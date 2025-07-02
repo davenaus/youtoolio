@@ -2,14 +2,36 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/Button/Button';
+import { HomepageModal } from '../../components/HomepageModal/HomepageModal';
 import * as S from './styles';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [showHomepageModal, setShowHomepageModal] = useState(false);
+
+  // Check if user has already seen the homepage modal
+  useEffect(() => {
+    const hasSeenModal = sessionStorage.getItem('youtool-homepage-modal-seen');
+    if (!hasSeenModal) {
+      // Show modal after a short delay for better UX
+      const timer = setTimeout(() => {
+        setShowHomepageModal(true);
+      }, 1500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // Handle closing the homepage modal
+  const handleCloseHomepageModal = () => {
+    setShowHomepageModal(false);
+    // Mark as seen in sessionStorage (persists for the browser session)
+    sessionStorage.setItem('youtool-homepage-modal-seen', 'true');
+  };
 
   useEffect(() => {
-    if (showVideoModal) {
+    if (showVideoModal || showHomepageModal) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -18,7 +40,7 @@ export const Home: React.FC = () => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [showVideoModal]);
+  }, [showVideoModal, showHomepageModal]);
 
   const tools = [
     { name: 'Video Analyzer', image: 'https://64.media.tumblr.com/f55e2ae2e5b16799fd5889c64b3fe36b/0e01452f9f6dd974-0e/s2048x3072/09051a8561ff4ab1cc8a5fa3b4b3d81f8a3a720d.jpg' },
@@ -81,19 +103,19 @@ export const Home: React.FC = () => {
 
   const testimonials = [
     {
-      text: "YouTool helped me grow from 1K to 100K subscribers in 6 months. The keyword analyzer is a game-changer!",
+      text: "YouTool helped me grow from 0 to 1K subscribers in 1 month. The keyword analyzer was a game-changer!",
       author: "Sarah Chen",
       role: "Tech YouTuber",
       avatar: "SC"
     },
     {
-      text: "The analytics tools gave me insights I never had before. My video performance increased by 300%.",
+      text: "The Tag Generator is way better than other competitors. My video performance increased by 110%.",
       author: "Marcus Rivera",
       role: "Gaming Creator",
       avatar: "MR"
     },
     {
-      text: "Finally, professional YouTube tools that are actually free. The thumbnail tester saved me hours.",
+      text: "Finally, professional YouTube tools that are actually free. The thumbnail downloader saved me hours.",
       author: "Emma Wilson",
       role: "Lifestyle Vlogger",
       avatar: "EW"
@@ -349,6 +371,18 @@ export const Home: React.FC = () => {
           </S.CTAContent>
         </S.ContentWrapper>
       </S.CTASection>
+
+      {/* Homepage Modal */}
+      <HomepageModal 
+        isOpen={showHomepageModal} 
+        onClose={handleCloseHomepageModal}
+        badge="Major Update"
+        title="🎉 YouTool.io Got An Overhaul"
+        description="We're excited to announce that YouTool has been completely rebuilt with more powerful tools, enhanced performance, and an improved user experience. All your favorite features are now better than ever, plus we've added new free tools."
+        buttonText="Explore the New YouTool"
+        imageUrl="https://64.media.tumblr.com/11f3580a23599be502c1105ca2ac6dec/bd17899b6a19cdbc-69/s2048x3072/1c2ef6a45b8409fb5d6c367ca0994ea9b1ddfceb.pnj"
+        imageAlt="YouTool Overhaul Preview"
+      />
 
       {/* Video Modal */}
       {showVideoModal && (
