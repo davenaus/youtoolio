@@ -44,7 +44,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
   const [copiedLink, setCopiedLink] = useState<string>('');
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
-  const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+  const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_5;
 
   useEffect(() => {
     if (channelId) {

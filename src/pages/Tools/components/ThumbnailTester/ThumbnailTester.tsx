@@ -143,7 +143,7 @@ export const ThumbnailTester: React.FC = () => {
   };
 
   const fetchTrendingVideos = async (): Promise<ChannelVideo[]> => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_3;
 
     if (!API_KEY) {
       throw new Error('YouTube API key not configured');
@@ -197,7 +197,7 @@ export const ThumbnailTester: React.FC = () => {
   };
 
 const fetchChannelVideos = async (channelUrl: string): Promise<ChannelVideo[]> => {
-  const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+  const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_3;
   const channelId = extractChannelId(channelUrl);
   
   if (!channelId) {

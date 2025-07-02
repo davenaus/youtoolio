@@ -136,7 +136,7 @@ export const PlaylistAnalyzer: React.FC = () => {
     showOnlyTopPerformers: false
   });
 
-  const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+  const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_4;
 
   useEffect(() => {
     if (playlistId) {

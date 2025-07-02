@@ -74,10 +74,10 @@ export const KeywordAnalyzer: React.FC = () => {
   };
 
   const fetchYouTubeData = async (searchTerm: string): Promise<YouTubeVideo[]> => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_2;
     
     if (!API_KEY) {
-      throw new Error('YouTube API key not configured. Please add REACT_APP_YOUTUBE_API_KEY to your environment variables.');
+      throw new Error('YouTube API key not configured.');
     }
 
     try {

@@ -124,7 +124,7 @@ export const ThumbnailDownloader: React.FC = () => {
   };
 
   const fetchThumbnail = async (videoId: string): Promise<ThumbnailData> => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_2;
     
     if (!API_KEY) {
       throw new Error('YouTube API key not configured');

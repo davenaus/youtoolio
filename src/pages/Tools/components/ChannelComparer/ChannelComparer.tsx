@@ -97,7 +97,7 @@ export const ChannelComparer: React.FC = () => {
         if (type === 'channel') {
           return match[1];
         } else {
-          const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+          const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_2;
           const response = await fetch(
             `https://www.googleapis.com/youtube/v3/channels?part=id&${type === 'user' ? 'forUsername' : 'forHandle'}=${match[1]}&key=${API_KEY}`
           );
@@ -112,7 +112,7 @@ export const ChannelComparer: React.FC = () => {
   };
 
   const fetchChannelData = async (channelId: string): Promise<ChannelData> => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_2;
     if (!API_KEY) {
       throw new Error('YouTube API key not configured');
     }

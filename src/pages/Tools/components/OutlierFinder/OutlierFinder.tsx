@@ -42,7 +42,7 @@ export const OutlierFinder: React.FC = () => {
     showOnlyRecent: false
   });
 
-  const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+  const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_3;
 
   useEffect(() => {
     if (searchQuery) {

@@ -94,7 +94,7 @@ export const ChannelIdFinder: React.FC = () => {
   };
 
   const fetchChannelByVideoId = async (videoId: string): Promise<string> => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_4;
     
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/videos?` +
@@ -114,7 +114,7 @@ export const ChannelIdFinder: React.FC = () => {
   };
 
   const fetchChannelBySearch = async (searchTerm: string): Promise<string> => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_4;
     
     // Try searching for channels
     const response = await fetch(
@@ -136,7 +136,7 @@ export const ChannelIdFinder: React.FC = () => {
   };
 
   const fetchChannelDetails = async (channelId: string): Promise<ChannelInfo> => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_4;
     
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/channels?` +
@@ -191,9 +191,9 @@ export const ChannelIdFinder: React.FC = () => {
       return;
     }
 
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_4;
     if (!API_KEY) {
-      setError('YouTube API key not configured. Please add REACT_APP_YOUTUBE_API_KEY to your environment variables.');
+      setError('YouTube API key not configured.');
       return;
     }
 

@@ -59,7 +59,7 @@ export const CommentDownloader: React.FC = () => {
     minLikes: 0
   });
 
-  const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+  const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_5;
   const MAX_RESULTS = 100;
   const MAX_PAGES = Math.ceil(filters.maxComments / MAX_RESULTS);
 

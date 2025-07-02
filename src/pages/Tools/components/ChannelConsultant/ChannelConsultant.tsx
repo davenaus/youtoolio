@@ -55,7 +55,7 @@ export const ChannelConsultant: React.FC = () => {
       if (match) {
         if (type === 'channelId') return match[1];
         
-        const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+        const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_3;
         if (!API_KEY) {
           throw new Error('YouTube API key not configured');
         }
@@ -78,7 +78,7 @@ export const ChannelConsultant: React.FC = () => {
   };
 
   const getChannelData = async (channelId: string): Promise<ChannelData> => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_3;
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/channels?` +
       `part=snippet,statistics,topicDetails&id=${channelId}&key=${API_KEY}`

@@ -180,7 +180,7 @@ export const VideoAnalyzer: React.FC = () => {
 
   // API functions
   const fetchVideoData = async (videoId: string) => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_4;
     if (!API_KEY) {
       throw new Error('YouTube API key not configured');
     }
@@ -202,7 +202,7 @@ export const VideoAnalyzer: React.FC = () => {
   };
 
   const fetchChannelData = async (channelId: string) => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_4;
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/channels?` +
       `part=snippet,statistics&id=${channelId}&key=${API_KEY}`
@@ -222,7 +222,7 @@ export const VideoAnalyzer: React.FC = () => {
   const fetchCategoryName = async (categoryId: string): Promise<string> => {
     if (!categoryId) return 'Unknown';
     try {
-      const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+      const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_4;
       const response = await fetch(
         `https://www.googleapis.com/youtube/v3/videoCategories?` +
         `part=snippet&id=${categoryId}&key=${API_KEY}`
