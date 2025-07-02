@@ -152,7 +152,7 @@ export const Home: React.FC = () => {
                 variant="secondary"
                 size="lg"
                 icon="bx bx-play"
-                onClick={() => window.open('https://youtu.be/m02ZZL-EWg0', '_blank')}
+                onClick={() => setShowVideoModal(true)}
               >
                 Watch Demo
               </Button>
@@ -362,10 +362,10 @@ export const Home: React.FC = () => {
               <iframe
                 width="100%"
                 height="100%"
-                src="https://youtu.be/m02ZZL-EWg0?autoplay=1"
+                src="https://www.youtube.com/embed/m02ZZL-EWg0?autoplay=1&rel=0&modestbranding=1&controls=1&showinfo=0&fs=1&iv_load_policy=3"
                 title="YouTool Demo"
                 frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
               />
             </S.VideoPlayer>
