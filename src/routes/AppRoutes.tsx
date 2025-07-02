@@ -4,6 +4,7 @@ import { Routes, Route } from 'react-router-dom';
 import { Home } from '../pages/Home/Home';
 import { Tools } from '../pages/Tools/Tools';
 import { NotFound } from '../pages/NotFound/NotFound';
+import { LinkInBioLanding } from '../pages/LinkInBioLanding/LinkInBioLanding';
 
 // Tool imports
 import { OutlierFinder } from '../pages/Tools/components/OutlierFinder/OutlierFinder';
@@ -33,6 +34,9 @@ export const AppRoutes: React.FC = () => {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/tools" element={<Tools />} />
+      
+      {/* Link in Bio Landing Page */}
+      <Route path="/link-in-bio-page-maker" element={<LinkInBioLanding />} />
       
       {/* Tool Routes */}
       <Route path="/tools/youtube-transcript" element={<YouTubeTranscript />} />

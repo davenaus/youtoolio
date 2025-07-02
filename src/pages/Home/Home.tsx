@@ -325,7 +325,7 @@ export const Home: React.FC = () => {
             </S.StatCard>
             <S.StatCard delay={0.1}>
               <S.StatIcon><i className="bx bx-group"></i></S.StatIcon>
-              <S.StatNumber>50K+</S.StatNumber>
+              <S.StatNumber>1K+</S.StatNumber>
               <S.StatLabel>Active Users</S.StatLabel>
               <S.StatDescription>Trusted by creators worldwide</S.StatDescription>
             </S.StatCard>
