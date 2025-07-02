@@ -48,7 +48,7 @@ const tools: Tool[] = [
     category: 'SEO',
     tags: ['Thumbnails', 'Preview', 'Testing'],
     url: '/tools/thumbnail-tester',
-    image: 'https://64.media.tumblr.com/c16a513f772461ec4c1c27bf532b7d8f/0e01452f9f6dd974-6d/s2048x3072/8f37d7ca31ccb0b698b3e21d74c2e276c260c7a0.jpg',
+    image: 'https://64.media.tumblr.com/c16a513f7724612ec41c27bf532b7d8f/0e01452f9f6dd974-6d/s2048x3072/8f37d7ca31ccb0b698b3e21d74c2e276c260c7a0.jpg',
   },
   {
     id: 'thumbnail-downloader',
@@ -150,7 +150,7 @@ const tools: Tool[] = [
     category: 'SEO',
     tags: ['Analytics', 'Insights'],
     url: '/tools/channel-comparer',
-    image: 'https://64.media.tumblr.com/b5ef4a3f8a1a52b8b8bf56336b718566ce/0e01452f9f6dd974-22/s2048x3072/af73a86628e0cbe0468bb714952560c7d95172cf1.jpg',
+    image: 'https://64.media.tumblr.com/b5ef4a3f8a1a52b8b8bf5633b71856ce/0e01452f9f6dd974-22/s2048x3072/af73a8628e0cbe0468bb714952560c7d95172cf1.jpg',
   },
   {
     id: 'moderation-checker',
