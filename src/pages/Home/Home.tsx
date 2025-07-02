@@ -120,7 +120,7 @@ export const Home: React.FC = () => {
 
             <S.HeroSubtitle>
               Supercharge your YouTube channel with professional-grade analytics,
-              SEO tools, and content optimization features. Join 50,000+ creators 
+              SEO tools, and content optimization features. Join 1,000+ creators 
               who've transformed their channels with our free tools.
             </S.HeroSubtitle>
 
@@ -152,7 +152,7 @@ export const Home: React.FC = () => {
                 variant="secondary"
                 size="lg"
                 icon="bx bx-play"
-                onClick={() => window.open('https://youtube.com', '_blank')}
+                onClick={() => window.open('https://youtu.be/m02ZZL-EWg0', '_blank')}
               >
                 Watch Demo
               </Button>
@@ -362,7 +362,7 @@ export const Home: React.FC = () => {
               <iframe
                 width="100%"
                 height="100%"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                src="https://youtu.be/m02ZZL-EWg0?autoplay=1"
                 title="YouTool Demo"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
