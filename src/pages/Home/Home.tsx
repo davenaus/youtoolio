@@ -21,12 +21,12 @@ export const Home: React.FC = () => {
   }, [showVideoModal]);
 
   const tools = [
-    { name: 'Video Analyzer', image: '/images/tools/video-analyzer.jpg' },
-    { name: 'Keyword Analyzer', image: '/images/tools/keyword-analyzer.jpg' },
-    { name: 'Thumbnail Tester', image: '/images/tools/thumbnail-tester.jpg' },
-    { name: 'QR Generator', image: '/images/tools/qr-code-generator.jpg' },
-    { name: 'Channel Analyzer', image: '/images/tools/channel-analyzer.jpg' },
-    { name: 'Tag Generator', image: '/images/tools/tag-generator.jpg' }
+    { name: 'Video Analyzer', image: 'https://64.media.tumblr.com/f55e2ae2e5b16799fd5889c64b3fe36b/0e01452f9f6dd974-0e/s2048x3072/09051a8561ff4ab1cc8a5fa3b4b3d81f8a3a720d.jpg' },
+    { name: 'Keyword Analyzer', image: 'https://64.media.tumblr.com/10c0d99fe1fe964324e1cdb293ee4756/0e01452f9f6dd974-c1/s2048x3072/4307ba680bb19d0d80529c1d1415552dffdd3b9a.jpg' },
+    { name: 'Thumbnail Tester', image: 'https://64.media.tumblr.com/c16a513f772461ec4c1c27bf532b7d8f/0e01452f9f6dd974-6d/s2048x3072/8f37d7ca31ccb0b698b3e21d74c2e276c260c7a0.jpg' },
+    { name: 'QR Generator', image: 'https://64.media.tumblr.com/da5e76716d812a5ccec22e37179e2575/0e01452f9f6dd974-89/s2048x3072/2c12bac7610d803f4a197ea109c839a969849ac2.jpg' },
+    { name: 'Channel Analyzer', image: 'https://64.media.tumblr.com/ac9ad9e3a75b264881169b38018b6be8/0e01452f9f6dd974-e5/s2048x3072/8c12986bb347fdcb8bb1f003ca88748e35b437d8.jpg' },
+    { name: 'Tag Generator', image: 'https://64.media.tumblr.com/276a73213e38fa7b326758ee7f115ed6/0e01452f9f6dd974-35/s2048x3072/a99f9ebfb857f86f0b720517850972aff27712c1.jpg' }
   ];
 
   const features = [
@@ -35,28 +35,28 @@ export const Home: React.FC = () => {
       title: 'Advanced Analytics',
       description: 'Deep insights into your YouTube performance with comprehensive analytics and trend analysis',
       highlight: 'Real-time data',
-      image: '/images/tools/video-analyzer.jpg'
+      image: 'https://64.media.tumblr.com/f55e2ae2e5b16799fd5889c64b3fe36b/0e01452f9f6dd974-0e/s2048x3072/09051a8561ff4ab1cc8a5fa3b4b3d81f8a3a720d.jpg'
     },
     {
       icon: 'bx bx-search-alt',
       title: 'SEO Optimization',
       description: 'Optimize your content for maximum discoverability with AI-powered keyword research',
       highlight: 'Boost visibility',
-      image: '/images/tools/keyword-analyzer.jpg'
+      image: 'https://64.media.tumblr.com/10c0d99fe1fe964324e1cdb293ee4756/0e01452f9f6dd974-c1/s2048x3072/4307ba680bb19d0d80529c1d1415552dffdd3b9a.jpg'
     },
     {
       icon: 'bx bx-download',
       title: 'Content Tools',
       description: 'Download thumbnails, comments, and transcripts with professional-grade utilities',
       highlight: 'One-click downloads',
-      image: '/images/tools/thumbnail-downloader.jpg'
+      image: 'https://64.media.tumblr.com/b12f0a4e3b88cf8409200338965cf706/0e01452f9f6dd974-5e/s2048x3072/00de80d7d1ca44cb236d21cab0adbe20fc5bbfb9.jpg'
     },
     {
       icon: 'bx bx-trending-up',
       title: 'Growth Insights',
       description: 'Discover what makes videos go viral and apply those insights to your content strategy',
       highlight: 'Viral patterns',
-      image: '/images/tools/outlier-finder.jpg'
+      image: 'https://64.media.tumblr.com/60109acd631995e9b43834a7f4358e78/0e01452f9f6dd974-f2/s2048x3072/3390c9b19607d957940ac9e1b8b23b6afbdc037f.jpg'
     }
   ];
 
@@ -65,7 +65,7 @@ export const Home: React.FC = () => {
       id: 'video-analyzer',
       name: 'Video Analyzer',
       description: 'Deep-dive analytics for your YouTube videos. Track performance metrics, engagement rates, viewer retention patterns, and get actionable insights to improve your content strategy.',
-      image: '/images/tools/video-analyzer.jpg',
+      image: 'https://64.media.tumblr.com/f55e2ae2e5b16799fd5889c64b3fe36b/0e01452f9f6dd974-0e/s2048x3072/09051a8561ff4ab1cc8a5fa3b4b3d81f8a3a720d.jpg',
       icon: 'bx bx-chart',
       features: ['Performance tracking', 'Engagement analytics', 'Retention insights', 'Growth recommendations']
     },
@@ -73,7 +73,7 @@ export const Home: React.FC = () => {
       id: 'qr-code-generator',
       name: 'QR Code Generator', 
       description: 'Create professional QR codes with custom styling and logo integration. Perfect for linking to your YouTube channel, social media, or any content you want to promote.',
-      image: '/images/tools/qr-code-generator.jpg',
+      image: 'https://64.media.tumblr.com/da5e76716d812a5ccec22e37179e2575/0e01452f9f6dd974-89/s2048x3072/2c12bac7610d803f4a197ea109c839a969849ac2.jpg',
       icon: 'bx bx-qr',
       features: ['Custom styling', 'Logo integration', 'Multiple formats', 'High resolution']
     }
@@ -109,7 +109,7 @@ export const Home: React.FC = () => {
           <S.HeroContent>
             <S.Logo>
               <S.LogoImage
-                src="/images/logo.png"
+                src="https://64.media.tumblr.com/e000461398dfaa9247cc9db6eca187a2/0e01452f9f6dd974-6b/s2048x3072/0457337859cea0729cdfee1d7a9407e25f8f5cca.png"
                 alt="YouTool Logo"
               />
             </S.Logo>
@@ -161,7 +161,7 @@ export const Home: React.FC = () => {
 
           <S.HeroImage>
             <S.VideoPreview onClick={() => setShowVideoModal(true)}>
-              <S.VideoThumbnail src="/images/thumbnail.jpg" alt="YouTool Demo" />
+              <S.VideoThumbnail src="https://64.media.tumblr.com/e6f81d50783e858c0607b451cb6ce268/0e01452f9f6dd974-a5/s2048x3072/f7630c48335303291ad4bfb87b376deda23a724e.jpg" alt="YouTool Demo" />
               <S.PlayButton>
                 <i className="bx bx-play"></i>
               </S.PlayButton>
