@@ -1,0 +1,18 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://youtool.io/sitemap.xml
+
+# Block any admin or private areas (if you add them later)
+# Disallow: /admin/
+# Disallow: /api/private/
+
+# Allow all tools to be indexed
+Allow: /tools/
+Allow: /tools/*
+
+# Block any test or development pages
+Disallow: /test/
+Disallow: /dev/

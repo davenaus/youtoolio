@@ -1,0 +1,618 @@
+// src/pages/Tools/components/CommentDownloader/CommentDownloader.tsx
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { AdSense } from '../../../../components/AdSense/AdSense';
+import * as S from './styles';
+
+interface Comment {
+  id: string;
+  text: string;
+  author: string;
+  publishedAt: string;
+  likeCount: number;
+  replies?: Reply[];
+}
+
+interface Reply {
+  id: string;
+  text: string;
+  author: string;
+  publishedAt: string;
+  likeCount: number;
+}
+
+interface FilterOptions {
+  includeReplies: boolean;
+  maxComments: number;
+  sortBy: 'relevance' | 'time';
+  dateRange: {
+    start: string;
+    end: string;
+  };
+  keyword: string;
+  minLikes: number;
+}
+
+export const CommentDownloader: React.FC = () => {
+  const { videoId } = useParams<{ videoId: string }>();
+  const navigate = useNavigate();
+  const [videoUrl, setVideoUrl] = useState('');
+  const [status, setStatus] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [videoData, setVideoData] = useState<any>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [batchUrls, setBatchUrls] = useState('');
+  const [showBatch, setShowBatch] = useState(false);
+  const [batchResults, setBatchResults] = useState<any[]>([]);
+
+  const [filters, setFilters] = useState<FilterOptions>({
+    includeReplies: true,
+    maxComments: 1000,
+    sortBy: 'relevance',
+    dateRange: {
+      start: '',
+      end: ''
+    },
+    keyword: '',
+    minLikes: 0
+  });
+
+  const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+  const MAX_RESULTS = 100;
+  const MAX_PAGES = Math.ceil(filters.maxComments / MAX_RESULTS);
+
+  useEffect(() => {
+    if (videoId) {
+      const videoUrl = `https://youtube.com/watch?v=${videoId}`;
+      setVideoUrl(videoUrl);
+      handleDownload(videoId);
+    }
+  }, [videoId]);
+
+  const extractVideoId = (url: string): string | false => {
+    // Regular video URL pattern
+    const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+    const match = url.match(regExp);
+    if (match && match[7].length === 11) {
+      return match[7];
+    }
+
+    // Shorts URL pattern
+    const shortsRegExp = /^.*(youtube.com\/shorts\/)([^#&?]*).*/;
+    const shortsMatch = url.match(shortsRegExp);
+    if (shortsMatch && shortsMatch[2]) {
+      return shortsMatch[2];
+    }
+
+    // Direct video ID
+    if (url.match(/^[A-Za-z0-9_-]{11}$/)) {
+      return url;
+    }
+
+    return false;
+  };
+
+  const fetchVideoData = async (videoId: string) => {
+    try {
+      const response = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?` +
+        `part=snippet,statistics&id=${videoId}&key=${API_KEY}`
+      );
+      const data = await response.json();
+      if (data.items?.[0]) {
+        setVideoData(data.items[0]);
+      }
+    } catch (error) {
+      console.error('Error fetching video data:', error);
+    }
+  };
+
+  const fetchReplies = async (commentId: string): Promise<Reply[]> => {
+    try {
+      const response = await fetch(
+        `https://www.googleapis.com/youtube/v3/comments?` +
+        `part=snippet&parentId=${commentId}&key=${API_KEY}&maxResults=100`
+      );
+      const data = await response.json();
+      
+      return data.items?.map((item: any) => ({
+        id: item.id,
+        text: item.snippet.textDisplay,
+        author: item.snippet.authorDisplayName,
+        publishedAt: item.snippet.publishedAt,
+        likeCount: item.snippet.likeCount || 0
+      })) || [];
+    } catch (error) {
+      console.error('Error fetching replies:', error);
+      return [];
+    }
+  };
+
+  const filterComments = (comments: Comment[]): Comment[] => {
+    let filtered = [...comments];
+
+    // Filter by keyword
+    if (filters.keyword) {
+      filtered = filtered.filter(comment => 
+        comment.text.toLowerCase().includes(filters.keyword.toLowerCase()) ||
+        comment.author.toLowerCase().includes(filters.keyword.toLowerCase())
+      );
+    }
+
+    // Filter by minimum likes
+    if (filters.minLikes > 0) {
+      filtered = filtered.filter(comment => comment.likeCount >= filters.minLikes);
+    }
+
+    // Filter by date range
+    if (filters.dateRange.start || filters.dateRange.end) {
+      filtered = filtered.filter(comment => {
+        const commentDate = new Date(comment.publishedAt);
+        const startDate = filters.dateRange.start ? new Date(filters.dateRange.start) : null;
+        const endDate = filters.dateRange.end ? new Date(filters.dateRange.end) : null;
+        
+        if (startDate && commentDate < startDate) return false;
+        if (endDate && commentDate > endDate) return false;
+        return true;
+      });
+    }
+
+    // Sort comments
+    if (filters.sortBy === 'time') {
+      filtered.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+    } else {
+      filtered.sort((a, b) => b.likeCount - a.likeCount);
+    }
+
+    // Limit results
+    return filtered.slice(0, filters.maxComments);
+  };
+
+  const handleSearch = () => {
+    const extractedId = extractVideoId(videoUrl);
+    if (extractedId) {
+      navigate(`/tools/comment-downloader/${extractedId}`);
+    } else {
+      setStatus('Invalid YouTube URL. Please enter a valid YouTube video URL.');
+    }
+  };
+
+  const handleDownload = async (id: string) => {
+    setIsLoading(true);
+    setShowResults(false);
+    setStatus('Fetching video data...');
+    
+    try {
+      await fetchVideoData(id);
+      
+      setStatus('Fetching comments...');
+      const newComments: Comment[] = [];
+
+      let nextPageToken = '';
+      for (let i = 0; i < MAX_PAGES; i++) {
+        const url = `https://www.googleapis.com/youtube/v3/commentThreads?` +
+                   `part=snippet,replies&videoId=${id}&key=${API_KEY}&` +
+                   `maxResults=${MAX_RESULTS}&pageToken=${nextPageToken}&order=${filters.sortBy}`;
+        
+        setStatus(`Fetching comments... (Page ${i + 1}/${MAX_PAGES})`);
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (response.status !== 200) {
+          throw new Error(`API Error (${response.status}): ${data.error?.message || 'Unknown error'}`);
+        }
+
+        for (const item of data.items) {
+          const comment: Comment = {
+            id: item.id,
+            text: item.snippet.topLevelComment.snippet.textDisplay,
+            author: item.snippet.topLevelComment.snippet.authorDisplayName,
+            publishedAt: item.snippet.topLevelComment.snippet.publishedAt,
+            likeCount: item.snippet.topLevelComment.snippet.likeCount || 0,
+            replies: []
+          };
+
+          // Fetch replies if enabled
+          if (filters.includeReplies && item.snippet.totalReplyCount > 0) {
+            if (item.replies?.comments) {
+              comment.replies = item.replies.comments.map((reply: any) => ({
+                id: reply.id,
+                text: reply.snippet.textDisplay,
+                author: reply.snippet.authorDisplayName,
+                publishedAt: reply.snippet.publishedAt,
+                likeCount: reply.snippet.likeCount || 0
+              }));
+            } else {
+              comment.replies = await fetchReplies(comment.id);
+            }
+          }
+
+          newComments.push(comment);
+        }
+
+        if (!data.nextPageToken || newComments.length >= filters.maxComments) break;
+        nextPageToken = data.nextPageToken;
+      }
+
+      const filteredComments = filterComments(newComments);
+      setComments(filteredComments);
+      setStatus(`Fetched ${filteredComments.length} comments successfully.`);
+      setShowResults(true);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      setStatus(`Error: ${error instanceof Error ? error.message : 'Failed to fetch comments'}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBatchDownload = async () => {
+    const urls = batchUrls.split('\n').filter(url => url.trim());
+    if (urls.length === 0) return;
+
+    setIsLoading(true);
+    setBatchResults([]);
+    
+    for (let i = 0; i < urls.length; i++) {
+      const videoId = extractVideoId(urls[i].trim());
+      if (videoId) {
+        setStatus(`Processing video ${i + 1}/${urls.length}...`);
+        try {
+          await handleDownload(videoId);
+          setBatchResults(prev => [...prev, { videoId, status: 'success', comments: comments.length }]);
+        } catch (error) {
+          setBatchResults(prev => [...prev, { videoId, status: 'error', error: error instanceof Error ? error.message : 'Unknown error' }]);
+        }
+      }
+    }
+    
+    setIsLoading(false);
+  };
+
+  const downloadComments = (format: 'txt' | 'json' | 'csv' | 'pdf' = 'txt') => {
+    let content = '';
+    let mimeType = 'text/plain';
+    let filename = `youtube_comments.${format}`;
+
+    switch (format) {
+      case 'json':
+        content = JSON.stringify(comments, null, 2);
+        mimeType = 'application/json';
+        break;
+      case 'csv':
+        content = 'Author,Text,Published At,Likes,Type\n';
+        comments.forEach(comment => {
+          content += `"${comment.author}","${comment.text.replace(/"/g, '""')}","${comment.publishedAt}","${comment.likeCount}","Comment"\n`;
+          if (comment.replies) {
+            comment.replies.forEach(reply => {
+              content += `"${reply.author}","${reply.text.replace(/"/g, '""')}","${reply.publishedAt}","${reply.likeCount}","Reply"\n`;
+            });
+          }
+        });
+        mimeType = 'text/csv';
+        break;
+      default:
+        content = comments.map(comment => {
+          let text = `Author: ${comment.author}\nPublished: ${new Date(comment.publishedAt).toLocaleString()}\nLikes: ${comment.likeCount}\n\n${comment.text}\n\n`;
+          if (comment.replies && comment.replies.length > 0) {
+            text += 'Replies:\n';
+            comment.replies.forEach(reply => {
+              text += `  └ ${reply.author} (${reply.likeCount} likes): ${reply.text}\n`;
+            });
+            text += '\n';
+          }
+          text += '---\n\n';
+          return text;
+        }).join('');
+    }
+
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const getTopComments = () => {
+    return [...comments]
+      .sort((a, b) => b.likeCount - a.likeCount)
+      .slice(0, 10);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  return (
+    <S.PageWrapper>
+      {/* Left Sidebar Ad */}
+      <S.AdSidebar position="left">
+        <AdSense 
+          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
+          format="vertical"
+        />
+      </S.AdSidebar>
+
+      {/* Right Sidebar Ad */}
+      <S.AdSidebar position="right">
+        <AdSense 
+          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
+          format="vertical"
+        />
+      </S.AdSidebar>
+
+      <S.MainContainer>
+        <S.Header>
+          <S.BackButton onClick={() => navigate('/tools')}>
+            <i className="bx bx-arrow-back"></i>
+            Back to Tools
+          </S.BackButton>
+          <S.Title>Comment Downloader</S.Title>
+          <S.Subtitle>
+            Download and analyze YouTube video comments with advanced filtering options
+          </S.Subtitle>
+        </S.Header>
+
+        <S.SearchContainer>
+          <S.SearchBar>
+            <S.SearchInput
+              type="text"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="Enter YouTube video URL or video ID"
+              onKeyPress={handleKeyPress}
+              disabled={isLoading}
+            />
+            <S.SearchButton onClick={handleSearch} disabled={isLoading}>
+              {isLoading ? (
+                <i className='bx bx-loader-alt bx-spin'></i>
+              ) : (
+                <i className='bx bx-download'></i>
+              )}
+            </S.SearchButton>
+          </S.SearchBar>
+
+          <S.ToggleContainer>
+            <S.ToggleButton 
+              onClick={() => setShowFilters(!showFilters)}
+              className={showFilters ? 'active' : ''}
+            >
+              <i className="bx bx-filter"></i>
+              Advanced Filters
+            </S.ToggleButton>
+            <S.ToggleButton 
+              onClick={() => setShowBatch(!showBatch)}
+              className={showBatch ? 'active' : ''}
+            >
+              <i className="bx bx-list-ul"></i>
+              Batch Download
+            </S.ToggleButton>
+          </S.ToggleContainer>
+        </S.SearchContainer>
+
+        {showFilters && (
+          <S.FiltersContainer>
+            <S.FilterGrid>
+              <S.FilterGroup>
+                <S.FilterLabel>Maximum Comments</S.FilterLabel>
+                <S.FilterSelect
+                  value={filters.maxComments}
+                  onChange={(e) => setFilters({...filters, maxComments: parseInt(e.target.value)})}
+                >
+                  <option value={100}>100</option>
+                  <option value={500}>500</option>
+                  <option value={1000}>1,000</option>
+                  <option value={2000}>2,000</option>
+                  <option value={5000}>5,000</option>
+                </S.FilterSelect>
+              </S.FilterGroup>
+
+              <S.FilterGroup>
+                <S.FilterLabel>Sort By</S.FilterLabel>
+                <S.FilterSelect
+                  value={filters.sortBy}
+                  onChange={(e) => setFilters({...filters, sortBy: e.target.value as 'relevance' | 'time'})}
+                >
+                  <option value="relevance">Relevance</option>
+                  <option value="time">Most Recent</option>
+                </S.FilterSelect>
+              </S.FilterGroup>
+
+              <S.FilterGroup>
+                <S.FilterLabel>Minimum Likes</S.FilterLabel>
+                <S.FilterInput
+                  type="number"
+                  value={filters.minLikes}
+                  onChange={(e) => setFilters({...filters, minLikes: parseInt(e.target.value) || 0})}
+                  placeholder="0"
+                />
+              </S.FilterGroup>
+
+              <S.FilterGroup>
+                <S.FilterLabel>Keyword Filter</S.FilterLabel>
+                <S.FilterInput
+                  type="text"
+                  value={filters.keyword}
+                  onChange={(e) => setFilters({...filters, keyword: e.target.value})}
+                  placeholder="Filter by keyword..."
+                />
+              </S.FilterGroup>
+
+              <S.FilterGroup>
+                <S.FilterLabel>Date Range (Start)</S.FilterLabel>
+                <S.FilterInput
+                  type="date"
+                  value={filters.dateRange.start}
+                  onChange={(e) => setFilters({...filters, dateRange: {...filters.dateRange, start: e.target.value}})}
+                />
+              </S.FilterGroup>
+
+              <S.FilterGroup>
+                <S.FilterLabel>Date Range (End)</S.FilterLabel>
+                <S.FilterInput
+                  type="date"
+                  value={filters.dateRange.end}
+                  onChange={(e) => setFilters({...filters, dateRange: {...filters.dateRange, end: e.target.value}})}
+                />
+              </S.FilterGroup>
+            </S.FilterGrid>
+
+            <S.CheckboxGroup>
+              <S.Checkbox
+                type="checkbox"
+                id="includeReplies"
+                checked={filters.includeReplies}
+                onChange={(e) => setFilters({...filters, includeReplies: e.target.checked})}
+              />
+              <S.CheckboxLabel htmlFor="includeReplies">
+                Include replies to comments
+              </S.CheckboxLabel>
+            </S.CheckboxGroup>
+          </S.FiltersContainer>
+        )}
+
+        {showBatch && (
+          <S.BatchContainer>
+            <S.BatchLabel>Batch Download (one URL per line)</S.BatchLabel>
+            <S.BatchTextarea
+              value={batchUrls}
+              onChange={(e) => setBatchUrls(e.target.value)}
+              placeholder="https://youtube.com/watch?v=VIDEO_ID_1&#10;https://youtube.com/watch?v=VIDEO_ID_2&#10;..."
+              rows={5}
+            />
+            <S.BatchButton onClick={handleBatchDownload} disabled={isLoading || !batchUrls.trim()}>
+              <i className="bx bx-download"></i>
+              Download All
+            </S.BatchButton>
+          </S.BatchContainer>
+        )}
+
+        {status && <S.Status>{status}</S.Status>}
+
+        <S.ResultsContainer className={showResults ? 'visible' : ''}>
+          {isLoading ? (
+            <S.LoadingContainer>
+              <i className='bx bx-loader-alt bx-spin'></i>
+              <p>Processing comments...</p>
+            </S.LoadingContainer>
+          ) : videoData && comments.length > 0 ? (
+            <>
+              <S.VideoInfo>
+                <S.ThumbnailContainer>
+                  <S.Thumbnail
+                    src={videoData.snippet.thumbnails.maxres?.url || videoData.snippet.thumbnails.high.url}
+                    alt={videoData.snippet.title}
+                  />
+                </S.ThumbnailContainer>
+                
+                <S.VideoDetails>
+                  <S.VideoTitle>{videoData.snippet.title}</S.VideoTitle>
+                  <S.VideoMeta>
+                    <S.MetaItem>
+                      <i className="bx bx-user"></i>
+                      {videoData.snippet.channelTitle}
+                    </S.MetaItem>
+                    <S.MetaItem>
+                      <i className="bx bx-comment"></i>
+                      {comments.length} comments downloaded
+                    </S.MetaItem>
+                  </S.VideoMeta>
+                </S.VideoDetails>
+              </S.VideoInfo>
+
+              <S.DownloadSection>
+                <S.SectionTitle>
+                  <i className="bx bx-download"></i>
+                  Download Options
+                </S.SectionTitle>
+                <S.DownloadGrid>
+                  <S.DownloadButton onClick={() => downloadComments('txt')}>
+                    <i className="bx bx-file-txt"></i>
+                    Download as TXT
+                  </S.DownloadButton>
+                  <S.DownloadButton onClick={() => downloadComments('json')}>
+                    <i className="bx bx-file-json"></i>
+                    Download as JSON
+                  </S.DownloadButton>
+                  <S.DownloadButton onClick={() => downloadComments('csv')}>
+                    <i className="bx bx-spreadsheet"></i>
+                    Download as CSV
+                  </S.DownloadButton>
+                </S.DownloadGrid>
+              </S.DownloadSection>
+
+              {getTopComments().length > 0 && (
+                <S.TopCommentsSection>
+                  <S.SectionTitle>
+                    <i className="bx bx-trending-up"></i>
+                    Top Comments by Likes
+                  </S.SectionTitle>
+                  <S.CommentsList>
+                    {getTopComments().slice(0, 5).map((comment, index) => (
+                      <S.CommentItem key={comment.id}>
+                        <S.CommentHeader>
+                          <S.CommentAuthor>{comment.author}</S.CommentAuthor>
+                          <S.CommentLikes>
+                            <i className="bx bx-like"></i>
+                            {comment.likeCount}
+                          </S.CommentLikes>
+                        </S.CommentHeader>
+                        <S.CommentText>{comment.text}</S.CommentText>
+                        <S.CommentDate>
+                          {new Date(comment.publishedAt).toLocaleDateString()}
+                        </S.CommentDate>
+                      </S.CommentItem>
+                    ))}
+                  </S.CommentsList>
+                </S.TopCommentsSection>
+              )}
+
+              <S.AILinks>
+                <S.AILinkText>Analyze your comments with AI:</S.AILinkText>
+                <S.AIButtonGrid>
+                  <a href="https://chat.openai.com/" target="_blank" rel="noopener noreferrer">
+                    <S.AIButton color="#10a37f">
+                      <i className="bx bx-bot"></i>
+                      ChatGPT
+                    </S.AIButton>
+                  </a>
+                  <a href="https://gemini.google.com/chat" target="_blank" rel="noopener noreferrer">
+                    <S.AIButton color="#4285f4">
+                      <i className="bx bx-diamond"></i>
+                      Gemini
+                    </S.AIButton>
+                  </a>
+                  <a href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">
+                    <S.AIButton color="#cc785c">
+                      <i className="bx bx-brain"></i>
+                      Claude
+                    </S.AIButton>
+                  </a>
+                </S.AIButtonGrid>
+              </S.AILinks>
+
+              {/* Bottom Ad for smaller screens */}
+              <S.BottomAdContainer>
+                <AdSense 
+                  slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
+                  format="horizontal"
+                />
+              </S.BottomAdContainer>
+            </>
+          ) : null}
+        </S.ResultsContainer>
+      </S.MainContainer>
+    </S.PageWrapper>
+  );
+};
+
+export default CommentDownloader;
