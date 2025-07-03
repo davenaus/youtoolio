@@ -51,7 +51,7 @@ export const BackButton = styled.button`
   border: 1px solid ${({ theme }) => theme.colors.dark5};
   color: ${({ theme }) => theme.colors.text.secondary};
   padding: 0.5rem 1rem;
-  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border-radius: 8px;
   font-family: ${({ theme }) => theme.fonts.primary};
   font-size: 0.9rem;
   cursor: pointer;
@@ -307,7 +307,7 @@ export const MetaItem = styled.div`
   font-weight: 500;
   background: ${({ theme }) => theme.colors.dark4};
   padding: 0.75rem 1rem;
-  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border-radius: 8px;
   border: 1px solid ${({ theme }) => theme.colors.dark5};
   transition: all 0.2s ease;
   
@@ -508,7 +508,7 @@ export const ViewButton = styled.a`
   background: ${({ theme }) => theme.colors.dark4};
   color: ${({ theme }) => theme.colors.text.secondary};
   padding: 0.5rem 1rem;
-  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border-radius: 8px;
   text-decoration: none;
   font-size: 0.9rem;
   transition: all 0.2s ease;
@@ -586,6 +586,250 @@ export const Drawback = styled.div`
   }
 `;
 
+// New Detailed Analysis Styles
+export const DetailedAnalysisGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+`;
+
+export const DetailedSection = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.red3};
+    box-shadow: ${({ theme }) => theme.shadows.md};
+  }
+`;
+
+export const DescriptionContainer = styled.div`
+  margin-top: 1rem;
+`;
+
+export const DescriptionText = styled.p`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  line-height: 1.6;
+  font-size: 0.95rem;
+  margin: 0 0 1rem 0;
+  background: ${({ theme }) => theme.colors.dark4};
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid ${({ theme }) => theme.colors.red3};
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: ${({ theme }) => theme.colors.dark5};
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: ${({ theme }) => theme.colors.red3};
+    border-radius: 3px;
+  }
+`;
+
+export const DescriptionStats = styled.div`
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+`;
+
+export const StatItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.9rem;
+  background: ${({ theme }) => theme.colors.dark2};
+  padding: 0.5rem 0.75rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  
+  i {
+    color: ${({ theme }) => theme.colors.red3};
+    font-size: 1rem;
+  }
+`;
+
+export const EmptyState = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-style: italic;
+  padding: 2rem;
+  text-align: center;
+  background: ${({ theme }) => theme.colors.dark4};
+  border-radius: 8px;
+  border: 2px dashed ${({ theme }) => theme.colors.dark5};
+  
+  i {
+    color: ${({ theme }) => theme.colors.red3};
+    font-size: 1.2rem;
+    opacity: 0.7;
+  }
+`;
+
+export const KeywordContainer = styled.div`
+  margin-top: 1rem;
+`;
+
+export const KeywordList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+`;
+
+export const KeywordTag = styled.span`
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  color: ${({ theme }) => theme.colors.white};
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: ${({ theme }) => theme.shadows.sm};
+  }
+`;
+
+export const CategoryContainer = styled.div`
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+export const CategoryItem = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: ${({ theme }) => theme.colors.dark4};
+  border-radius: 8px;
+  border-left: 4px solid ${({ theme }) => theme.colors.red3};
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+`;
+
+export const CategoryLabel = styled.span`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-weight: 600;
+  font-size: 0.9rem;
+`;
+
+export const CategoryValue = styled.span`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-weight: 500;
+  background: ${({ theme }) => theme.colors.dark2};
+  padding: 0.25rem 0.75rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+`;
+
+export const PerformanceContainer = styled.div`
+  margin-top: 1rem;
+  display: grid;
+  gap: 1rem;
+`;
+
+export const PerformanceMetric = styled.div`
+  padding: 1rem;
+  background: ${({ theme }) => theme.colors.dark4};
+  border-radius: 8px;
+  border-left: 4px solid ${({ theme }) => theme.colors.red3};
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.dark2};
+    transform: translateX(4px);
+  }
+`;
+
+export const MetricTitle = styled.div`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+`;
+
+export const MetricDescription = styled.div`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.9rem;
+  line-height: 1.4;
+`;
+
+// Content Strategy Styles
+export const ContentStrategyContainer = styled.div`
+  margin-top: 1rem;
+  display: grid;
+  gap: 1rem;
+`;
+
+export const StrategyMetric = styled.div`
+  padding: 1rem;
+  background: ${({ theme }) => theme.colors.dark4};
+  border-radius: 8px;
+  border-left: 4px solid ${({ theme }) => theme.colors.red3};
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.dark2};
+    transform: translateX(4px);
+    box-shadow: ${({ theme }) => theme.shadows.sm};
+  }
+`;
+
+// Engagement Insights Styles
+export const EngagementContainer = styled.div`
+  margin-top: 1rem;
+  display: grid;
+  gap: 1rem;
+`;
+
+export const EngagementMetric = styled.div`
+  padding: 1rem;
+  background: ${({ theme }) => theme.colors.dark4};
+  border-radius: 8px;
+  border-left: 4px solid ${({ theme }) => theme.colors.red3};
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.dark2};
+    transform: translateX(4px);
+    box-shadow: ${({ theme }) => theme.shadows.sm};
+  }
+`;
+
+export const EngagementDetail = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  font-style: italic;
+  opacity: 0.8;
+`;
+
 export const BottomAdContainer = styled.div`
   margin: 2rem 0;
   text-align: center;
@@ -594,4 +838,3 @@ export const BottomAdContainer = styled.div`
     display: none;
   }
 `;
-

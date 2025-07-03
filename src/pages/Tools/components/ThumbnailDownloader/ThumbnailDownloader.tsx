@@ -404,27 +404,7 @@ export const ThumbnailDownloader: React.FC = () => {
               </S.InputHint>
             </S.InputContainer>
 
-            <S.ExampleUrls>
-              <S.ExampleTitle>Supported URL formats:</S.ExampleTitle>
-              <S.ExampleList>
-                <S.ExampleItem>
-                  <i className="bx bx-video"></i>
-                  <span>https://youtube.com/watch?v=VIDEO_ID</span>
-                </S.ExampleItem>
-                <S.ExampleItem>
-                  <i className="bx bx-mobile"></i>
-                  <span>https://youtube.com/shorts/VIDEO_ID</span>
-                </S.ExampleItem>
-                <S.ExampleItem>
-                  <i className="bx bx-link"></i>
-                  <span>https://youtu.be/VIDEO_ID</span>
-                </S.ExampleItem>
-                <S.ExampleItem>
-                  <i className="bx bx-hash"></i>
-                  <span>Direct video ID (11 characters)</span>
-                </S.ExampleItem>
-              </S.ExampleList>
-            </S.ExampleUrls>
+
 
             {downloadHistory.length > 0 && (
               <S.HistorySection>

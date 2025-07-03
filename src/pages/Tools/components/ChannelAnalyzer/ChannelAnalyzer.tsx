@@ -308,6 +308,50 @@ export const ChannelAnalyzer: React.FC = () => {
     });
   };
 
+  const getChannelAge = (createdDate: string): string => {
+    const created = new Date(createdDate);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - created.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const years = Math.floor(diffDays / 365);
+    const months = Math.floor((diffDays % 365) / 30);
+    
+    if (years > 0) {
+      return `${years} year${years > 1 ? 's' : ''}, ${months} month${months > 1 ? 's' : ''}`;
+    }
+    return `${months} month${months > 1 ? 's' : ''}`;
+  };
+
+  const formatChannelKeywords = (keywords: string): string[] => {
+    if (!keywords) return [];
+    return keywords.split(',').map(keyword => keyword.trim()).filter(keyword => keyword.length > 0);
+  };
+
+  const getTopicCategory = (topicDetails: any): string => {
+    if (!topicDetails?.topicCategories) return 'Not specified';
+    
+    const categoryMap: { [key: string]: string } = {
+      '/m/04rlf': 'Music',
+      '/m/02jjt': 'Entertainment', 
+      '/m/09s1f': 'Comedy',
+      '/m/0kt51': 'Health & Fitness',
+      '/m/019_rr': 'Lifestyle',
+      '/m/032tl': 'Fashion',
+      '/m/027x7n': 'Automotive',
+      '/m/0bzvm2': 'Gaming',
+      '/m/06ntj': 'Sports',
+      '/m/0f2f9': 'News & Politics',
+      '/m/01k8wb': 'Knowledge',
+      '/m/098wr': 'Science & Technology'
+    };
+
+    const categories = topicDetails.topicCategories.map((cat: string) => 
+      categoryMap[cat] || 'Other'
+    );
+    
+    return categories.join(', ');
+  };
+
   return (
     <S.PageWrapper>
       {/* Left Sidebar Ad */}
@@ -501,6 +545,293 @@ export const ChannelAnalyzer: React.FC = () => {
                   ))}
                 </S.AnalysisSection>
               </S.AnalysisGrid>
+
+              {/* New Detailed Analysis Sections */}
+              <S.DetailedAnalysisGrid>
+                {/* Channel Description */}
+                <S.DetailedSection>
+                  <S.SectionTitle>
+                    <i className="bx bx-text"></i>
+                    Channel Description
+                  </S.SectionTitle>
+                  <S.DescriptionContainer>
+                    {channelData.snippet.description ? (
+                      <>
+                        <S.DescriptionText>
+                          {channelData.snippet.description}
+                        </S.DescriptionText>
+                        <S.DescriptionStats>
+                          <S.StatItem>
+                            <i className="bx bx-text"></i>
+                            {channelData.snippet.description.length} characters
+                          </S.StatItem>
+                          <S.StatItem>
+                            <i className="bx bx-file-blank"></i>
+                            {channelData.snippet.description.split(' ').length} words
+                          </S.StatItem>
+                        </S.DescriptionStats>
+                      </>
+                    ) : (
+                      <S.EmptyState>
+                        <i className="bx bx-info-circle"></i>
+                        No channel description provided
+                      </S.EmptyState>
+                    )}
+                  </S.DescriptionContainer>
+                </S.DetailedSection>
+
+                {/* Channel Tags/Keywords */}
+                <S.DetailedSection>
+                  <S.SectionTitle>
+                    <i className="bx bx-purchase-tag"></i>
+                    Channel Keywords
+                  </S.SectionTitle>
+                  <S.KeywordContainer>
+                    {channelData.brandingSettings?.channel?.keywords ? (
+                      <>
+                        <S.KeywordList>
+                          {formatChannelKeywords(channelData.brandingSettings.channel.keywords).map((keyword, index) => (
+                            <S.KeywordTag key={index}>
+                              {keyword}
+                            </S.KeywordTag>
+                          ))}
+                        </S.KeywordList>
+                      </>
+                    ) : (
+                      <S.EmptyState>
+                        <i className="bx bx-info-circle"></i>
+                        No channel keywords set
+                      </S.EmptyState>
+                    )}
+                  </S.KeywordContainer>
+                </S.DetailedSection>
+
+                {/* Channel Category & Topics */}
+                <S.DetailedSection>
+                  <S.SectionTitle>
+                    <i className="bx bx-category"></i>
+                    Channel Category
+                  </S.SectionTitle>
+                  <S.CategoryContainer>
+                    <S.CategoryItem>
+                      <S.CategoryLabel>Primary Category:</S.CategoryLabel>
+                      <S.CategoryValue>
+                        {getTopicCategory(channelData.topicDetails)}
+                      </S.CategoryValue>
+                    </S.CategoryItem>
+                    <S.CategoryItem>
+                      <S.CategoryLabel>Content Type:</S.CategoryLabel>
+                      <S.CategoryValue>
+                        {channelData.status?.madeForKids ? 'Made for Kids' : 'General Audience'}
+                      </S.CategoryValue>
+                    </S.CategoryItem>
+                    {channelData.snippet.country && (
+                      <S.CategoryItem>
+                        <S.CategoryLabel>Country:</S.CategoryLabel>
+                        <S.CategoryValue>{channelData.snippet.country}</S.CategoryValue>
+                      </S.CategoryItem>
+                    )}
+                  </S.CategoryContainer>
+                </S.DetailedSection>
+
+                {/* Channel Performance Metrics */}
+                <S.DetailedSection>
+                  <S.SectionTitle>
+                    <i className="bx bx-line-chart"></i>
+                    Performance Analysis
+                  </S.SectionTitle>
+                  <S.PerformanceContainer>
+                    <S.PerformanceMetric>
+                      <S.MetricTitle>Channel Age</S.MetricTitle>
+                      <S.MetricDescription>
+                        {getChannelAge(channelData.snippet.publishedAt)} old
+                      </S.MetricDescription>
+                    </S.PerformanceMetric>
+                    <S.PerformanceMetric>
+                      <S.MetricTitle>Views per Subscriber</S.MetricTitle>
+                      <S.MetricDescription>
+                        {Math.round(parseInt(channelData.statistics.viewCount) / parseInt(channelData.statistics.subscriberCount))} views per subscriber
+                      </S.MetricDescription>
+                    </S.PerformanceMetric>
+                    <S.PerformanceMetric>
+                      <S.MetricTitle>Upload Frequency</S.MetricTitle>
+                      <S.MetricDescription>
+                        {Math.round(parseInt(channelData.statistics.videoCount) / (Date.now() - new Date(channelData.snippet.publishedAt).getTime()) * (1000 * 60 * 60 * 24 * 30))} videos per month average
+                      </S.MetricDescription>
+                    </S.PerformanceMetric>
+                    <S.PerformanceMetric>
+                      <S.MetricTitle>Latest Activity</S.MetricTitle>
+                      <S.MetricDescription>
+                        Last video: {formatDate(latestVideoData.snippet.publishedAt)}
+                      </S.MetricDescription>
+                    </S.PerformanceMetric>
+                  </S.PerformanceContainer>
+                </S.DetailedSection>
+
+                {/* Content Strategy Analysis */}
+                <S.DetailedSection>
+                  <S.SectionTitle>
+                    <i className="bx bx-brain"></i>
+                    Content Strategy Analysis
+                  </S.SectionTitle>
+                  <S.ContentStrategyContainer>
+                    <S.StrategyMetric>
+                      <S.MetricTitle>Content Consistency</S.MetricTitle>
+                      <S.MetricDescription>
+                        {(() => {
+                          const daysSinceCreation = Math.floor((Date.now() - new Date(channelData.snippet.publishedAt).getTime()) / (1000 * 60 * 60 * 24));
+                          const videosPerDay = parseInt(channelData.statistics.videoCount) / daysSinceCreation;
+                          if (videosPerDay > 0.5) return "🟢 Highly consistent (Daily content)";
+                          if (videosPerDay > 0.14) return "🟡 Moderately consistent (Weekly content)";
+                          if (videosPerDay > 0.03) return "🟠 Irregular (Monthly content)";
+                          return "🔴 Inconsistent (Sporadic uploads)";
+                        })()}
+                      </S.MetricDescription>
+                    </S.StrategyMetric>
+                    
+                    <S.StrategyMetric>
+                      <S.MetricTitle>Channel Growth Stage</S.MetricTitle>
+                      <S.MetricDescription>
+                        {(() => {
+                          const subs = parseInt(channelData.statistics.subscriberCount);
+                          const monthsOld = Math.floor((Date.now() - new Date(channelData.snippet.publishedAt).getTime()) / (1000 * 60 * 60 * 24 * 30));
+                          const subsPerMonth = subs / monthsOld;
+                          
+                          if (subs < 1000) return "🌱 Discovery Phase (Building foundation)";
+                          if (subs < 10000) return "📈 Growth Phase (Building audience)";
+                          if (subs < 100000) return "🚀 Expansion Phase (Scaling content)";
+                          if (subs < 1000000) return "⭐ Established Phase (Strong presence)";
+                          return "👑 Authority Phase (Industry leader)";
+                        })()}
+                      </S.MetricDescription>
+                    </S.StrategyMetric>
+
+                    <S.StrategyMetric>
+                      <S.MetricTitle>Content Volume Strategy</S.MetricTitle>
+                      <S.MetricDescription>
+                        {(() => {
+                          const videosCount = parseInt(channelData.statistics.videoCount);
+                          if (videosCount > 1000) return "📚 High Volume Creator (1000+ videos)";
+                          if (videosCount > 500) return "📖 Regular Publisher (500+ videos)";
+                          if (videosCount > 100) return "📝 Active Creator (100+ videos)";
+                          if (videosCount > 20) return "✏️ Emerging Creator (20+ videos)";
+                          return "🆕 New Creator (Starting journey)";
+                        })()}
+                      </S.MetricDescription>
+                    </S.StrategyMetric>
+
+                    <S.StrategyMetric>
+                      <S.MetricTitle>Optimization Score</S.MetricTitle>
+                      <S.MetricDescription>
+                        {(() => {
+                          let score = 0;
+                          if (channelData.snippet.description) score += 20;
+                          if (channelData.brandingSettings?.channel?.keywords) score += 20;
+                          if (channelData.brandingSettings?.image?.bannerExternalUrl) score += 20;
+                          if (channelData.brandingSettings?.channel?.unsubscribedTrailer) score += 20;
+                          if (playlistData.length > 0) score += 20;
+                          
+                          const getScoreColor = (s: number) => {
+                            if (s >= 80) return "🟢";
+                            if (s >= 60) return "🟡";
+                            if (s >= 40) return "🟠";
+                            return "🔴";
+                          };
+                          
+                          return `${getScoreColor(score)} ${score}/100 - Channel optimization score`;
+                        })()}
+                      </S.MetricDescription>
+                    </S.StrategyMetric>
+                  </S.ContentStrategyContainer>
+                </S.DetailedSection>
+
+                {/* Audience Engagement Insights */}
+                <S.DetailedSection>
+                  <S.SectionTitle>
+                    <i className="bx bx-group"></i>
+                    Audience Engagement Insights
+                  </S.SectionTitle>
+                  <S.EngagementContainer>
+                    <S.EngagementMetric>
+                      <S.MetricTitle>Subscriber Attraction Rate</S.MetricTitle>
+                      <S.MetricDescription>
+                        {(() => {
+                          const viewToSubRatio = parseInt(channelData.statistics.viewCount) / parseInt(channelData.statistics.subscriberCount);
+                          if (viewToSubRatio < 50) return "🔥 Excellent (High conversion rate)";
+                          if (viewToSubRatio < 100) return "✅ Good (Solid conversion)";
+                          if (viewToSubRatio < 200) return "⚡ Average (Room for improvement)";
+                          if (viewToSubRatio < 500) return "📊 Below Average (Focus on retention)";
+                          return "⚠️ Low (Needs engagement strategy)";
+                        })()}
+                      </S.MetricDescription>
+                      <S.EngagementDetail>
+                        {Math.round(parseInt(channelData.statistics.viewCount) / parseInt(channelData.statistics.subscriberCount))} views needed per subscriber
+                      </S.EngagementDetail>
+                    </S.EngagementMetric>
+
+                    <S.EngagementMetric>
+                      <S.MetricTitle>Content Discovery Potential</S.MetricTitle>
+                      <S.MetricDescription>
+                        {(() => {
+                          const avgViews = parseInt(channelData.statistics.viewCount) / parseInt(channelData.statistics.videoCount);
+                          const subscribers = parseInt(channelData.statistics.subscriberCount);
+                          const discoverabilityRatio = avgViews / subscribers;
+                          
+                          if (discoverabilityRatio > 2) return "🌟 Viral Potential (High organic reach)";
+                          if (discoverabilityRatio > 1.5) return "🚀 Strong Discovery (Good algorithm favor)";
+                          if (discoverabilityRatio > 1) return "📈 Moderate Reach (Steady growth)";
+                          if (discoverabilityRatio > 0.5) return "🎯 Subscriber-Focused (Loyal audience)";
+                          return "💤 Limited Reach (Needs SEO work)";
+                        })()}
+                      </S.MetricDescription>
+                      <S.EngagementDetail>
+                        {(parseInt(channelData.statistics.viewCount) / parseInt(channelData.statistics.videoCount) / parseInt(channelData.statistics.subscriberCount) * 100).toFixed(1)}% average reach beyond subscribers
+                      </S.EngagementDetail>
+                    </S.EngagementMetric>
+
+                    <S.EngagementMetric>
+                      <S.MetricTitle>Channel Authority Level</S.MetricTitle>
+                      <S.MetricDescription>
+                        {(() => {
+                          const subs = parseInt(channelData.statistics.subscriberCount);
+                          const views = parseInt(channelData.statistics.viewCount);
+                          const videos = parseInt(channelData.statistics.videoCount);
+                          const authorityScore = (subs * 0.4) + (views * 0.0001) + (videos * 10);
+                          
+                          if (authorityScore > 50000) return "👑 Industry Authority (Highly influential)";
+                          if (authorityScore > 20000) return "🏆 Established Expert (Strong influence)";
+                          if (authorityScore > 8000) return "⭐ Rising Authority (Growing influence)";
+                          if (authorityScore > 2000) return "📢 Emerging Voice (Building credibility)";
+                          return "🌱 New Contributor (Starting journey)";
+                        })()}
+                      </S.MetricDescription>
+                      <S.EngagementDetail>
+                        Based on subscriber count, total views, and content volume
+                      </S.EngagementDetail>
+                    </S.EngagementMetric>
+
+                    <S.EngagementMetric>
+                      <S.MetricTitle>Growth Momentum</S.MetricTitle>
+                      <S.MetricDescription>
+                        {(() => {
+                          const daysSinceLastVideo = Math.floor((Date.now() - new Date(latestVideoData.snippet.publishedAt).getTime()) / (1000 * 60 * 60 * 24));
+                          const channelAgeMonths = Math.floor((Date.now() - new Date(channelData.snippet.publishedAt).getTime()) / (1000 * 60 * 60 * 24 * 30));
+                          const subsPerMonth = parseInt(channelData.statistics.subscriberCount) / channelAgeMonths;
+                          
+                          if (daysSinceLastVideo > 30) return "😴 Dormant (Inactive for 30+ days)";
+                          if (daysSinceLastVideo > 14) return "⏳ Slowing (2+ weeks since upload)";
+                          if (daysSinceLastVideo > 7) return "📅 Regular (Weekly schedule)";
+                          if (daysSinceLastVideo > 3) return "🔥 Active (Multiple uploads/week)";
+                          return "⚡ Highly Active (Daily content)";
+                        })()}
+                      </S.MetricDescription>
+                      <S.EngagementDetail>
+                        Last upload: {Math.floor((Date.now() - new Date(latestVideoData.snippet.publishedAt).getTime()) / (1000 * 60 * 60 * 24))} days ago
+                      </S.EngagementDetail>
+                    </S.EngagementMetric>
+                  </S.EngagementContainer>
+                </S.DetailedSection>
+              </S.DetailedAnalysisGrid>
 
               {/* Bottom Ad for smaller screens */}
               <S.BottomAdContainer>

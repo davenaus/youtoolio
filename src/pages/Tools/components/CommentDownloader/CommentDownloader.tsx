@@ -46,6 +46,7 @@ export const CommentDownloader: React.FC = () => {
   const [batchUrls, setBatchUrls] = useState('');
   const [showBatch, setShowBatch] = useState(false);
   const [batchResults, setBatchResults] = useState<any[]>([]);
+  const [isBatchMode, setIsBatchMode] = useState(false);
 
   const [filters, setFilters] = useState<FilterOptions>({
     includeReplies: true,
@@ -67,6 +68,7 @@ export const CommentDownloader: React.FC = () => {
     if (videoId) {
       const videoUrl = `https://youtube.com/watch?v=${videoId}`;
       setVideoUrl(videoUrl);
+      setIsBatchMode(false); // Single video mode
       handleDownload(videoId);
     }
   }, [videoId]);
@@ -173,6 +175,7 @@ export const CommentDownloader: React.FC = () => {
   const handleSearch = () => {
     const extractedId = extractVideoId(videoUrl);
     if (extractedId) {
+      setIsBatchMode(false); // Single video mode
       navigate(`/tools/comment-downloader/${extractedId}`);
     } else {
       setStatus('Invalid YouTube URL. Please enter a valid YouTube video URL.');
@@ -185,6 +188,7 @@ export const CommentDownloader: React.FC = () => {
     setStatus('Fetching video data...');
     
     try {
+      // Always fetch video data for single video downloads (not batch)
       await fetchVideoData(id);
       
       setStatus('Fetching comments...');
@@ -253,22 +257,88 @@ export const CommentDownloader: React.FC = () => {
     const urls = batchUrls.split('\n').filter(url => url.trim());
     if (urls.length === 0) return;
 
+    setIsBatchMode(true); // Enable batch mode
     setIsLoading(true);
     setBatchResults([]);
+    setComments([]); // Clear previous comments
+    setVideoData(null); // Clear video data for batch mode
+    setShowResults(false); // Hide results initially
+    
+    let allComments: Comment[] = [];
     
     for (let i = 0; i < urls.length; i++) {
       const videoId = extractVideoId(urls[i].trim());
       if (videoId) {
         setStatus(`Processing video ${i + 1}/${urls.length}...`);
         try {
-          await handleDownload(videoId);
-          setBatchResults(prev => [...prev, { videoId, status: 'success', comments: comments.length }]);
+          // Use the same download logic but collect all comments
+          const newComments: Comment[] = [];
+          let nextPageToken = '';
+          
+          for (let j = 0; j < MAX_PAGES; j++) {
+            const url = `https://www.googleapis.com/youtube/v3/commentThreads?` +
+                       `part=snippet,replies&videoId=${videoId}&key=${API_KEY}&` +
+                       `maxResults=${MAX_RESULTS}&pageToken=${nextPageToken}&order=${filters.sortBy}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (response.status !== 200) {
+              throw new Error(`API Error (${response.status}): ${data.error?.message || 'Unknown error'}`);
+            }
+
+            for (const item of data.items) {
+              const comment: Comment = {
+                id: item.id,
+                text: item.snippet.topLevelComment.snippet.textDisplay,
+                author: item.snippet.topLevelComment.snippet.authorDisplayName,
+                publishedAt: item.snippet.topLevelComment.snippet.publishedAt,
+                likeCount: item.snippet.topLevelComment.snippet.likeCount || 0,
+                replies: []
+              };
+
+              if (filters.includeReplies && item.snippet.totalReplyCount > 0) {
+                if (item.replies?.comments) {
+                  comment.replies = item.replies.comments.map((reply: any) => ({
+                    id: reply.id,
+                    text: reply.snippet.textDisplay,
+                    author: reply.snippet.authorDisplayName,
+                    publishedAt: reply.snippet.publishedAt,
+                    likeCount: reply.snippet.likeCount || 0
+                  }));
+                } else {
+                  comment.replies = await fetchReplies(comment.id);
+                }
+              }
+
+              newComments.push(comment);
+            }
+
+            if (!data.nextPageToken || newComments.length >= filters.maxComments) break;
+            nextPageToken = data.nextPageToken;
+          }
+
+          const filteredComments = filterComments(newComments);
+          allComments = [...allComments, ...filteredComments];
+          
+          setBatchResults(prev => [...prev, { 
+            videoId, 
+            status: 'success', 
+            comments: filteredComments.length 
+          }]);
         } catch (error) {
-          setBatchResults(prev => [...prev, { videoId, status: 'error', error: error instanceof Error ? error.message : 'Unknown error' }]);
+          setBatchResults(prev => [...prev, { 
+            videoId, 
+            status: 'error', 
+            error: error instanceof Error ? error.message : 'Unknown error' 
+          }]);
         }
       }
     }
     
+    setComments(allComments);
+    setStatus(`Batch download complete. Total comments: ${allComments.length}`);
+    setShowResults(true);
     setIsLoading(false);
   };
 
@@ -504,30 +574,64 @@ export const CommentDownloader: React.FC = () => {
               <i className='bx bx-loader-alt bx-spin'></i>
               <p>Processing comments...</p>
             </S.LoadingContainer>
-          ) : videoData && comments.length > 0 ? (
+          ) : comments.length > 0 ? (
             <>
-              <S.VideoInfo>
-                <S.ThumbnailContainer>
-                  <S.Thumbnail
-                    src={videoData.snippet.thumbnails.maxres?.url || videoData.snippet.thumbnails.high.url}
-                    alt={videoData.snippet.title}
-                  />
-                </S.ThumbnailContainer>
-                
-                <S.VideoDetails>
-                  <S.VideoTitle>{videoData.snippet.title}</S.VideoTitle>
-                  <S.VideoMeta>
-                    <S.MetaItem>
-                      <i className="bx bx-user"></i>
-                      {videoData.snippet.channelTitle}
-                    </S.MetaItem>
-                    <S.MetaItem>
-                      <i className="bx bx-comment"></i>
-                      {comments.length} comments downloaded
-                    </S.MetaItem>
-                  </S.VideoMeta>
-                </S.VideoDetails>
-              </S.VideoInfo>
+              {/* Only show video info for single video downloads, not batch */}
+              {!isBatchMode && videoData && (
+                <S.VideoInfo>
+                  <S.ThumbnailContainer>
+                    <S.Thumbnail
+                      src={videoData.snippet.thumbnails.maxres?.url || videoData.snippet.thumbnails.high.url}
+                      alt={videoData.snippet.title}
+                    />
+                  </S.ThumbnailContainer>
+                  
+                  <S.VideoDetails>
+                    <S.VideoTitle>{videoData.snippet.title}</S.VideoTitle>
+                    <S.VideoMeta>
+                      <S.MetaItem>
+                        <i className="bx bx-user"></i>
+                        {videoData.snippet.channelTitle}
+                      </S.MetaItem>
+                      <S.MetaItem>
+                        <i className="bx bx-comment"></i>
+                        {comments.length} comments downloaded
+                      </S.MetaItem>
+                    </S.VideoMeta>
+                  </S.VideoDetails>
+                </S.VideoInfo>
+              )}
+
+              {/* Show batch results if in batch mode */}
+              {isBatchMode && batchResults.length > 0 && (
+                <S.BatchResultsSection>
+                  <S.SectionTitle>
+                    <i className="bx bx-list-check"></i>
+                    Batch Download Results
+                  </S.SectionTitle>
+                  <S.BatchResultsList>
+                    {batchResults.map((result, index) => (
+                      <S.BatchResultItem key={index} success={result.status === 'success'}>
+                        <S.BatchResultIcon>
+                          {result.status === 'success' ? (
+                            <i className="bx bx-check-circle"></i>
+                          ) : (
+                            <i className="bx bx-error-circle"></i>
+                          )}
+                        </S.BatchResultIcon>
+                        <S.BatchResultDetails>
+                          <S.BatchResultVideoId>Video ID: {result.videoId}</S.BatchResultVideoId>
+                          {result.status === 'success' ? (
+                            <S.BatchResultComments>{result.comments} comments downloaded</S.BatchResultComments>
+                          ) : (
+                            <S.BatchResultError>Error: {result.error}</S.BatchResultError>
+                          )}
+                        </S.BatchResultDetails>
+                      </S.BatchResultItem>
+                    ))}
+                  </S.BatchResultsList>
+                </S.BatchResultsSection>
+              )}
 
               <S.DownloadSection>
                 <S.SectionTitle>

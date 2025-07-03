@@ -61,7 +61,7 @@ export const BackButton = styled.button`
   &:hover {
     background: ${({ theme }) => theme.colors.dark4};
     border-color: ${({ theme }) => theme.colors.dark5};
-  color: ${({ theme }) => theme.colors.text.primary};
+    color: ${({ theme }) => theme.colors.text.primary};
     transform: translateX(-2px);
   }
   
@@ -297,15 +297,62 @@ export const VideoDetails = styled.div`
   gap: 1rem;
 `;
 
+export const VideoHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+`;
+
 export const VideoTitle = styled.h2`
   color: ${({ theme }) => theme.colors.text.primary};
   font-size: 1.4rem;
   font-weight: 600;
   margin: 0;
   line-height: 1.3;
+  flex: 1;
 
   @media (max-width: 768px) {
     font-size: 1.2rem;
+  }
+`;
+
+export const ViewVideoButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  border: none;
+  color: ${({ theme }) => theme.colors.white};
+  padding: 0.75rem 1rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  box-shadow: ${({ theme }) => theme.shadows.sm};
+
+  &:hover {
+    background: linear-gradient(135deg, ${({ theme }) => theme.colors.red2}, ${({ theme }) => theme.colors.red3});
+    transform: translateY(-2px);
+    box-shadow: ${({ theme }) => theme.shadows.md};
+  }
+
+  i {
+    font-size: 1rem;
+  }
+  
+  @media (max-width: 768px) {
+    justify-content: center;
+    width: 100%;
   }
 `;
 
@@ -562,12 +609,47 @@ export const Tag = styled.span`
   font-weight: 500;
   border: 1px solid ${({ theme }) => theme.colors.dark5};
   transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
   
   &:hover {
     background: ${({ theme }) => theme.colors.red3};
     color: ${({ theme }) => theme.colors.white};
     transform: translateY(-1px);
+    
+    &::before {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
+  
+  &::before {
+    content: 'Click to Analyze';
+    position: absolute;
+    top: -1.5rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(5px);
+    background: ${({ theme }) => theme.colors.dark1};
+    color: ${({ theme }) => theme.colors.text.primary};
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: ${({ theme }) => theme.borderRadius.sm};
+    opacity: 0;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    pointer-events: none;
+    border: 1px solid ${({ theme }) => theme.colors.dark5};
+    z-index: 10;
+  }
+`;
+
+export const TagText = styled.span`
+  /* Remove this component as we're going back to simple approach */
+`;
+
+export const TagAnalyzeButton = styled.span`
+  /* Remove this component as we're going back to simple approach */
 `;
 
 export const BottomAdContainer = styled.div`

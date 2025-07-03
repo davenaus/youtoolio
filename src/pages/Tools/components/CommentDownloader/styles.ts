@@ -478,6 +478,77 @@ export const MetaItem = styled.div`
   }
 `;
 
+// New Batch Results Styles
+export const BatchResultsSection = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+`;
+
+export const BatchResultsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+`;
+
+export const BatchResultItem = styled.div<{ success: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: ${({ theme }) => theme.colors.dark4};
+  border: 1px solid ${({ theme, success }) => success ? theme.colors.success || '#4caf50' : theme.colors.warning || '#f44336'};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border-left: 4px solid ${({ success }) => success ? '#4caf50' : '#f44336'};
+`;
+
+export const BatchResultIcon = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  
+  i {
+    font-size: 1.25rem;
+  }
+`;
+
+export const BatchResultDetails = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`;
+
+export const BatchResultVideoId = styled.div`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-weight: 500;
+  font-size: 0.9rem;
+`;
+
+export const BatchResultComments = styled.div`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.85rem;
+`;
+
+export const BatchResultError = styled.div`
+  color: ${({ theme }) => theme.colors.warning || '#f44336'};
+  font-size: 0.85rem;
+`;
+
+export const BatchSummary = styled.div`
+  text-align: center;
+  padding: 1rem;
+  background: ${({ theme }) => theme.colors.dark4};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-weight: 600;
+`;
+
 export const DownloadSection = styled.div`
   background: ${({ theme }) => theme.colors.dark3};
   border: 1px solid ${({ theme }) => theme.colors.dark5};

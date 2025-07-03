@@ -52,6 +52,25 @@ export const ModerationChecker: React.FC = () => {
     localStorage.setItem('moderation_history', JSON.stringify(newHistory));
   };
 
+  // Helper function to check for whole words only
+  const containsWholeWord = (text: string, word: string): boolean => {
+    // Create a regex pattern that matches the word with word boundaries
+    // \b ensures we match whole words only, not substrings
+    const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+    return regex.test(text);
+  };
+
+  // Helper function to find all instances of a word (for counting/highlighting)
+  const findWholeWordMatches = (text: string, word: string): string[] => {
+    const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+    const matches: string[] = [];
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      matches.push(match[0]); // Push the actual matched text (preserves case)
+    }
+    return matches;
+  };
+
   const analyzeContent = async () => {
     if (!content.trim()) {
       alert('Please enter some content to analyze');
@@ -64,163 +83,177 @@ export const ModerationChecker: React.FC = () => {
     try {
       // Generate flagged words based on actual content analysis
       const mockFlaggedWords: { word: string; category: string; severity: string }[] = [];
-      const contentLower = content.toLowerCase();
       
-      // Comprehensive word lists for client-side moderation
+      // More reasonable word lists for client-side moderation
       const profanityWords = [
-        // Mild profanity
-        'damn', 'hell', 'crap', 'piss', 'dammit', 'suck', 'sucks', 'sucked', 'stupid', 'idiot', 'moron', 'dumb', 'dumbass',
-        // Moderate profanity
-        'shit', 'bullshit', 'pissed', 'ass', 'asshole', 'bitch', 'wtf', 'screw', 'screwed', 'bastard', 'bloody', 'freaking', 'freakin',
+        // Only actual profanity, not mild words
+        'shit', 'bullshit', 'asshole', 'bitch', 'wtf', 'bastard',
         // Strong profanity
-        'fuck', 'fucking', 'fucked', 'fucker', 'motherfucker', 'cocksucker', 'dickhead', 'pussy', 'whore', 'slut', 'cunt'
+        'fuck', 'fucking', 'fucked', 'fucker', 'motherfucker', 'cocksucker', 'dickhead', 'whore', 'slut', 'cunt'
       ];
       
       const spamIndicators = [
-        'click here', 'subscribe now', 'like and subscribe', 'smash that like button', 'hit the bell', 'notification squad',
-        'first comment', 'early squad', 'who\'s watching in', 'free money', 'make money fast', 'get rich quick',
-        'work from home', 'earn $', 'visit my profile', 'check my channel', 'follow for follow', 'sub for sub',
-        'subscribe to me', 'urgent', 'limited time', 'act now', 'don\'t miss out', 'exclusive offer',
-        'click the link', 'link in bio', 'dm me', 'text me', 'whatsapp me', 'telegram me'
+        'click here now', 'subscribe now', 'like and subscribe', 'smash that like button', 'hit the bell', 'notification squad',
+        'first comment', 'early squad', 'free money', 'make money fast', 'get rich quick',
+        'work from home', 'visit my profile', 'check my channel', 'follow for follow', 'sub for sub',
+        'subscribe to me', 'click the link', 'link in bio'
       ];
       
       const violenceWords = [
-        'kill', 'murder', 'die', 'death', 'dead', 'suicide', 'hang yourself', 'shoot', 'stab', 'knife',
-        'gun', 'weapon', 'bomb', 'explosive', 'attack', 'assault', 'fight', 'beat up', 'destroy',
-        'violence', 'violent', 'war', 'battle', 'massacre', 'slaughter', 'torture', 'hurt', 'pain',
-        'suffer', 'revenge', 'hate', 'hatred', 'enemy', 'threat', 'threaten', 'dangerous'
+        // Only serious violence, not casual words
+        'kill him', 'kill her', 'kill you', 'murder', 'suicide', 'hang yourself', 'shoot you', 'stab you',
+        'bomb', 'explosive', 'massacre', 'slaughter', 'torture', 'assassinate'
       ];
       
       const hateWords = [
-        'hate', 'racist', 'racism', 'nazi', 'hitler', 'jews', 'muslim', 'terrorist', 'gay', 'fag',
-        'retard', 'retarded', 'disabled', 'mental', 'crazy', 'insane', 'psycho', 'loser', 'failure',
-        'worthless', 'pathetic', 'disgusting', 'ugly', 'fat', 'skinny', 'freak', 'weird', 'strange'
+        // Only actual hate speech, not descriptive words
+        'racist', 'racism', 'nazi', 'hitler', 'terrorist', 'fag', 'faggot',
+        'retard', 'retarded', 'worthless', 'pathetic', 'disgusting'
       ];
       
       const sexualWords = [
-        'sex', 'sexual', 'porn', 'pornography', 'nude', 'naked', 'strip', 'sexy', 'hot', 'horny',
-        'masturbate', 'orgasm', 'climax', 'erotic', 'adult', 'xxx', 'nsfw', 'boobs', 'tits', 'dick',
-        'penis', 'vagina', 'anal', 'oral', 'blowjob', 'handjob', 'hookup', 'dating', 'onlyfans'
+        // Only explicit sexual content
+        'porn', 'pornography', 'nude', 'naked', 'masturbate', 'orgasm', 'climax', 'erotic',
+        'xxx', 'nsfw', 'boobs', 'tits', 'penis', 'vagina', 'anal sex', 'oral sex', 'blowjob', 'handjob', 'onlyfans'
       ];
       
       const drugWords = [
-        'weed', 'marijuana', 'cannabis', 'high', 'stoned', 'drunk', 'alcohol', 'beer', 'wine', 'vodka',
-        'cocaine', 'heroin', 'meth', 'drugs', 'pill', 'smoke', 'vape', 'cigarette', 'tobacco', 'addiction'
+        // Only actual drug references
+        'cocaine', 'heroin', 'meth', 'methamphetamine', 'crack cocaine', 'ecstasy', 'lsd', 'ketamine'
       ];
       
-      // Check for profanity
+      // Check for profanity using whole word matching
       profanityWords.forEach(word => {
-        if (contentLower.includes(word.toLowerCase())) {
-          let severity = 'low';
-          if (['fuck', 'fucking', 'fucked', 'motherfucker', 'cunt'].includes(word)) severity = 'high';
-          else if (['shit', 'bullshit', 'ass', 'asshole', 'bitch'].includes(word)) severity = 'medium';
+        if (containsWholeWord(content, word)) {
+          let severity = 'medium';
+          if (['fuck', 'fucking', 'fucked', 'motherfucker', 'cunt'].includes(word.toLowerCase())) severity = 'high';
+          else if (['shit', 'bullshit', 'asshole', 'bitch'].includes(word.toLowerCase())) severity = 'medium';
           
-          mockFlaggedWords.push({ word, category: 'profanity', severity });
+          // Find the actual matches to preserve original case
+          const matches = findWholeWordMatches(content, word);
+          matches.forEach(match => {
+            mockFlaggedWords.push({ word: match, category: 'profanity', severity });
+          });
         }
       });
       
       // Check for spam indicators
       spamIndicators.forEach(phrase => {
-        if (contentLower.includes(phrase.toLowerCase())) {
+        if (containsWholeWord(content, phrase)) {
           let severity = 'medium';
-          if (['free money', 'make money fast', 'get rich quick'].includes(phrase)) severity = 'high';
-          else if (['click here', 'link in bio', 'check my channel'].includes(phrase)) severity = 'low';
+          if (['free money', 'make money fast', 'get rich quick'].includes(phrase.toLowerCase())) severity = 'high';
+          else if (['click here now', 'link in bio', 'check my channel'].includes(phrase.toLowerCase())) severity = 'low';
           
-          mockFlaggedWords.push({ word: phrase, category: 'spam', severity });
+          const matches = findWholeWordMatches(content, phrase);
+          matches.forEach(match => {
+            mockFlaggedWords.push({ word: match, category: 'spam', severity });
+          });
         }
       });
       
       // Check for violence
       violenceWords.forEach(word => {
-        if (contentLower.includes(word.toLowerCase())) {
-          let severity = 'medium';
-          if (['kill', 'murder', 'suicide', 'bomb', 'weapon', 'torture'].includes(word)) severity = 'high';
-          else if (['fight', 'beat up', 'hurt'].includes(word)) severity = 'low';
+        if (containsWholeWord(content, word)) {
+          let severity = 'high'; // Most violence words should be high severity
+          if (['bomb', 'explosive', 'massacre', 'torture', 'assassinate'].includes(word.toLowerCase())) severity = 'high';
+          else if (['kill him', 'kill her', 'murder', 'suicide'].includes(word.toLowerCase())) severity = 'high';
           
-          mockFlaggedWords.push({ word, category: 'violence', severity });
+          const matches = findWholeWordMatches(content, word);
+          matches.forEach(match => {
+            mockFlaggedWords.push({ word: match, category: 'violence', severity });
+          });
         }
       });
       
       // Check for hate speech
       hateWords.forEach(word => {
-        if (contentLower.includes(word.toLowerCase())) {
-          let severity = 'medium';
-          if (['racist', 'nazi', 'fag', 'terrorist'].includes(word)) severity = 'high';
-          else if (['weird', 'strange', 'ugly'].includes(word)) severity = 'low';
+        if (containsWholeWord(content, word)) {
+          let severity = 'high'; // Hate speech should be high severity
+          if (['racist', 'nazi', 'fag', 'faggot', 'terrorist'].includes(word.toLowerCase())) severity = 'high';
+          else if (['retarded', 'worthless', 'pathetic'].includes(word.toLowerCase())) severity = 'medium';
           
-          mockFlaggedWords.push({ word, category: 'hate', severity });
+          const matches = findWholeWordMatches(content, word);
+          matches.forEach(match => {
+            mockFlaggedWords.push({ word: match, category: 'hate', severity });
+          });
         }
       });
       
       // Check for sexual content
       sexualWords.forEach(word => {
-        if (contentLower.includes(word.toLowerCase())) {
-          let severity = 'medium';
-          if (['porn', 'pornography', 'xxx', 'masturbate', 'orgasm'].includes(word)) severity = 'high';
-          else if (['sexy', 'hot', 'dating'].includes(word)) severity = 'low';
+        if (containsWholeWord(content, word)) {
+          let severity = 'high'; // Most sexual content should be high severity
+          if (['porn', 'pornography', 'xxx', 'masturbate', 'orgasm'].includes(word.toLowerCase())) severity = 'high';
+          else if (['nude', 'naked', 'erotic'].includes(word.toLowerCase())) severity = 'medium';
           
-          mockFlaggedWords.push({ word, category: 'sexual', severity });
+          const matches = findWholeWordMatches(content, word);
+          matches.forEach(match => {
+            mockFlaggedWords.push({ word: match, category: 'sexual', severity });
+          });
         }
       });
       
       // Check for drug references
       drugWords.forEach(word => {
-        if (contentLower.includes(word.toLowerCase())) {
-          let severity = 'medium';
-          if (['cocaine', 'heroin', 'meth', 'addiction'].includes(word)) severity = 'high';
-          else if (['beer', 'wine', 'vape'].includes(word)) severity = 'low';
+        if (containsWholeWord(content, word)) {
+          let severity = 'high'; // Hard drugs should be high severity
+          if (['cocaine', 'heroin', 'meth', 'methamphetamine', 'crack cocaine'].includes(word.toLowerCase())) severity = 'high';
+          else severity = 'medium';
           
-          mockFlaggedWords.push({ word, category: 'drugs', severity });
+          const matches = findWholeWordMatches(content, word);
+          matches.forEach(match => {
+            mockFlaggedWords.push({ word: match, category: 'drugs', severity });
+          });
         }
       });
 
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Create results based on actual flagged content
+      // Create results based on actual flagged content with more reasonable scoring
       const mockResults: ModerationResult = {
-        overallScore: Math.max(0, Math.min(100, 100 - (mockFlaggedWords.length * 15) - (mockFlaggedWords.filter(w => w.severity === 'high').length * 20))),
+        overallScore: Math.max(0, Math.min(100, 100 - (mockFlaggedWords.length * 8) - (mockFlaggedWords.filter(w => w.severity === 'high').length * 12))),
         riskLevel: (() => {
           const totalFlags = mockFlaggedWords.length;
           const highSeverityFlags = mockFlaggedWords.filter(w => w.severity === 'high').length;
           
-          if (highSeverityFlags > 0 || totalFlags > 5) return 'High Risk';
-          if (totalFlags > 2) return 'Medium Risk'; 
-          if (totalFlags > 0) return 'Low Risk';
+          if (highSeverityFlags > 2 || totalFlags > 8) return 'High Risk';
+          if (highSeverityFlags > 0 || totalFlags > 4) return 'Medium Risk'; 
+          if (totalFlags > 1) return 'Low Risk';
           return 'Safe';
         })() as any,
         categories: {
           profanity: {
-            score: mockFlaggedWords.filter(w => w.category === 'profanity').length * 20,
+            score: Math.min(mockFlaggedWords.filter(w => w.category === 'profanity').length * 15, 100),
             detected: mockFlaggedWords.filter(w => w.category === 'profanity').map(w => w.word),
             severity: mockFlaggedWords.filter(w => w.category === 'profanity').some(w => w.severity === 'high') ? 'High' : 
                      mockFlaggedWords.filter(w => w.category === 'profanity').some(w => w.severity === 'medium') ? 'Medium' : 'Low'
           },
           toxicity: {
-            score: Math.min(mockFlaggedWords.length * 15, 100),
-            confidence: Math.min(mockFlaggedWords.length * 25 + 50, 100),
-            severity: mockFlaggedWords.length > 3 ? 'High' : mockFlaggedWords.length > 1 ? 'Medium' : 'Low'
+            score: Math.min(mockFlaggedWords.length * 10, 100),
+            confidence: Math.min(mockFlaggedWords.length * 20 + 60, 100),
+            severity: mockFlaggedWords.length > 5 ? 'High' : mockFlaggedWords.length > 2 ? 'Medium' : 'Low'
           },
           spam: {
-            score: mockFlaggedWords.filter(w => w.category === 'spam').length * 25,
+            score: Math.min(mockFlaggedWords.filter(w => w.category === 'spam').length * 20, 100),
             indicators: mockFlaggedWords.filter(w => w.category === 'spam').map(w => w.word),
             severity: mockFlaggedWords.filter(w => w.category === 'spam').some(w => w.severity === 'high') ? 'High' : 
                      mockFlaggedWords.filter(w => w.category === 'spam').some(w => w.severity === 'medium') ? 'Medium' : 'Low'
           },
           violence: {
-            score: mockFlaggedWords.filter(w => w.category === 'violence').length * 30,
+            score: Math.min(mockFlaggedWords.filter(w => w.category === 'violence').length * 25, 100),
             detected: mockFlaggedWords.filter(w => w.category === 'violence').map(w => w.word),
             severity: mockFlaggedWords.filter(w => w.category === 'violence').some(w => w.severity === 'high') ? 'High' : 
                      mockFlaggedWords.filter(w => w.category === 'violence').some(w => w.severity === 'medium') ? 'Medium' : 'Low'
           },
           hate: {
-            score: mockFlaggedWords.filter(w => w.category === 'hate').length * 35,
+            score: Math.min(mockFlaggedWords.filter(w => w.category === 'hate').length * 30, 100),
             detected: mockFlaggedWords.filter(w => w.category === 'hate').map(w => w.word),
             severity: mockFlaggedWords.filter(w => w.category === 'hate').some(w => w.severity === 'high') ? 'High' : 
                      mockFlaggedWords.filter(w => w.category === 'hate').some(w => w.severity === 'medium') ? 'Medium' : 'Low'
           },
           sexual: {
-            score: mockFlaggedWords.filter(w => w.category === 'sexual').length * 25,
+            score: Math.min(mockFlaggedWords.filter(w => w.category === 'sexual').length * 20, 100),
             detected: mockFlaggedWords.filter(w => w.category === 'sexual').map(w => w.word),
             severity: mockFlaggedWords.filter(w => w.category === 'sexual').some(w => w.severity === 'high') ? 'High' : 
                      mockFlaggedWords.filter(w => w.category === 'sexual').some(w => w.severity === 'medium') ? 'Medium' : 'Low'
@@ -235,12 +268,63 @@ export const ModerationChecker: React.FC = () => {
         ].filter(Boolean),
         cleanedText: content,
         flaggedWords: mockFlaggedWords,
-        sentiment: {
-          positive: Math.floor(Math.random() * 100),
-          negative: Math.floor(Math.random() * 100),
-          neutral: Math.floor(Math.random() * 100),
-          overall: ['positive', 'negative', 'neutral'][Math.floor(Math.random() * 3)] as any
-        }
+        sentiment: (() => {
+          // Simple sentiment analysis based on content
+          const text = content.toLowerCase();
+          
+          // Positive indicators
+          const positiveWords = ['good', 'great', 'love', 'happy', 'excited', 'proud', 'beautiful', 'wonderful', 'amazing', 'awesome', 'congratulations', 'celebrate', 'ready'];
+          const positiveCount = positiveWords.filter(word => containsWholeWord(text, word)).length;
+          
+          // Negative indicators  
+          const negativeWords = ['bad', 'hate', 'angry', 'sad', 'terrible', 'awful', 'horrible', 'disgusting', 'annoying', 'frustrated'];
+          const negativeCount = negativeWords.filter(word => containsWholeWord(text, word)).length;
+          
+          // Neutral/casual indicators
+          const neutralWords = ['okay', 'fine', 'normal', 'regular', 'standard', 'typical'];
+          const neutralCount = neutralWords.filter(word => containsWholeWord(text, word)).length;
+          
+          // If no flagged words, assume neutral-positive content
+          const hasProfanity = mockFlaggedWords.some(w => w.category === 'profanity');
+          const hasViolence = mockFlaggedWords.some(w => w.category === 'violence');
+          const hasHate = mockFlaggedWords.some(w => w.category === 'hate');
+          
+          let positive, negative, neutral;
+          
+          if (hasProfanity || hasViolence || hasHate) {
+            // Content with flags tends to be more negative
+            positive = Math.max(10, 40 + positiveCount * 8 - mockFlaggedWords.length * 5);
+            negative = Math.min(80, 30 + negativeCount * 10 + mockFlaggedWords.length * 8);
+            neutral = 100 - positive - negative;
+          } else {
+            // Clean content tends to be more positive/neutral
+            positive = Math.max(30, 60 + positiveCount * 10);
+            negative = Math.max(5, 15 + negativeCount * 8);
+            neutral = 100 - positive - negative;
+          }
+          
+          // Ensure values are reasonable
+          positive = Math.max(0, Math.min(85, positive));
+          negative = Math.max(0, Math.min(70, negative));
+          neutral = Math.max(0, 100 - positive - negative);
+          
+          // Determine overall sentiment based on highest percentage
+          let overall: 'positive' | 'negative' | 'neutral';
+          if (positive >= negative && positive >= neutral) {
+            overall = 'positive';
+          } else if (negative >= positive && negative >= neutral) {
+            overall = 'negative';
+          } else {
+            overall = 'neutral';
+          }
+          
+          return {
+            positive,
+            negative,
+            neutral,
+            overall
+          };
+        })()
       };
 
       saveToHistory(content, contentType);
@@ -468,7 +552,7 @@ export const ModerationChecker: React.FC = () => {
                   Risk Level: {results.riskLevel}
                 </S.RiskLevel>
                 <S.ScoreDescription>
-                  {getScoreLabel(results.overallScore)} - {results.overallScore > 50 
+                  {results.overallScore > 50 
                     ? "Your content appears safe for most audiences" 
                     : "Consider reviewing your content for potential issues"}
                 </S.ScoreDescription>

@@ -474,7 +474,15 @@ export const VideoAnalyzer: React.FC = () => {
                 </S.ThumbnailContainer>
                 
                 <S.VideoDetails>
-                  <S.VideoTitle>{videoData.snippet.title}</S.VideoTitle>
+                  <S.VideoHeader>
+                    <S.VideoTitle>{videoData.snippet.title}</S.VideoTitle>
+                    <S.ViewVideoButton 
+                      onClick={() => window.open(`https://youtube.com/watch?v=${videoId || extractVideoId(videoUrl)}`, '_blank')}
+                    >
+                      <i className="bx bx-play"></i>
+                      View Video
+                    </S.ViewVideoButton>
+                  </S.VideoHeader>
                   <S.ChannelInfo>
                     <S.ChannelLogo
                       src={channelData.snippet.thumbnails.default.url}
@@ -576,7 +584,12 @@ export const VideoAnalyzer: React.FC = () => {
                   </S.TagsHeader>
                   <S.TagContainer>
                     {analysisResults.tags.map((tag, index) => (
-                      <S.Tag key={index}>{tag}</S.Tag>
+                      <S.Tag 
+                        key={index}
+                        onClick={() => window.open(`/tools/keyword-analyzer/${encodeURIComponent(tag)}`, '_blank')}
+                      >
+                        {tag}
+                      </S.Tag>
                     ))}
                   </S.TagContainer>
                 </S.TagsSection>
