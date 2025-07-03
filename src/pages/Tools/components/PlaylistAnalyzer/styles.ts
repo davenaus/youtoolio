@@ -574,11 +574,6 @@ export const ChannelItem = styled.div`
   background: ${({ theme }) => theme.colors.dark4};
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   transition: all 0.2s ease;
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.dark5};
-    transform: translateX(4px);
-  }
 `;
 
 export const ChannelLogo = styled.img`
