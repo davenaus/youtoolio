@@ -225,32 +225,7 @@ export const Home: React.FC = () => {
         </S.ContentWrapper>
       </S.FeaturesSection>
 
-      {/* Testimonials Section */}
-      <S.TestimonialsSection>
-        <S.ContentWrapper>
-          <S.SectionHeader>
-            <S.SectionBadge>Success Stories</S.SectionBadge>
-            <S.SectionTitle>Loved by creators worldwide</S.SectionTitle>
-          </S.SectionHeader>
-
-          <S.TestimonialsGrid>
-            {testimonials.map((testimonial, index) => (
-              <S.TestimonialCard key={index} delay={index * 0.2}>
-                <S.TestimonialQuote>"{testimonial.text}"</S.TestimonialQuote>
-                <S.TestimonialAuthor>
-                  <S.AuthorAvatar>{testimonial.avatar}</S.AuthorAvatar>
-                  <S.AuthorInfo>
-                    <S.AuthorName>{testimonial.author}</S.AuthorName>
-                    <S.AuthorRole>{testimonial.role}</S.AuthorRole>
-                  </S.AuthorInfo>
-                </S.TestimonialAuthor>
-              </S.TestimonialCard>
-            ))}
-          </S.TestimonialsGrid>
-        </S.ContentWrapper>
-      </S.TestimonialsSection>
-
-      {/* Featured Tools Section */}
+            {/* Featured Tools Section */}
       <S.FeaturedToolsSection>
         <S.ContentWrapper>
           <S.SectionHeader>
@@ -311,6 +286,31 @@ export const Home: React.FC = () => {
           </S.AllToolsAction>
         </S.ContentWrapper>
       </S.FeaturedToolsSection>
+
+      {/* Testimonials Section */}
+      <S.TestimonialsSection>
+        <S.ContentWrapper>
+          <S.SectionHeader>
+            <S.SectionBadge>Success Stories</S.SectionBadge>
+            <S.SectionTitle>Loved by creators worldwide</S.SectionTitle>
+          </S.SectionHeader>
+
+          <S.TestimonialsGrid>
+            {testimonials.map((testimonial, index) => (
+              <S.TestimonialCard key={index} delay={index * 0.2}>
+                <S.TestimonialQuote>"{testimonial.text}"</S.TestimonialQuote>
+                <S.TestimonialAuthor>
+                  <S.AuthorAvatar>{testimonial.avatar}</S.AuthorAvatar>
+                  <S.AuthorInfo>
+                    <S.AuthorName>{testimonial.author}</S.AuthorName>
+                    <S.AuthorRole>{testimonial.role}</S.AuthorRole>
+                  </S.AuthorInfo>
+                </S.TestimonialAuthor>
+              </S.TestimonialCard>
+            ))}
+          </S.TestimonialsGrid>
+        </S.ContentWrapper>
+      </S.TestimonialsSection>
 
       {/* Stats Section */}
       <S.StatsSection>
