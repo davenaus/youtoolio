@@ -621,7 +621,7 @@ export const KeywordAnalyzer: React.FC = () => {
             <S.TopVideosSection>
               <S.SectionTitle>
                 <i className="bx bx-play-circle"></i>
-                Top Performing Videos ({results.insights.totalResults} total)
+                Top Performing Videos
               </S.SectionTitle>
               
               <S.VideosList>

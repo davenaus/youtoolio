@@ -1129,7 +1129,7 @@ export const FeaturedToolsList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6rem;
-  margin-bottom: 4rem;
+  margin-bottom: 8rem;
   
   @media (max-width: 768px) {
     gap: 4rem;

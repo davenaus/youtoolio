@@ -17,7 +17,7 @@ export const AdSidebar = styled.div<{ position: 'left' | 'right' }>`
   width: 160px;
   z-index: 10;
   
-  @media (max-width: 1400px) {
+  @media (max-width: 1275px) {
     display: none;
   }
 `;
@@ -29,7 +29,7 @@ export const MainContainer = styled.div`
   padding: 2rem;
   position: relative;
   
-  @media (max-width: 1400px) {
+  @media (max-width: 1700px) {
     max-width: 900px;
   }
   
