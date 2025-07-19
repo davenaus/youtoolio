@@ -1,6 +1,12 @@
 // src/pages/LinkInBioLanding/styles.ts
 import styled from 'styled-components';
 
+// Green color constants
+const GREEN_PRIMARY = '#4CAF50';
+const GREEN_SECONDARY = '#45a049';
+const GREEN_LIGHT = '#66BB6A';
+const GREEN_DARK = '#388E3C';
+
 export const PageWrapper = styled.div`
   min-height: 100vh;
   background: ${({ theme }) => theme.colors.dark2};
@@ -38,7 +44,7 @@ export const BackButton = styled.button`
   
   &:hover {
     background: ${({ theme }) => theme.colors.dark4};
-    border-color: ${({ theme }) => theme.colors.dark5};
+    border-color: ${GREEN_PRIMARY};
     color: ${({ theme }) => theme.colors.text.primary};
     transform: translateX(-2px);
   }
@@ -70,7 +76,7 @@ export const HeroSection = styled.div`
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+    background: linear-gradient(90deg, ${GREEN_PRIMARY}, ${GREEN_LIGHT});
   }
   
   @media (max-width: 768px) {
@@ -85,24 +91,28 @@ export const HeroImageContainer = styled.div`
 `;
 
 export const HeroImage = styled.img`
-  width: 500px;
+  width: 700px;
   height: auto;
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   box-shadow: ${({ theme }) => theme.shadows.lg};
   
+  @media (max-width: 1024px) {
+    width: 500px;
+  }
+  
   @media (max-width: 768px) {
-    width: 250px;
+    width: 350px;
   }
   
   @media (max-width: 480px) {
-    width: 200px;
+    width: 250px;
   }
 `;
 
 export const Title = styled.h1`
   font-size: 3rem;
   font-weight: 700;
-  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  background: linear-gradient(135deg, ${GREEN_PRIMARY}, ${GREEN_LIGHT});
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -184,14 +194,14 @@ export const FeatureCard = styled.div`
   
   &:hover {
     transform: translateY(-5px);
-    border-color: ${({ theme }) => theme.colors.red3};
+    border-color: ${GREEN_PRIMARY};
     box-shadow: ${({ theme }) => theme.shadows.lg};
   }
 `;
 
 export const FeatureIcon = styled.i`
   font-size: 3rem;
-  color: ${({ theme }) => theme.colors.red3};
+  color: ${GREEN_PRIMARY};
   margin-bottom: 1rem;
   display: block;
 `;
@@ -224,7 +234,7 @@ export const ValueContent = styled.div`
 
 export const ValueBadge = styled.div`
   display: inline-block;
-  background: ${({ theme }) => theme.colors.red3};
+  background: ${GREEN_PRIMARY};
   color: ${({ theme }) => theme.colors.white};
   padding: 0.5rem 1rem;
   border-radius: 8px;
@@ -247,7 +257,7 @@ export const ValueTitle = styled.h2`
 export const ValuePrice = styled.div`
   font-size: 3rem;
   font-weight: 700;
-  color: ${({ theme }) => theme.colors.red3};
+  color: ${GREEN_PRIMARY};
   margin-bottom: 1rem;
   
   @media (max-width: 768px) {
@@ -287,7 +297,7 @@ export const ValueFeature = styled.div`
   color: ${({ theme }) => theme.colors.text.secondary};
   
   i {
-    color: ${({ theme }) => theme.colors.success};
+    color: ${GREEN_PRIMARY};
     font-size: 1.25rem;
     flex-shrink: 0;
   }
@@ -342,7 +352,7 @@ export const FAQItem = styled.div<{ isOpen?: boolean }>`
   transition: all 0.3s ease;
   
   &:hover {
-    border-color: ${({ theme }) => theme.colors.red3};
+    border-color: ${GREEN_PRIMARY};
   }
 `;
 
@@ -362,7 +372,7 @@ export const FAQQuestion = styled.div`
 
 export const FAQToggle = styled.span<{ isOpen?: boolean }>`
   font-size: 1.5rem;
-  color: ${({ theme }) => theme.colors.red3};
+  color: ${GREEN_PRIMARY};
   transition: transform 0.3s ease;
   transform: ${({ isOpen }) => isOpen ? 'rotate(45deg)' : 'rotate(0deg)'};
 `;
@@ -381,7 +391,7 @@ export const FAQAnswer = styled.div<{ isOpen?: boolean }>`
 `;
 
 export const FinalCTA = styled.div`
-  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  background: linear-gradient(135deg, ${GREEN_PRIMARY}, ${GREEN_LIGHT});
   border-radius: ${({ theme }) => theme.borderRadius.xl};
   padding: 4rem 3rem;
   text-align: center;
@@ -431,4 +441,46 @@ export const FinalCTANote = styled.p`
   margin: 0;
   opacity: 0.8;
   font-weight: 500;
+`;
+
+// Green Button Components
+export const GreenButton = styled.button<{ variant?: 'primary' | 'secondary', size?: 'lg' }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: ${({ size }) => size === 'lg' ? '1rem 2rem' : '0.75rem 1.5rem'};
+  font-size: ${({ size }) => size === 'lg' ? '1.1rem' : '1rem'};
+  font-weight: 600;
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  
+  ${({ variant }) => variant === 'primary' ? `
+    background: linear-gradient(135deg, ${GREEN_PRIMARY}, ${GREEN_LIGHT});
+    color: white;
+    
+    &:hover {
+      background: linear-gradient(135deg, ${GREEN_SECONDARY}, ${GREEN_PRIMARY});
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+    }
+  ` : `
+    background: transparent;
+    color: ${GREEN_PRIMARY};
+    border: 2px solid ${GREEN_PRIMARY};
+    
+    &:hover {
+      background: ${GREEN_PRIMARY};
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+    }
+  `}
+  
+  i {
+    font-size: 1.2em;
+  }
 `;

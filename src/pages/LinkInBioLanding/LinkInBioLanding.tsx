@@ -1,7 +1,6 @@
 // src/pages/LinkInBioLanding/LinkInBioLanding.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../../components/Button/Button';
 import * as S from './styles';
 
 export const LinkInBioLanding: React.FC = () => {
@@ -100,14 +99,14 @@ export const LinkInBioLanding: React.FC = () => {
             </S.Subtitle>
 
             <S.CTASection>
-              <Button
+              <S.GreenButton
                 variant="primary"
                 size="lg"
-                icon="bx bx-right-arrow-alt"
                 onClick={handleEnterTool}
               >
+                <i className="bx bx-right-arrow-alt"></i>
                 Enter Link-In-Bio Page Maker
-              </Button>
+              </S.GreenButton>
               
               <S.CTANote>
                 Opens in a new tab • Free to use • No account required
@@ -157,14 +156,14 @@ export const LinkInBioLanding: React.FC = () => {
               </S.ValueFeatures>
 
               <S.ValueCTA>
-                <Button
+                <S.GreenButton
                   variant="primary"
                   size="lg"
-                  icon="bx bx-shopping-cart"
                   onClick={() => window.open('https://austindavenport-shop.fourthwall.com/products/link-in-bio-page-maker', '_blank')}
                 >
+                  <i className="bx bx-shopping-cart"></i>
                   Get Your License Now
-                </Button>
+                </S.GreenButton>
               </S.ValueCTA>
             </S.ValueContent>
           </S.ValueSection>
@@ -205,22 +204,22 @@ export const LinkInBioLanding: React.FC = () => {
                 Join thousands who've switched from expensive monthly subscriptions to our one-time solution.
               </S.FinalCTASubtitle>
               <S.FinalCTAButtons>
-                <Button
+                <S.GreenButton
                   variant="primary"
                   size="lg"
-                  icon="bx bx-right-arrow-alt"
                   onClick={handleEnterTool}
                 >
+                  <i className="bx bx-right-arrow-alt"></i>
                   Enter The Tool
-                </Button>
-                <Button
+                </S.GreenButton>
+                <S.GreenButton
                   variant="secondary"
                   size="lg"
-                  icon="bx bx-shopping-cart"
                   onClick={() => window.open('https://austindavenport-shop.fourthwall.com/products/link-in-bio-page-maker', '_blank')}
                 >
+                  <i className="bx bx-shopping-cart"></i>
                   Buy License ($2.99)
-                </Button>
+                </S.GreenButton>
               </S.FinalCTAButtons>
               <S.FinalCTANote>
 
