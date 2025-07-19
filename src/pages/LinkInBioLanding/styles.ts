@@ -459,8 +459,9 @@ export const GreenButton = styled.button<{ variant?: 'primary' | 'secondary', si
   font-family: ${({ theme }) => theme.fonts.primary};
   
   ${({ variant }) => variant === 'primary' ? `
-    background: linear-gradient(135deg, ${GREEN_PRIMARY}, ${GREEN_LIGHT});
+    background: linear-gradient(135deg, ${GREEN_DARK}, ${GREEN_PRIMARY});
     color: white;
+        border: 2px solid ${GREEN_DARK};
     
     &:hover {
       background: linear-gradient(135deg, ${GREEN_SECONDARY}, ${GREEN_PRIMARY});
@@ -468,12 +469,12 @@ export const GreenButton = styled.button<{ variant?: 'primary' | 'secondary', si
       box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
     }
   ` : `
-    background: transparent;
-    color: ${GREEN_PRIMARY};
-    border: 2px solid ${GREEN_PRIMARY};
+    background: linear-gradient(135deg, ${GREEN_DARK}, ${GREEN_PRIMARY});
+    color: white;
+    border: 2px solid ${GREEN_DARK};
     
     &:hover {
-      background: ${GREEN_PRIMARY};
+      background: linear-gradient(135deg, ${GREEN_SECONDARY}, ${GREEN_PRIMARY});
       color: white;
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
