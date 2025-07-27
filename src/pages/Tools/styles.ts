@@ -3,6 +3,7 @@ import styled from 'styled-components';
 
 export const Container = styled.div`
   padding: 0;
+  padding-bottom: 8rem;
   transition: filter 0.3s ease;
   min-height: 100vh;
   background: ${({ theme }) => theme.colors.dark2};
@@ -15,17 +16,16 @@ export const Container = styled.div`
   }
   
   @media (max-width: 1440px) {
-    padding: 0 2rem;
+    padding: 0 2rem 8rem 2rem;
   }
   
   @media (max-width: 768px) {
-    padding: 0 1rem;
+    padding: 0 1rem 5rem 1rem;
   }
 `;
 
 export const Header = styled.div`
   margin-bottom: 3rem;
-  max-width: 800px;
   padding: 2rem 2rem 0 2rem;
   
   @media (max-width: 768px) {
@@ -61,6 +61,32 @@ export const BackButton = styled.button`
   }
 `;
 
+export const HeaderContent = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 5rem;
+  
+  @media (max-width: 968px) {
+    flex-direction: column;
+    gap: 2rem;
+  }
+`;
+
+export const HeaderLeft = styled.div`
+  flex: 0 0 auto;
+  max-width: 800px;
+`;
+
+export const HeaderRight = styled.div`
+  flex: 1;
+  position: relative;
+  
+  @media (max-width: 968px) {
+    flex: 1;
+    width: 100%;
+  }
+`;
+
 export const Title = styled.h1`
   font-size: 2.5rem;
   background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
@@ -85,6 +111,165 @@ export const Description = styled.p`
   }
 `;
 
+// Search Components
+export const SearchContainer = styled.div`
+  position: relative;
+  width: 100%;
+  margin-top: 0.75rem;
+`;
+
+export const SearchBar = styled.div`
+  display: flex;
+  align-items: center;
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 0.875rem 1.25rem;
+  transition: all 0.2s ease;
+  
+  &:focus-within {
+    border-color: ${({ theme }) => theme.colors.red3};
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  }
+  
+  i {
+    color: ${({ theme }) => theme.colors.text.muted};
+    margin-right: 1rem;
+    font-size: 1.25rem;
+  }
+`;
+
+export const SearchInput = styled.input`
+  flex: 1;
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 1rem;
+  outline: none;
+  
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.text.muted};
+  }
+`;
+
+export const ClearButton = styled.button`
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.colors.text.muted};
+  cursor: pointer;
+  padding: 0.25rem;
+  margin-left: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    color: ${({ theme }) => theme.colors.text.secondary};
+  }
+  
+  i {
+    font-size: 1.25rem;
+  }
+`;
+
+export const SearchDropdown = styled.div<{ isOpen: boolean }>`
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  max-height: 400px;
+  overflow-y: auto;
+  opacity: ${({ isOpen }) => (isOpen ? 1 : 0)};
+  visibility: ${({ isOpen }) => (isOpen ? 'visible' : 'hidden')};
+  transform: translateY(${({ isOpen }) => (isOpen ? '0' : '-10px')});
+  transition: all 0.2s ease;
+  z-index: 100;
+  box-shadow: ${({ theme }) => theme.shadows.xl};
+`;
+
+export const SearchResult = styled.div`
+  padding: 1rem;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.dark4};
+  }
+`;
+
+export const SearchResultIcon = styled.div`
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  
+  i {
+    font-size: 1.25rem;
+    color: ${({ theme }) => theme.colors.white};
+  }
+`;
+
+export const SearchResultContent = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+export const SearchResultName = styled.div`
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+export const SearchResultDescription = styled.div`
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const SearchResultTags = styled.div`
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+`;
+
+export const SearchResultTag = styled.span`
+  background: ${({ theme }) => theme.colors.dark5};
+  color: ${({ theme }) => theme.colors.text.muted};
+  padding: 0.125rem 0.5rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: 0.75rem;
+`;
+
+export const NoResults = styled.div`
+  padding: 2rem;
+  text-align: center;
+  color: ${({ theme }) => theme.colors.text.muted};
+`;
+
+// Rest of the existing styles remain the same...
 export const ToolsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -158,7 +343,6 @@ export const ToolCard = styled.div`
       opacity: 1;
     }
     
-    /* Make image overlay darker on hover */
     ${ToolImageOverlay} {
       background: linear-gradient(
         to bottom,
@@ -235,6 +419,10 @@ export const ToolDescription = styled.p`
 export const CategorySection = styled.section`
   margin-bottom: 4rem;
   padding: 0 2rem;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
   
   @media (max-width: 768px) {
     padding: 0 1rem;
