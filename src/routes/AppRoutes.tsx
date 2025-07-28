@@ -6,6 +6,15 @@ import { Tools } from '../pages/Tools/Tools';
 import { NotFound } from '../pages/NotFound/NotFound';
 import { LinkInBioLanding } from '../pages/LinkInBioLanding/LinkInBioLanding';
 
+// Legal Pages
+import { PrivacyPolicy, TermsOfService, CookiePolicy, DataUsageDisclosure } from '../pages/Legal';
+
+// Company Pages
+import { Blog, CreatorGuides, HelpCenter, AboutUs, Contact, Careers, PressKit, Partnerships, Changelog } from '../pages/Company';
+
+// Blog Posts
+import { YouTubeAnalyticsMetrics, YouTubeSEOOptimization } from '../pages/Company/BlogPosts';
+
 // Tool imports
 import { OutlierFinder } from '../pages/Tools/components/OutlierFinder/OutlierFinder';
 import { VideoAnalyzer } from '../pages/Tools/components/VideoAnalyzer/VideoAnalyzer';
@@ -34,6 +43,27 @@ export const AppRoutes: React.FC = () => {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/tools" element={<Tools />} />
+      
+      {/* Legal Pages */}
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms-of-service" element={<TermsOfService />} />
+      <Route path="/cookie-policy" element={<CookiePolicy />} />
+      <Route path="/data-usage" element={<DataUsageDisclosure />} />
+      
+      {/* Company Pages */}
+      <Route path="/blog" element={<Blog />} />
+      
+      {/* Blog Post Routes */}
+      <Route path="/blog/youtube-analytics-metrics-2025" element={<YouTubeAnalyticsMetrics />} />
+      <Route path="/blog/youtube-seo-optimization-guide" element={<YouTubeSEOOptimization />} />
+      <Route path="/guides" element={<CreatorGuides />} />
+      <Route path="/help" element={<HelpCenter />} />
+      <Route path="/about" element={<AboutUs />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/careers" element={<Careers />} />
+      <Route path="/press" element={<PressKit />} />
+      <Route path="/partnerships" element={<Partnerships />} />
+      <Route path="/changelog" element={<Changelog />} />
       
       {/* Link in Bio Landing Page */}
       <Route path="/link-in-bio-page-maker" element={<LinkInBioLanding />} />

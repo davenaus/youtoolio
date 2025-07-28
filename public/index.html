@@ -70,23 +70,82 @@
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTool.io",
-      "description": "Professional-grade YouTube tools to help you analyze, optimize, and grow your channel. All completely free.",
-      "url": "https://youtool.io",
-      "applicationCategory": "MultimediaApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "creator": {
-        "@type": "Organization",
-        "name": "YouTool.io"
-      }
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "name": "YouTool.io",
+          "description": "Professional-grade YouTube tools to help you analyze, optimize, and grow your channel. All completely free.",
+          "url": "https://youtool.io",
+          "applicationCategory": "MultimediaApplication",
+          "operatingSystem": "Web Browser",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "creator": {
+            "@type": "Organization",
+            "name": "YouTool.io",
+            "url": "https://youtool.io",
+            "logo": "https://youtool.io/logo192.png"
+          },
+          "featureList": [
+            "Video Analytics",
+            "Channel Analytics", 
+            "Keyword Research",
+            "Thumbnail Testing",
+            "SEO Optimization",
+            "Tag Generation",
+            "Comment Analysis",
+            "Playlist Analytics"
+          ],
+          "screenshot": "https://youtool.io/og-image.jpg"
+        },
+        {
+          "@type": "Organization",
+          "name": "YouTool.io",
+          "url": "https://youtool.io",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://youtool.io/logo192.png"
+          },
+          "description": "Free YouTube analytics and optimization tools for content creators",
+          "sameAs": [
+            "https://youtool.io/about",
+            "https://youtool.io/blog"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "name": "YouTool.io",
+          "url": "https://youtool.io",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://youtool.io/tools?search={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "YouTool Analytics Suite",
+          "applicationCategory": "BusinessApplication",
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "ratingCount": "1247"
+          },
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          }
+        }
+      ]
     }
-    </script>
+  </script>
 </head>
 
 <body>

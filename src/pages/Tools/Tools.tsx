@@ -18,6 +18,16 @@ interface Tool {
 }
 
 const tools: Tool[] = [
+    {
+    id: 'channel-analyzer',
+    name: 'Channel Analyzer',
+    description: 'Comprehensive channel analytics with growth tracking, competitor analysis, and optimization recommendations.',
+    icon: 'bx bx-line-chart',
+    category: 'SEO',
+    tags: ['Channel', 'Growth', 'Insights', 'Analytics', 'Competition'],
+    url: '/tools/channel-analyzer',
+    image: 'https://64.media.tumblr.com/ac9ad9e3a75b264881169b38018b6be8/0e01452f9f6dd974-e5/s2048x3072/8c12986bb347fdcb8bb1f003ca88748e35b437d8.jpg',
+  },
   {
     id: 'video-analyzer',
     name: 'Video Analyzer',
@@ -81,16 +91,7 @@ const tools: Tool[] = [
     url: '/tools/qr-code-generator',
     image: 'https://64.media.tumblr.com/da5e76716d812a5ccec22e37179e2575/0e01452f9f6dd974-89/s2048x3072/2c12bac7610d803f4a197ea109c839a969849ac2.jpg',
   },
-  {
-    id: 'channel-analyzer',
-    name: 'Channel Analyzer',
-    description: 'Comprehensive channel analytics with growth tracking, competitor analysis, and optimization recommendations.',
-    icon: 'bx bx-line-chart',
-    category: 'SEO',
-    tags: ['Channel', 'Growth', 'Insights', 'Analytics', 'Competition'],
-    url: '/tools/channel-analyzer',
-    image: 'https://64.media.tumblr.com/ac9ad9e3a75b264881169b38018b6be8/0e01452f9f6dd974-e5/s2048x3072/8c12986bb347fdcb8bb1f003ca88748e35b437d8.jpg',
-  },
+
   {
     id: 'channel-id-finder',
     name: 'Channel ID Finder',

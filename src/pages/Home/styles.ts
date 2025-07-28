@@ -146,7 +146,7 @@ export const Logo = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
   
   @media (max-width: 768px) {
     justify-content: center;

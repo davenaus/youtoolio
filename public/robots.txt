@@ -1,18 +1,24 @@
-# https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
 
-# Sitemaps
+# Sitemap
 Sitemap: https://youtool.io/sitemap.xml
 
-# Block any admin or private areas (if you add them later)
-# Disallow: /admin/
-# Disallow: /api/private/
+# Block access to admin areas and sensitive files
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /api/
+Disallow: /.well-known/
+Disallow: /static/
 
-# Allow all tools to be indexed
+# Allow important pages
 Allow: /tools/
-Allow: /tools/*
+Allow: /blog/
+Allow: /help/
+Allow: /about/
 
-# Block any test or development pages
-Disallow: /test/
-Disallow: /dev/
+# Crawl delay for better server performance
+Crawl-delay: 1
+
+# Host directive
+Host: https://youtool.io
