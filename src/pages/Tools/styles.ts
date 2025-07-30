@@ -66,7 +66,7 @@ export const HeaderContent = styled.div`
   align-items: flex-start;
   gap: 5rem;
   
-  @media (max-width: 968px) {
+  @media (max-width: 1368px) {
     flex-direction: column;
     gap: 2rem;
   }
@@ -81,7 +81,7 @@ export const HeaderRight = styled.div`
   flex: 1;
   position: relative;
   
-  @media (max-width: 968px) {
+  @media (max-width: 1368px) {
     flex: 1;
     width: 100%;
   }
@@ -272,7 +272,7 @@ export const NoResults = styled.div`
 // Rest of the existing styles remain the same...
 export const ToolsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
   
@@ -284,7 +284,7 @@ export const ToolsGrid = styled.div`
 
 export const ToolImageContainer = styled.div<{ backgroundImage: string }>`
   position: relative;
-  height: 200px;
+  height: 120px;
   background-image: url(${props => props.backgroundImage});
   background-size: cover;
   background-position: center;
@@ -356,7 +356,7 @@ export const ToolCard = styled.div`
 `;
 
 export const ToolCardContent = styled.div`
-  padding: 1.5rem;
+  padding: 1rem;
   padding-top: 0.5rem;
   display: flex;
   flex-direction: column;
@@ -368,18 +368,18 @@ export const ToolCardContent = styled.div`
 `;
 
 export const ToolIcon = styled.div`
-  width: 56px;
-  height: 56px;
+  width: 44px;
+  height: 44px;
   background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   box-shadow: ${({ theme }) => theme.shadows.glow};
 
   i {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     color: ${({ theme }) => theme.colors.white};
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
   }
@@ -410,10 +410,14 @@ export const StatusTag = styled.span<{ variant: 'new' | 'beta' }>`
 
 export const ToolDescription = styled.p`
   color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 0.9rem;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
   flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 `;
 
 export const CategorySection = styled.section`

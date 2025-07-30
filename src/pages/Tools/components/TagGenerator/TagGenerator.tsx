@@ -572,15 +572,95 @@ export const TagGenerator: React.FC = () => {
                   <S.StatValue>{tagStats.estimatedReach.toLocaleString()}</S.StatValue>
                   <S.StatLabel>Est. Reach</S.StatLabel>
                 </S.StatCard>
-
-                <S.StatCard>
-                  <S.StatIcon className="bx bx-collection"></S.StatIcon>
-                  <S.StatValue>{selectedTags.length}</S.StatValue>
-                  <S.StatLabel>Selected Tags</S.StatLabel>
-                </S.StatCard>
               </S.StatsOverview>
 
+              <S.SelectedTagsSection visible={true}>
+                <S.SelectedTagsHeader>
+                  <S.SectionTitle>
+                    <i className="bx bx-check-double"></i>
+                    Selected Tags ({selectedTags.length})
+                  </S.SectionTitle>
+                  {selectedTags.length > 0 && (
+                    <S.ActionButtons>
+                      <S.CopyDropdown>
+                        <S.CopyButton onClick={() => handleCopyTags('comma')}>
+                          <i className={`bx ${copySuccess === 'comma' ? 'bxs-check-circle' : 'bxs-copy'}`}></i>
+                          {copySuccess === 'comma' ? 'Copied!' : 'Copy'}
+                        </S.CopyButton>
+                        <S.CopyOptions>
+                          <S.CopyOption onClick={() => handleCopyTags('comma')}>
+                            Comma Separated
+                          </S.CopyOption>
+                          <S.CopyOption onClick={() => handleCopyTags('line')}>
+                            Line by Line
+                          </S.CopyOption>
+                          <S.CopyOption onClick={() => handleCopyTags('quote')}>
+                            With Quotes
+                          </S.CopyOption>
+                          <S.CopyOption onClick={() => handleCopyTags('hashtag')}>
+                            With Hashtags
+                          </S.CopyOption>
+                        </S.CopyOptions>
+                      </S.CopyDropdown>
+                      <S.ClearButton onClick={() => setSelectedTags([])}>
+                        <i className='bx bx-x'></i>
+                        Clear Selection
+                      </S.ClearButton>
+                    </S.ActionButtons>
+                  )}
+                </S.SelectedTagsHeader>
+                
+                {selectedTags.length > 0 ? (
+                  <S.SelectedTagsGrid>
+                    {selectedTags.map((tag, index) => (
+                      <S.SelectedTag key={index} onClick={() => toggleTag(tag)}>
+                        {tag}
+                        <i className="bx bx-x"></i>
+                      </S.SelectedTag>
+                    ))}
+                  </S.SelectedTagsGrid>
+                ) : (
+                  <S.NoTagsMessage>
+                    <i className="bx bx-info-circle"></i>
+                    No tags selected. Click on tags below to add them to your selection.
+                  </S.NoTagsMessage>
+                )}
+              </S.SelectedTagsSection>
+
               <S.TagCategoriesGrid>
+                {generatedTags.suggested.length > 0 && (
+                  <S.TagCategory>
+                    <S.CategoryHeader>
+                      <S.CategoryTitle>
+                        <i className="bx bx-bot"></i>
+                        AI-Generated Tags
+                      </S.CategoryTitle>
+                      <S.CategoryActions>
+                        <S.SelectAllButton onClick={() => selectAllFromCategory(generatedTags.suggested)}>
+                          Select All
+                        </S.SelectAllButton>
+                        <S.CategoryBadge>{generatedTags.suggested.length}</S.CategoryBadge>
+                      </S.CategoryActions>
+                    </S.CategoryHeader>
+                    <S.CategoryDescription>
+                      AI-generated tags based on current trends and optimization
+                    </S.CategoryDescription>
+                    <S.TagGrid>
+                      {generatedTags.suggested.map((tag, index) => (
+                        <S.TagChip 
+                          key={index}
+                          selected={selectedTags.includes(tag)}
+                          category="suggested"
+                          onClick={() => toggleTag(tag)}
+                        >
+                          <i className="bx bx-brain"></i>
+                          {tag}
+                        </S.TagChip>
+                      ))}
+                    </S.TagGrid>
+                  </S.TagCategory>
+                )}
+
                 <S.TagCategory>
                   <S.CategoryHeader>
                     <S.CategoryTitle>
@@ -704,84 +784,7 @@ export const TagGenerator: React.FC = () => {
                     ))}
                   </S.TagGrid>
                 </S.TagCategory>
-
-                {generatedTags.suggested.length > 0 && (
-                  <S.TagCategory>
-                    <S.CategoryHeader>
-                      <S.CategoryTitle>
-                        <i className="bx bx-bot"></i>
-                        AI Suggested
-                      </S.CategoryTitle>
-                      <S.CategoryActions>
-                        <S.SelectAllButton onClick={() => selectAllFromCategory(generatedTags.suggested)}>
-                          Select All
-                        </S.SelectAllButton>
-                        <S.CategoryBadge>{generatedTags.suggested.length}</S.CategoryBadge>
-                      </S.CategoryActions>
-                    </S.CategoryHeader>
-                    <S.CategoryDescription>
-                      AI-generated tags based on current trends
-                    </S.CategoryDescription>
-                    <S.TagGrid>
-                      {generatedTags.suggested.map((tag, index) => (
-                        <S.TagChip 
-                          key={index}
-                          selected={selectedTags.includes(tag)}
-                          category="suggested"
-                          onClick={() => toggleTag(tag)}
-                        >
-                          <i className="bx bx-brain"></i>
-                          {tag}
-                        </S.TagChip>
-                      ))}
-                    </S.TagGrid>
-                  </S.TagCategory>
-                )}
               </S.TagCategoriesGrid>
-
-              <S.SelectedTagsSection visible={selectedTags.length > 0}>
-                <S.SelectedTagsHeader>
-                  <S.SectionTitle>
-                    <i className="bx bx-check-double"></i>
-                    Selected Tags ({selectedTags.length})
-                  </S.SectionTitle>
-                  <S.ActionButtons>
-                    <S.CopyDropdown>
-                      <S.CopyButton onClick={() => handleCopyTags('comma')}>
-                        <i className={`bx ${copySuccess === 'comma' ? 'bxs-check-circle' : 'bxs-copy'}`}></i>
-                        {copySuccess === 'comma' ? 'Copied!' : 'Copy'}
-                      </S.CopyButton>
-                      <S.CopyOptions>
-                        <S.CopyOption onClick={() => handleCopyTags('comma')}>
-                          Comma Separated
-                        </S.CopyOption>
-                        <S.CopyOption onClick={() => handleCopyTags('line')}>
-                          Line by Line
-                        </S.CopyOption>
-                        <S.CopyOption onClick={() => handleCopyTags('quote')}>
-                          With Quotes
-                        </S.CopyOption>
-                        <S.CopyOption onClick={() => handleCopyTags('hashtag')}>
-                          With Hashtags
-                        </S.CopyOption>
-                      </S.CopyOptions>
-                    </S.CopyDropdown>
-                    <S.ClearButton onClick={() => setSelectedTags([])}>
-                      <i className='bx bx-x'></i>
-                      Clear Selection
-                    </S.ClearButton>
-                  </S.ActionButtons>
-                </S.SelectedTagsHeader>
-                
-                <S.SelectedTagsGrid>
-                  {selectedTags.map((tag, index) => (
-                    <S.SelectedTag key={index} onClick={() => toggleTag(tag)}>
-                      {tag}
-                      <i className="bx bx-x"></i>
-                    </S.SelectedTag>
-                  ))}
-                </S.SelectedTagsGrid>
-              </S.SelectedTagsSection>
 
               <S.ActionBar>
                 <S.ResetButton onClick={handleClear}>

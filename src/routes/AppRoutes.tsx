@@ -32,6 +32,7 @@ import { YouTubeTranscript } from '../pages/Tools/components/YouTubeTranscript/Y
 import { CommentPicker } from '../pages/Tools/components/CommentPicker/CommentPicker';
 import { SubscribeLinkGenerator } from '../pages/Tools/components/SubscribeLinkGenerator/SubscribeLinkGenerator';
 import { ColorPalette } from '../pages/Tools/components/ColorPalette/ColorPalette';
+import { ColorPickerFromImage } from '../pages/Tools/components/ColorPickerFromImage/ColorPickerFromImage';
 
 // New tool imports
 import { KeywordAnalyzer } from '../pages/Tools/components/KeywordAnalyzer/KeywordAnalyzer';
@@ -93,6 +94,7 @@ export const AppRoutes: React.FC = () => {
       <Route path="/tools/thumbnail-tester" element={<ThumbnailTester />} />
       <Route path="/tools/youtube-calculator" element={<YouTubeCalculator />} />
       <Route path="/tools/color-palette" element={<ColorPalette />} />
+      <Route path="/tools/color-picker-from-image" element={<ColorPickerFromImage />} />
       
       {/* New Tool Routes */}
       <Route path="/tools/keyword-analyzer" element={<KeywordAnalyzer />} />

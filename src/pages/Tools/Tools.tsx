@@ -175,6 +175,17 @@ const tools: Tool[] = [
     image: 'https://64.media.tumblr.com/f97bde423a79533024eef1213555f72b/0e01452f9f6dd974-57/s2048x3072/10d31cb6dce21a536ff44a7638cf80cdb52df36a.jpg',
   },
   {
+    id: 'color-picker-from-image',
+    name: 'Color Picker from Image',
+    description: 'Click anywhere on an image to instantly copy hex colors to clipboard.',
+    icon: 'bx bxs-eyedropper',
+    category: 'Utilities',
+    tags: ['Color Picker', 'Eyedropper', 'Image', 'Hex', 'Design'],
+    url: '/tools/color-picker-from-image',
+    isNew: true,
+    image: 'https://64.media.tumblr.com/f55e2ae2e5b16799fd5889c64b3fe36b/0e01452f9f6dd974-0e/s2048x3072/09051a8561ff4ab1cc8a5fa3b4b3d81f8a3a720d.jpg',
+  },
+  {
     id: 'youtube-calculator',
     name: 'YouTube Calculator',
     description: 'Estimate your potential YouTube earnings based on views, video length, and content category.',
@@ -395,12 +406,6 @@ export const Tools: React.FC = () => {
                         {tool.isNew && <Tag variant="new">New</Tag>}
                         {tool.isBeta && <Tag variant="beta">Beta</Tag>}
                       </S.ToolName>
-
-                      <S.TagContainer>
-                        {tool.tags.map(tag => (
-                          <S.Tag key={tag}>{tag}</S.Tag>
-                        ))}
-                      </S.TagContainer>
 
                       <S.ToolDescription>{tool.description}</S.ToolDescription>
 

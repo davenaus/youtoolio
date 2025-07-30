@@ -638,6 +638,26 @@ export const SelectedTagsGrid = styled.div`
   gap: 0.5rem;
 `;
 
+export const NoTagsMessage = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.95rem;
+  text-align: center;
+  background: ${({ theme }) => theme.colors.dark4};
+  border: 1px dashed ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  
+  i {
+    color: ${({ theme }) => theme.colors.red3};
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+`;
+
 export const SelectedTag = styled.button`
   display: flex;
   align-items: center;
