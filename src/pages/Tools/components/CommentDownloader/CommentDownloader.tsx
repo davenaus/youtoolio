@@ -48,6 +48,19 @@ export const CommentDownloader: React.FC = () => {
   const [batchResults, setBatchResults] = useState<any[]>([]);
   const [isBatchMode, setIsBatchMode] = useState(false);
 
+  // Tool configuration
+  const toolConfig = {
+    name: 'Comment Downloader',
+    description: 'Download all comments from any YouTube video for analysis and insights',
+    image: 'https://64.media.tumblr.com/66078549793f9f7a2f8135de9fa7332b/0e01452f9f6dd974-a7/s2048x3072/d1645c95d5bd8165f5fd093296a1372f053a2a21.jpg',
+    icon: 'bx bx-download',
+    features: [
+      'Complete comment export',
+      'Multiple formats',
+      'Sentiment analysis'
+    ]
+  };
+
   const [filters, setFilters] = useState<FilterOptions>({
     includeReplies: true,
     maxComments: 1000,
@@ -421,37 +434,56 @@ export const CommentDownloader: React.FC = () => {
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>Comment Downloader</S.Title>
-          <S.Subtitle>
-            Download and analyze YouTube video comments with advanced filtering options
-          </S.Subtitle>
-        </S.Header>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
 
-        <S.SearchContainer>
-          <S.SearchBar>
-            <S.SearchInput
-              type="text"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="Enter YouTube video URL or video ID"
-              onKeyPress={handleKeyPress}
-              disabled={isLoading}
-            />
-            <S.SearchButton onClick={handleSearch} disabled={isLoading}>
-              {isLoading ? (
-                <i className='bx bx-loader-alt bx-spin'></i>
-              ) : (
-                <i className='bx bx-download'></i>
-              )}
-            </S.SearchButton>
-          </S.SearchBar>
+        {/* Enhanced Header Section */}
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
+            
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+              
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
+                ))}
+              </S.FeaturesList>
 
-          <S.ToggleContainer>
+              {/* Integrated Search Bar */}
+              <S.HeaderSearchContainer>
+                <S.HeaderSearchBar>
+                  <S.HeaderSearchInput
+                    type="text"
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder="Enter YouTube video URL to download comments"
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                  <S.HeaderSearchButton onClick={handleSearch} disabled={isLoading}>
+                    {isLoading ? (
+                      <i className='bx bx-loader-alt bx-spin'></i>
+                    ) : (
+                      <i className='bx bx-search'></i>
+                    )}
+                  </S.HeaderSearchButton>
+                </S.HeaderSearchBar>
+              </S.HeaderSearchContainer>
+            </S.HeaderTextContent>
+          </S.HeaderContent>
+        </S.EnhancedHeader>
+
+        <S.ToggleContainer>
             <S.ToggleButton 
               onClick={() => setShowFilters(!showFilters)}
               className={showFilters ? 'active' : ''}
@@ -467,7 +499,6 @@ export const CommentDownloader: React.FC = () => {
               Batch Download
             </S.ToggleButton>
           </S.ToggleContainer>
-        </S.SearchContainer>
 
         {showFilters && (
           <S.FiltersContainer>

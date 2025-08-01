@@ -63,6 +63,19 @@ export const YouTubeCalculator: React.FC = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<'input' | 'channel' | 'advanced' | 'results'>('input');
   const [isCalculating, setIsCalculating] = useState(false);
+
+  // Tool configuration
+  const toolConfig = {
+    name: 'YouTube Calculator',
+    description: 'Estimate your potential YouTube earnings based on views, video length, and content category',
+    image: 'https://64.media.tumblr.com/95def04a5eda69c7703fca45158d5256/0e01452f9f6dd974-57/s2048x3072/ec37f2775fabde8ea0dc7ba6e16a91cfe8d8870d.jpg',
+    icon: 'bx bx-dollar-circle',
+    features: [
+      'Revenue estimation',
+      'Category-based CPM',
+      'Advanced analytics'
+    ]
+  };
   
   // Basic video data
   const [videoLength, setVideoLength] = useState<number>(10);
@@ -286,16 +299,34 @@ export const YouTubeCalculator: React.FC = () => {
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>YouTube Revenue Calculator</S.Title>
-          <S.Subtitle>
-            Calculate your YouTube earnings with advanced analytics and optimization insights
-          </S.Subtitle>
-        </S.Header>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
+
+        {/* Enhanced Header Section */}
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
+            
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+              
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
+                ))}
+              </S.FeaturesList>
+            </S.HeaderTextContent>
+          </S.HeaderContent>
+        </S.EnhancedHeader>
 
         {renderStepIndicator()}
 

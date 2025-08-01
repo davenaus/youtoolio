@@ -44,6 +44,19 @@ export const SubscribeLinkGenerator: React.FC = () => {
   const [copiedLink, setCopiedLink] = useState<string>('');
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
+  // Tool configuration
+  const toolConfig = {
+    name: 'Subscribe Link Generator',
+    description: 'Generate professional subscribe links and channel cards for YouTube creators',
+    image: 'https://64.media.tumblr.com/5c2c1e7c0c7b4f1e5a2a1b0e6b0c4e8d/tumblr_p9k7d8eR2w1t9z8e8o1_1280.jpg',
+    icon: 'bx bx-link',
+    features: [
+      'Multiple link variations',
+      'Channel preview cards',
+      'QR code generation'
+    ]
+  };
+
   const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_5;
 
   useEffect(() => {
@@ -323,52 +336,68 @@ export const SubscribeLinkGenerator: React.FC = () => {
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>Subscribe Link Generator</S.Title>
-          <S.Subtitle>
-            Generate professional subscribe links and channel cards for YouTube creators
-          </S.Subtitle>
-        </S.Header>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
 
-        <S.SearchContainer>
-          <form onSubmit={handleSubmit}>
-            <S.SearchBar>
-              <S.SearchInput
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="Enter YouTube channel URL or @handle"
-                disabled={isLoading}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              />
-              <S.SearchButton onClick={handleSearch} disabled={isLoading || !url.trim()}>
-                {isLoading ? (
-                  <i className='bx bx-loader-alt bx-spin'></i>
-                ) : (
-                  <i className='bx bx-search'></i>
-                )}
-              </S.SearchButton>
-            </S.SearchBar>
-          </form>
-
-          {searchHistory.length > 0 && !channelInfo && (
-            <S.HistorySection>
-              <S.HistoryLabel>Recent channels:</S.HistoryLabel>
-              <S.HistoryList>
-                {searchHistory.map((channel, index) => (
-                  <S.HistoryItem key={index} onClick={() => setUrl(channel)}>
-                    <i className="bx bx-history"></i>
-                    <span>{channel}</span>
-                  </S.HistoryItem>
+        {/* Enhanced Header Section with Integrated Search */}
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
+            
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+              
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
                 ))}
-              </S.HistoryList>
-            </S.HistorySection>
-          )}
-        </S.SearchContainer>
+              </S.FeaturesList>
+
+              {/* Integrated Search Bar */}
+              <S.HeaderSearchContainer>
+                <S.HeaderSearchBar>
+                  <S.HeaderSearchInput
+                    type="text"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="Enter your channel URL to generate subscribe link"
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                  <S.HeaderSearchButton onClick={handleSearch} disabled={isLoading}>
+                    {isLoading ? (
+                      <i className='bx bx-loader-alt bx-spin'></i>
+                    ) : (
+                      <i className='bx bx-search'></i>
+                    )}
+                  </S.HeaderSearchButton>
+                </S.HeaderSearchBar>
+              </S.HeaderSearchContainer>
+            </S.HeaderTextContent>
+          </S.HeaderContent>
+        </S.EnhancedHeader>
+
+        {searchHistory.length > 0 && !channelInfo && (
+          <S.HistorySection>
+            <S.HistoryLabel>Recent channels:</S.HistoryLabel>
+            <S.HistoryList>
+              {searchHistory.map((channel, index) => (
+                <S.HistoryItem key={index} onClick={() => setUrl(channel)}>
+                  <i className="bx bx-history"></i>
+                  <span>{channel}</span>
+                </S.HistoryItem>
+              ))}
+            </S.HistoryList>
+          </S.HistorySection>
+        )}
 
         {isLoading && (
           <S.LoadingContainer>

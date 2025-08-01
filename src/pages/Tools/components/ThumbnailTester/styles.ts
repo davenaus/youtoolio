@@ -69,6 +69,166 @@ export const BackButton = styled.button`
   }
 `;
 
+// Enhanced Header Components
+export const EnhancedHeader = styled.div<{ backgroundImage: string }>`
+  position: relative;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red1}, ${({ theme }) => theme.colors.red2});
+  border: 1px solid ${({ theme }) => theme.colors.red3};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: 3rem 2rem;
+  margin-bottom: 3rem;
+  overflow: hidden;
+  
+  /* Background image with low opacity */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('${({ backgroundImage }) => backgroundImage}');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.15;
+    z-index: 0;
+  }
+  
+  /* Additional gradient overlay for better text readability */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+      ${({ theme }) => theme.colors.red1}80, 
+      ${({ theme }) => theme.colors.red2}60,
+      transparent 70%
+    );
+    z-index: 1;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 2rem 1.5rem;
+  }
+`;
+
+export const HeaderOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(125, 0, 0, 0.3), 
+    rgba(82, 1, 1, 0.2),
+    transparent 70%
+  );
+  z-index: 1;
+`;
+
+export const HeaderContent = styled.div`
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+  }
+`;
+
+export const ToolIconContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  flex-shrink: 0;
+  box-shadow: ${({ theme }) => theme.shadows.lg};
+  
+  i {
+    font-size: 2.5rem;
+    color: ${({ theme }) => theme.colors.white};
+  }
+  
+  @media (max-width: 768px) {
+    width: 70px;
+    height: 70px;
+    
+    i {
+      font-size: 2rem;
+    }
+  }
+`;
+
+export const HeaderTextContent = styled.div`
+  flex: 1;
+  color: ${({ theme }) => theme.colors.text.primary};
+`;
+
+export const ToolTitle = styled.h1`
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin: 0 0 1rem 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  
+  @media (max-width: 768px) {
+    font-size: 2rem;
+  }
+`;
+
+export const ToolDescription = styled.p`
+  font-size: 1.2rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
+  opacity: 0.95;
+  
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+  }
+`;
+
+export const FeaturesList = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+`;
+
+export const FeatureItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.95rem;
+  
+  i {
+    color: ${({ theme }) => theme.colors.red4};
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  
+  span {
+    opacity: 0.9;
+  }
+`;
+
 
 
 
@@ -349,7 +509,7 @@ export const SecondaryButton = styled.button`
 // Step 1: Input Section
 export const InputSection = styled.div`
   animation: fadeIn 0.3s ease-in-out;
-  max-width: 800px;
+  max-width: 1100px;
   margin: 0 auto;
   
   @keyframes fadeIn {
@@ -982,9 +1142,92 @@ export const BottomAdContainer = styled.div`
   }
 `;
 
+// Header Search Components
+export const HeaderSearchContainer = styled.div`
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 600px;
+  
+  @media (max-width: 768px) {
+    margin-top: 1.5rem;
+    max-width: 100%;
+  }
+`;
 
+export const HeaderSearchBar = styled.div`
+  display: flex;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  
+  &:focus-within {
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
+  }
+`;
 
+export const HeaderSearchInput = styled.input`
+  flex: 1;
+  padding: 1rem 1.5rem;
+  border: none;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.white};
+  font-size: 1rem;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-weight: 500;
 
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+  }
 
+  &:focus {
+    outline: none;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.95rem;
+  }
+`;
 
+export const HeaderSearchButton = styled.button`
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: ${({ theme }) => theme.colors.white};
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+  backdrop-filter: blur(10px);
 
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  i {
+    font-size: 1.25rem;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0.875rem 1.25rem;
+    min-width: 55px;
+    
+    i {
+      font-size: 1.1rem;
+    }
+  }
+`;

@@ -14,6 +14,19 @@ interface Color {
 const ColorPaletteComponent: React.FC = () => {
   const navigate = useNavigate();
   
+  // Tool configuration
+  const toolConfig = {
+    name: 'Color Palette Generator',
+    description: 'Extract color palettes from images and generate beautiful gradients',
+    image: 'https://64.media.tumblr.com/f97bde423a79533024eef1213555f72b/0e01452f9f6dd974-57/s2048x3072/10d31cb6dce21a536ff44a7638cf80cdb52df36a.jpg',
+    icon: 'bx bx-palette',
+    features: [
+      'Color extraction',
+      'Gradient generation',
+      'Design inspiration'
+    ]
+  };
+  
   // State declarations
   const [extractedColors, setExtractedColors] = useState<string[]>([]);
   const [imagePreview, setImagePreview] = useState<string>('');
@@ -459,16 +472,34 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>Color Palette Generator</S.Title>
-          <S.Subtitle>
-            Extract beautiful color palettes from images and create stunning gradients
-          </S.Subtitle>
-        </S.Header>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
+
+        {/* Enhanced Header Section */}
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
+            
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+              
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
+                ))}
+              </S.FeaturesList>
+            </S.HeaderTextContent>
+          </S.HeaderContent>
+        </S.EnhancedHeader>
 
         {/* Step 1: Upload */}
         {!imagePreview && (

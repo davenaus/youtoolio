@@ -16,6 +16,38 @@ const ColorPickerFromImage: React.FC = () => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isActive, setIsActive] = useState(false);
 
+  const [imageUrl, setImageUrl] = useState('');
+const [isLoading, setIsLoading] = useState(false);
+
+const handleUrlUpload = async () => {
+  if (!imageUrl) return;
+
+  setIsLoading(true);
+  try {
+    const response = await fetch(imageUrl);
+    const blob = await response.blob();
+    const file = new File([blob], 'image-from-url', { type: blob.type });
+    handleFileUpload(file);
+  } catch (error) {
+    alert('Failed to fetch image. Please check the URL.');
+    console.error(error);
+  }
+  setIsLoading(false);
+};
+
+const toolConfig = {
+  name: 'Color Picker from Image',
+  description: 'Upload or paste any image and click anywhere to instantly copy the hex color.',
+  icon: 'bx bxs-eyedropper',
+    image: 'https://64.media.tumblr.com/f55e2ae2e5b16799fd5889c64b3fe36b/0e01452f9f6dd974-0e/s2048x3072/09051a8561ff4ab1cc8a5fa3b4b3d81f8a3a720d.jpg',
+  features: [
+    'Drag & Drop Image Support',
+    'Hover to Preview Colors',
+    'Supports JPG, PNG, GIF, WebP'
+  ]
+};
+
+
   // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -217,16 +249,37 @@ const ColorPickerFromImage: React.FC = () => {
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>Color Picker from Image</S.Title>
-          <S.Subtitle>
-            Upload an image and click anywhere to instantly copy the hex color to your clipboard
-          </S.Subtitle>
-        </S.Header>
+                <S.BackButton onClick={() => navigate('/tools')}>
+                  <i className="bx bx-arrow-back"></i>
+                  Back to Tools
+                </S.BackButton>
+        
+<S.EnhancedHeader backgroundImage={toolConfig.image}>
+  <S.HeaderOverlay />
+  <S.HeaderContent>
+    <S.ToolIconContainer>
+      <i className={toolConfig.icon}></i>
+    </S.ToolIconContainer>
+
+    <S.HeaderTextContent>
+      <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+      <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+
+      <S.FeaturesList>
+        {toolConfig.features.map((feature, index) => (
+          <S.FeatureItem key={index}>
+            <i className="bx bx-check-circle"></i>
+            <span>{feature}</span>
+          </S.FeatureItem>
+        ))}
+      </S.FeaturesList>
+
+      {/* Integrated Search Bar */}
+      <S.HeaderSearchContainer>
+      </S.HeaderSearchContainer>
+    </S.HeaderTextContent>
+  </S.HeaderContent>
+</S.EnhancedHeader>
 
         {/* Upload Section */}
         {!imagePreview && (

@@ -954,3 +954,163 @@ export const BottomAdContainer = styled.div`
     display: none;
   }
 `;
+
+export const HeaderOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(125, 0, 0, 0.3), 
+    rgba(82, 1, 1, 0.2),
+    transparent 70%
+  );
+  z-index: 1;
+`;
+
+export const HeaderContent = styled.div`
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+  }
+`;
+
+export const ToolIconContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  flex-shrink: 0;
+  box-shadow: ${({ theme }) => theme.shadows.lg};
+  
+  i {
+    font-size: 2.5rem;
+    color: ${({ theme }) => theme.colors.white};
+  }
+  
+  @media (max-width: 768px) {
+    width: 70px;
+    height: 70px;
+    
+    i {
+      font-size: 2rem;
+    }
+  }
+`;
+
+export const HeaderTextContent = styled.div`
+  flex: 1;
+  color: ${({ theme }) => theme.colors.text.primary};
+`;
+
+export const ToolTitle = styled.h1`
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin: 0 0 1rem 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  
+  @media (max-width: 768px) {
+    font-size: 2rem;
+  }
+`;
+
+export const ToolDescription = styled.p`
+  font-size: 1.2rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
+  opacity: 0.95;
+  
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+  }
+`;
+
+export const FeaturesList = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+`;
+
+export const FeatureItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.95rem;
+  
+  i {
+    color: ${({ theme }) => theme.colors.red4};
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  
+  span {
+    opacity: 0.9;
+  }
+`;
+
+// Enhanced Header Components
+export const EnhancedHeader = styled.div<{ backgroundImage: string }>`
+  position: relative;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red1}, ${({ theme }) => theme.colors.red2});
+  border: 1px solid ${({ theme }) => theme.colors.red3};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: 3rem 2rem;
+  margin-bottom: 3rem;
+  overflow: hidden;
+  
+  /* Background image with low opacity */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('${({ backgroundImage }) => backgroundImage}');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.15;
+    z-index: 0;
+  }
+  
+  /* Additional gradient overlay for better text readability */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+      ${({ theme }) => theme.colors.red1}80, 
+      ${({ theme }) => theme.colors.red2}60,
+      transparent 70%
+    );
+    z-index: 1;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 2rem 1.5rem;
+  }
+`;

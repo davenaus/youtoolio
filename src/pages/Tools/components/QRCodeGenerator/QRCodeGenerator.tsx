@@ -30,6 +30,19 @@ export const QRCodeGenerator: React.FC = () => {
   const [generatedQR, setGeneratedQR] = useState<GeneratedQR | null>(null);
   const [qrHistory, setQrHistory] = useState<string[]>([]);
   
+  // Tool configuration
+  const toolConfig = {
+    name: 'QR Code Generator',
+    description: 'Generate custom QR codes with optional logo overlay for your content',
+    image: 'https://64.media.tumblr.com/da5e76716d812a5ccec22e37179e2575/0e01452f9f6dd974-89/s2048x3072/2c12bac7610d803f4a197ea109c839a969849ac2.jpg',
+    icon: 'bx bx-qr-scan',
+    features: [
+      'Custom logo overlay',
+      'Multiple formats',
+      'High resolution output'
+    ]
+  };
+  
   const [config, setConfig] = useState<QRConfig>({
     url: '',
     size: 1000,
@@ -335,16 +348,34 @@ export const QRCodeGenerator: React.FC = () => {
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>QR Code Generator</S.Title>
-          <S.Subtitle>
-            Create professional QR codes with custom styling and logo integration
-          </S.Subtitle>
-        </S.Header>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
+
+        {/* Enhanced Header Section */}
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
+            
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+              
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
+                ))}
+              </S.FeaturesList>
+            </S.HeaderTextContent>
+          </S.HeaderContent>
+        </S.EnhancedHeader>
 
         {renderStepIndicator()}
 

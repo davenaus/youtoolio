@@ -126,6 +126,19 @@ export const PlaylistAnalyzer: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showDetailedVideos, setShowDetailedVideos] = useState(false);
 
+  // Tool configuration
+  const toolConfig = {
+    name: 'Playlist Analyzer',
+    description: 'Analyze any YouTube playlist for detailed insights on views, engagement, and channel distribution',
+    image: 'https://64.media.tumblr.com/85cd205bebdd16ad2dbd1dec3eace901/0e01452f9f6dd974-52/s2048x3072/6e82ba74aec1cf9c1f02548aaa618d2a7c49fd14.jpg',
+    icon: 'bx bx-list-ul',
+    features: [
+      'Performance analytics',
+      'Content insights',
+      'Channel distribution'
+    ]
+  };
+
   const [filters, setFilters] = useState<FilterOptions>({
     minViews: 0,
     maxVideos: 1000,
@@ -597,35 +610,56 @@ export const PlaylistAnalyzer: React.FC = () => {
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>Playlist Analyzer</S.Title>
-          <S.Subtitle>
-            Comprehensive analysis of YouTube playlists with detailed insights and recommendations
-          </S.Subtitle>
-        </S.Header>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
+
+{/* Enhanced Header Section with Integrated Search */}
+<S.EnhancedHeader backgroundImage={toolConfig.image}>
+  <S.HeaderOverlay />
+  <S.HeaderContent>
+    <S.ToolIconContainer>
+      <i className={toolConfig.icon}></i>
+    </S.ToolIconContainer>
+    
+    <S.HeaderTextContent>
+      <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+      <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+      
+      <S.FeaturesList>
+        {toolConfig.features.map((feature, index) => (
+          <S.FeatureItem key={index}>
+            <i className="bx bx-check-circle"></i>
+            <span>{feature}</span>
+          </S.FeatureItem>
+        ))}
+      </S.FeaturesList>
+
+      {/* Integrated Search Bar */}
+      <S.HeaderSearchContainer>
+        <S.HeaderSearchBar>
+          <S.HeaderSearchInput
+            type="text"
+            value={playlistUrl}
+            onChange={(e) => setPlaylistUrl(e.target.value)}
+            placeholder="Enter YouTube playlist URL for analysis"
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <S.HeaderSearchButton onClick={handleSearch} disabled={isLoading}>
+            {isLoading ? (
+              <i className='bx bx-loader-alt bx-spin'></i>
+            ) : (
+              <i className='bx bx-search'></i>
+            )}
+          </S.HeaderSearchButton>
+        </S.HeaderSearchBar>
+      </S.HeaderSearchContainer>
+    </S.HeaderTextContent>
+  </S.HeaderContent>
+</S.EnhancedHeader>
 
         <S.SearchContainer>
-          <S.SearchBar>
-            <S.SearchInput
-              type="text"
-              value={playlistUrl}
-              onChange={(e) => setPlaylistUrl(e.target.value)}
-              placeholder="Enter YouTube playlist URL or playlist ID"
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              disabled={isLoading}
-            />
-            <S.SearchButton onClick={handleSearch} disabled={isLoading}>
-              {isLoading ? (
-                <i className='bx bx-loader-alt bx-spin'></i>
-              ) : (
-                <i className='bx bx-search'></i>
-              )}
-            </S.SearchButton>
-          </S.SearchBar>
 
           <S.ControlsContainer>
             <S.FilterToggle onClick={() => setShowFilters(!showFilters)}>

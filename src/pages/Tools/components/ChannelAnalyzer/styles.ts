@@ -38,11 +38,6 @@ export const MainContainer = styled.div`
   }
 `;
 
-export const Header = styled.div`
-  margin-bottom: 2rem;
-  text-align: center;
-`;
-
 export const BackButton = styled.button`
   display: flex;
   align-items: center;
@@ -51,7 +46,7 @@ export const BackButton = styled.button`
   border: 1px solid ${({ theme }) => theme.colors.dark5};
   color: ${({ theme }) => theme.colors.text.secondary};
   padding: 0.5rem 1rem;
-  border-radius: 8px;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
   font-family: ${({ theme }) => theme.fonts.primary};
   font-size: 0.9rem;
   cursor: pointer;
@@ -70,8 +65,174 @@ export const BackButton = styled.button`
   }
 `;
 
-export const Title = styled.h1`
+// Enhanced Header Components
+export const EnhancedHeader = styled.div<{ backgroundImage: string }>`
+  position: relative;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red1}, ${({ theme }) => theme.colors.red2});
+  border: 1px solid ${({ theme }) => theme.colors.red3};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: 3rem 2rem;
+  margin-bottom: 3rem;
+  overflow: hidden;
+  
+  /* Background image with low opacity */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('${({ backgroundImage }) => backgroundImage}');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.15;
+    z-index: 0;
+  }
+  
+  /* Additional gradient overlay for better text readability */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+      ${({ theme }) => theme.colors.red1}80, 
+      ${({ theme }) => theme.colors.red2}60,
+      transparent 70%
+    );
+    z-index: 1;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 2rem 1.5rem;
+  }
+`;
+
+export const HeaderOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(125, 0, 0, 0.3), 
+    rgba(82, 1, 1, 0.2),
+    transparent 70%
+  );
+  z-index: 1;
+`;
+
+export const HeaderContent = styled.div`
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+  }
+`;
+
+export const ToolIconContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  flex-shrink: 0;
+  box-shadow: ${({ theme }) => theme.shadows.lg};
+  
+  i {
+    font-size: 2.5rem;
+    color: ${({ theme }) => theme.colors.white};
+  }
+  
+  @media (max-width: 768px) {
+    width: 70px;
+    height: 70px;
+    
+    i {
+      font-size: 2rem;
+    }
+  }
+`;
+
+export const HeaderTextContent = styled.div`
+  flex: 1;
+  color: ${({ theme }) => theme.colors.text.primary};
+`;
+
+export const ToolTitle = styled.h1`
   font-size: 2.5rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin: 0 0 1rem 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  
+  @media (max-width: 768px) {
+    font-size: 2rem;
+  }
+`;
+
+export const ToolDescription = styled.p`
+  font-size: 1.2rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  line-height: 1.6;
+  margin: 0 0 1.5rem 0;
+  opacity: 0.95;
+  
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+  }
+`;
+
+export const FeaturesList = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+`;
+
+export const FeatureItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.95rem;
+  
+  i {
+    color: ${({ theme }) => theme.colors.red4};
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  
+  span {
+    opacity: 0.9;
+  }
+`;
+
+// Keep all existing styles below...
+export const Header = styled.div`
+  margin-bottom: 2rem;
+  text-align: center;
+`;
+
+export const Title = styled.h1`
+  font-size: 3rem;
   background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
   background-clip: text;
   -webkit-background-clip: text;
@@ -97,7 +258,7 @@ export const Subtitle = styled.p`
 `;
 
 export const SearchContainer = styled.div`
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto 2rem auto;
 `;
 
@@ -107,12 +268,11 @@ export const SearchBar = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.dark5};
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   overflow: hidden;
-  margin-bottom: 0.5rem;
   transition: all 0.2s ease;
   
   &:focus-within {
     border-color: ${({ theme }) => theme.colors.red3};
-    box-shadow: 0 0 0 3px rgba(125, 0, 0, 0.1);
+    box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
   }
 `;
 
@@ -194,187 +354,95 @@ export const LoadingContainer = styled.div`
 export const ChannelInfo = styled.div`
   display: flex;
   align-items: center;
-  margin-bottom: 2rem;
-  background: linear-gradient(135deg, ${({ theme }) => theme.colors.dark3}, ${({ theme }) => theme.colors.dark2});
-  border: 1px solid ${({ theme }) => theme.colors.red3};
+  gap: 2rem;
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
   border-radius: ${({ theme }) => theme.borderRadius.xl};
   padding: 2rem;
-  gap: 2rem;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-  box-shadow: ${({ theme }) => theme.shadows.lg};
+  margin-bottom: 2rem;
   
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red3});
-  }
-  
-
   @media (max-width: 768px) {
     flex-direction: column;
-    padding: 1.5rem;
-    gap: 1.5rem;
     text-align: center;
+    gap: 1rem;
   }
 `;
 
 export const ChannelLogoContainer = styled.div`
-  flex: 0 0 auto;
-  position: relative;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border-radius: ${({ theme }) => theme.borderRadius.full};
-    background: linear-gradient(45deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red3});
-    z-index: -1;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  
-  &:hover::after {
-    opacity: 1;
-  }
-  
-  @media (max-width: 768px) {
-    align-self: center;
-  }
+  flex-shrink: 0;
 `;
 
 export const ChannelLogo = styled.img`
-  width: 100px;
-  height: 100px;
-  border-radius: ${({ theme }) => theme.borderRadius.full};
-  border: 4px solid ${({ theme }) => theme.colors.dark5};
-  transition: all 0.3s ease;
-  box-shadow: ${({ theme }) => theme.shadows.md};
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 3px solid ${({ theme }) => theme.colors.red3};
   
-  &:hover {
-    border-color: transparent;
-    transform: scale(1.05);
-    box-shadow: ${({ theme }) => theme.shadows.xl};
+  @media (max-width: 768px) {
+    width: 100px;
+    height: 100px;
   }
 `;
 
 export const ChannelDetails = styled.div`
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
 `;
 
 export const ChannelName = styled.h2`
   color: ${({ theme }) => theme.colors.text.primary};
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0;
-  line-height: 1.2;
-  background: linear-gradient(135deg, ${({ theme }) => theme.colors.text.primary}, ${({ theme }) => theme.colors.gray3});
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  
   @media (max-width: 768px) {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
   }
 `;
 
 export const ChannelMeta = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
   
   @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-    justify-items: center;
+    justify-content: center;
+    gap: 1rem;
   }
 `;
 
 export const MetaItem = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 1rem;
-  font-weight: 500;
-  background: ${({ theme }) => theme.colors.dark4};
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
-  transition: all 0.2s ease;
-  
+  font-size: 0.9rem;
   
   i {
     color: ${({ theme }) => theme.colors.red3};
-    font-size: 1.2rem;
-    flex-shrink: 0;
+    font-size: 1rem;
   }
 `;
 
 export const VisitButton = styled.a`
   display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
   background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
   color: ${({ theme }) => theme.colors.white};
-  padding: 1rem 2rem;
-  border-radius: ${({ theme }) => theme.borderRadius.lg};
   text-decoration: none;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
   font-weight: 600;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  align-self: flex-start;
-  box-shadow: ${({ theme }) => theme.shadows.md};
-  position: relative;
-  overflow: hidden;
+  transition: all 0.2s ease;
   
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  
-  &::after {
-    content: '';
-    position: relative;
-    z-index: 1;
-  }
-  
-  span, i {
-    position: relative;
-    z-index: 1;
-  }
-  
-  @media (max-width: 768px) {
-    align-self: center;
-    padding: 1rem 1.5rem;
-  }
-
   &:hover {
-    transform: translateY(-3px);
-    
-    &::before {
-      opacity: 1;
-    }
+    background: linear-gradient(135deg, ${({ theme }) => theme.colors.red2}, ${({ theme }) => theme.colors.red3});
+    transform: translateY(-2px);
   }
   
   i {
-    font-size: 1.2rem;
-    transition: transform 0.3s ease;
-  }
-  
-  &:hover i {
-    transform: translateX(2px);
+    font-size: 1rem;
   }
 `;
 
@@ -388,10 +456,6 @@ export const MetricsGrid = styled.div`
     grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
   }
-  
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-  }
 `;
 
 export const MetricCard = styled.div`
@@ -401,29 +465,11 @@ export const MetricCard = styled.div`
   padding: 1.5rem;
   text-align: center;
   transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
   
   &:hover {
     transform: translateY(-4px);
     border-color: ${({ theme }) => theme.colors.red3};
     box-shadow: ${({ theme }) => theme.shadows.lg};
-    
-    &::before {
-      opacity: 1;
-    }
   }
 `;
 
@@ -456,87 +502,8 @@ export const BrandingSection = styled.div`
   background: ${({ theme }) => theme.colors.dark3};
   border: 1px solid ${({ theme }) => theme.colors.dark5};
   border-radius: ${({ theme }) => theme.borderRadius.xl};
-  padding: 1.5rem;
+  padding: 2rem;
   margin-bottom: 2rem;
-`;
-
-export const BrandingGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1rem;
-`;
-
-export const BrandingItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-`;
-
-export const BrandingPreview = styled.div`
-  width: 220px;
-  height: 220px;
-  border-radius: ${({ theme }) => theme.borderRadius.lg};
-  overflow: hidden;
-  border: 2px solid ${({ theme }) => theme.colors.dark5};
-  margin-bottom: 1rem;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    border-color: ${({ theme }) => theme.colors.red3};
-    transform: scale(1.05);
-  }
-`;
-
-export const BrandingImage = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-
-export const BrandingLabel = styled.div`
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin-bottom: 0.5rem;
-`;
-
-export const ViewButton = styled.a`
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  background: ${({ theme }) => theme.colors.dark4};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  text-decoration: none;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.red3};
-    color: ${({ theme }) => theme.colors.white};
-    transform: translateY(-2px);
-  }
-`;
-
-export const AnalysisGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  margin-bottom: 2rem;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-`;
-
-export const AnalysisSection = styled.div`
-  background: ${({ theme }) => theme.colors.dark3};
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  padding: 1.5rem;
 `;
 
 export const SectionTitle = styled.h3`
@@ -554,13 +521,80 @@ export const SectionTitle = styled.h3`
   }
 `;
 
+export const BrandingGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+`;
+
+export const BrandingItem = styled.div`
+  text-align: center;
+`;
+
+export const BrandingPreview = styled.div`
+  margin-bottom: 1rem;
+`;
+
+export const BrandingImage = styled.img`
+  max-width: 100%;
+  height: auto;
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+`;
+
+export const BrandingLabel = styled.div`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+`;
+
+export const ViewButton = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: ${({ theme }) => theme.colors.dark4};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  text-decoration: none;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.red3};
+    color: ${({ theme }) => theme.colors.white};
+  }
+`;
+
+export const AnalysisGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const AnalysisSection = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: 1.5rem;
+`;
+
 export const Achievement = styled.div`
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
   margin-bottom: 1rem;
   color: ${({ theme }) => theme.colors.text.secondary};
-  line-height: 1.4;
+  line-height: 1.5;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
   
   i {
     color: ${({ theme }) => theme.colors.success};
@@ -576,27 +610,25 @@ export const Drawback = styled.div`
   gap: 0.75rem;
   margin-bottom: 1rem;
   color: ${({ theme }) => theme.colors.text.secondary};
-  line-height: 1.4;
+  line-height: 1.5;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
   
   i {
-    color: ${({ theme }) => theme.colors.warning};
+    color: ${({ theme }) => theme.colors.error};
     font-size: 1.1rem;
     margin-top: 0.1rem;
     flex-shrink: 0;
   }
 `;
 
-// New Detailed Analysis Styles
 export const DetailedAnalysisGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 2rem;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
   margin-bottom: 2rem;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
 `;
 
 export const DetailedSection = styled.div`
@@ -604,50 +636,25 @@ export const DetailedSection = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.dark5};
   border-radius: ${({ theme }) => theme.borderRadius.xl};
   padding: 1.5rem;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    border-color: ${({ theme }) => theme.colors.red3};
-    box-shadow: ${({ theme }) => theme.shadows.md};
-  }
 `;
 
 export const DescriptionContainer = styled.div`
-  margin-top: 1rem;
+  /* Description specific styles */
 `;
 
 export const DescriptionText = styled.p`
   color: ${({ theme }) => theme.colors.text.secondary};
   line-height: 1.6;
-  font-size: 0.95rem;
-  margin: 0 0 1rem 0;
+  margin-bottom: 1rem;
   background: ${({ theme }) => theme.colors.dark4};
   padding: 1rem;
-  border-radius: 8px;
-  border-left: 4px solid ${({ theme }) => theme.colors.red3};
-  max-height: 200px;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: ${({ theme }) => theme.colors.dark5};
-    border-radius: 3px;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: ${({ theme }) => theme.colors.red3};
-    border-radius: 3px;
-  }
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border-left: 3px solid ${({ theme }) => theme.colors.red3};
 `;
 
 export const DescriptionStats = styled.div`
   display: flex;
   gap: 1rem;
-  flex-wrap: wrap;
 `;
 
 export const StatItem = styled.div`
@@ -655,171 +662,123 @@ export const StatItem = styled.div`
   align-items: center;
   gap: 0.5rem;
   color: ${({ theme }) => theme.colors.text.muted};
-  font-size: 0.9rem;
-  background: ${({ theme }) => theme.colors.dark2};
-  padding: 0.5rem 0.75rem;
-  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  font-size: 0.875rem;
   
   i {
     color: ${({ theme }) => theme.colors.red3};
-    font-size: 1rem;
   }
 `;
 
 export const EmptyState = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.75rem;
-  color: ${({ theme }) => theme.colors.text.muted};
-  font-style: italic;
   padding: 2rem;
-  text-align: center;
+  color: ${({ theme }) => theme.colors.text.muted};
   background: ${({ theme }) => theme.colors.dark4};
-  border-radius: 8px;
-  border: 2px dashed ${({ theme }) => theme.colors.dark5};
+  border: 1px dashed ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
   
   i {
     color: ${({ theme }) => theme.colors.red3};
-    font-size: 1.2rem;
-    opacity: 0.7;
+    font-size: 1.25rem;
   }
 `;
 
 export const KeywordContainer = styled.div`
-  margin-top: 1rem;
+  /* Keyword specific styles */
 `;
 
 export const KeywordList = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: 0.5rem;
 `;
 
 export const KeywordTag = styled.span`
-  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  background: ${({ theme }) => theme.colors.red3};
   color: ${({ theme }) => theme.colors.white};
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-size: 0.875rem;
   font-weight: 500;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: ${({ theme }) => theme.shadows.sm};
-  }
 `;
 
 export const CategoryContainer = styled.div`
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  /* Category specific styles */
 `;
 
 export const CategoryItem = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  background: ${({ theme }) => theme.colors.dark4};
-  border-radius: 8px;
-  border-left: 4px solid ${({ theme }) => theme.colors.red3};
+  padding: 0.75rem 0;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
   
-  @media (max-width: 480px) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+  &:last-child {
+    border-bottom: none;
   }
 `;
 
 export const CategoryLabel = styled.span`
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text.muted};
   font-size: 0.9rem;
 `;
 
 export const CategoryValue = styled.span`
   color: ${({ theme }) => theme.colors.text.primary};
   font-weight: 500;
-  background: ${({ theme }) => theme.colors.dark2};
-  padding: 0.25rem 0.75rem;
-  border-radius: ${({ theme }) => theme.borderRadius.sm};
 `;
 
 export const PerformanceContainer = styled.div`
-  margin-top: 1rem;
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
 `;
 
 export const PerformanceMetric = styled.div`
+  text-align: center;
   padding: 1rem;
   background: ${({ theme }) => theme.colors.dark4};
-  border-radius: 8px;
-  border-left: 4px solid ${({ theme }) => theme.colors.red3};
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.dark2};
-    transform: translateX(4px);
-  }
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
 `;
 
 export const MetricTitle = styled.div`
   color: ${({ theme }) => theme.colors.text.primary};
   font-weight: 600;
-  font-size: 0.95rem;
   margin-bottom: 0.5rem;
+  font-size: 0.9rem;
 `;
 
 export const MetricDescription = styled.div`
   color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   line-height: 1.4;
 `;
 
-// Content Strategy Styles
 export const ContentStrategyContainer = styled.div`
-  margin-top: 1rem;
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
 `;
 
 export const StrategyMetric = styled.div`
-  padding: 1rem;
   background: ${({ theme }) => theme.colors.dark4};
-  border-radius: 8px;
-  border-left: 4px solid ${({ theme }) => theme.colors.red3};
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.dark2};
-    transform: translateX(4px);
-    box-shadow: ${({ theme }) => theme.shadows.sm};
-  }
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1rem;
 `;
 
-// Engagement Insights Styles
 export const EngagementContainer = styled.div`
-  margin-top: 1rem;
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
 `;
 
 export const EngagementMetric = styled.div`
-  padding: 1rem;
   background: ${({ theme }) => theme.colors.dark4};
-  border-radius: 8px;
-  border-left: 4px solid ${({ theme }) => theme.colors.red3};
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background: ${({ theme }) => theme.colors.dark2};
-    transform: translateX(4px);
-    box-shadow: ${({ theme }) => theme.shadows.sm};
-  }
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1rem;
 `;
 
 export const EngagementDetail = styled.div`
@@ -827,7 +786,6 @@ export const EngagementDetail = styled.div`
   font-size: 0.8rem;
   margin-top: 0.5rem;
   font-style: italic;
-  opacity: 0.8;
 `;
 
 export const BottomAdContainer = styled.div`
@@ -836,5 +794,95 @@ export const BottomAdContainer = styled.div`
   
   @media (min-width: 1401px) {
     display: none;
+  }
+`;
+
+// Header Search Components
+export const HeaderSearchContainer = styled.div`
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 600px;
+  
+  @media (max-width: 768px) {
+    margin-top: 1.5rem;
+    max-width: 100%;
+  }
+`;
+
+export const HeaderSearchBar = styled.div`
+  display: flex;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  
+  &:focus-within {
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
+  }
+`;
+
+export const HeaderSearchInput = styled.input`
+  flex: 1;
+  padding: 1rem 1.5rem;
+  border: none;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.white};
+  font-size: 1rem;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-weight: 500;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  &:focus {
+    outline: none;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.95rem;
+  }
+`;
+
+export const HeaderSearchButton = styled.button`
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: ${({ theme }) => theme.colors.white};
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+  backdrop-filter: blur(10px);
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  i {
+    font-size: 1.25rem;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0.875rem 1.25rem;
+    min-width: 55px;
+    
+    i {
+      font-size: 1.1rem;
+    }
   }
 `;

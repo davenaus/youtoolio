@@ -28,7 +28,6 @@ import { TagGenerator } from '../pages/Tools/components/TagGenerator/TagGenerato
 import { ThumbnailDownloader } from '../pages/Tools/components/ThumbnailDownloader/ThumbnailDownloader';
 import { ThumbnailTester } from '../pages/Tools/components/ThumbnailTester/ThumbnailTester';
 import { YouTubeCalculator } from '../pages/Tools/components/YouTubeCalculator/YouTubeCalculator';
-import { YouTubeTranscript } from '../pages/Tools/components/YouTubeTranscript/YouTubeTranscript';
 import { CommentPicker } from '../pages/Tools/components/CommentPicker/CommentPicker';
 import { SubscribeLinkGenerator } from '../pages/Tools/components/SubscribeLinkGenerator/SubscribeLinkGenerator';
 import { ColorPalette } from '../pages/Tools/components/ColorPalette/ColorPalette';
@@ -70,7 +69,6 @@ export const AppRoutes: React.FC = () => {
       <Route path="/link-in-bio-page-maker" element={<LinkInBioLanding />} />
       
       {/* Tool Routes */}
-      <Route path="/tools/youtube-transcript" element={<YouTubeTranscript />} />
       <Route path="/tools/outlier-finder" element={<OutlierFinder />} />
       <Route path="/tools/outlier-finder/:searchQuery/:type" element={<OutlierFinder />} />
       <Route path="/tools/video-analyzer" element={<VideoAnalyzer />} />

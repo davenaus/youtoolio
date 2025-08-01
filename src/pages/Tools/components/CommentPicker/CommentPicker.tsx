@@ -46,6 +46,19 @@ export const CommentPicker: React.FC = () => {
   const [numberOfWinners, setNumberOfWinners] = useState(1);
   const [multipleWinners, setMultipleWinners] = useState<Comment[]>([]);
 
+  // Tool configuration
+  const toolConfig = {
+    name: 'Comment Picker',
+    description: 'Randomly select winners from YouTube video comments with advanced filtering',
+    image: 'https://64.media.tumblr.com/8bc2e7b6f5d4c1a7e2b1f8a0e4c3d7e9/tumblr_p2k8r4fG3t1t7x4v2o1_1280.jpg',
+    icon: 'bx bx-gift',
+    features: [
+      'Random comment selection',
+      'Advanced filtering options',
+      'Multiple winner support'
+    ]
+  };
+
   const [filters, setFilters] = useState<FilterOptions>({
     minLikes: 0,
     dateRange: {
@@ -432,38 +445,56 @@ export const CommentPicker: React.FC = () => {
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>Comment Picker</S.Title>
-          <S.Subtitle>
-            Randomly select winners from YouTube video comments with advanced filtering
-          </S.Subtitle>
-        </S.Header>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
 
-        <S.SearchContainer>
-          <form onSubmit={handleSubmit}>
-            <S.SearchBar>
-              <S.SearchInput
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="Enter YouTube video URL or video ID"
-                disabled={isLoading}
-              />
-              <S.SearchButton type="button" onClick={handleSearch} disabled={isLoading}>
-                {isLoading ? (
-                  <i className='bx bx-loader-alt bx-spin'></i>
-                ) : (
-                  <i className='bx bx-gift'></i>
-                )}
-              </S.SearchButton>
-            </S.SearchBar>
-          </form>
+        {/* Enhanced Header Section with Integrated Search */}
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
+            
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+              
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
+                ))}
+              </S.FeaturesList>
 
-          <S.ToggleContainer>
+              {/* Integrated Search Bar */}
+              <S.HeaderSearchContainer>
+                <S.HeaderSearchBar>
+                  <S.HeaderSearchInput
+                    type="text"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="Enter YouTube video URL to pick random comments"
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                  <S.HeaderSearchButton onClick={handleSearch} disabled={isLoading}>
+                    {isLoading ? (
+                      <i className='bx bx-loader-alt bx-spin'></i>
+                    ) : (
+                      <i className='bx bx-search'></i>
+                    )}
+                  </S.HeaderSearchButton>
+                </S.HeaderSearchBar>
+              </S.HeaderSearchContainer>
+            </S.HeaderTextContent>
+          </S.HeaderContent>
+        </S.EnhancedHeader>
+
+        <S.ToggleContainer>
             <S.ToggleButton 
               onClick={() => setShowFilters(!showFilters)}
               className={showFilters ? 'active' : ''}
@@ -479,7 +510,6 @@ export const CommentPicker: React.FC = () => {
               Multiple Winners
             </S.ToggleButton>
           </S.ToggleContainer>
-        </S.SearchContainer>
 
         {showFilters && (
           <S.FiltersContainer>

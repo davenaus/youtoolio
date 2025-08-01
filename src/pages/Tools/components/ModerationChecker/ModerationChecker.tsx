@@ -4,6 +4,19 @@ import { useNavigate } from 'react-router-dom';
 import { AdSense } from '../../../../components/AdSense/AdSense';
 import * as S from './styles';
 
+const toolConfig = {
+  name: 'Moderation Checker',
+  description: 'Enter any text to scan for profanity, spam, hate, and unsafe content using our moderation AI.',
+  icon: 'bx bx-shield',
+  image: 'https://64.media.tumblr.com/85fa58821bb2821eae83196f1bd591b6/0e01452f9f6dd974-9c/s2048x3072/23294c53a2da205260c1f54a1515d3ead28110ff.jpg',
+  features: [
+    'Profanity & Hate Speech Detection',
+    'Toxicity and Risk Scores',
+    'Sentiment & Safety Suggestions',
+  ]
+};
+
+
 interface ModerationResult {
   overallScore: number;
   riskLevel: 'Safe' | 'Low Risk' | 'Medium Risk' | 'High Risk';
@@ -416,10 +429,30 @@ export const ModerationChecker: React.FC = () => {
             <i className="bx bx-arrow-back"></i>
             Back to Tools
           </S.BackButton>
-          <S.Title>Content Moderation Checker</S.Title>
-          <S.Subtitle>
-            Analyze your content for potential policy violations, toxicity, and audience safety
-          </S.Subtitle>
+{/* Enhanced Header Section with Integrated Search */}
+<S.EnhancedHeader backgroundImage={toolConfig.image}>
+  <S.HeaderOverlay />
+  <S.HeaderContent>
+    <S.ToolIconContainer>
+      <i className={toolConfig.icon}></i>
+    </S.ToolIconContainer>
+    
+    <S.HeaderTextContent>
+      <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+      <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+      
+      <S.FeaturesList>
+        {toolConfig.features.map((feature, index) => (
+          <S.FeatureItem key={index}>
+            <i className="bx bx-check-circle"></i>
+            <span>{feature}</span>
+          </S.FeatureItem>
+        ))}
+      </S.FeaturesList>
+
+    </S.HeaderTextContent>
+  </S.HeaderContent>
+</S.EnhancedHeader>
         </S.Header>
 
         <S.AnalysisContainer>

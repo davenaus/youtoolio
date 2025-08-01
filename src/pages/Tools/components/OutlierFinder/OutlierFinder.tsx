@@ -33,6 +33,19 @@ export const OutlierFinder: React.FC = () => {
   const [resultCount, setResultCount] = useState(10);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
+  // Tool configuration
+  const toolConfig = {
+    name: 'Outlier Finder',
+    description: 'Discover high-performing videos that exceed typical view-to-subscriber ratios in any niche',
+    image: 'https://64.media.tumblr.com/60109acd631995e9b43834a7f4358e78/0e01452f9f6dd974-f2/s2048x3072/3390c9b19607d957940ac9e1b8b23b6afbdc037f.jpg',
+    icon: 'bx bx-trophy',
+    features: [
+      'Viral content detection',
+      'Performance ratios',
+      'Trend analysis'
+    ]
+  };
+
   const [filters, setFilters] = useState<FilterOptions>({
     minViews: 0,
     maxAge: 365,
@@ -307,37 +320,56 @@ export const OutlierFinder: React.FC = () => {
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>Outlier Finder</S.Title>
-          <S.Subtitle>
-            Discover viral videos that significantly outperformed their channel's typical reach
-          </S.Subtitle>
-        </S.Header>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
 
-        <S.SearchContainer>
-          <S.SearchBar>
-            <S.SearchInput
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Enter YouTube search query (e.g., 'cooking', 'gaming', 'music')"
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              disabled={isLoading}
-            />
-            <S.SearchButton onClick={handleSearch} disabled={isLoading}>
-              {isLoading ? (
-                <i className='bx bx-loader-alt bx-spin'></i>
-              ) : (
-                <i className='bx bx-search'></i>
-              )}
-            </S.SearchButton>
-          </S.SearchBar>
+        {/* Enhanced Header Section */}
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
+            
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+              
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
+                ))}
+              </S.FeaturesList>
 
-          <S.ControlsContainer>
+              {/* Integrated Search Bar */}
+              <S.HeaderSearchContainer>
+                <S.HeaderSearchBar>
+                  <S.HeaderSearchInput
+                    type="text"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Enter channel URL to find outlier videos"
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                  <S.HeaderSearchButton onClick={handleSearch} disabled={isLoading}>
+                    {isLoading ? (
+                      <i className='bx bx-loader-alt bx-spin'></i>
+                    ) : (
+                      <i className='bx bx-search'></i>
+                    )}
+                  </S.HeaderSearchButton>
+                </S.HeaderSearchBar>
+              </S.HeaderSearchContainer>
+            </S.HeaderTextContent>
+          </S.HeaderContent>
+        </S.EnhancedHeader>
+
+        <S.ControlsContainer>
             <S.ToggleContainer>
               <S.ToggleButton 
                 onClick={() => handleToggle(false)}
@@ -361,19 +393,18 @@ export const OutlierFinder: React.FC = () => {
             </S.FilterToggle>
           </S.ControlsContainer>
 
-          {searchHistory.length > 0 && !showResults && (
-            <S.SearchHistory>
-              <S.HistoryLabel>Recent searches:</S.HistoryLabel>
-              <S.HistoryTags>
-                {searchHistory.map((term, index) => (
-                  <S.HistoryTag key={index} onClick={() => setQuery(term)}>
-                    {term}
-                  </S.HistoryTag>
-                ))}
-              </S.HistoryTags>
-            </S.SearchHistory>
-          )}
-        </S.SearchContainer>
+        {searchHistory.length > 0 && !showResults && (
+          <S.SearchHistory>
+            <S.HistoryLabel>Recent searches:</S.HistoryLabel>
+            <S.HistoryTags>
+              {searchHistory.map((term, index) => (
+                <S.HistoryTag key={index} onClick={() => setQuery(term)}>
+                  {term}
+                </S.HistoryTag>
+              ))}
+            </S.HistoryTags>
+          </S.SearchHistory>
+        )}
 
         {showFilters && (
           <S.FiltersContainer>

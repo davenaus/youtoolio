@@ -76,6 +76,19 @@ export const VideoAnalyzer: React.FC = () => {
   const [analysisResults, setAnalysisResults] = useState<VideoAnalysis | null>(null);
   const [showResults, setShowResults] = useState(false);
 
+  // Tool configuration
+  const toolConfig = {
+    name: 'Video Analyzer',
+    description: 'Deep-dive analytics for your YouTube videos with performance metrics, engagement rates, and optimization insights',
+    image: 'https://64.media.tumblr.com/f55e2ae2e5b16799fd5889c64b3fe36b/0e01452f9f6dd974-0e/s2048x3072/09051a8561ff4ab1cc8a5fa3b4b3d81f8a3a720d.jpg',
+    icon: 'bx bx-chart',
+    features: [
+      'Performance metrics tracking',
+      'Engagement rate analysis',
+      'Revenue estimation'
+    ]
+  };
+
   useEffect(() => {
     if (videoId) {
       setVideoUrl(`https://youtube.com/watch?v=${videoId}`);
@@ -418,35 +431,54 @@ export const VideoAnalyzer: React.FC = () => {
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>Video Analyzer</S.Title>
-          <S.Subtitle>
-            Detailed insights into any YouTube video's performance
-          </S.Subtitle>
-        </S.Header>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
 
-        <S.SearchContainer>
-          <S.SearchBar>
-            <S.SearchInput
-              type="text"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="Enter YouTube video URL or video ID"
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <S.SearchButton onClick={handleSearch} disabled={isLoading}>
-              {isLoading ? (
-                <i className='bx bx-loader-alt bx-spin'></i>
-              ) : (
-                <i className='bx bx-search'></i>
-              )}
-            </S.SearchButton>
-          </S.SearchBar>
-        </S.SearchContainer>
+        {/* Enhanced Header Section with Integrated Search */}
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
+            
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+              
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
+                ))}
+              </S.FeaturesList>
+
+              {/* Integrated Search Bar */}
+              <S.HeaderSearchContainer>
+                <S.HeaderSearchBar>
+                  <S.HeaderSearchInput
+                    type="text"
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder="Enter YouTube video URL or video ID"
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                  <S.HeaderSearchButton onClick={handleSearch} disabled={isLoading}>
+                    {isLoading ? (
+                      <i className='bx bx-loader-alt bx-spin'></i>
+                    ) : (
+                      <i className='bx bx-search'></i>
+                    )}
+                  </S.HeaderSearchButton>
+                </S.HeaderSearchBar>
+              </S.HeaderSearchContainer>
+            </S.HeaderTextContent>
+          </S.HeaderContent>
+        </S.EnhancedHeader>
 
         <S.ResultsContainer className={showResults ? 'visible' : ''}>
           {isLoading ? (

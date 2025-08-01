@@ -62,6 +62,19 @@ export const ThumbnailTester: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<'input' | 'preview' | 'compare'>('input');
 
+  // Tool configuration
+  const toolConfig = {
+    name: 'Thumbnail Tester',
+    description: 'Preview how your thumbnails will look across different YouTube layouts and compare with trending videos',
+    image: 'https://64.media.tumblr.com/c16a513f7724612ec41c27bf532b7d8f/0e01452f9f6dd974-6d/s2048x3072/8f37d7ca31ccb0b698b3e21d74c2e276c260c7a0.jpg',
+    icon: 'bx bx-book-content',
+    features: [
+      'Layout preview testing',
+      'Trending comparison',
+      'CTR optimization'
+    ]
+  };
+
   // Comparison state
   const [comparisonVideos, setComparisonVideos] = useState<ChannelVideo[]>([]);
   const [settings, setSettings] = useState<ComparisonSettings>({
@@ -140,6 +153,80 @@ export const ThumbnailTester: React.FC = () => {
       }
     }
     return null;
+  };
+
+  const extractVideoId = (url: string): string | null => {
+    const patterns = [
+      /youtube\.com\/watch\?v=([\w-]+)/,
+      /youtu\.be\/([\w-]+)/,
+      /youtube\.com\/embed\/([\w-]+)/
+    ];
+
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) {
+        return match[1];
+      }
+    }
+    return null;
+  };
+
+  const handleVideoUrlInput = async (url: string) => {
+    if (!url.trim()) {
+      alert('Please enter a YouTube video URL');
+      return;
+    }
+
+    const videoId = extractVideoId(url);
+    if (!videoId) {
+      alert('Please enter a valid YouTube video URL');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+      if (!API_KEY) {
+        throw new Error('YouTube API key not configured');
+      }
+
+      const response = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?` +
+        `part=snippet&` +
+        `id=${videoId}&` +
+        `key=${API_KEY}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch video data');
+      }
+
+      const data = await response.json();
+      if (!data.items?.[0]) {
+        throw new Error('Video not found');
+      }
+
+      const video = data.items[0];
+      const thumbnail = video.snippet.thumbnails.maxres?.url || 
+                       video.snippet.thumbnails.high?.url || 
+                       video.snippet.thumbnails.medium?.url;
+      
+      setThumbnailUrl(thumbnail);
+      setTitle(video.snippet.title);
+      setChannelName(video.snippet.channelTitle);
+      
+      // Clear the input field
+      const input = document.querySelector('input[placeholder*="YouTube video URL"]') as HTMLInputElement;
+      if (input) input.value = '';
+      
+      alert('Thumbnail loaded successfully!');
+    } catch (error) {
+      console.error('Error loading thumbnail:', error);
+      alert(`Failed to load thumbnail: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const fetchTrendingVideos = async (): Promise<ChannelVideo[]> => {
@@ -545,26 +632,40 @@ const fetchChannelVideos = async (channelUrl: string): Promise<ChannelVideo[]> =
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>Thumbnail Tester</S.Title>
-          <S.Subtitle>
-            Test how your YouTube thumbnail looks across different layouts and compare with trending videos
-          </S.Subtitle>
-        </S.Header>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
+
+        {/* Enhanced Header Section with Integrated Search */}
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
+            
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+              
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
+                ))}
+              </S.FeaturesList>
+            </S.HeaderTextContent>
+          </S.HeaderContent>
+        </S.EnhancedHeader>
 
         {renderStepIndicator()}
 
         {/* Step 1: Upload Section */}
         {currentStep === 'input' && (
           <S.InputSection>
-            <S.SectionTitle>
-              <i className="bx bx-upload"></i>
-              Upload Your Thumbnail
-            </S.SectionTitle>
 
             {/* New side-by-side layout */}
             <S.UploadAndFormWrapper>

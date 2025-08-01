@@ -61,6 +61,19 @@ export const TagGenerator: React.FC = () => {
   const [analysisMode, setAnalysisMode] = useState<'basic' | 'advanced'>('advanced');
   const [targetAudience, setTargetAudience] = useState<'general' | 'gaming' | 'education' | 'entertainment' | 'tech'>('general');
 
+  // Tool configuration
+  const toolConfig = {
+    name: 'Tag Generator',
+    description: 'Generate high-performing YouTube tags with advanced AI analysis to boost your video discoverability',
+    image: 'https://64.media.tumblr.com/276a73213e38fa7b326758ee7f115ed6/0e01452f9f6dd974-35/s2048x3072/a99f9ebfb857f86f0b720517850972aff27712c1.jpg',
+    icon: 'bx bx-purchase-tag-alt',
+    features: [
+      'AI-powered tag suggestions',
+      'Performance analytics',
+      'Trending keyword detection'
+    ]
+  };
+
   useEffect(() => {
     if (searchTitle) {
       const decodedTitle = decodeURIComponent(searchTitle);
@@ -452,42 +465,62 @@ export const TagGenerator: React.FC = () => {
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>AI Tag Generator</S.Title>
-          <S.Subtitle>
-            Generate high-performing YouTube tags with advanced AI analysis
-          </S.Subtitle>
-        </S.Header>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
 
-        <S.SearchContainer>
-          <S.SearchBar>
-            <S.SearchInput
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Enter your video title or main topic..."
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <S.SearchButton onClick={handleSearch} disabled={isLoading}>
-              {isLoading ? (
-                <i className='bx bx-loader-alt bx-spin'></i>
-              ) : (
-                <i className='bx bx-search'></i>
-              )}
-            </S.SearchButton>
-          </S.SearchBar>
+        {/* Enhanced Header Section with Integrated Search */}
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
+            
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+              
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
+                ))}
+              </S.FeaturesList>
 
-          <S.ControlsContainer>
-            <S.FilterToggle onClick={() => setShowFilters(!showFilters)}>
-              <i className="bx bx-cog"></i>
-              Advanced Settings
-            </S.FilterToggle>
-          </S.ControlsContainer>
-        </S.SearchContainer>
+              {/* Integrated Search Bar */}
+              <S.HeaderSearchContainer>
+                <S.HeaderSearchBar>
+                  <S.HeaderSearchInput
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Enter your video title or main topic..."
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                  <S.HeaderSearchButton onClick={handleSearch} disabled={isLoading}>
+                    {isLoading ? (
+                      <i className='bx bx-loader-alt bx-spin'></i>
+                    ) : (
+                      <i className='bx bx-search'></i>
+                    )}
+                  </S.HeaderSearchButton>
+                </S.HeaderSearchBar>
+              </S.HeaderSearchContainer>
+            </S.HeaderTextContent>
+          </S.HeaderContent>
+        </S.EnhancedHeader>
+
+        {/* Advanced Settings Container */}
+        <S.ControlsContainer>
+          <S.FilterToggle onClick={() => setShowFilters(!showFilters)}>
+            <i className="bx bx-cog"></i>
+            Advanced Settings
+          </S.FilterToggle>
+        </S.ControlsContainer>
 
         {showFilters && (
           <S.FiltersContainer>

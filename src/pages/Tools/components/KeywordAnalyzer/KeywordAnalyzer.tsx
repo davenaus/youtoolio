@@ -50,6 +50,19 @@ export const KeywordAnalyzer: React.FC = () => {
   const [showResults, setShowResults] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Tool configuration
+  const toolConfig = {
+    name: 'Keyword Analyzer',
+    description: 'Discover search volume, competition, and optimization opportunities for YouTube keywords with detailed insights',
+    image: 'https://64.media.tumblr.com/10c0d99fe1fe964324e1cdb293ee4756/0e01452f9f6dd974-c1/s2048x3072/4307ba680bb19d0d80529c1d1415552dffdd3b9a.jpg',
+    icon: 'bx bx-search-alt',
+    features: [
+      'Search volume analysis',
+      'Competition scoring',
+      'Trend identification'
+    ]
+  };
+
   // Load search history from localStorage
   useEffect(() => {
     const history = localStorage.getItem('keyword_history');
@@ -426,74 +439,77 @@ export const KeywordAnalyzer: React.FC = () => {
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>Keyword Analyzer</S.Title>
-          <S.Subtitle>
-            Discover search volume, competition, and optimization opportunities for YouTube keywords
-          </S.Subtitle>
-        </S.Header>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
 
-        <S.SearchContainer>
-          <S.SearchSection>
-            <S.SectionTitle>
-              <i className="bx bx-search"></i>
-              Analyze YouTube Keyword
-            </S.SectionTitle>
+        {/* Enhanced Header Section with Integrated Search */}
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
             
-            <S.SearchBar>
-              <S.SearchInput
-                type="text"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                placeholder="Enter YouTube keyword (e.g., 'gaming tutorial', 'cooking recipes')"
-                onKeyPress={(e) => e.key === 'Enter' && analyzeKeyword()}
-                autoFocus
-              />
-              <S.SearchButton onClick={analyzeKeyword} disabled={isAnalyzing || !keyword.trim()}>
-                {isAnalyzing ? (
-                  <>
-                    <i className="bx bx-loader-alt bx-spin"></i>
-                    Analyzing...
-                  </>
-                ) : (
-                  <>
-                    <i className="bx bx-search"></i>
-                    Analyze
-                  </>
-                )}
-              </S.SearchButton>
-            </S.SearchBar>
-
-            <S.HelpText>
-              Enter any keyword or phrase to analyze its performance on YouTube
-            </S.HelpText>
-
-            {error && (
-              <S.ErrorMessage>
-                <i className="bx bx-error"></i>
-                {error}
-              </S.ErrorMessage>
-            )}
-          </S.SearchSection>
-
-          {searchHistory.length > 0 && (
-            <S.HistorySection>
-              <S.HistoryLabel>Recent searches:</S.HistoryLabel>
-              <S.HistoryList>
-                {searchHistory.map((term, index) => (
-                  <S.HistoryItem key={index} onClick={() => setKeyword(term)}>
-                    <i className="bx bx-time"></i>
-                    {term}
-                  </S.HistoryItem>
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+              
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
                 ))}
-              </S.HistoryList>
-            </S.HistorySection>
-          )}
-        </S.SearchContainer>
+              </S.FeaturesList>
+
+              {/* Integrated Search Bar */}
+              <S.HeaderSearchContainer>
+                <S.HeaderSearchBar>
+                  <S.HeaderSearchInput
+                    type="text"
+                    value={keyword}
+                    onChange={(e) => setKeyword(e.target.value)}
+                    placeholder="Enter keyword or phrase to analyze (e.g., 'gaming tutorial', 'cooking recipes')"
+                    onKeyPress={(e) => e.key === 'Enter' && analyzeKeyword()}
+                  />
+                  <S.HeaderSearchButton onClick={analyzeKeyword} disabled={isAnalyzing || !keyword.trim()}>
+                    {isAnalyzing ? (
+                      <i className="bx bx-loader-alt bx-spin"></i>
+                    ) : (
+                      <i className="bx bx-search"></i>
+                    )}
+                  </S.HeaderSearchButton>
+                </S.HeaderSearchBar>
+              </S.HeaderSearchContainer>
+            </S.HeaderTextContent>
+          </S.HeaderContent>
+        </S.EnhancedHeader>
+
+        {/* Error Message */}
+        {error && (
+          <S.ErrorMessage>
+            <i className="bx bx-error"></i>
+            {error}
+          </S.ErrorMessage>
+        )}
+
+        {/* Search History */}
+        {searchHistory.length > 0 && (
+          <S.HistorySection>
+            <S.HistoryLabel>Recent searches:</S.HistoryLabel>
+            <S.HistoryList>
+              {searchHistory.map((term, index) => (
+                <S.HistoryItem key={index} onClick={() => setKeyword(term)}>
+                  <i className="bx bx-time"></i>
+                  {term}
+                </S.HistoryItem>
+              ))}
+            </S.HistoryList>
+          </S.HistorySection>
+        )}
 
         {isAnalyzing && (
           <S.LoadingContainer>

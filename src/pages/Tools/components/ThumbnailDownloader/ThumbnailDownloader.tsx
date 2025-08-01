@@ -46,6 +46,19 @@ export const ThumbnailDownloader: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<'input' | 'preview' | 'download'>('input');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  // Tool configuration
+  const toolConfig = {
+    name: 'Thumbnail Downloader',
+    description: 'Download high-quality YouTube video thumbnails in multiple resolutions',
+    image: 'https://64.media.tumblr.com/b12f0a4e3b88cf8409200338965cf706/0e01452f9f6dd974-5e/s2048x3072/00de80d7d1ca44cb236d21cab0adbe20fc5bbfb9.jpg',
+    icon: 'bx bx-photo-album',
+    features: [
+      'Multiple resolutions',
+      'Batch downloads',
+      'Direct save to device'
+    ]
+  };
+
   useEffect(() => {
     if (videoId) {
       const videoUrl = `https://youtube.com/watch?v=${videoId}`;
@@ -84,6 +97,20 @@ export const ThumbnailDownloader: React.FC = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!url.trim()) {
+      alert('Please enter a YouTube video URL');
+      return;
+    }
+
+    const extractedId = extractVideoId(url);
+    if (extractedId) {
+      navigate(`/tools/thumbnail-downloader/${extractedId}`);
+    } else {
+      alert('Invalid YouTube URL. Please check the URL and try again.');
+    }
+  };
+
+  const handleHeaderSearch = () => {
     if (!url.trim()) {
       alert('Please enter a YouTube video URL');
       return;
@@ -358,51 +385,65 @@ export const ThumbnailDownloader: React.FC = () => {
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>Thumbnail Downloader</S.Title>
-          <S.Subtitle>
-            Download high-quality YouTube video thumbnails in multiple resolutions
-          </S.Subtitle>
-        </S.Header>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
+
+        {/* Enhanced Header Section with Integrated Search */}
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
+            
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+              
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
+                ))}
+              </S.FeaturesList>
+
+              {/* Integrated Search Bar */}
+              <S.HeaderSearchContainer>
+                <S.HeaderSearchBar>
+                  <S.HeaderSearchInput
+                    type="text"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="Enter YouTube video URL to download thumbnail"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleHeaderSearch();
+                      }
+                    }}
+                  />
+                  <S.HeaderSearchButton onClick={handleHeaderSearch} disabled={isLoading}>
+                    {isLoading ? (
+                      <i className='bx bx-loader-alt bx-spin'></i>
+                    ) : (
+                      <i className='bx bx-download'></i>
+                    )}
+                  </S.HeaderSearchButton>
+                </S.HeaderSearchBar>
+              </S.HeaderSearchContainer>
+            </S.HeaderTextContent>
+          </S.HeaderContent>
+        </S.EnhancedHeader>
 
         {renderStepIndicator()}
 
         {/* Step 1: URL Input */}
         {currentStep === 'input' && (
           <S.InputSection>
-            <S.SectionTitle>
-              <i className="bx bx-link"></i>
-              Enter YouTube Video URL
-            </S.SectionTitle>
-
-            <S.InputContainer>
-              <form onSubmit={handleSearch}>
-                <S.SearchBar>
-                  <S.SearchInput
-                    type="text"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="https://youtube.com/watch?v=... or video ID"
-                    autoFocus
-                  />
-                  <S.SearchButton type="submit" disabled={isLoading}>
-                    {isLoading ? (
-                      <i className='bx bx-loader-alt bx-spin'></i>
-                    ) : (
-                      <i className='bx bx-search'></i>
-                    )}
-                  </S.SearchButton>
-                </S.SearchBar>
-              </form>
-              
-              <S.InputHint>
-                Supports regular YouTube videos, Shorts, and direct video IDs
-              </S.InputHint>
-            </S.InputContainer>
 
 
 
@@ -435,10 +476,6 @@ export const ThumbnailDownloader: React.FC = () => {
               </S.LoadingContainer>
             ) : thumbnailData ? (
               <>
-                <S.SectionTitle>
-                  <i className="bx bx-image"></i>
-                  Thumbnail Preview
-                </S.SectionTitle>
 
                 <S.VideoInfo>
                   <S.VideoDetails>

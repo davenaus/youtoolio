@@ -31,6 +31,19 @@ export const ChannelIdFinder: React.FC = () => {
   const [searchType, setSearchType] = useState<'url' | 'name' | 'id'>('url');
   const [error, setError] = useState<string | null>(null);
 
+  // Tool configuration
+  const toolConfig = {
+    name: 'Channel ID Finder',
+    description: 'Find any YouTube channel\'s ID, statistics, and detailed information from URLs, names, or handles',
+    image: 'https://64.media.tumblr.com/10ccc3757948e253900a92bc6ce226ab/0e01452f9f6dd974-3b/s2048x3072/62471a32052a5c06b185d9c0242331a986f0cca6.jpg',
+    icon: 'bx bx-search-alt-2',
+    features: [
+      'Multi-format search',
+      'Complete channel data',
+      'API-ready results'
+    ]
+  };
+
   // Load search history from localStorage
   useEffect(() => {
     const history = localStorage.getItem('channel_search_history');
@@ -312,101 +325,81 @@ export const ChannelIdFinder: React.FC = () => {
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>Channel ID Finder</S.Title>
-          <S.Subtitle>
-            Find any YouTube channel's ID, statistics, and detailed information instantly
-          </S.Subtitle>
-        </S.Header>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
 
-        <S.SearchContainer>
-          <S.SearchSection>
-            <S.SectionTitle>
-              <i className="bx bx-search-alt"></i>
-              Find Channel Information
-            </S.SectionTitle>
+        {/* Enhanced Header Section with Integrated Search */}
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
             
-            
-            <S.SearchBar>
-              <S.SearchInput
-                type="text"
-                value={input}
-                onChange={(e) => {
-                  setInput(e.target.value);
-                  setSearchType(detectInputType(e.target.value));
-                  if (error) setError(null);
-                }}
-                placeholder="Enter channel URL, name, handle (@username), or channel ID"
-                onKeyPress={(e) => e.key === 'Enter' && searchChannel()}
-                autoFocus
-              />
-              <S.SearchButton onClick={searchChannel} disabled={isSearching || !input.trim()}>
-                {isSearching ? (
-                  <>
-                    <i className="bx bx-loader-alt bx-spin"></i>
-                    Searching...
-                  </>
-                ) : (
-                  <>
-                    <i className="bx bx-search"></i>
-                    Find Channel
-                  </>
-                )}
-              </S.SearchButton>
-            </S.SearchBar>
-
-            {error && (
-              <S.ErrorMessage>
-                <i className="bx bx-error"></i>
-                {error}
-              </S.ErrorMessage>
-            )}
-
-            <S.ExamplesGrid>
-              <S.ExampleCard onClick={() => setInput('https://youtube.com/@mkbhd')}>
-                <i className="bx bx-link"></i>
-                <div>
-                  <strong>URL Example</strong>
-                  <span>https://youtube.com/@mkbhd</span>
-                </div>
-              </S.ExampleCard>
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
               
-              <S.ExampleCard onClick={() => setInput('@mkbhd')}>
-                <i className="bx bx-user"></i>
-                <div>
-                  <strong>Handle Example</strong>
-                  <span>@mkbhd</span>
-                </div>
-              </S.ExampleCard>
-              
-              <S.ExampleCard onClick={() => setInput('UCBJycsmduvYEL83R_U4JriQ')}>
-                <i className="bx bx-hash"></i>
-                <div>
-                  <strong>Channel ID</strong>
-                  <span>UCBJycsmduvYEL83R_U4JriQ</span>
-                </div>
-              </S.ExampleCard>
-            </S.ExamplesGrid>
-          </S.SearchSection>
-
-          {searchHistory.length > 0 && (
-            <S.HistorySection>
-              <S.HistoryLabel>Recent searches:</S.HistoryLabel>
-              <S.HistoryList>
-                {searchHistory.map((term, index) => (
-                  <S.HistoryItem key={index} onClick={() => setInput(term)}>
-                    <i className="bx bx-time"></i>
-                    <span>{term}</span>
-                  </S.HistoryItem>
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
                 ))}
-              </S.HistoryList>
-            </S.HistorySection>
-          )}
-        </S.SearchContainer>
+              </S.FeaturesList>
+
+              {/* Integrated Search Bar */}
+              <S.HeaderSearchContainer>
+                <S.HeaderSearchBar>
+                  <S.HeaderSearchInput
+                    type="text"
+                    value={input}
+                    onChange={(e) => {
+                      setInput(e.target.value);
+                      setSearchType(detectInputType(e.target.value));
+                      if (error) setError(null);
+                    }}
+                    placeholder="Enter channel URL, name, handle (@username), or channel ID"
+                    onKeyPress={(e) => e.key === 'Enter' && searchChannel()}
+                  />
+                  <S.HeaderSearchButton onClick={searchChannel} disabled={isSearching || !input.trim()}>
+                    {isSearching ? (
+                      <i className='bx bx-loader-alt bx-spin'></i>
+                    ) : (
+                      <i className='bx bx-search'></i>
+                    )}
+                  </S.HeaderSearchButton>
+                </S.HeaderSearchBar>
+              </S.HeaderSearchContainer>
+            </S.HeaderTextContent>
+          </S.HeaderContent>
+        </S.EnhancedHeader>
+
+        {/* Error Message */}
+        {error && (
+          <S.ErrorMessage>
+            <i className="bx bx-error"></i>
+            {error}
+          </S.ErrorMessage>
+        )}
+
+        {/* Search History */}
+        {searchHistory.length > 0 && (
+          <S.HistorySection>
+            <S.HistoryLabel>Recent searches:</S.HistoryLabel>
+            <S.HistoryList>
+              {searchHistory.map((term, index) => (
+                <S.HistoryItem key={index} onClick={() => setInput(term)}>
+                  <i className="bx bx-time"></i>
+                  <span>{term}</span>
+                </S.HistoryItem>
+              ))}
+            </S.HistoryList>
+          </S.HistorySection>
+        )}
 
         {isSearching && (
           <S.LoadingContainer>

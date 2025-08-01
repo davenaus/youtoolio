@@ -42,6 +42,19 @@ export const ChannelAnalyzer: React.FC = () => {
   const [analysisResults, setAnalysisResults] = useState<ChannelAnalysis | null>(null);
   const [showResults, setShowResults] = useState(false);
 
+  // Tool configuration
+  const toolConfig = {
+    name: 'Channel Analyzer',
+    description: 'Comprehensive channel analytics with growth tracking, competitor analysis, and optimization recommendations',
+    image: 'https://64.media.tumblr.com/ac9ad9e3a75b264881169b38018b6be8/0e01452f9f6dd974-e5/s2048x3072/8c12986bb347fdcb8bb1f003ca88748e35b437d8.jpg',
+    icon: 'bx bx-line-chart',
+    features: [
+      'Growth tracking',
+      'Competitor analysis', 
+      'Optimization recommendations'
+    ]
+  };
+
   useEffect(() => {
     if (channelId) {
       setChannelUrl(`https://youtube.com/channel/${channelId}`);
@@ -371,35 +384,54 @@ export const ChannelAnalyzer: React.FC = () => {
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>Channel Analyzer</S.Title>
-          <S.Subtitle>
-            Comprehensive analysis of YouTube channel performance
-          </S.Subtitle>
-        </S.Header>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
 
-        <S.SearchContainer>
-          <S.SearchBar>
-            <S.SearchInput
-              type="text"
-              value={channelUrl}
-              onChange={(e) => setChannelUrl(e.target.value)}
-              placeholder="Enter YouTube @ handle or channel ID"
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            />
-            <S.SearchButton onClick={handleSearch} disabled={isLoading}>
-              {isLoading ? (
-                <i className='bx bx-loader-alt bx-spin'></i>
-              ) : (
-                <i className='bx bx-search'></i>
-              )}
-            </S.SearchButton>
-          </S.SearchBar>
-        </S.SearchContainer>
+        {/* Enhanced Header Section with Integrated Search */}
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
+            
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+              
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
+                ))}
+              </S.FeaturesList>
+
+              {/* Integrated Search Bar */}
+              <S.HeaderSearchContainer>
+                <S.HeaderSearchBar>
+                  <S.HeaderSearchInput
+                    type="text"
+                    value={channelUrl}
+                    onChange={(e) => setChannelUrl(e.target.value)}
+                    placeholder="Enter YouTube @ handle or channel ID"
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                  <S.HeaderSearchButton onClick={handleSearch} disabled={isLoading}>
+                    {isLoading ? (
+                      <i className='bx bx-loader-alt bx-spin'></i>
+                    ) : (
+                      <i className='bx bx-search'></i>
+                    )}
+                  </S.HeaderSearchButton>
+                </S.HeaderSearchBar>
+              </S.HeaderSearchContainer>
+            </S.HeaderTextContent>
+          </S.HeaderContent>
+        </S.EnhancedHeader>
 
         <S.ResultsContainer className={showResults ? 'visible' : ''}>
           {isLoading ? (

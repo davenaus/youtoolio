@@ -78,6 +78,19 @@ export const ChannelComparer: React.FC = () => {
   const [channelData2, setChannelData2] = useState<ChannelData | null>(null);
   const [comparisonAnalysis, setComparisonAnalysis] = useState<ComparisonAnalysis | null>(null);
 
+  // Tool configuration
+  const toolConfig = {
+    name: 'Channel Comparer',
+    description: 'Compare any two YouTube channels side by side with detailed metrics and analysis',
+    image: 'https://64.media.tumblr.com/b5ef4a3f8a1a52b8b8bf5633b71856ce/0e01452f9f6dd974-22/s2048x3072/af73a8628e0cbe0468bb714952560c7d95172cf1.jpg',
+    icon: 'bx bx-analyse',
+    features: [
+      'Side-by-side comparison',
+      'Detailed metrics analysis',
+      'Performance insights'
+    ]
+  };
+
   const getChannelId = async (url: string): Promise<string> => {
     // Check if it's a direct channel ID
     if (/^UC[\w-]{22}$/.test(url)) {
@@ -431,16 +444,34 @@ export const ChannelComparer: React.FC = () => {
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>Channel Comparer</S.Title>
-          <S.Subtitle>
-            Comprehensive side-by-side analysis of YouTube channels with detailed metrics
-          </S.Subtitle>
-        </S.Header>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
+
+        {/* Enhanced Header Section */}
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
+            
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+              
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
+                ))}
+              </S.FeaturesList>
+            </S.HeaderTextContent>
+          </S.HeaderContent>
+        </S.EnhancedHeader>
 
         <S.InputContainer>
           <S.InputGroup>

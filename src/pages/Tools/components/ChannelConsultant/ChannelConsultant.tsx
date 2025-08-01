@@ -37,6 +37,19 @@ export const ChannelConsultant: React.FC = () => {
   const [instructions, setInstructions] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
 
+  // Tool configuration
+  const toolConfig = {
+    name: 'Channel Consultant',
+    description: 'Create a custom AI bot trained on your channel to help with content creation and strategy',
+    image: 'https://64.media.tumblr.com/dec9583099d591e567f0ceecac3b080a/0e01452f9f6dd974-11/s2048x3072/d955005ed173796f50e9a654b7dafe7ca077a024.jpg',
+    icon: 'bx bx-user-circle',
+    features: [
+      'AI-powered insights',
+      'Content strategy',
+      'Performance optimization'
+    ]
+  };
+
   const getChannelId = async (url: string): Promise<string> => {
     // Check if it's a direct channel ID
     if (/^UC[\w-]{22}$/.test(url)) {
@@ -210,35 +223,54 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
       </S.AdSidebar>
 
       <S.MainContainer>
-        <S.Header>
-          <S.BackButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Tools
-          </S.BackButton>
-          <S.Title>Channel Consultant</S.Title>
-          <S.Subtitle>
-            Generate custom AI bot instructions tailored to any YouTube channel for content optimization
-          </S.Subtitle>
-        </S.Header>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
 
-        <S.SearchContainer>
-          <S.SearchBar>
-            <S.SearchInput
-              type="text"
-              value={channelUrl}
-              onChange={(e) => setChannelUrl(e.target.value)}
-              placeholder="Enter YouTube channel URL, @handle, or ID to create custom bot"
-              onKeyPress={(e) => e.key === 'Enter' && handleAnalyze()}
-            />
-            <S.SearchButton onClick={handleAnalyze} disabled={isLoading}>
-              {isLoading ? (
-                <i className='bx bx-loader-alt bx-spin'></i>
-              ) : (
-                <i className='bx bx-bot'></i>
-              )}
-            </S.SearchButton>
-          </S.SearchBar>
-        </S.SearchContainer>
+        {/* Enhanced Header Section */}
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
+            
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+              
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
+                ))}
+              </S.FeaturesList>
+
+              {/* Integrated Search Bar */}
+              <S.HeaderSearchContainer>
+                <S.HeaderSearchBar>
+                  <S.HeaderSearchInput
+                    type="text"
+                    value={channelUrl}
+                    onChange={(e) => setChannelUrl(e.target.value)}
+                    placeholder="Enter your channel URL for consultation"
+                    onKeyPress={(e) => e.key === 'Enter' && handleAnalyze()}
+                  />
+                  <S.HeaderSearchButton onClick={handleAnalyze} disabled={isLoading}>
+                    {isLoading ? (
+                      <i className='bx bx-loader-alt bx-spin'></i>
+                    ) : (
+                      <i className='bx bx-search'></i>
+                    )}
+                  </S.HeaderSearchButton>
+                </S.HeaderSearchBar>
+              </S.HeaderSearchContainer>
+            </S.HeaderTextContent>
+          </S.HeaderContent>
+        </S.EnhancedHeader>
 
         <S.ResultsContainer className={showResults ? 'visible' : ''}>
           {isLoading ? (
