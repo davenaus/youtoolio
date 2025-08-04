@@ -273,9 +273,6 @@ export const Blog: React.FC = () => {
             We're working on more helpful articles, tutorials, and insights for YouTube creators. 
             Stay tuned for weekly content that will help you grow your channel.
           </p>
-          <SubscribeButton onClick={() => window.open('mailto:youtool.io.business@gmail.com?subject=Blog Newsletter Subscription')}>
-            Get Notified of New Posts
-          </SubscribeButton>
         </ComingSoon>
       </ContentWrapper>
     </Container>

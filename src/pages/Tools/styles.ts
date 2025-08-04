@@ -89,7 +89,7 @@ export const HeaderRight = styled.div`
 
 export const Title = styled.h1`
   font-size: 2.5rem;
-  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

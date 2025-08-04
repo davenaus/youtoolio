@@ -18,26 +18,41 @@ interface YouTubeVideo {
   tags: string[];
 }
 
+interface UploadTimeData {
+  day: string;
+  hour: number;
+  count: number;
+  avgViews: number;
+}
+
 interface KeywordData {
   keyword: string;
-  searchVolume: number;
-  competitionScore: number;
-  overallScore: number;
-  difficulty: 'Easy' | 'Medium' | 'Hard' | 'Very Hard';
+  tagScore: number; // Main score like rapidtags.io
+  searchVolume: 'Low' | 'Moderate' | 'High' | 'Very High';
+  searchVolumeScore: number; // 0-100 numeric value
+  competitiveness: 'Low' | 'Moderate' | 'High' | 'Very High';
+  competitivenessScore: number; // 0-100 numeric value
   trend: 'Rising' | 'Stable' | 'Declining';
   relatedKeywords: string[];
   topVideos: YouTubeVideo[];
+  uploadTimeDistribution: UploadTimeData[];
   insights: {
     averageViews: number;
+    averageViewCount: string; // Formatted like "472.3K"
+    viewsPerDay: number;
     averageLength: number;
     bestUploadDays: string[];
+    bestUploadTimes: { day: string; hour: number }[];
     topChannels: { name: string; count: number }[];
     totalResults: number;
     newVideosLastWeek: number;
     keywordInTitlePercentage: number;
     averageLikes: number;
+    engagementRate: number;
+    optimalUploadTime: string;
   };
   recommendations: string[];
+  performanceDescription: string;
 }
 
 export const KeywordAnalyzer: React.FC = () => {
@@ -57,9 +72,10 @@ export const KeywordAnalyzer: React.FC = () => {
     image: 'https://64.media.tumblr.com/10c0d99fe1fe964324e1cdb293ee4756/0e01452f9f6dd974-c1/s2048x3072/4307ba680bb19d0d80529c1d1415552dffdd3b9a.jpg',
     icon: 'bx bx-search-alt',
     features: [
-      'Search volume analysis',
-      'Competition scoring',
-      'Trend identification'
+      'Tag score analysis like rapidtags.io',
+      'Upload time distribution chart',
+      'Engagement rate calculation',
+      'Optimal posting time recommendations'
     ]
   };
 
@@ -94,58 +110,75 @@ export const KeywordAnalyzer: React.FC = () => {
     }
 
     try {
-      // Search for videos
-      const searchResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?` +
-        `part=snippet&type=video&q=${encodeURIComponent(searchTerm)}&` +
-        `maxResults=50&order=relevance&key=${API_KEY}`
+      // Search for videos with multiple queries to get broader data
+      const searchQueries = [
+        searchTerm,
+        `${searchTerm} tutorial`,
+        `${searchTerm} guide`,
+        `how to ${searchTerm}`,
+        `${searchTerm} tips`
+      ];
+
+      let allVideos: YouTubeVideo[] = [];
+
+      for (const query of searchQueries) {
+        try {
+          const searchResponse = await fetch(
+            `https://www.googleapis.com/youtube/v3/search?` +
+            `part=snippet&type=video&q=${encodeURIComponent(query)}&` +
+            `maxResults=20&order=relevance&key=${API_KEY}&publishedAfter=${new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()}`
+          );
+
+          if (!searchResponse.ok) continue;
+
+          const searchData = await searchResponse.json();
+          
+          if (searchData.items && searchData.items.length > 0) {
+            const videoIds = searchData.items.map((item: any) => item.id.videoId).join(',');
+            
+            const statsResponse = await fetch(
+              `https://www.googleapis.com/youtube/v3/videos?` +
+              `part=statistics,contentDetails,snippet&id=${videoIds}&key=${API_KEY}`
+            );
+
+            if (!statsResponse.ok) continue;
+
+            const statsData = await statsResponse.json();
+
+            const videos: YouTubeVideo[] = searchData.items.map((searchItem: any) => {
+              const statsItem = statsData.items.find((stat: any) => stat.id === searchItem.id.videoId);
+              
+              return {
+                id: searchItem.id.videoId,
+                title: searchItem.snippet.title,
+                description: searchItem.snippet.description,
+                thumbnail: searchItem.snippet.thumbnails.medium?.url || searchItem.snippet.thumbnails.default.url,
+                views: parseInt(statsItem?.statistics?.viewCount || '0'),
+                likes: parseInt(statsItem?.statistics?.likeCount || '0'),
+                publishedAt: searchItem.snippet.publishedAt,
+                channelTitle: searchItem.snippet.channelTitle,
+                channelId: searchItem.snippet.channelId,
+                duration: statsItem?.contentDetails?.duration || 'PT0S',
+                tags: statsItem?.snippet?.tags || []
+              };
+            }).filter((video: YouTubeVideo) => video.views > 100); // Filter minimum views
+
+            allVideos = [...allVideos, ...videos];
+          }
+        } catch (queryError) {
+          console.warn(`Error with query "${query}":`, queryError);
+          continue;
+        }
+      }
+
+      // Remove duplicates and get top performers
+      const uniqueVideos = allVideos.filter((video, index, self) => 
+        index === self.findIndex(v => v.id === video.id)
       );
 
-      if (!searchResponse.ok) {
-        throw new Error(`YouTube API error: ${searchResponse.status}`);
-      }
+      // Sort by views and take top 100
+      return uniqueVideos.sort((a, b) => b.views - a.views).slice(0, 100);
 
-      const searchData = await searchResponse.json();
-      
-      if (!searchData.items || searchData.items.length === 0) {
-        throw new Error('No videos found for this keyword');
-      }
-
-      // Get video IDs for detailed stats
-      const videoIds = searchData.items.map((item: any) => item.id.videoId).join(',');
-      
-      // Fetch detailed video statistics
-      const statsResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/videos?` +
-        `part=statistics,contentDetails,snippet&id=${videoIds}&key=${API_KEY}`
-      );
-
-      if (!statsResponse.ok) {
-        throw new Error(`YouTube API error: ${statsResponse.status}`);
-      }
-
-      const statsData = await statsResponse.json();
-
-      // Combine search results with detailed stats
-      const videos: YouTubeVideo[] = searchData.items.map((searchItem: any) => {
-        const statsItem = statsData.items.find((stat: any) => stat.id === searchItem.id.videoId);
-        
-        return {
-          id: searchItem.id.videoId,
-          title: searchItem.snippet.title,
-          description: searchItem.snippet.description,
-          thumbnail: searchItem.snippet.thumbnails.medium?.url || searchItem.snippet.thumbnails.default.url,
-          views: parseInt(statsItem?.statistics?.viewCount || '0'),
-          likes: parseInt(statsItem?.statistics?.likeCount || '0'),
-          publishedAt: searchItem.snippet.publishedAt,
-          channelTitle: searchItem.snippet.channelTitle,
-          channelId: searchItem.snippet.channelId,
-          duration: statsItem?.contentDetails?.duration || 'PT0S',
-          tags: statsItem?.snippet?.tags || []
-        };
-      }).filter((video: YouTubeVideo) => video.views > 0); // Filter out videos with no view data
-
-      return videos;
     } catch (error) {
       console.error('YouTube API Error:', error);
       throw error;
@@ -163,107 +196,238 @@ export const KeywordAnalyzer: React.FC = () => {
     return hours * 3600 + minutes * 60 + seconds;
   };
 
-  const analyzeKeywordData = (videos: YouTubeVideo[], keyword: string): KeywordData => {
-    if (videos.length === 0) {
-      throw new Error('No video data available for analysis');
+  const formatViewCount = (views: number): string => {
+    if (views >= 1000000) {
+      return `${(views / 1000000).toFixed(1)}M`;
+    } else if (views >= 1000) {
+      return `${(views / 1000).toFixed(1)}K`;
     }
+    return views.toString();
+  };
 
-    // Calculate basic metrics
+  const analyzeUploadTimes = (videos: YouTubeVideo[]): UploadTimeData[] => {
+    const timeData: { [key: string]: { count: number; totalViews: number } } = {};
+    
+    videos.forEach(video => {
+      const date = new Date(video.publishedAt);
+      const day = date.toLocaleDateString('en-US', { weekday: 'long' });
+      const hour = date.getHours();
+      const key = `${day}-${hour}`;
+      
+      if (!timeData[key]) {
+        timeData[key] = { count: 0, totalViews: 0 };
+      }
+      
+      timeData[key].count++;
+      timeData[key].totalViews += video.views;
+    });
+
+    return Object.entries(timeData).map(([key, data]) => {
+      const [day, hourStr] = key.split('-');
+      return {
+        day,
+        hour: parseInt(hourStr),
+        count: data.count,
+        avgViews: data.totalViews / data.count
+      };
+    });
+  };
+
+  const calculateTagScore = (videos: YouTubeVideo[], keyword: string): number => {
+    if (videos.length === 0) return 0;
+
+    // Factors that rapidtags.io likely considers for tag score
     const totalViews = videos.reduce((sum, video) => sum + video.views, 0);
-    const averageViews = Math.round(totalViews / videos.length);
-    const averageLikes = Math.round(videos.reduce((sum, video) => sum + video.likes, 0) / videos.length);
-    
-    const durations = videos.map(video => parseDuration(video.duration));
-    const averageLength = Math.round(durations.reduce((sum, duration) => sum + duration, 0) / durations.length);
+    const totalLikes = videos.reduce((sum, video) => sum + video.likes, 0);
+    const averageViews = totalViews / videos.length;
+    const averageLikes = totalLikes / videos.length;
 
-    // Improved Search Volume Calculation
-    // Use logarithmic scale to better distribute scores across different popularity levels
-    const maxViews = Math.max(...videos.map(v => v.views));
-    const medianViews = [...videos].sort((a, b) => a.views - b.views)[Math.floor(videos.length / 2)]?.views || 0;
-    
-    // Logarithmic scaling with multiple factors
-    const viewsFactor = Math.log10(Math.max(1, averageViews)) * 10; // 0-70 range typically
-    const peakFactor = Math.log10(Math.max(1, maxViews)) * 8; // Peak performance indicator
-    const consistencyFactor = (medianViews / Math.max(1, averageViews)) * 20; // How consistent the performance is
-    
-    const searchVolume = Math.min(100, Math.max(1, Math.round(
-      (viewsFactor * 0.4) + 
-      (peakFactor * 0.3) + 
-      (consistencyFactor * 0.3)
-    )));
+    // 1. Content Volume Factor (0-25 points)
+    // Based on number of quality videos for the keyword
+    const volumeFactor = Math.min(25, (videos.length / 4) * 25);
 
-    // Improved Competition Score Calculation
-    // Lower scores = less competition (better opportunity)
-    const viewsStdDev = Math.sqrt(
-      videos.reduce((sum, video) => {
-        const diff = video.views - averageViews;
-        return sum + (diff * diff);
-      }, 0) / videos.length
+    // 2. Performance Factor (0-30 points)
+    // Based on average views and engagement
+    const performanceLog = Math.log10(Math.max(1, averageViews));
+    const performanceFactor = Math.min(30, (performanceLog / 7) * 30);
+
+    // 3. Growth Potential Factor (0-25 points)
+    // Based on recent videos performance vs older ones
+    const recentVideos = videos.filter(v => 
+      new Date(v.publishedAt) > new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
     );
+    const recentAvgViews = recentVideos.length > 0 ? 
+      recentVideos.reduce((sum, v) => sum + v.views, 0) / recentVideos.length : 0;
+    const growthRatio = recentAvgViews / Math.max(1, averageViews);
+    const growthFactor = Math.min(25, growthRatio * 20);
+
+    // 4. Engagement Quality Factor (0-20 points)
+    // Based on likes-to-views ratio
+    const engagementRate = averageLikes / Math.max(1, averageViews);
+    const engagementFactor = Math.min(20, engagementRate * 2000);
+
+    const tagScore = Math.round(volumeFactor + performanceFactor + growthFactor + engagementFactor);
+    return Math.min(100, Math.max(1, tagScore));
+  };
+
+  const calculateSearchVolume = (videos: YouTubeVideo[]): { label: 'Low' | 'Moderate' | 'High' | 'Very High'; score: number } => {
+    const totalViews = videos.reduce((sum, video) => sum + video.views, 0);
+    const averageViews = totalViews / videos.length;
     
-    const coefficientOfVariation = viewsStdDev / Math.max(1, averageViews);
+    // More balanced scoring algorithm
+    // 1. Base score from video count (0-30 points)
+    const videoCountScore = Math.min(30, (videos.length / 100) * 30);
     
-    // Count videos with keyword in title
-    const keywordInTitle = videos.filter(video => 
-      video.title.toLowerCase().includes(keyword.toLowerCase())
-    ).length;
-    const keywordInTitlePercentage = Math.round((keywordInTitle / videos.length) * 100);
+    // 2. Average views score (0-40 points) - logarithmic scale
+    const viewsScore = Math.min(40, (Math.log10(Math.max(1, averageViews)) - 2) * 8);
     
-    // Count recent videos (last 30 days)
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    // 3. Recent activity bonus (0-20 points)
     const recentVideos = videos.filter(video => 
-      new Date(video.publishedAt) > thirtyDaysAgo
-    ).length;
+      new Date(video.publishedAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    );
+    const recentActivityScore = Math.min(20, (recentVideos.length / videos.length) * 20);
     
-    // Count high-performing channels (channels with multiple videos in top results)
+    // 4. Upload frequency score (0-10 points)
+    const uploadFrequencyScore = Math.min(10, (videos.length / 10) * 2);
+    
+    // Combine scores with realistic distribution
+    const rawScore = videoCountScore + viewsScore + recentActivityScore + uploadFrequencyScore;
+    const volumeScore = Math.max(1, Math.min(100, rawScore));
+    
+    let label: 'Low' | 'Moderate' | 'High' | 'Very High';
+    if (volumeScore >= 75) label = 'Very High';
+    else if (volumeScore >= 55) label = 'High';
+    else if (volumeScore >= 35) label = 'Moderate';
+    else label = 'Low';
+    
+    return { label, score: Math.round(volumeScore) };
+  };
+
+  const calculateCompetitiveness = (videos: YouTubeVideo[], keyword: string): { label: 'Low' | 'Moderate' | 'High' | 'Very High'; score: number } => {
+    // Channel dominance
     const channelCount = videos.reduce((acc, video) => {
       acc[video.channelId] = (acc[video.channelId] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
     
-    const dominantChannels = Object.values(channelCount).filter(count => count > 1).length;
+    const dominantChannels = Object.values(channelCount).filter(count => count > 2).length;
+    const dominanceScore = (dominantChannels / videos.length) * 30;
     
-    // Competition factors (each 0-100, lower = less competition)
-    const saturationFactor = Math.min(100, (recentVideos / videos.length) * 200); // High recent upload rate = more competition
-    const dominanceFactor = Math.min(100, (dominantChannels / videos.length) * 300); // Few channels dominating = harder to break in
-    const titleOptimizationFactor = Math.min(100, keywordInTitlePercentage); // High keyword usage = more competition
-    const variabilityFactor = Math.min(100, (1 - Math.min(1, coefficientOfVariation)) * 100); // Low variation = established competition
+    // Keyword optimization
+    const optimizedTitles = videos.filter(video => 
+      video.title.toLowerCase().includes(keyword.toLowerCase())
+    ).length;
+    const optimizationScore = (optimizedTitles / videos.length) * 40;
     
-    const competitionScore = Math.round(
-      (saturationFactor * 0.3) +
-      (dominanceFactor * 0.25) +
-      (titleOptimizationFactor * 0.25) +
-      (variabilityFactor * 0.2)
+    // Recent competition
+    const recentUploads = videos.filter(video => 
+      new Date(video.publishedAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    ).length;
+    const recencyScore = Math.min(30, (recentUploads / videos.length) * 100);
+    
+    const totalScore = Math.round(dominanceScore + optimizationScore + recencyScore);
+    
+    let label: 'Low' | 'Moderate' | 'High' | 'Very High';
+    if (totalScore >= 75) label = 'Very High';
+    else if (totalScore >= 55) label = 'High';
+    else if (totalScore >= 35) label = 'Moderate';
+    else label = 'Low';
+    
+    return { label, score: totalScore };
+  };
+
+  const generatePerformanceDescription = (tagScore: number): string => {
+    if (tagScore >= 85) {
+      return "This tag is excellent and has strong growth potential with low effort required.";
+    } else if (tagScore >= 70) {
+      return "This tag is high quality and has potential for growth, but may require some effort to improve its performance.";
+    } else if (tagScore >= 50) {
+      return "This tag shows moderate potential but will require strategic optimization to compete effectively.";
+    } else if (tagScore >= 30) {
+      return "This tag has limited potential and faces significant competition. Consider alternative keywords.";
+    } else {
+      return "This tag is highly competitive with low opportunity. Focus on long-tail variations instead.";
+    }
+  };
+
+  const analyzeKeywordData = (videos: YouTubeVideo[], keyword: string): KeywordData => {
+    if (videos.length === 0) {
+      throw new Error('No video data available for analysis');
+    }
+
+    // Calculate main metrics using rapidtags.io methodology
+    const tagScore = calculateTagScore(videos, keyword);
+    const searchVolume = calculateSearchVolume(videos);
+    const competitiveness = calculateCompetitiveness(videos, keyword);
+    
+    // Basic metrics
+    const totalViews = videos.reduce((sum, video) => sum + video.views, 0);
+    const totalLikes = videos.reduce((sum, video) => sum + video.likes, 0);
+    const averageViews = Math.round(totalViews / videos.length);
+    const averageLikes = Math.round(totalLikes / videos.length);
+    
+    const durations = videos.map(video => parseDuration(video.duration));
+    const averageLength = Math.round(durations.reduce((sum, duration) => sum + duration, 0) / durations.length);
+    
+    // Engagement rate calculation
+    const engagementRate = Number(((averageLikes / Math.max(1, averageViews)) * 100).toFixed(2));
+    
+    // Views per day calculation (similar to rapidtags.io)
+    const avgDaysOld = videos.reduce((sum, video) => {
+      const daysSinceUpload = (Date.now() - new Date(video.publishedAt).getTime()) / (1000 * 60 * 60 * 24);
+      return sum + daysSinceUpload;
+    }, 0) / videos.length;
+    
+    const viewsPerDay = Number((averageViews / Math.max(1, avgDaysOld)).toFixed(12));
+    
+    // Upload time analysis
+    const uploadTimeDistribution = analyzeUploadTimes(videos);
+    
+    // Best upload times
+    const bestTimes = uploadTimeDistribution
+      .sort((a, b) => b.avgViews - a.avgViews)
+      .slice(0, 3);
+    
+    const bestUploadDays = Array.from(new Set(bestTimes.map(t => t.day))).slice(0, 3);
+    const bestUploadTimes = bestTimes.map(t => ({ day: t.day, hour: t.hour }));
+    
+    // Optimal upload time recommendation
+    const optimalTime = bestTimes.length > 0 ? 
+      `${bestTimes[0].day} at ${bestTimes[0].hour}:00` : 'Data insufficient';
+
+    // Analyze upload patterns for trend
+    const recentVideos = videos.filter(video => 
+      new Date(video.publishedAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     );
-
-    // Calculate difficulty based on refined competition score
-    let difficulty: 'Easy' | 'Medium' | 'Hard' | 'Very Hard' = 'Easy';
-    if (competitionScore > 80) difficulty = 'Very Hard';
-    else if (competitionScore > 60) difficulty = 'Hard';
-    else if (competitionScore > 35) difficulty = 'Medium';
-
-    // Overall score (opportunity score: high search volume, low competition)
-    const overallScore = Math.round(
-      (searchVolume * 0.6) + ((100 - competitionScore) * 0.4)
-    );
-
-    // Analyze upload patterns
-    const uploadDays = videos.map(video => {
-      const date = new Date(video.publishedAt);
-      return date.toLocaleDateString('en-US', { weekday: 'long' });
-    });
     
-    const dayCount = uploadDays.reduce((acc, day) => {
-      acc[day] = (acc[day] || 0) + 1;
+    let trend: 'Rising' | 'Stable' | 'Declining' = 'Stable';
+    const recentRatio = recentVideos.length / videos.length;
+    if (recentRatio > 0.3) trend = 'Rising';
+    else if (recentRatio < 0.1) trend = 'Declining';
+
+    // Generate related keywords
+    const allTags = videos.flatMap(video => video.tags);
+    const allTitles = videos.map(video => video.title).join(' ');
+    
+    const relatedKeywords = Array.from(new Set([
+      ...allTags.filter(tag => 
+        tag.toLowerCase() !== keyword.toLowerCase() && 
+        tag.length > 2 && 
+        tag.length < 20
+      ),
+      ...allTitles.split(/\s+/).filter(word => 
+        word.toLowerCase() !== keyword.toLowerCase() && 
+        word.length > 3 && 
+        !['the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can'].includes(word.toLowerCase())
+      )
+    ])).slice(0, 12);
+
+    // Top channels analysis
+    const channelCount = videos.reduce((acc, video) => {
+      acc[video.channelId] = (acc[video.channelId] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
     
-    const bestUploadDays = Object.entries(dayCount)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 3)
-      .map(([day]) => day);
-
-    // Analyze top channels
     const topChannels = Object.entries(channelCount)
       .sort(([,a], [,b]) => b - a)
       .slice(0, 5)
@@ -272,70 +436,51 @@ export const KeywordAnalyzer: React.FC = () => {
         count 
       }));
 
-    // Count recent videos (last week for trend)
-    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const newVideosLastWeek = videos.filter(video => 
-      new Date(video.publishedAt) > oneWeekAgo
+    // Calculate keyword in title percentage
+    const keywordInTitle = videos.filter(video => 
+      video.title.toLowerCase().includes(keyword.toLowerCase())
     ).length;
-
-    // Generate related keywords from video titles and tags
-    const allTags = videos.flatMap(video => video.tags);
-    const allTitles = videos.map(video => video.title).join(' ');
-    
-    const tagKeywords = allTags.filter(tag => 
-      tag.toLowerCase() !== keyword.toLowerCase() && 
-      tag.length > 2 && 
-      tag.length < 20
-    );
-    
-    const titleKeywords = allTitles.split(/\s+/)
-      .filter(word => 
-        word.toLowerCase() !== keyword.toLowerCase() && 
-        word.length > 3 && 
-        !['the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'had', 'her', 'was', 'one', 'our', 'out', 'day', 'get', 'has', 'him', 'his', 'how', 'man', 'new', 'now', 'old', 'see', 'two', 'who', 'boy', 'did', 'its', 'let', 'put', 'say', 'she', 'too', 'use'].includes(word.toLowerCase())
-      );
-    
-    const uniqueKeywords = Array.from(new Set([...tagKeywords, ...titleKeywords]));
-    const relatedKeywords = uniqueKeywords.slice(0, 12);
-
-    // Trend analysis
-    let trend: 'Rising' | 'Stable' | 'Declining' = 'Stable';
-    if (newVideosLastWeek > videos.length * 0.15) trend = 'Rising';
-    else if (newVideosLastWeek < videos.length * 0.05) trend = 'Declining';
+    const keywordInTitlePercentage = Math.round((keywordInTitle / videos.length) * 100);
 
     // Enhanced recommendations
     const recommendations = [
-      `Search Volume: ${searchVolume}/100 - ${searchVolume > 70 ? 'High demand keyword' : searchVolume > 40 ? 'Moderate demand' : 'Niche keyword with specific audience'}`,
-      `Competition: ${competitionScore}/100 - ${competitionScore < 35 ? 'Low competition, good opportunity' : competitionScore < 60 ? 'Moderate competition, focus on quality' : 'High competition, need unique angle'}`,
-      `${keywordInTitlePercentage}% of top videos include exact keyword - ${keywordInTitlePercentage > 80 ? 'Essential for ranking' : keywordInTitlePercentage > 50 ? 'Highly recommended' : 'Consider keyword variations'}`,
-      `Average views: ${averageViews.toLocaleString()} - ${averageViews > 100000 ? 'High-performing niche' : averageViews > 10000 ? 'Good potential' : 'Specialized audience'}`,
-      `Upload timing: ${bestUploadDays.join(', ')} show best performance`,
-      `Video length: Target ${Math.floor(averageLength / 60)}:${(averageLength % 60).toString().padStart(2, '0')} for optimal engagement`,
-      trend === 'Rising' ? 'Trending topic - act quickly for best results' : 
-      trend === 'Declining' ? 'Declining interest - consider pivot to related keywords' : 
-      'Stable market - consistent long-term opportunity'
+      `Tag Score: ${tagScore}/100 - ${generatePerformanceDescription(tagScore)}`,
+      `Search Volume: ${searchVolume.label} (${searchVolume.score}/100) - ${searchVolume.score > 60 ? 'High demand market' : 'Niche opportunity'}`,
+      `Competition: ${competitiveness.label} (${competitiveness.score}/100) - ${competitiveness.score < 40 ? 'Good opportunity to rank' : 'Requires strong content strategy'}`,
+      `Engagement Rate: ${engagementRate}% - ${engagementRate > 3 ? 'Above average engagement' : 'Focus on improving engagement'}`,
+      `Optimal Upload Time: ${optimalTime} based on top performers`,
+      `Video Length: Target ${Math.floor(averageLength / 60)}:${(averageLength % 60).toString().padStart(2, '0')} for best results`,
+      `Title Optimization: ${keywordInTitlePercentage}% include exact keyword - ${keywordInTitlePercentage > 70 ? 'Essential for ranking' : 'Consider keyword variations'}`
     ];
 
     return {
       keyword,
-      searchVolume,
-      competitionScore,
-      overallScore,
-      difficulty,
+      tagScore,
+      searchVolume: searchVolume.label,
+      searchVolumeScore: searchVolume.score,
+      competitiveness: competitiveness.label,
+      competitivenessScore: competitiveness.score,
       trend,
       relatedKeywords,
-      topVideos: videos.slice(0, 10), // Top 10 videos
+      topVideos: videos.slice(0, 10),
+      uploadTimeDistribution,
       insights: {
         averageViews,
+        averageViewCount: formatViewCount(averageViews),
+        viewsPerDay,
         averageLength,
         bestUploadDays,
+        bestUploadTimes,
         topChannels,
         totalResults: videos.length,
-        newVideosLastWeek,
+        newVideosLastWeek: recentVideos.length,
         keywordInTitlePercentage,
-        averageLikes
+        averageLikes,
+        engagementRate,
+        optimalUploadTime: optimalTime
       },
-      recommendations
+      recommendations,
+      performanceDescription: generatePerformanceDescription(tagScore)
     };
   };
 
@@ -345,10 +490,12 @@ export const KeywordAnalyzer: React.FC = () => {
     setError(null);
 
     try {
-      // Fetch real YouTube data
       const videos = await fetchYouTubeData(searchTerm);
       
-      // Analyze the data
+      if (videos.length === 0) {
+        throw new Error('No videos found for this keyword');
+      }
+      
       const analysis = analyzeKeywordData(videos, searchTerm);
       
       saveToHistory(searchTerm);
@@ -368,7 +515,6 @@ export const KeywordAnalyzer: React.FC = () => {
       return;
     }
 
-    // Update URL to include the keyword
     const encodedKeyword = encodeURIComponent(keyword.trim());
     navigate(`/tools/keyword-analyzer/${encodedKeyword}`);
   };
@@ -378,12 +524,29 @@ export const KeywordAnalyzer: React.FC = () => {
     navigate(`/tools/keyword-analyzer/${encodedKeyword}`);
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Easy': return '#4caf50';
-      case 'Medium': return '#ff9800';
-      case 'Hard': return '#f44336';
-      case 'Very Hard': return '#9c27b0';
+  const getScoreColor = (score: number) => {
+    if (score >= 70) return '#4caf50';
+    if (score >= 50) return '#ff9800';
+    if (score >= 30) return '#f44336';
+    return '#9c27b0';
+  };
+
+  const getVolumeColor = (label: string) => {
+    switch (label) {
+      case 'Very High': return '#4caf50';
+      case 'High': return '#8bc34a';
+      case 'Moderate': return '#ff9800';
+      case 'Low': return '#f44336';
+      default: return '#607d8b';
+    }
+  };
+
+  const getCompetitionColor = (label: string) => {
+    switch (label) {
+      case 'Low': return '#4caf50';
+      case 'Moderate': return '#ff9800';
+      case 'High': return '#f44336';
+      case 'Very High': return '#9c27b0';
       default: return '#607d8b';
     }
   };
@@ -420,9 +583,166 @@ export const KeywordAnalyzer: React.FC = () => {
     });
   };
 
+  // Upload Time Distribution Chart Component
+  const UploadTimeChart: React.FC<{ data: UploadTimeData[] }> = ({ data }) => {
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    const [isIntegrated, setIsIntegrated] = useState(false);
+    
+    useEffect(() => {
+      const handleResize = () => setIsMobile(window.innerWidth <= 768);
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }, []);
+    
+    useEffect(() => {
+      // Check if this chart is inside an integrated container
+      const checkIntegrated = () => {
+        const chartElement = document.querySelector('.integrated');
+        setIsIntegrated(!!chartElement);
+      };
+      checkIntegrated();
+    }, []);
+    
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const hours = Array.from({ length: 24 }, (_, i) => i);
+    
+    const getHeatmapValue = (day: string, hour: number) => {
+      const item = data.find(d => d.day === day && d.hour === hour);
+      return item ? item.count : 0;
+    };
+    
+    const maxCount = Math.max(...data.map(d => d.count), 1);
+    
+    const getHeatColor = (count: number) => {
+      if (count === 0) return '#1a1a1a';
+      if (count === 1) return '#28a745'; // 1 video = green
+      if (count === 2) return '#fac11b'; // 2 videos = yellow
+      if (count >= 3) return '#d73527'; // 3+ videos = red
+      return '#28a745'; // fallback
+    };
+
+    
+    // Mobile-friendly summary view
+    const getMobileSummary = () => {
+      const timeSlots = [
+        { label: 'Early Morning', range: '0-5', hours: [0, 1, 2, 3, 4, 5] },
+        { label: 'Morning', range: '6-11', hours: [6, 7, 8, 9, 10, 11] },
+        { label: 'Afternoon', range: '12-17', hours: [12, 13, 14, 15, 16, 17] },
+        { label: 'Evening', range: '18-23', hours: [18, 19, 20, 21, 22, 23] }
+      ];
+      
+      return timeSlots.map(slot => {
+        const totalUploads = data.filter(item => slot.hours.includes(item.hour)).reduce((sum, item) => sum + item.count, 0);
+        const avgViews = data.filter(item => slot.hours.includes(item.hour)).reduce((sum, item) => sum + item.avgViews, 0) / slot.hours.length;
+        
+        return {
+          ...slot,
+          totalUploads,
+          avgViews: isNaN(avgViews) ? 0 : avgViews,
+          intensity: totalUploads / Math.max(1, Math.max(...timeSlots.map(s => 
+            data.filter(item => s.hours.includes(item.hour)).reduce((sum, item) => sum + item.count, 0)
+          )))
+        };
+      });
+    };
+
+    return (
+      <S.UploadTimeChart>
+        {!isIntegrated && (
+          <>
+            <S.ChartTitle>Upload Time Distribution</S.ChartTitle>
+            <S.ChartSubtitle>
+              Visual representation of upload timing patterns
+            </S.ChartSubtitle>
+          </>
+        )}
+        
+        {isIntegrated && (
+          <S.ChartSubtitle style={{ fontSize: '0.8rem', marginBottom: '1rem', opacity: 0.8 }}>
+            Visual representation of upload timing patterns
+          </S.ChartSubtitle>
+        )}
+        
+        {isMobile ? (
+          <S.MobileSummaryContainer>
+            {getMobileSummary().map(slot => (
+              <S.MobileSummaryBar key={slot.label}>
+                <S.MobileSummaryLabel>
+                  <strong>{slot.label}</strong>
+                  <span>{slot.range}:00</span>
+                </S.MobileSummaryLabel>
+                <S.MobileSummaryProgress>
+                  <S.MobileSummaryFill 
+                    intensity={slot.intensity}
+                    color={getHeatColor(slot.totalUploads)}
+                  />
+                </S.MobileSummaryProgress>
+                <S.MobileSummaryStats>
+                  <span>{slot.totalUploads} uploads</span>
+                  <span>{formatViewCount(slot.avgViews)} avg views</span>
+                </S.MobileSummaryStats>
+              </S.MobileSummaryBar>
+            ))}
+          </S.MobileSummaryContainer>
+        ) : (
+          <S.HeatmapContainer style={isIntegrated ? { transform: 'scale(0.85)', transformOrigin: 'left top', marginBottom: '-20px' } : {}}>
+            <S.HourLabels>
+              {hours.filter((_, index) => index % 4 === 0).map(hour => {
+                // Calculate the position: 60px offset + (hour * cellWidth + gap)
+                const cellWidth = 15; // matches HeatmapCell width
+                const gap = 2; // matches grid gap
+                const leftPosition = 60 + (hour * (cellWidth + gap)) + (cellWidth / 2);
+                
+                return (
+                  <S.HourLabel 
+                    key={hour} 
+                    style={{ left: `${leftPosition}px` }}
+                  >
+                    {hour.toString().padStart(2, '0')}:00
+                  </S.HourLabel>
+                );
+              })}
+            </S.HourLabels>
+            
+            <S.HeatmapGrid>
+              <S.DayLabels>
+                {days.map(day => (
+                  <S.DayLabel key={day}>{day.slice(0, 3)}</S.DayLabel>
+                ))}
+              </S.DayLabels>
+              
+              <S.HeatmapRows>
+                {days.map(day => (
+                  <S.HeatmapRow key={day}>
+                    {hours.map(hour => {
+                      const count = getHeatmapValue(day, hour);
+                      return (
+                        <S.HeatmapCell
+                        key={`${day}-${hour}`}
+                        color={getHeatColor(count)}
+                        title={`${day} ${hour.toString().padStart(2, '0')}:00 - ${count} uploads`}
+                        />
+                      );
+                    })}
+                  </S.HeatmapRow>
+                ))}
+              </S.HeatmapRows>
+            </S.HeatmapGrid>
+          </S.HeatmapContainer>
+        )}
+        
+        <S.HeatmapLegend style={isIntegrated ? { marginTop: '0.5rem', fontSize: '0.8rem' } : {}}>
+          <span>1 Video</span>
+          <S.LegendGradient />
+          <span>3+ Videos</span>
+        </S.HeatmapLegend>
+
+      </S.UploadTimeChart>
+    );
+  };
+
   return (
     <S.PageWrapper>
-      {/* Left Sidebar Ad */}
       <S.AdSidebar position="left">
         <AdSense 
           slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
@@ -430,7 +750,6 @@ export const KeywordAnalyzer: React.FC = () => {
         />
       </S.AdSidebar>
 
-      {/* Right Sidebar Ad */}
       <S.AdSidebar position="right">
         <AdSense 
           slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
@@ -444,7 +763,6 @@ export const KeywordAnalyzer: React.FC = () => {
           Back to Tools
         </S.BackButton>
 
-        {/* Enhanced Header Section with Integrated Search */}
         <S.EnhancedHeader backgroundImage={toolConfig.image}>
           <S.HeaderOverlay />
           <S.HeaderContent>
@@ -465,7 +783,6 @@ export const KeywordAnalyzer: React.FC = () => {
                 ))}
               </S.FeaturesList>
 
-              {/* Integrated Search Bar */}
               <S.HeaderSearchContainer>
                 <S.HeaderSearchBar>
                   <S.HeaderSearchInput
@@ -488,7 +805,6 @@ export const KeywordAnalyzer: React.FC = () => {
           </S.HeaderContent>
         </S.EnhancedHeader>
 
-        {/* Error Message */}
         {error && (
           <S.ErrorMessage>
             <i className="bx bx-error"></i>
@@ -496,20 +812,7 @@ export const KeywordAnalyzer: React.FC = () => {
           </S.ErrorMessage>
         )}
 
-        {/* Search History */}
-        {searchHistory.length > 0 && (
-          <S.HistorySection>
-            <S.HistoryLabel>Recent searches:</S.HistoryLabel>
-            <S.HistoryList>
-              {searchHistory.map((term, index) => (
-                <S.HistoryItem key={index} onClick={() => setKeyword(term)}>
-                  <i className="bx bx-time"></i>
-                  {term}
-                </S.HistoryItem>
-              ))}
-            </S.HistoryList>
-          </S.HistorySection>
-        )}
+
 
         {isAnalyzing && (
           <S.LoadingContainer>
@@ -518,9 +821,9 @@ export const KeywordAnalyzer: React.FC = () => {
             </S.LoadingAnimation>
             <S.LoadingText>Analyzing keyword performance...</S.LoadingText>
             <S.LoadingSteps>
-              <S.LoadingStep>Fetching YouTube search results</S.LoadingStep>
-              <S.LoadingStep>Analyzing video performance data</S.LoadingStep>
-              <S.LoadingStep>Calculating competition metrics</S.LoadingStep>
+              <S.LoadingStep>Fetching comprehensive YouTube data</S.LoadingStep>
+              <S.LoadingStep>Calculating tag score using rapidtags methodology</S.LoadingStep>
+              <S.LoadingStep>Analyzing upload time patterns</S.LoadingStep>
               <S.LoadingStep>Generating optimization insights</S.LoadingStep>
             </S.LoadingSteps>
           </S.LoadingContainer>
@@ -528,31 +831,130 @@ export const KeywordAnalyzer: React.FC = () => {
 
         {showResults && results && (
           <S.ResultsContainer>
-            <S.ResultsHeader>
-              <S.ResultsTitle>Analysis Results for "{results.keyword}"</S.ResultsTitle>
-            </S.ResultsHeader>
 
-            {/* Key Metrics */}
-            <S.MetricsGrid>
+            {/* Enhanced Premium Overview */}
+            <S.PremiumOverviewSection>
+              <S.PremiumOverviewHeader>
+                <S.SectionTitle>
+                  <i className="bx bx-chart-line"></i>
+                  Keyword Analysis - {results.keyword}
+                </S.SectionTitle>
+              </S.PremiumOverviewHeader>
+              
+              <S.PremiumOverviewContent>
+                <S.PremiumOverviewGrid>
+                  {/* Tag Score Hero Card */}
+                  <S.TagScoreHeroCard>
+                    <S.TagScoreContent>
+                      <S.TagScoreLabel>Tag Score</S.TagScoreLabel>
+                      <S.TagScoreHeroNumber color={getScoreColor(results.tagScore)}>
+                        {results.tagScore}
+                        <S.TagScoreOutOf>/100</S.TagScoreOutOf>
+                      </S.TagScoreHeroNumber>
+                      <S.TagScoreQuality score={results.tagScore}>
+                        {results.tagScore >= 70 ? 'High Quality' : 
+                         results.tagScore >= 50 ? 'Good Quality' : 
+                         results.tagScore >= 30 ? 'Fair Quality' : 'Needs Work'}
+                      </S.TagScoreQuality>
+                      <S.TagScoreDescription>
+                      {results.performanceDescription}
+                      </S.TagScoreDescription>
+                  
+                  {/* Integrated Upload Time Chart */}
+                  <S.IntegratedChartContainer className="integrated">
+                    <S.IntegratedChartTitle>
+                      <i className="bx bx-time"></i>
+                      Upload Time Distribution
+                    </S.IntegratedChartTitle>
+                    <UploadTimeChart data={results.uploadTimeDistribution} />
+                  </S.IntegratedChartContainer>
+                    </S.TagScoreContent>
+                    <S.TagScoreIcon>
+                      <i className="bx bx-trophy"></i>
+                    </S.TagScoreIcon>
+                  </S.TagScoreHeroCard>
+
+                  {/* Metrics Cards */}
+                  <S.MetricsCardContainer>
+                    <S.PremiumMetricCard>
+                      <S.MetricCardHeader>
+                        <S.MetricCardIcon className="bx bx-bar-chart-alt" />
+                        <S.MetricCardTitle>Search Volume</S.MetricCardTitle>
+                      </S.MetricCardHeader>
+                      <S.MetricProgressContainer>
+                        <S.MetricProgressBar>
+                          <S.MetricProgressFill 
+                            width={results.searchVolumeScore} 
+                            color={getVolumeColor(results.searchVolume)}
+                            delay="0.2s"
+                          />
+                        </S.MetricProgressBar>
+                        <S.MetricScoreContainer>
+                          <S.MetricScore>{results.searchVolumeScore}</S.MetricScore>
+                          <S.MetricLabel>{results.searchVolume}</S.MetricLabel>
+                        </S.MetricScoreContainer>
+                      </S.MetricProgressContainer>
+                    </S.PremiumMetricCard>
+
+                    <S.PremiumMetricCard>
+                      <S.MetricCardHeader>
+                        <S.MetricCardIcon className="bx bx-target-lock" />
+                        <S.MetricCardTitle>Competition</S.MetricCardTitle>
+                      </S.MetricCardHeader>
+                      <S.MetricProgressContainer>
+                        <S.MetricProgressBar>
+                          <S.MetricProgressFill 
+                            width={results.competitivenessScore} 
+                            color={getCompetitionColor(results.competitiveness)}
+                            delay="0.4s"
+                          />
+                        </S.MetricProgressBar>
+                        <S.MetricScoreContainer>
+                          <S.MetricScore>{results.competitivenessScore}</S.MetricScore>
+                          <S.MetricLabel>{results.competitiveness}</S.MetricLabel>
+                        </S.MetricScoreContainer>
+                      </S.MetricProgressContainer>
+                    </S.PremiumMetricCard>
+
+                    <S.PremiumMetricCard>
+                      <S.MetricCardHeader>
+                        <S.MetricCardIcon 
+                          className={getTrendIcon(results.trend)}
+                          style={{ color: getTrendColor(results.trend) }}
+                        />
+                        <S.MetricCardTitle>Trend</S.MetricCardTitle>
+                      </S.MetricCardHeader>
+                      <S.TrendContainer>
+                        <S.TrendValue color={getTrendColor(results.trend)}>
+                          {results.trend}
+                        </S.TrendValue>
+                        <S.TrendSubtext>
+                          {results.trend === 'Rising' ? 'Growing interest' :
+                           results.trend === 'Stable' ? 'Consistent demand' :
+                           'Declining interest'}
+                        </S.TrendSubtext>
+                      </S.TrendContainer>
+                    </S.PremiumMetricCard>
+                  </S.MetricsCardContainer>
+                </S.PremiumOverviewGrid>
+              </S.PremiumOverviewContent>
+            </S.PremiumOverviewSection>
+
+            {/* Detailed Metrics */}
+            <S.DetailedMetricsGrid>
               <S.MetricCard>
-                <S.MetricIcon className="bx bx-bar-chart-alt"></S.MetricIcon>
-                <S.MetricValue>{results.searchVolume}</S.MetricValue>
-                <S.MetricLabel>Search Volume</S.MetricLabel>
-                <S.MetricSubtext>Relative search interest</S.MetricSubtext>
+                <S.MetricLabel>Average View Count</S.MetricLabel>
+                <S.DetailedMetricValue>{results.insights.averageViewCount}</S.DetailedMetricValue>
               </S.MetricCard>
 
               <S.MetricCard>
-                <S.MetricIcon className="bx bx-trophy"></S.MetricIcon>
-                <S.MetricValue>{results.competitionScore}</S.MetricValue>
-                <S.MetricLabel>Competition Score</S.MetricLabel>
-                <S.MetricSubtext>Lower is better</S.MetricSubtext>
+                <S.MetricLabel>Views Per Day (avg)</S.MetricLabel>
+                <S.DetailedMetricValue>{results.insights.viewsPerDay.toFixed(12)}</S.DetailedMetricValue>
               </S.MetricCard>
 
               <S.MetricCard>
-                <S.MetricIcon className="bx bx-target-lock"></S.MetricIcon>
-                <S.MetricValue>{results.overallScore}</S.MetricValue>
-                <S.MetricLabel>Overall Score</S.MetricLabel>
-                <S.MetricSubtext>Opportunity rating</S.MetricSubtext>
+                <S.MetricLabel>Engagement Rate</S.MetricLabel>
+                <S.DetailedMetricValue>{results.insights.engagementRate}%</S.DetailedMetricValue>
               </S.MetricCard>
 
               <S.MetricCard>
@@ -560,17 +962,51 @@ export const KeywordAnalyzer: React.FC = () => {
                   className={getTrendIcon(results.trend)}
                   style={{ color: getTrendColor(results.trend) }}
                 ></S.MetricIcon>
-                <S.MetricValue style={{ color: getTrendColor(results.trend) }}>
-                  {results.trend}
-                </S.MetricValue>
                 <S.MetricLabel>Trend</S.MetricLabel>
-                <S.MetricSubtext>Current direction</S.MetricSubtext>
+                <S.DetailedMetricValue style={{ color: getTrendColor(results.trend) }}>
+                  {results.trend}
+                </S.DetailedMetricValue>
               </S.MetricCard>
-            </S.MetricsGrid>
+            </S.DetailedMetricsGrid>
+
+            {/* Upload Timing Insights */}
+            <S.UploadInsightsSection>
+              <S.SectionTitle>
+                <i className="bx bx-time"></i>
+                Upload Timing Insights
+              </S.SectionTitle>
+              
+              <S.UploadInsightsList>
+                <S.InsightCard>
+                  <S.InsightTitle>Best Upload Days</S.InsightTitle>
+                  <S.DaysList>
+                    {results.insights.bestUploadDays.map(day => (
+                      <S.DayBadge key={day}>{day}</S.DayBadge>
+                    ))}
+                  </S.DaysList>
+                </S.InsightCard>
+
+                <S.InsightCard>
+                  <S.InsightTitle>Optimal Upload Time</S.InsightTitle>
+                  <S.OptimalTime>{results.insights.optimalUploadTime}</S.OptimalTime>
+                </S.InsightCard>
+
+                <S.InsightCard>
+                  <S.InsightTitle>Best Performing Times</S.InsightTitle>
+                  <S.TimesList>
+                    {results.insights.bestUploadTimes.slice(0, 3).map((time, index) => (
+                      <S.TimeItem key={index}>
+                        {time.day} at {time.hour.toString().padStart(2, '0')}:00
+                      </S.TimeItem>
+                    ))}
+                  </S.TimesList>
+                </S.InsightCard>
+              </S.UploadInsightsList>
+            </S.UploadInsightsSection>
 
             {/* Analysis Grid */}
             <S.AnalysisGrid>
-              {/* Difficulty & Insights */}
+              {/* SEO Insights */}
               <S.AnalysisCard>
                 <S.CardTitle>
                   <i className="bx bx-brain"></i>
@@ -578,10 +1014,10 @@ export const KeywordAnalyzer: React.FC = () => {
                 </S.CardTitle>
                 
                 <S.InsightItem>
-                  <S.InsightLabel>Difficulty Level:</S.InsightLabel>
-                  <S.DifficultyBadge color={getDifficultyColor(results.difficulty)}>
-                    {results.difficulty}
-                  </S.DifficultyBadge>
+                  <S.InsightLabel>Tag Score:</S.InsightLabel>
+                  <S.TagScoreBadge color={getScoreColor(results.tagScore)}>
+                    {results.tagScore}/100
+                  </S.TagScoreBadge>
                 </S.InsightItem>
 
                 <S.InsightItem>
@@ -595,17 +1031,13 @@ export const KeywordAnalyzer: React.FC = () => {
                 </S.InsightItem>
 
                 <S.InsightItem>
-                  <S.InsightLabel>Best Upload Days:</S.InsightLabel>
-                  <S.DaysList>
-                    {results.insights.bestUploadDays.map(day => (
-                      <S.DayBadge key={day}>{day}</S.DayBadge>
-                    ))}
-                  </S.DaysList>
+                  <S.InsightLabel>Keyword in Title:</S.InsightLabel>
+                  <S.InsightValue>{results.insights.keywordInTitlePercentage}%</S.InsightValue>
                 </S.InsightItem>
 
                 <S.InsightItem>
-                  <S.InsightLabel>Keyword in Title:</S.InsightLabel>
-                  <S.InsightValue>{results.insights.keywordInTitlePercentage}%</S.InsightValue>
+                  <S.InsightLabel>Engagement Rate:</S.InsightLabel>
+                  <S.InsightValue>{results.insights.engagementRate}%</S.InsightValue>
                 </S.InsightItem>
               </S.AnalysisCard>
 
@@ -633,7 +1065,27 @@ export const KeywordAnalyzer: React.FC = () => {
               </S.AnalysisCard>
             </S.AnalysisGrid>
 
-            {/* Top Videos */}
+            {/* Recommendations */}
+            <S.RecommendationsSection>
+              <S.SectionTitle>
+                <i className="bx bx-lightbulb"></i>
+                Optimization Recommendations
+              </S.SectionTitle>
+              
+              <S.RecommendationsList>
+                {results.recommendations.map((recommendation, index) => (
+                  <S.Recommendation key={index} type="info">
+                    <i className="bx bx-check-circle"></i>
+                    <div>
+                      {recommendation}
+                    </div>
+                  </S.Recommendation>
+                ))}
+              </S.RecommendationsList>
+            </S.RecommendationsSection>
+
+
+                        {/* Top Videos */}
             <S.TopVideosSection>
               <S.SectionTitle>
                 <i className="bx bx-play-circle"></i>
@@ -682,29 +1134,9 @@ export const KeywordAnalyzer: React.FC = () => {
                 ))}
               </S.VideosList>
             </S.TopVideosSection>
-
-            {/* Recommendations */}
-            <S.RecommendationsSection>
-              <S.SectionTitle>
-                <i className="bx bx-lightbulb"></i>
-                Optimization Recommendations
-              </S.SectionTitle>
-              
-              <S.RecommendationsList>
-                {results.recommendations.map((recommendation, index) => (
-                  <S.Recommendation key={index} type="info">
-                    <i className="bx bx-check-circle"></i>
-                    <div>
-                      {recommendation}
-                    </div>
-                  </S.Recommendation>
-                ))}
-              </S.RecommendationsList>
-            </S.RecommendationsSection>
           </S.ResultsContainer>
         )}
 
-        {/* Bottom Ad */}
         <S.BottomAdContainer>
           <AdSense 
             slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
