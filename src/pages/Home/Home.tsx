@@ -998,7 +998,7 @@ export const Home: React.FC = () => {
             </Logo>
 
             <HeroTitle>
-              Understand Your Channel. <Highlight>Accelerate Your Growth.</Highlight>
+          <Highlight>Accelerate Your YouTube Growth.</Highlight>
             </HeroTitle>
 
             <HeroSubtitle>
