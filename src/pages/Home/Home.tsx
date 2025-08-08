@@ -5,6 +5,7 @@ import styled, { keyframes } from 'styled-components';
 import { Button } from '../../components/Button/Button';
 
 
+
 // Animations
 const fadeInUp = keyframes`
   from {
@@ -175,6 +176,11 @@ const StatLabel = styled.div`
 const HeroVisual = styled.div`
   animation: ${fadeInUp} 0.8s ease-out 0.2s both;
   position: relative;
+
+   @media (max-width: 768px) {
+    font-size: 1rem;
+    margin-bottom: 20px;
+  }
 `;
 
 const AnalyticsPreview = styled.div`
@@ -239,14 +245,15 @@ const MetricLabel = styled.span`
   font-size: 0.9rem;
 `;
 
-const MetricValue = styled.span`
-  color: ${({ theme }) => theme.colors.success};
-  font-weight: 600;
-`;
 
 const FeaturesSection = styled.section`
   padding: 6rem 0;
   background: ${({ theme }) => theme.colors.dark1};
+
+       @media (max-width: 768px) {
+    font-size: 1rem;
+    padding: 30px;
+  }
 `;
 
 const SectionHeader = styled.div`
@@ -426,6 +433,430 @@ const CTAButton = styled.button`
   }
 `;
 
+// Interactive Learning Path Section - Replaces Educational Section
+const LearningPathSection = styled.section`
+  padding: 6rem 0;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.dark3} 0%, ${({ theme }) => theme.colors.dark1} 100%);
+  position: relative;
+  overflow: hidden;
+
+     @media (max-width: 768px) {
+    font-size: 1rem;
+    padding: 30px;
+  }
+  
+`;
+
+const PathContainer = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  position: relative;
+`;
+
+const LearningPath = styled.div`
+  position: relative;
+  
+  // Connecting line
+  &::before {
+    content: '';
+    position: absolute;
+    left: 60px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, 
+      ${({ theme }) => theme.colors.red3} 0%, 
+      ${({ theme }) => theme.colors.red4} 50%, 
+      ${({ theme }) => theme.colors.red5} 100%);
+    z-index: 1;
+    
+    @media (max-width: 768px) {
+      left: 30px;
+    }
+  }
+`;
+
+const LearningStep = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-bottom: 4rem;
+  position: relative;
+  z-index: 2;
+  
+  &:nth-child(even) {
+    flex-direction: row-reverse;
+    
+    @media (max-width: 768px) {
+      flex-direction: row;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+`;
+
+const StepIcon = styled.div`
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 2.5rem;
+  flex-shrink: 0;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(125, 0, 0, 0.3);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    padding: 4px;
+    background: linear-gradient(45deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: exclude;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+  }
+  
+  @media (max-width: 768px) {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+`;
+
+const StepContent = styled.div`
+  flex: 1;
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: 2.5rem;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50px;
+    width: 0;
+    height: 0;
+    border: 15px solid transparent;
+  }
+  
+  // Arrow pointing left (for normal steps)
+  &::before {
+    left: -30px;
+    border-right-color: ${({ theme }) => theme.colors.dark5};
+  }
+  
+  // Arrow pointing right (for reversed steps)
+  ${LearningStep}:nth-child(even) & {
+    &::before {
+      left: auto;
+      right: -30px;
+      border-left-color: ${({ theme }) => theme.colors.dark5};
+      border-right-color: transparent;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+    
+    &::before {
+      left: -15px !important;
+      right: auto !important;
+      border-right-color: ${({ theme }) => theme.colors.dark5} !important;
+      border-left-color: transparent !important;
+    }
+  }
+`;
+
+const StepTitle = styled.h3`
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin-bottom: 1rem;
+  
+  @media (max-width: 768px) {
+    font-size: 1.4rem;
+  }
+`;
+
+const StepDescription = styled.p`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+`;
+
+const StepFeatures = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+`;
+
+const FeatureTag = styled.span`
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}20, ${({ theme }) => theme.colors.red4}20);
+  border: 1px solid ${({ theme }) => theme.colors.red3}40;
+  color: ${({ theme }) => theme.colors.red4};
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+`;
+
+// Data Dashboard Science Section - Replaces Science-Based Cards
+const DataDashboardSection = styled.section`
+  padding: 6rem 0;
+  background: ${({ theme }) => theme.colors.dark1};
+  position: relative;
+`;
+
+const DashboardGrid = styled.div`
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 3rem;
+  align-items: center;
+  
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+`;
+
+const MainDashboard = styled.div`
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.dark3}, ${({ theme }) => theme.colors.dark4});
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
+  }
+`;
+
+const DashboardHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+`;
+
+const DashboardTitle = styled.h3`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  
+  &::before {
+    content: '⚡';
+    font-size: 1.2rem;
+  }
+`;
+
+const LiveIndicator = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: ${({ theme }) => theme.colors.success};
+  font-size: 0.9rem;
+  font-weight: 500;
+  
+  &::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: ${({ theme }) => theme.colors.success};
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+`;
+
+const MetricsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+`;
+
+const MetricCard = styled.div`
+  background: ${({ theme }) => theme.colors.dark2};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.red3};
+    transform: translateY(-2px);
+  }
+`;
+
+const MetricValue = styled.div`
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: ${({ theme }) => theme.colors.success};
+
+  
+  
+  @media (max-width: 768px) {
+    font-size: 2rem;
+  }
+`;
+
+const MetricLabelDash = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+`;
+
+const MetricTrend = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: ${({ theme }) => theme.colors.success};
+  font-size: 0.8rem;
+  font-weight: 600;
+  
+  &::before {
+    content: '↗';
+    font-size: 1rem;
+  }
+`;
+
+const ChartArea = styled.div`
+  height: 200px;
+  background: ${({ theme }) => theme.colors.dark2};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60%;
+    background: linear-gradient(0deg, 
+      ${({ theme }) => theme.colors.red3}20 0%,
+      ${({ theme }) => theme.colors.red4}10 50%,
+      transparent 100%);
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 10%;
+    width: 80%;
+    height: 3px;
+    background: linear-gradient(90deg, 
+      transparent 0%,
+      ${({ theme }) => theme.colors.red3} 20%,
+      ${({ theme }) => theme.colors.red4} 40%,
+      ${({ theme }) => theme.colors.red5} 60%,
+      ${({ theme }) => theme.colors.red4} 80%,
+      transparent 100%);
+    border-radius: 2px;
+  }
+`;
+
+const ChartPlaceholder = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.9rem;
+  text-align: center;
+  z-index: 2;
+  position: relative;
+  
+  i {
+    display: block;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: ${({ theme }) => theme.colors.red3};
+  }
+`;
+
+const StatsPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
+
+const StatCard = styled.div`
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.dark3}, ${({ theme }) => theme.colors.dark4});
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.4s ease;
+  
+  &:hover {
+    transform: scale(1.02);
+    border-color: ${({ theme }) => theme.colors.red3};
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+  }
+`;
+
+const StatIcon = styled.div`
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  color: white;
+  font-size: 1.5rem;
+`;
+
+const StatTitle = styled.h4`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+`;
+
+const StatDescription = styled.p`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+`;
+
 const VideoModal = styled.div`
   position: fixed;
   top: 0;
@@ -571,19 +1002,18 @@ export const Home: React.FC = () => {
             </HeroTitle>
 
             <HeroSubtitle>
-              Get deep insights into your YouTube performance with professional-grade analytics tools. 
-              Discover what makes content successful, optimize for growth, and make data-driven decisions 
-              that transform your channel.
+                Professional-grade analytics and optimization tools that help you understand your audience, 
+            improve your content, and grow your channel faster.
             </HeroSubtitle>
 
             <HeroButtons>
               <Button
                 variant="primary"
                 size="lg"
-                icon="bx bx-chart"
+                icon="bx bx-wrench"
                 onClick={() => navigate('/tools')}
               >
-                Analyze My Channel
+                View Tools
               </Button>
               <Button
                 variant="secondary"
@@ -617,7 +1047,7 @@ export const Home: React.FC = () => {
                 <PreviewIcon>
                   <i className="bx bx-chart"></i>
                 </PreviewIcon>
-                <PreviewTitle>Channel Analytics Dashboard</PreviewTitle>
+                <PreviewTitle>Example Channel Analytics</PreviewTitle>
               </PreviewHeader>
               
               {metrics.map((metric, index) => (
@@ -637,8 +1067,7 @@ export const Home: React.FC = () => {
           <SectionBadge>Why Creators Choose YouTool</SectionBadge>
           <SectionTitle>Everything You Need to Succeed on YouTube</SectionTitle>
           <SectionSubtitle>
-            Professional-grade analytics and optimization tools that help you understand your audience, 
-            improve your content, and grow your channel faster.
+              Get deep insights into your YouTube performance with professional-grade analytics tools. 
           </SectionSubtitle>
         </SectionHeader>
 
@@ -660,6 +1089,78 @@ export const Home: React.FC = () => {
         </FeaturesGrid>
       </FeaturesSection>
 
+      {/* Interactive Learning Path Section - Replaces Educational Section */}
+      <LearningPathSection>
+        <SectionHeader>
+          <SectionBadge>Interactive Learning Path</SectionBadge>
+          <SectionTitle>Master YouTube Analytics in 3 Steps</SectionTitle>
+          <SectionSubtitle>
+            Learn and utilize our tools to transform your channel from guesswork to data-driven growth.
+            Each step builds on the previous, creating a comprehensive optimization strategy.
+          </SectionSubtitle>
+        </SectionHeader>
+
+        <PathContainer>
+          <LearningPath>
+            <LearningStep>
+              <StepIcon>
+                <i className="bx bx-search-alt"></i>
+              </StepIcon>
+              <StepContent>
+                <StepTitle>Analyze & Understand</StepTitle>
+                <StepDescription>
+                  Deep-dive into your current performance to identify what's working, what isn't, 
+                  and where your biggest opportunities lie. 
+                </StepDescription>
+                <StepFeatures>
+                  <FeatureTag>Channel Analyzer</FeatureTag>
+                  <FeatureTag>Video Analyzer</FeatureTag>
+                  <FeatureTag>Keyword Analyzer</FeatureTag>
+                  <FeatureTag>Outlier Finder</FeatureTag>
+                  <FeatureTag>Comment Downloader</FeatureTag>
+                </StepFeatures>
+              </StepContent>
+            </LearningStep>
+
+            <LearningStep>
+              <StepIcon>
+                <i className="bx bx-target-lock"></i>
+              </StepIcon>
+              <StepContent>
+                <StepTitle>Optimize & Execute</StepTitle>
+                <StepDescription>
+                  Implement data-driven improvements to your content strategy. 
+                </StepDescription>
+                <StepFeatures>
+                  <FeatureTag>Channel Consultant</FeatureTag>
+                  <FeatureTag>Tag Generator</FeatureTag>
+                  <FeatureTag>Thumbnail Tester</FeatureTag>
+                </StepFeatures>
+              </StepContent>
+            </LearningStep>
+
+            <LearningStep>
+              <StepIcon>
+                <i className="bx bx-trending-up"></i>
+              </StepIcon>
+              <StepContent>
+                <StepTitle>Scale & Accelerate</StepTitle>
+                <StepDescription>
+                  Upgrade your workflow using YouTool, by utilizing new tools to help develope your channel and brand. 
+                </StepDescription>
+                <StepFeatures>
+                  <FeatureTag>QR Code Generator</FeatureTag>
+                  <FeatureTag>Thumbnail Downloader</FeatureTag>
+                  <FeatureTag>Subscriber Link Creator</FeatureTag>
+                  <FeatureTag>Color Picker</FeatureTag>
+                </StepFeatures>
+              </StepContent>
+            </LearningStep>
+          </LearningPath>
+        </PathContainer>
+      </LearningPathSection>
+
+
       {/* CTA Section */}
       <CTASection>
         <CTAContent>
@@ -669,8 +1170,8 @@ export const Home: React.FC = () => {
             optimize their content, and achieve their YouTube goals. Start analyzing your channel today.
           </CTASubtitle>
           <CTAButton onClick={() => navigate('/tools')}>
-            <i className="bx bx-rocket"></i>
-            Start Your Analysis Now
+            <i className="bx bxs-wrench"></i>
+            Use Our Tools
           </CTAButton>
         </CTAContent>
       </CTASection>

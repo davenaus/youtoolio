@@ -514,28 +514,6 @@ export const ThumbnailDownloader: React.FC = () => {
                   </S.QualityInfo>
                 </S.ThumbnailPreview>
 
-                <S.QualitySelector>
-                  <S.QualitySelectorTitle>
-                    <i className="bx bx-cog"></i>
-                    Choose Quality
-                  </S.QualitySelectorTitle>
-                  <S.QualityGrid>
-                    {getAvailableQualities().map((quality) => (
-                      <S.QualityOption
-                        key={quality.key}
-                        active={selectedQuality === quality.key}
-                        recommended={quality.recommended}
-                        onClick={() => setSelectedQuality(quality.key)}
-                      >
-                        <S.QualityName>
-                          {quality.name}
-                          {quality.recommended && <S.RecommendedBadge>Recommended</S.RecommendedBadge>}
-                        </S.QualityName>
-                        <S.QualitySpecs>{quality.width} × {quality.height}</S.QualitySpecs>
-                      </S.QualityOption>
-                    ))}
-                  </S.QualityGrid>
-                </S.QualitySelector>
 
                 <S.ActionButtons>
                   <S.SecondaryButton onClick={() => setCurrentStep('input')}>

@@ -652,3 +652,39 @@ export const ModalNote = styled.p`
   font-style: italic;
   margin: 0;
 `;
+
+// Educational Card Styles
+export const EducationalCard = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: 2rem;
+  margin-bottom: 2rem;
+  transition: all 0.3s ease;
+
+`;
+
+export const EducationalCardTitle = styled.h3`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+`;
+
+export const EducationalCardDescription = styled.p`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+`;
+
+export const EducationalCardBenefits = styled.p`
+  color: ${({ theme }) => theme.colors.text.muted};
+  line-height: 1.6;
+  margin: 0;
+  font-size: 0.95rem;
+  
+  strong {
+    color: ${({ theme }) => theme.colors.text.primary};
+  }
+`;

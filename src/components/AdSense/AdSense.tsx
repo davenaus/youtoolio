@@ -10,7 +10,7 @@ interface AdSenseProps {
 }
 
 const AdContainer = styled.div<{ format?: string }>`
-  display: flex;
+  display: none;
   justify-content: center;
   align-items: center;
   background: ${({ theme }) => theme.colors.dark3};

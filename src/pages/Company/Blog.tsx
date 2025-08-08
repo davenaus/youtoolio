@@ -64,7 +64,7 @@ const Subtitle = styled.p`
 
 const BlogGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 2rem;
   
   @media (max-width: 768px) {
@@ -223,6 +223,51 @@ export const Blog: React.FC = () => {
       date: "July 8, 2025",
       icon: "bx-search-alt",
       slug: "youtube-seo-optimization-guide"
+    },
+    {
+      id: 3,
+      title: "Understanding the YouTube Algorithm in 2025: A Creator's Complete Guide",
+      excerpt: "Dive deep into how YouTube's algorithm actually works and learn proven strategies to optimize your content for better reach, engagement, and sustainable growth.",
+      category: "Algorithm",
+      date: "August 5, 2025",
+      icon: "bx-brain",
+      slug: "youtube-algorithm-2025"
+    },
+    {
+      id: 4,
+      title: "The Complete Guide to YouTube Thumbnails That Get Clicks",
+      excerpt: "Master the art and science of creating compelling thumbnails that stand out and drive clicks. Learn design principles, psychology, and testing strategies that work.",
+      category: "Design",
+      date: "August 3, 2025",
+      icon: "bx-image",
+      slug: "youtube-thumbnail-guide"
+    },
+    {
+      id: 5,
+      title: "Complete Guide to YouTube Monetization in 2025",
+      excerpt: "Explore every monetization method available to creators, from the YouTube Partner Program to advanced revenue strategies that build sustainable income streams.",
+      category: "Monetization",
+      date: "August 1, 2025",
+      icon: "bx-dollar-circle",
+      slug: "youtube-monetization-2025"
+    },
+    {
+      id: 6,
+      title: "Building a YouTube Content Strategy That Drives Long-Term Growth",
+      excerpt: "Develop a comprehensive content strategy that builds loyal audiences and drives sustainable channel success through strategic planning and execution.",
+      category: "Strategy",
+      date: "July 28, 2025",
+      icon: "bx-target-lock",
+      slug: "youtube-content-strategy"
+    },
+    {
+      id: 7,
+      title: "15 Proven YouTube Growth Hacks That Actually Work in 2025",
+      excerpt: "Discover specific strategies and techniques that successful creators use to accelerate growth, improve discoverability, and build engaged communities.",
+      category: "Growth",
+      date: "July 25, 2025",
+      icon: "bx-trending-up",
+      slug: "youtube-growth-hacks"
     }
   ];
 
@@ -266,14 +311,6 @@ export const Blog: React.FC = () => {
             </BlogPost>
           ))}
         </BlogGrid>
-
-        <ComingSoon>
-          <h3>More Content Coming Soon!</h3>
-          <p>
-            We're working on more helpful articles, tutorials, and insights for YouTube creators. 
-            Stay tuned for weekly content that will help you grow your channel.
-          </p>
-        </ComingSoon>
       </ContentWrapper>
     </Container>
   );

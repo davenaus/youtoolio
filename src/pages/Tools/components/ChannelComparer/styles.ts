@@ -1,5 +1,10 @@
 // src/pages/Tools/components/ChannelComparer/styles.ts
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
+
+const pulseGlow = keyframes`
+  0%, 100% { box-shadow: 0 0 20px rgba(229, 72, 72, 0.4); }
+  50% { box-shadow: 0 0 40px rgba(229, 72, 72, 0.8); }
+`;
 
 export const PageWrapper = styled.div`
   min-height: 100vh;
@@ -146,10 +151,25 @@ export const ToolIconContainer = styled.div`
   justify-content: center;
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   flex-shrink: 0;
-  box-shadow: ${({ theme }) => theme.shadows.lg};
+  box-shadow: 0 0 30px rgba(229, 72, 72, 0.4);
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(135deg, ${({ theme }) => theme.colors.red5}, ${({ theme }) => theme.colors.red3});
+    border-radius: ${({ theme }) => theme.borderRadius.lg};
+    z-index: -1;
+    opacity: 0.5;
+    animation: ${pulseGlow} 3s ease-in-out infinite;
+  }
   
   i {
     font-size: 2.5rem;
@@ -157,8 +177,8 @@ export const ToolIconContainer = styled.div`
   }
   
   @media (max-width: 768px) {
-    width: 70px;
-    height: 70px;
+    width: 60px;
+    height: 60px;
     
     i {
       font-size: 2rem;

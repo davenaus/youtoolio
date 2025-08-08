@@ -10,14 +10,14 @@ import { LinkInBioLanding } from '../pages/LinkInBioLanding/LinkInBioLanding';
 import { PrivacyPolicy, TermsOfService, CookiePolicy, DataUsageDisclosure } from '../pages/Legal';
 
 // Company Pages
-import { Blog, CreatorGuides, HelpCenter, AboutUs, Contact, Careers, PressKit, Partnerships, Changelog } from '../pages/Company';
+import { Blog, CreatorGuides, HelpCenter, AboutUs, Contact, Careers, PressKit, Partnerships, Changelog, YouTubeEducationCenter, YouTubeGlossary, CaseStudies } from '../pages/Company';
 
 // Blog Posts
-import { YouTubeAnalyticsMetrics, YouTubeSEOOptimization } from '../pages/Company/BlogPosts';
+import { YouTubeAnalyticsMetrics, YouTubeSEOOptimization, YouTubeAlgorithm2025, YouTubeThumbnailGuide, YouTubeMonetization2025, YouTubeContentStrategy, YouTubeGrowthHacks } from '../pages/Company/BlogPosts';
 
 // Tool imports
 import { OutlierFinder } from '../pages/Tools/components/OutlierFinder/OutlierFinder';
-import { VideoAnalyzer } from '../pages/Tools/components/VideoAnalyzer/VideoAnalyzer';
+import VideoAnalyzer from '../pages/Tools/components/VideoAnalyzer/VideoAnalyzer';
 import { ChannelAnalyzer } from '../pages/Tools/components/ChannelAnalyzer/ChannelAnalyzer';
 import { ChannelComparer } from '../pages/Tools/components/ChannelComparer/ChannelComparer';
 import { ChannelConsultant } from '../pages/Tools/components/ChannelConsultant/ChannelConsultant';
@@ -56,6 +56,11 @@ export const AppRoutes: React.FC = () => {
       {/* Blog Post Routes */}
       <Route path="/blog/youtube-analytics-metrics-2025" element={<YouTubeAnalyticsMetrics />} />
       <Route path="/blog/youtube-seo-optimization-guide" element={<YouTubeSEOOptimization />} />
+      <Route path="/blog/youtube-algorithm-2025" element={<YouTubeAlgorithm2025 />} />
+      <Route path="/blog/youtube-thumbnail-guide" element={<YouTubeThumbnailGuide />} />
+      <Route path="/blog/youtube-monetization-2025" element={<YouTubeMonetization2025 />} />
+      <Route path="/blog/youtube-content-strategy" element={<YouTubeContentStrategy />} />
+      <Route path="/blog/youtube-growth-hacks" element={<YouTubeGrowthHacks />} />
       <Route path="/guides" element={<CreatorGuides />} />
       <Route path="/help" element={<HelpCenter />} />
       <Route path="/about" element={<AboutUs />} />
@@ -64,6 +69,9 @@ export const AppRoutes: React.FC = () => {
       <Route path="/press" element={<PressKit />} />
       <Route path="/partnerships" element={<Partnerships />} />
       <Route path="/changelog" element={<Changelog />} />
+      <Route path="/education" element={<YouTubeEducationCenter />} />
+      <Route path="/glossary" element={<YouTubeGlossary />} />
+      <Route path="/case-studies" element={<CaseStudies />} />
       
       {/* Link in Bio Landing Page */}
       <Route path="/link-in-bio-page-maker" element={<LinkInBioLanding />} />

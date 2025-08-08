@@ -312,18 +312,18 @@ export const Tools: React.FC = () => {
     <>
       <S.Container className={showMobileModal ? 'blurred' : ''}>
         <S.Header>
-          <S.BackButton onClick={() => navigate('/')}>
-            <i className="bx bx-arrow-back"></i>
-            Back to Home
-          </S.BackButton>
-          
-          <S.HeaderContent>
-            <S.HeaderLeft>
-              <S.Title>YouTube Tools</S.Title>
-              <S.Description>
-                Professional-grade YouTube tools to help you analyze, optimize, and grow your channel. 
-                All tools are completely free and designed to give you the insights you need to succeed.
-              </S.Description>
+        <S.BackButton onClick={() => navigate('/')}>            
+        <i className="bx bx-arrow-back"></i>
+        Back to Home
+        </S.BackButton>
+        
+        <S.HeaderContent>
+        <S.HeaderLeft>
+        <S.Title>YouTube Analytics Tools</S.Title>
+        <S.Description>
+        Comprehensive analytics suite designed by creators for creators. Our tools help you understand 
+        your performance, optimize your content strategy, and grow your channel with data-driven insights. 
+          </S.Description>
             </S.HeaderLeft>
             
             <S.HeaderRight ref={searchRef}>
@@ -388,6 +388,40 @@ export const Tools: React.FC = () => {
         {categories.map(category => (
           <S.CategorySection key={category}>
             <S.CategoryTitle>{category}</S.CategoryTitle>
+            
+            {/* Educational content for each category */}
+            {category === 'SEO' && (
+              <S.EducationalCard>
+                <S.EducationalCardTitle>SEO & Growth Tools</S.EducationalCardTitle>
+                <S.EducationalCardDescription>
+                  Search Engine Optimization is crucial for YouTube success. These tools help you research keywords, 
+                  analyze competition, optimize your content for discoverability, and understand what makes videos 
+                  rank well in both YouTube and Google search results. Master these tools to dramatically increase 
+                  your organic reach and attract viewers who are actively searching for your content.
+                </S.EducationalCardDescription>
+                <S.EducationalCardBenefits>
+                  <strong>Key Benefits:</strong> Higher search rankings, increased organic traffic, 
+                  better content discoverability, competitive intelligence, and data-driven content planning.
+                </S.EducationalCardBenefits>
+              </S.EducationalCard>
+            )}
+            
+            {category === 'Utilities' && (
+              <S.EducationalCard>
+                <S.EducationalCardTitle>Creator Utility Tools</S.EducationalCardTitle>
+                <S.EducationalCardDescription>
+                  Streamline your content creation workflow with these essential utility tools. From downloading 
+                  resources and generating assets to calculating potential earnings and moderating content, 
+                  these tools save time and help you maintain professional standards across all aspects 
+                  of your YouTube presence.
+                </S.EducationalCardDescription>
+                <S.EducationalCardBenefits>
+                  <strong>Key Benefits:</strong> Time-saving automation, professional asset creation, 
+                  revenue planning, content moderation, and streamlined workflow management.
+                </S.EducationalCardBenefits>
+              </S.EducationalCard>
+            )}
+            
             <S.ToolsGrid>
               {tools
                 .filter(tool => tool.category === category)

@@ -822,7 +822,6 @@ export const KeywordAnalyzer: React.FC = () => {
             <S.LoadingText>Analyzing keyword performance...</S.LoadingText>
             <S.LoadingSteps>
               <S.LoadingStep>Fetching comprehensive YouTube data</S.LoadingStep>
-              <S.LoadingStep>Calculating tag score using rapidtags methodology</S.LoadingStep>
               <S.LoadingStep>Analyzing upload time patterns</S.LoadingStep>
               <S.LoadingStep>Generating optimization insights</S.LoadingStep>
             </S.LoadingSteps>
