@@ -333,15 +333,6 @@ export const ToolCard = styled.div`
     transition: opacity 0.3s ease;
     z-index: 3;
   }
-
-  &:hover {
-    transform: translateY(-8px);
-    border-color: ${({ theme }) => theme.colors.red3};
-    box-shadow: ${({ theme }) => theme.shadows.xl};
-    
-    &::before {
-      opacity: 1;
-    }
     
     ${ToolImageOverlay} {
       background: linear-gradient(
@@ -608,7 +599,7 @@ export const ModalButton = styled.button<{ variant: 'primary' | 'secondary' }>`
   justify-content: center;
   gap: 0.5rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.5s ease;
   
   ${({ variant, theme }) => variant === 'primary' 
     ? `

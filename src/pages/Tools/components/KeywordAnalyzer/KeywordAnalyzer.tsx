@@ -685,7 +685,7 @@ export const KeywordAnalyzer: React.FC = () => {
             ))}
           </S.MobileSummaryContainer>
         ) : (
-          <S.HeatmapContainer style={isIntegrated ? { transform: 'scale(0.85)', transformOrigin: 'left top', marginBottom: '-20px' } : {}}>
+          <S.HeatmapContainer style={isIntegrated ? { transform: 'scale(1)'} : {}}>
             <S.HourLabels>
               {hours.filter((_, index) => index % 4 === 0).map(hour => {
                 // Calculate the position: 60px offset + (hour * cellWidth + gap)
