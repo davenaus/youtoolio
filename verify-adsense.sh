@@ -3,8 +3,8 @@
 # AdSense Implementation Verification Script
 # Run this after building to verify everything is working
 
-echo "🔍 VERIFYING ADSENSE IMPLEMENTATION..."
-echo "=================================="
+echo "🔍 VERIFYING ADSENSE IMPLEMENTATION (UPDATED)..."
+echo "================================================"
 
 # Check if build directory exists
 if [ ! -d "build" ]; then
@@ -32,6 +32,24 @@ else
     echo "❌ ads.txt missing from build directory"
 fi
 
+# Check robots.txt for /static/ blocking issue
+echo ""
+echo "🤖 Checking robots.txt for critical issues..."
+if [ -f "build/robots.txt" ]; then
+    echo "✅ robots.txt exists in build directory"
+    
+    if grep -q "Disallow: /static/" build/robots.txt; then
+        echo "❌ CRITICAL: robots.txt is blocking /static/ files!"
+        echo "This prevents search engines from accessing CSS/JS files"
+    elif grep -q "Allow: /static/" build/robots.txt; then
+        echo "✅ /static/ files properly allowed in robots.txt"
+    else
+        echo "⚠️  /static/ not explicitly mentioned in robots.txt"
+    fi
+else
+    echo "❌ robots.txt missing from build directory"
+fi
+
 # Check sitemap.xml
 echo ""
 echo "🗺️  Checking sitemap.xml..."
@@ -54,6 +72,22 @@ if [ -f "build/index.html" ]; then
     fi
 else
     echo "❌ index.html missing from build directory"
+fi
+
+# Check AdSense component for display issue
+echo ""
+echo "📺 Checking AdSense component..."
+if [ -f "src/components/AdSense/AdSense.tsx" ]; then
+    if grep -q "display: none" src/components/AdSense/AdSense.tsx; then
+        echo "❌ CRITICAL: AdSense component has 'display: none'!"
+        echo "Ads will never be visible to users"
+    elif grep -q "display: flex" src/components/AdSense/AdSense.tsx; then
+        echo "✅ AdSense component display properly configured"
+    else
+        echo "⚠️  AdSense component display property not found"
+    fi
+else
+    echo "❌ AdSense component file missing"
 fi
 
 # Check environment variables

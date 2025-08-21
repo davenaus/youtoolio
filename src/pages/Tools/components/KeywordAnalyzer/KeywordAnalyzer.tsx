@@ -690,7 +690,7 @@ export const KeywordAnalyzer: React.FC = () => {
               {hours.filter((_, index) => index % 4 === 0).map(hour => {
                 // Calculate the position: 60px offset + (hour * cellWidth + gap)
                 const cellWidth = 15; // matches HeatmapCell width
-                const gap = 2;  
+                const gap = 2; // matches grid gap
                 const leftPosition = 60 + (hour * (cellWidth + gap)) + (cellWidth / 2);
                 
                 return (

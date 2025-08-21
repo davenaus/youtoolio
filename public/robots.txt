@@ -9,7 +9,9 @@ Disallow: /admin/
 Disallow: /_next/
 Disallow: /api/
 Disallow: /.well-known/
-Disallow: /static/
+
+# Allow static files (required for React apps)
+Allow: /static/
 
 # Allow important pages
 Allow: /tools/
