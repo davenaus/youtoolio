@@ -406,6 +406,97 @@ export const OutlierFinder: React.FC = () => {
           </S.SearchHistory>
         )}
 
+        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {!showResults && (
+          <S.EducationalSection>
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Outlier Finder</S.SectionSubTitle>
+              
+              <S.EducationalText>
+                Our Outlier Finder identifies videos that significantly outperform typical view-to-subscriber ratios 
+                in any topic or niche. This powerful tool helps you discover viral content patterns, successful 
+                content strategies, and trending topics by analyzing performance metrics across YouTube.
+              </S.EducationalText>
+
+              <S.StepByStep>
+                <S.StepItem>
+                  <S.StepNumberCircle>1</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.OutlierFinderStepTitle>Enter Search Query</S.OutlierFinderStepTitle>
+                    <S.EducationalText>
+                      Type any keyword, topic, or niche you want to analyze. Choose between regular videos 
+                      or YouTube Shorts depending on the content format you're interested in studying. 
+                      Our algorithm searches through thousands of videos to find the top performers.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>2</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.OutlierFinderStepTitle>Customize Filters</S.OutlierFinderStepTitle>
+                    <S.EducationalText>
+                      Apply advanced filters to narrow your search by minimum views, video age, channel size, 
+                      and sorting preferences. Filter by channel subscriber count to find outliers from 
+                      small creators or established channels. Sort results by view ratio, engagement, or viral score.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>3</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.OutlierFinderStepTitle>Analyze Performance Data</S.OutlierFinderStepTitle>
+                    <S.EducationalText>
+                      Review detailed metrics including view-to-subscriber ratios, engagement rates, and viral 
+                      scores for each outlier video. Use these insights to understand what makes content go viral 
+                      and apply these patterns to your own content strategy.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+              </S.StepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Understanding Outlier Metrics</S.SectionSubTitle>
+              
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>View-to-Subscriber Ratio:</strong> Measures how many views a video gets relative to the creator's subscriber count</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Engagement Rate:</strong> Calculates the percentage of viewers who liked, commented, or interacted with the video</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Viral Score:</strong> Comprehensive metric combining view ratio, engagement, and time factors to identify viral content</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Channel Size Filtering:</strong> Discover outliers from micro-influencers, small creators, or established channels</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Content Format Analysis:</strong> Separate analysis for YouTube Shorts versus traditional long-form videos</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Trend Detection:</strong> Identify emerging trends and viral content patterns before they become mainstream</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+
+              <S.EducationalText>
+                Use outlier analysis to understand what content resonates with audiences, identify successful 
+                content strategies, discover trending topics, and find inspiration for your own viral content. 
+                This tool is invaluable for content creators, marketers, and researchers studying YouTube trends 
+                and viral content patterns.
+              </S.EducationalText>
+            </S.EducationalContent>
+          </S.EducationalSection>
+        )}
+
         {showFilters && (
           <S.FiltersContainer>
             <S.FilterGrid>
@@ -587,13 +678,13 @@ export const OutlierFinder: React.FC = () => {
                 ))}
               </S.ResultsList>
 
-              {/* Bottom Ad for smaller screens */}
-              <S.BottomAdContainer>
-                <AdSense 
-                  slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-                  format="horizontal"
-                />
-              </S.BottomAdContainer>
+        {/* Bottom Ad */}
+        <S.BottomAdContainer>
+          <AdSense 
+            slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
+            format="horizontal"
+          />
+        </S.BottomAdContainer>
             </>
           ) : showResults && (
             <S.NoResults>

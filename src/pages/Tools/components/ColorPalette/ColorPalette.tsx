@@ -501,6 +501,7 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
           </S.HeaderContent>
         </S.EnhancedHeader>
 
+
         {/* Step 1: Upload */}
         {!imagePreview && (
           <S.UploadSection>
@@ -547,6 +548,8 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
             />
           </S.UploadSection>
         )}
+
+        
 
         {/* Step 2: Processing */}
         {imagePreview && isLoading && (
@@ -704,6 +707,8 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
           </S.ResultsSection>
         )}
 
+        
+
         {/* Hidden canvas for processing */}
         <canvas ref={canvasRef} style={{ display: 'none' }} />
         <canvas ref={pickerCanvasRef} style={{ display: 'none' }} />
@@ -774,9 +779,11 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
           </S.ColorPickerModal>
         )}
 
+        
+
         {/* Bottom Ad */}
         <S.BottomAdContainer>
-          <AdSense 
+          <AdSense
             slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
             format="horizontal"
           />

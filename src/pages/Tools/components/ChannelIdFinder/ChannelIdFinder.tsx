@@ -401,6 +401,96 @@ export const ChannelIdFinder: React.FC = () => {
           </S.HistorySection>
         )}
 
+        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {!showResults && !isSearching && (
+          <S.EducationalSection>
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Channel ID Finder</S.SectionSubTitle>
+              
+              <S.EducationalText>
+                Our Channel ID Finder extracts comprehensive information from any YouTube channel using multiple 
+                search methods. Whether you have a channel URL, handle, name, or even a video link, our tool 
+                identifies the channel and provides complete details including statistics, IDs, and API endpoints.
+              </S.EducationalText>
+
+              <S.StepByStep>
+                <S.StepItem>
+                  <S.StepNumberCircle>1</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Enter Channel Information</S.StepTitle>
+                    <S.EducationalText>
+                      Paste any YouTube channel URL, type a channel name, enter a @handle, use a direct 
+                      channel ID, or even paste a video URL. Our intelligent system automatically detects 
+                      the input type and finds the associated channel information.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>2</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Automatic Resolution</S.StepTitle>
+                    <S.EducationalText>
+                      The tool processes your input through multiple resolution methods including URL parsing, 
+                      API searches, and video-to-channel mapping. We handle all YouTube URL formats and 
+                      find channels even from video or playlist links.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>3</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Complete Channel Data</S.StepTitle>
+                    <S.EducationalText>
+                      Get comprehensive channel information including IDs, statistics, custom URLs, handles, 
+                      API endpoints, and metadata. All data is formatted for easy copying and immediate use 
+                      in your projects, research, or API integrations.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+              </S.StepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Supported Input Formats</S.SectionSubTitle>
+              
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Channel URLs:</strong> youtube.com/channel/UC..., youtube.com/c/name, youtube.com/user/name</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Handle/Username:</strong> @channelname or youtube.com/@channelname formats</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Direct Channel IDs:</strong> 24-character IDs starting with UC for immediate lookup</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Video URLs:</strong> Extract channel information from any video or shorts link</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Channel Names:</strong> Search by channel name for popular or unique channels</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>API Integration:</strong> Ready-to-use YouTube Data API v3 endpoints for developers</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+
+              <S.EducationalText>
+                Perfect for developers, researchers, marketers, and content creators who need to programmatically 
+                access YouTube channel data. All results include both human-readable information and 
+                API-ready identifiers for seamless integration with your applications or analysis workflows.
+              </S.EducationalText>
+            </S.EducationalContent>
+          </S.EducationalSection>
+        )}
+
         {isSearching && (
           <S.LoadingContainer>
             <S.LoadingAnimation>

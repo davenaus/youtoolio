@@ -573,6 +573,100 @@ export const TagGenerator: React.FC = () => {
           </S.FiltersContainer>
         )}
 
+        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {!showResults && (
+          <S.EducationalSection>
+            
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Tag Generator</S.SectionSubTitle>
+              
+              <S.EducationalText>
+                Our Tag Generator helps you discover high-performing YouTube tags using advanced keyword research 
+                and competitor analysis. Generate targeted tags that improve video discoverability, boost search rankings, 
+                and reach the right audience for maximum engagement and growth.
+              </S.EducationalText>
+
+              <S.StepByStep>
+                <S.StepItem>
+                  <S.StepNumberCircle>1</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Enter Your Topic</S.StepTitle>
+                    <S.EducationalText>
+                      Input your main video topic, target keyword, or seed phrase into the generator above. 
+                      Our system analyzes related terms, trending keywords, and successful tag patterns 
+                      to provide comprehensive tag suggestions tailored to your content.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>2</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Advanced Tag Analysis</S.StepTitle>
+                    <S.EducationalText>
+                      Our algorithm examines search volume, competition levels, and trending patterns 
+                      to suggest optimal tags. We analyze successful videos in your niche to identify 
+                      high-performing tag combinations and keyword opportunities.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>3</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Copy & Optimize</S.StepTitle>
+                    <S.EducationalText>
+                      Select from generated tags based on relevance and search potential. Copy tags 
+                      directly to your clipboard for easy pasting into YouTube Studio. Use our optimization 
+                      tips to maximize tag effectiveness and improve video discoverability.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+              </S.StepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Tag Optimization Features</S.SectionSubTitle>
+              
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Long-tail Keyword Discovery:</strong> Find specific, targeted tags with lower competition and higher conversion potential</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Trending Tag Analysis:</strong> Identify currently popular tags and emerging keywords in your niche</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Competition Assessment:</strong> Evaluate tag difficulty and competition levels for strategic selection</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Search Volume Insights:</strong> Understand monthly search volumes and trending patterns for each tag</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Related Tag Suggestions:</strong> Discover semantically related keywords and topic clusters</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Tag Performance Scoring:</strong> Get recommendations based on relevance, competition, and search potential</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Bulk Tag Generation:</strong> Generate comprehensive tag lists for multiple videos and content series</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Export & Organization:</strong> Save and organize your tag collections for future content planning</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+          </S.EducationalSection>
+        )}
+
         <S.ResultsContainer className={showResults ? 'visible' : ''}>
           {isLoading ? (
             <S.LoadingContainer>

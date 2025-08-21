@@ -22,6 +22,109 @@ const pulseGlow = keyframes`
   50% { box-shadow: 0 0 40px rgba(229, 72, 72, 0.8); }
 `;
 
+// Educational Content Styled Components - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL
+export const EducationalSection = styled.div`
+  margin-bottom: 3rem;
+  animation: ${fadeIn} 0.8s ease-out;
+`;
+
+export const EducationalContent = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  margin-top: 2rem;
+  line-height: 1.7;
+`;
+
+export const SectionSubTitle = styled.h2`
+  color: ${({ theme }) => theme.colors.red4};
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+`;
+
+export const EducationalText = styled.p`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+  line-height: 1.7;
+`;
+
+export const FeatureList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+`;
+
+export const FeatureListItem = styled.li`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  
+  i {
+    color: ${({ theme }) => theme.colors.success};
+    font-size: 1.2rem;
+    margin-top: 0.1rem;
+    flex-shrink: 0;
+  }
+  
+  span {
+    flex: 1;
+  }
+`;
+
+export const StepByStep = styled.div`
+  background: ${({ theme }) => theme.colors.dark4};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 2rem;
+  margin: 2rem 0;
+`;
+
+export const StepItem = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+  
+  @media (max-width: 768px) {
+    gap: 1rem;
+  }
+`;
+
+export const StepNumberCircle = styled.div`
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(125, 0, 0, 0.3);
+`;
+
+export const StepContent = styled.div`
+  flex: 1;
+`;
+
+export const StepTitle = styled.h4`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+`;
+
 export const PageWrapper = styled.div`
   min-height: 100vh;
   background: ${({ theme }) => theme.colors.dark2};

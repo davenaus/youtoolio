@@ -599,6 +599,100 @@ export const CommentDownloader: React.FC = () => {
 
         {status && <S.Status>{status}</S.Status>}
 
+        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {!showResults && (
+          <S.EducationalSection>
+            
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Comment Downloader</S.SectionSubTitle>
+              
+              <S.EducationalText>
+                Our Comment Downloader extracts all comments from any YouTube video, providing valuable audience 
+                insights, feedback analysis, and engagement data. Perfect for content creators, researchers, 
+                and marketers seeking to understand audience sentiment and improve content strategy.
+              </S.EducationalText>
+
+              <S.StepByStep>
+                <S.StepItem>
+                  <S.StepNumberCircle>1</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Enter Video URL</S.StepTitle>
+                    <S.EducationalText>
+                      Paste any YouTube video URL to begin comment extraction. Our system supports all 
+                      video formats including regular videos, shorts, and live streams. We efficiently 
+                      process videos with thousands of comments.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>2</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Comment Processing</S.StepTitle>
+                    <S.EducationalText>
+                      Our advanced scraping technology extracts all visible comments, including replies, 
+                      timestamps, author information, and engagement metrics. We organize comments by 
+                      popularity, recency, and thread structure.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>3</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Download & Analyze</S.StepTitle>
+                    <S.EducationalText>
+                      Export comments in multiple formats including CSV, JSON, or plain text. Use the 
+                      organized data for sentiment analysis, audience research, content improvement, 
+                      and competitive intelligence gathering.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+              </S.StepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Comment Analysis Features</S.SectionSubTitle>
+              
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Complete Comment Extraction:</strong> Download all comments including replies and nested conversations</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Author Information:</strong> Capture commenter usernames, profile links, and engagement history</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Timestamp Data:</strong> Get precise comment timing for temporal analysis and engagement patterns</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Like/Dislike Metrics:</strong> Track comment popularity and audience sentiment indicators</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Thread Organization:</strong> Maintain comment hierarchy and conversation structure</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Multiple Export Formats:</strong> Save as CSV, JSON, XML, or plain text for various analysis tools</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Bulk Processing:</strong> Handle multiple videos and large comment volumes efficiently</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Sentiment Indicators:</strong> Basic sentiment analysis and engagement quality assessment</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+          </S.EducationalSection>
+        )}
+
         <S.ResultsContainer className={showResults ? 'visible' : ''}>
           {isLoading ? (
             <S.LoadingContainer>

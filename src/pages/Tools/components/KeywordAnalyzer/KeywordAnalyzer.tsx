@@ -812,6 +812,100 @@ export const KeywordAnalyzer: React.FC = () => {
           </S.ErrorMessage>
         )}
 
+        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {!showResults && !isAnalyzing && (
+          <S.EducationalSection>
+            
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Keyword Analyzer</S.SectionSubTitle>
+              
+              <S.EducationalText>
+                Our Keyword Analyzer provides comprehensive YouTube keyword research with advanced metrics 
+                including search volume, competition analysis, and upload timing insights. Discover high-performing 
+                keywords and optimize your content strategy for maximum visibility and engagement.
+              </S.EducationalText>
+
+              <S.StepByStep>
+                <S.StepItem>
+                  <S.StepNumberCircle>1</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Enter Target Keyword</S.StepTitle>
+                    <S.EducationalText>
+                      Input your main keyword or phrase in the search bar above. Our system analyzes 
+                      thousands of YouTube videos to provide comprehensive insights including search volume, 
+                      competition levels, and performance opportunities.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>2</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Advanced Data Analysis</S.StepTitle>
+                    <S.EducationalText>
+                      Our algorithm examines video performance, upload patterns, engagement metrics, 
+                      and competitive landscape. We calculate tag scores, trending patterns, and optimal 
+                      timing recommendations based on real YouTube data.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>3</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Optimize Your Strategy</S.StepTitle>
+                    <S.EducationalText>
+                      Review detailed insights including tag scores, upload timing charts, competition analysis, 
+                      and related keyword suggestions. Use these recommendations to optimize your content 
+                      strategy and improve search rankings.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+              </S.StepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Keyword Research Features</S.SectionSubTitle>
+              
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Tag Score Analysis:</strong> Professional scoring system similar to RapidTags with 0-100 scale for keyword quality assessment</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Search Volume Metrics:</strong> Comprehensive analysis of keyword demand with Low, Moderate, High, and Very High classifications</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Competition Analysis:</strong> Detailed competitive landscape assessment including market saturation and ranking difficulty</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Upload Time Distribution:</strong> Visual heatmap showing optimal posting times based on successful videos in your niche</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Engagement Rate Calculation:</strong> Precise engagement metrics including likes-to-views ratios and audience interaction patterns</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Trending Analysis:</strong> Real-time trend detection with Rising, Stable, and Declining keyword performance indicators</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Related Keywords Discovery:</strong> Advanced semantic keyword suggestions for expanding your content strategy</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Top Video Analysis:</strong> Study successful videos using your keywords with performance metrics and optimization insights</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+          </S.EducationalSection>
+        )}
+
 
 
         {isAnalyzing && (

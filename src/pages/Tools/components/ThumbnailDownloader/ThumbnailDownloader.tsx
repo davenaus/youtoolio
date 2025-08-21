@@ -441,6 +441,100 @@ export const ThumbnailDownloader: React.FC = () => {
 
         {renderStepIndicator()}
 
+        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {currentStep === 'input' && (
+          <S.EducationalSection>
+            
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Thumbnail Downloader</S.SectionSubTitle>
+              
+              <S.EducationalText>
+                Our Thumbnail Downloader provides instant access to high-quality YouTube video thumbnails 
+                in multiple resolutions. Whether you need thumbnails for design inspiration, content creation, 
+                or competitive analysis, this tool delivers crisp, original-quality images directly to your device.
+              </S.EducationalText>
+
+              <S.StepByStep>
+                <S.StepItem>
+                  <S.StepNumberCircle>1</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Enter Video URL</S.StepTitle>
+                    <S.EducationalText>
+                      Paste any YouTube video URL into the search bar. Our system accepts various formats 
+                      including youtube.com/watch?v=, youtu.be/, youtube.com/embed/, and youtube.com/shorts/ 
+                      links. You can also enter just the video ID directly.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>2</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Preview Thumbnails</S.StepTitle>
+                    <S.EducationalText>
+                      View the video information and preview the thumbnail in your selected quality. 
+                      Choose from multiple resolution options including maximum resolution (1280×720), 
+                      standard quality (640×480), high quality (480×360), medium (320×180), and low quality (120×90).
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>3</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Download Instantly</S.StepTitle>
+                    <S.EducationalText>
+                      Click download to save the thumbnail directly to your device. The file is automatically 
+                      named with the video title and resolution for easy organization. Use advanced options 
+                      to download all qualities at once or copy direct URLs.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+              </S.StepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Available Thumbnail Qualities & Use Cases</S.SectionSubTitle>
+              
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Maximum Resolution (1280×720):</strong> Perfect for website headers, blog posts, social media covers, and professional presentations requiring crisp, high-quality images</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Standard Quality (640×480):</strong> Ideal for email newsletters, medium-sized web content, and applications where file size balance is important</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>High Quality (480×360):</strong> Great for social media posts, thumbnails for video galleries, and content management systems</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Medium Quality (320×180):</strong> Suitable for mobile applications, small web widgets, and situations requiring faster loading times</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Low Quality (120×90):</strong> Perfect for generating previews, creating image catalogs, and applications requiring minimal bandwidth usage</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Batch Download Option:</strong> Download all available resolutions simultaneously for comprehensive thumbnail collections and future-proofing your design assets</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Direct URL Access:</strong> Copy thumbnail URLs for integration into content management systems, automated workflows, and API implementations</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Download History:</strong> Track recently downloaded thumbnails with automatic history management for easy re-access and project organization</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+          </S.EducationalSection>
+        )}
+
         {/* Step 1: URL Input */}
         {currentStep === 'input' && (
           <S.InputSection>

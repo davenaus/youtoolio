@@ -508,6 +508,97 @@ export const ChannelComparer: React.FC = () => {
           {isLoading ? 'Analyzing...' : 'Compare Channels'}
         </S.CompareButton>
 
+        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {!showResults && !isLoading && (
+          <S.EducationalSection>
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Channel Comparer</S.SectionSubTitle>
+              
+              <S.EducationalText>
+                Our Channel Comparer allows you to analyze and compare any two YouTube channels side by side. 
+                Get detailed insights into subscriber counts, view metrics, engagement rates, and performance 
+                indicators to understand competitive positioning and growth opportunities.
+              </S.EducationalText>
+
+              <S.StepByStep>
+                <S.StepItem>
+                  <S.StepNumberCircle>1</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Enter Channel URLs</S.StepTitle>
+                    <S.EducationalText>
+                      Paste two YouTube channel URLs in the input fields above. You can use channel URLs, 
+                      custom URLs, @handles, or direct channel IDs. Our system automatically detects and 
+                      processes different URL formats.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>2</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Comprehensive Analysis</S.StepTitle>
+                    <S.EducationalText>
+                      Our algorithm compares 15+ key metrics including subscribers, total views, average views 
+                      per video, engagement potential, content consistency, growth rates, and channel optimization 
+                      factors like descriptions, banners, and keyword usage.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>3</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Strategic Insights</S.StepTitle>
+                    <S.EducationalText>
+                      Review the detailed comparison results to identify strengths, weaknesses, and opportunities. 
+                      Use these insights for competitive analysis, partnership decisions, or strategic planning 
+                      to improve your own channel performance.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+              </S.StepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Channel Comparison Metrics</S.SectionSubTitle>
+              
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Subscriber Analysis:</strong> Compare total subscribers, growth rates, and subscriber acquisition efficiency</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>View Metrics:</strong> Analyze total views, average views per video, and views per subscriber ratios</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Content Performance:</strong> Evaluate upload frequency, content consistency, and engagement potential</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Channel Optimization:</strong> Compare SEO factors, descriptions, branding, and categorization</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Growth Analysis:</strong> Calculate growth rates, channel age impact, and scaling efficiency</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Competitive Insights:</strong> Identify winning strategies and areas for improvement</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+
+              <S.EducationalText>
+                Use this comprehensive comparison data to make informed decisions about content strategy, 
+                collaboration opportunities, competitive positioning, and channel optimization priorities. 
+                The detailed metrics help you understand what makes successful channels thrive and how 
+                to apply those insights to your own growth strategy.
+              </S.EducationalText>
+            </S.EducationalContent>
+          </S.EducationalSection>
+        )}
+
         <S.ResultsContainer className={showResults ? 'visible' : ''}>
           {isLoading ? (
             <S.LoadingContainer>
@@ -581,13 +672,13 @@ export const ChannelComparer: React.FC = () => {
                 </S.InsightsSection>
               )}
 
-              {/* Bottom Ad for smaller screens */}
-              <S.BottomAdContainer>
-                <AdSense 
-                  slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-                  format="horizontal"
-                />
-              </S.BottomAdContainer>
+        {/* Bottom Ad */}
+        <S.BottomAdContainer>
+          <AdSense
+            slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
+            format="horizontal"
+          />
+        </S.BottomAdContainer>
             </>
           ) : null}
         </S.ResultsContainer>

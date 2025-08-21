@@ -272,6 +272,97 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
           </S.HeaderContent>
         </S.EnhancedHeader>
 
+        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {!showResults && !isLoading && (
+          <S.EducationalSection>
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Channel Consultant</S.SectionSubTitle>
+              
+              <S.EducationalText>
+                Our Channel Consultant creates a custom AI assistant trained specifically on your YouTube channel. 
+                The AI understands your niche, audience, and branding to provide personalized content strategy, 
+                SEO optimization, and creative assistance tailored to your unique channel goals.
+              </S.EducationalText>
+
+              <S.StepByStep>
+                <S.StepItem>
+                  <S.StepNumberCircle>1</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Enter Channel URL</S.StepTitle>
+                    <S.EducationalText>
+                      Paste your YouTube channel URL in the search field above. Our system analyzes your 
+                      channel details, category, description, and subscriber metrics to understand your 
+                      content focus and audience demographics.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>2</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>AI Bot Creation</S.StepTitle>
+                    <S.EducationalText>
+                      The system generates comprehensive instructions that train an AI chatbot to become 
+                      your personal YouTube consultant. The bot understands your niche and can operate 
+                      in four specialized modes: SEO, Ideation, Script, and Trendjack.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>3</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Deploy Your Consultant</S.StepTitle>
+                    <S.EducationalText>
+                      Copy the generated instructions and paste them into any AI platform like ChatGPT, 
+                      Claude, or Gemini. Your custom consultant will immediately understand your channel 
+                      and provide expert advice tailored to your specific content strategy needs.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+              </S.StepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>AI Consultant Modes</S.SectionSubTitle>
+              
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>SEO Mode:</strong> Generates optimized titles, descriptions, tags, and thumbnail concepts based on video content</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Ideation Mode:</strong> Creates video ideas and content concepts specifically aligned with your channel niche</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Script Mode:</strong> Writes detailed 5,000-word scripts for any topic within your content area</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Trendjack Mode:</strong> Identifies upcoming events, launches, and trends relevant to your niche for timely content</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Personalized Insights:</strong> All recommendations consider your channel's specific category, audience, and content style</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Multi-Platform Support:</strong> Works with ChatGPT, Claude, Gemini, and other AI platforms</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+
+              <S.EducationalText>
+                Transform any AI chatbot into your personal YouTube strategist. The consultant understands 
+                your unique channel identity and provides advice that aligns with your brand voice, target 
+                audience, and growth objectives. Get professional-level content strategy without the cost 
+                of hiring a dedicated YouTube consultant.
+              </S.EducationalText>
+            </S.EducationalContent>
+          </S.EducationalSection>
+        )}
+
         <S.ResultsContainer className={showResults ? 'visible' : ''}>
           {isLoading ? (
             <S.LoadingContainer>

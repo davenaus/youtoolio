@@ -48,7 +48,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
   const toolConfig = {
     name: 'Subscribe Link Generator',
     description: 'Generate professional subscribe links and channel cards for YouTube creators',
-    image: 'https://64.media.tumblr.com/5c2c1e7c0c7b4f1e5a2a1b0e6b0c4e8d/tumblr_p9k7d8eR2w1t9z8e8o1_1280.jpg',
+    image: 'https://64.media.tumblr.com/12a9d70197335903fdf345505df6b606/0e01452f9f6dd974-2d/s2048x3072/2f17ae0cb670be14c7c35f8084d926da44afd456.jpg',
     icon: 'bx bx-link',
     features: [
       'Multiple link variations',
@@ -397,6 +397,96 @@ export const SubscribeLinkGenerator: React.FC = () => {
               ))}
             </S.HistoryList>
           </S.HistorySection>
+        )}
+
+        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {!channelInfo && !isLoading && (
+          <S.EducationalSection>
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Subscribe Link Generator</S.SectionSubTitle>
+              
+              <S.EducationalText>
+                Our Subscribe Link Generator creates professional subscription links and channel preview cards 
+                for YouTube creators. Generate multiple link variations, download QR codes, and get tools to 
+                help grow your subscriber base with optimized subscription experiences.
+              </S.EducationalText>
+
+              <S.StepByStep>
+                <S.StepItem>
+                  <S.StepNumberCircle>1</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.SubscribeLinkGeneratorStepTitle>Enter Channel Information</S.SubscribeLinkGeneratorStepTitle>
+                    <S.EducationalText>
+                      Input your YouTube channel URL, @handle, or channel ID. Our system automatically 
+                      fetches channel metadata including subscriber count, video statistics, and recent 
+                      uploads to create a comprehensive channel preview.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>2</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.SubscribeLinkGeneratorStepTitle>Generate Multiple Link Variations</S.SubscribeLinkGeneratorStepTitle>
+                    <S.EducationalText>
+                      Access various subscribe link formats including direct subscription links, channel 
+                      homepage links, and specialized URLs for different marketing purposes. Each variation 
+                      is optimized for specific use cases and platforms.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>3</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.SubscribeLinkGeneratorStepTitle>Download & Share Assets</S.SubscribeLinkGeneratorStepTitle>
+                    <S.EducationalText>
+                      Copy generated links, download QR codes for offline promotion, and use the channel 
+                      preview cards for social media marketing. Share your channel professionally across 
+                      different platforms and marketing materials.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+              </S.StepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Subscribe Link Features</S.SectionSubTitle>
+              
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Direct Subscribe Links:</strong> Create immediate subscription links that bypass the channel page</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Channel Preview Cards:</strong> Professional-looking channel cards with subscriber counts and recent videos</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>QR Code Generation:</strong> Downloadable QR codes for offline marketing and promotional materials</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Multiple Link Formats:</strong> Various URL structures optimized for different platforms and use cases</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Channel Analytics:</strong> Display subscriber count, video count, and total view statistics</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Social Media Ready:</strong> Links and cards optimized for sharing across social platforms</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+
+              <S.EducationalText>
+                Perfect for content creators, marketers, and businesses looking to grow their YouTube presence. 
+                Use these professional subscription tools to increase subscriber conversion rates, enhance 
+                marketing campaigns, and create consistent branding across all promotional materials.
+              </S.EducationalText>
+            </S.EducationalContent>
+          </S.EducationalSection>
         )}
 
         {isLoading && (

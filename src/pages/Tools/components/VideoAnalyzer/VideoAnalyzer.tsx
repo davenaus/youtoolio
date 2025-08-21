@@ -1127,6 +1127,100 @@ const VideoAnalyzer: React.FC = () => {
           </S.HeaderContent>
         </S.EnhancedHeader>
 
+        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {!showResults && (
+          <S.EducationalSection>
+            
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Video Analyzer</S.SectionSubTitle>
+              
+              <S.EducationalText>
+                Our Video Analyzer provides comprehensive insights into YouTube video performance, 
+                helping content creators, marketers, and researchers understand what makes videos successful. 
+                From engagement metrics to SEO optimization scores, get detailed analytics that drive results.
+              </S.EducationalText>
+
+              <S.StepByStep>
+                <S.StepItem>
+                  <S.StepNumberCircle>1</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Enter Video URL</S.StepTitle>
+                    <S.EducationalText>
+                      Input any YouTube video URL into the search bar above. Our system accepts various formats 
+                      including youtube.com/watch?v=, youtu.be/, youtube.com/embed/, youtube.com/shorts/, 
+                      or direct video IDs. The analyzer works with any public YouTube video.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>2</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Comprehensive Data Analysis</S.StepTitle>
+                    <S.EducationalText>
+                      Our system fetches detailed video metadata, engagement statistics, channel information, 
+                      and technical specifications. We analyze performance patterns, content optimization, 
+                      upload timing, and audience engagement metrics for complete insights.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>3</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Review Detailed Insights</S.StepTitle>
+                    <S.EducationalText>
+                      Navigate through organized tabs to explore video overview, technical details, 
+                      channel analytics, and strategic recommendations. Use these insights to optimize 
+                      your content strategy and improve video performance.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+              </S.StepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>What Analytics Are Provided?</S.SectionSubTitle>
+              
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Engagement Analysis:</strong> Like-to-view ratio, comment engagement rate, audience retention patterns, and social sharing metrics</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>SEO Optimization Score:</strong> Title effectiveness, description quality, tag usage, and keyword optimization recommendations</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Technical Specifications:</strong> Video resolution, duration analysis, upload quality, captions availability, and format details</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Content Performance:</strong> View velocity, subscriber conversion rate, watch time estimates, and trending potential analysis</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Channel Context:</strong> Publisher information, subscriber count, upload frequency, and channel authority metrics</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Upload Timing Analysis:</strong> Publication date strategy, optimal posting times, and schedule consistency evaluation</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Competitive Insights:</strong> Performance benchmarking, niche analysis, and content gap identification for strategic planning</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Strategic Recommendations:</strong> Actionable insights for content optimization, audience growth, and engagement improvement</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+          </S.EducationalSection>
+        )}
+
         <S.ResultsContainer className={showResults ? 'visible' : ''}>
           {isLoading ? (
             <S.LoadingContainer>

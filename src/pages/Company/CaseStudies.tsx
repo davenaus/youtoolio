@@ -284,7 +284,7 @@ export const CaseStudies: React.FC = () => {
         ctr: "+145%"
       },
       keyInsights: "The creator's audience was primarily interested in home workouts and nutrition guidance. By creating targeted content for these specific interests and optimizing for higher-value keywords, both engagement and revenue improved dramatically.",
-      toolsUsed: ["Channel Analyzer", "Audience Insights", "Revenue Calculator", "Keyword Analyzer"],
+      toolsUsed: ["Channel Analyzer", "Keyword Analyzer"],
       details: {
         timeframe: "4 months",
         startingMetrics: "25,000 subscribers, $800 monthly revenue",
@@ -402,11 +402,11 @@ export const CaseStudies: React.FC = () => {
         </CaseStudyGrid>
 
         <div style={{ 
-          background: '#374151', 
+          background: '#1A1A1D', 
           borderRadius: '12px', 
           padding: '3rem', 
           textAlign: 'center',
-          border: '1px solid #4B5563'
+          border: '1px solid #393939ff'
         }}>
           <h3 style={{ color: '#F3F4F6', marginBottom: '1rem' }}>Ready to Write Your Success Story?</h3>
           <p style={{ 
@@ -440,7 +440,7 @@ export const CaseStudies: React.FC = () => {
             </button>
             <button 
               style={{
-                background: '#6B7280',
+                background: '#29292bff',
                 color: 'white',
                 border: 'none',
                 padding: '1rem 2rem',

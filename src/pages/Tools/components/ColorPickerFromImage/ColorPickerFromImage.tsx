@@ -333,6 +333,99 @@ const toolConfig = {
           </S.UploadSection>
         )}
 
+
+        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {!imagePreview && (
+          <S.EducationalSection>
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Color Picker</S.SectionSubTitle>
+              
+              <S.EducationalText>
+                Our Color Picker tool allows you to extract exact color values from any image with pixel-perfect 
+                precision. Simply upload an image, hover to preview colors, and click to copy hex codes instantly. 
+                Perfect for designers, developers, and artists who need precise color matching and extraction.
+              </S.EducationalText>
+
+              <S.StepByStep>
+                <S.StepItem>
+                  <S.StepNumberCircle>1</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Upload Your Image</S.StepTitle>
+                    <S.EducationalText>
+                      Upload any image file (JPG, PNG, GIF, WebP, BMP) using drag-and-drop, file chooser, 
+                      or paste directly from your clipboard. The tool maintains original image quality 
+                      for accurate color sampling across all pixels.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>2</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Preview & Pick Colors</S.StepTitle>
+                    <S.EducationalText>
+                      Move your mouse over any part of the image to see a live preview of the color 
+                      value. The preview cursor shows both the color swatch and corresponding hex code 
+                      in real-time as you explore different areas of your image.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>3</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Copy & Save Colors</S.StepTitle>
+                    <S.EducationalText>
+                      Click anywhere on the image to instantly copy the hex color code to your clipboard. 
+                      All picked colors are automatically saved to your history for easy access and 
+                      comparison throughout your design workflow.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+              </S.StepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Precision Color Extraction</S.SectionSubTitle>
+              
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Pixel-Perfect Accuracy:</strong> Extract exact RGB values from any pixel in your image</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Live Color Preview:</strong> See color values in real-time as you hover over the image</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Instant Clipboard Copy:</strong> One-click copying of hex codes for immediate use</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Color History:</strong> Automatic saving of picked colors for easy comparison and reuse</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Multiple Input Methods:</strong> Upload, drag-drop, or paste images directly from clipboard</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Universal Format Support:</strong> Works with all common image formats and sizes</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+
+              <S.EducationalText>
+                Essential for web developers needing exact color matches, graphic designers extracting brand 
+                colors from references, and digital artists seeking color inspiration from photographs. 
+                The tool preserves image quality and provides professional-grade color accuracy for all 
+                your creative and technical projects.
+              </S.EducationalText>
+            </S.EducationalContent>
+          </S.EducationalSection>
+        )}
+
+
         {/* Color Picker Interface */}
         {imagePreview && (
           <S.PickerSection>

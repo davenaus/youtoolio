@@ -40,20 +40,20 @@ interface PlaylistAnalysis {
   totalDuration: number;
   totalLikes: number;
   totalComments: number;
-  
+
   // Time Analysis
   oldestVideo: Date;
   newestVideo: Date;
   timeSpan: number; // days
   avgUploadFrequency: number; // videos per month
-  
+
   // Performance Analysis
   avgViewsPerVideo: number;
   avgLikesPerVideo: number;
   avgCommentsPerVideo: number;
   engagementRate: number;
   performanceScore: number;
-  
+
   // Content Analysis
   mostViewedVideo: VideoData;
   leastViewedVideo: VideoData;
@@ -61,23 +61,23 @@ interface PlaylistAnalysis {
   mostCommentedVideo: VideoData;
   longestVideo: VideoData;
   shortestVideo: VideoData;
-  
+
   // Channel Analysis
   channels: Map<string, ChannelInfo>;
   dominantChannel: ChannelInfo;
   channelDiversity: number;
-  
+
   // Content Distribution
   topTags: [string, number][];
   categories: [string, number][];
   languages: [string, number][];
   uploadPattern: { [key: string]: number };
-  
+
   // Quality Metrics
   qualityScore: number;
   consistencyScore: number;
   discoverabilityScore: number;
-  
+
   // Recommendations
   recommendations: string[];
   insights: string[];
@@ -190,7 +190,7 @@ export const PlaylistAnalyzer: React.FC = () => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const remainingSeconds = seconds % 60;
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}m`;
     }
@@ -222,7 +222,7 @@ export const PlaylistAnalyzer: React.FC = () => {
       const videoIds = playlistData.items
         .map((item: any) => item.contentDetails.videoId)
         .join(',');
-      
+
       const videoResponse = await fetch(
         `https://www.googleapis.com/youtube/v3/videos?` +
         `part=statistics,snippet,contentDetails&id=${videoIds}&key=${API_KEY}`
@@ -257,7 +257,7 @@ export const PlaylistAnalyzer: React.FC = () => {
   const fetchChannelDetails = async (channelIds: string[]): Promise<Map<string, ChannelInfo>> => {
     const channels = new Map<string, ChannelInfo>();
     const uniqueChannelIds = Array.from(new Set(channelIds));
-    
+
     // Process in batches of 50
     for (let i = 0; i < uniqueChannelIds.length; i += 50) {
       const batch = uniqueChannelIds.slice(i, i + 50);
@@ -266,7 +266,7 @@ export const PlaylistAnalyzer: React.FC = () => {
         `part=snippet,statistics&id=${batch.join(',')}&key=${API_KEY}`
       );
       const data = await response.json();
-      
+
       for (const channel of data.items || []) {
         channels.set(channel.id, {
           id: channel.id,
@@ -280,7 +280,7 @@ export const PlaylistAnalyzer: React.FC = () => {
         });
       }
     }
-    
+
     return channels;
   };
 
@@ -290,16 +290,16 @@ export const PlaylistAnalyzer: React.FC = () => {
       if (video.views < filters.minViews) return false;
       if (filters.channelFilter && !video.channelTitle.toLowerCase().includes(filters.channelFilter.toLowerCase())) return false;
       if (filters.categoryFilter && video.categoryId !== filters.categoryFilter) return false;
-      
+
       if (filters.dateRange.start || filters.dateRange.end) {
         const videoDate = new Date(video.publishedAt);
         const startDate = filters.dateRange.start ? new Date(filters.dateRange.start) : null;
         const endDate = filters.dateRange.end ? new Date(filters.dateRange.end) : null;
-        
+
         if (startDate && videoDate < startDate) return false;
         if (endDate && videoDate > endDate) return false;
       }
-      
+
       return true;
     });
 
@@ -342,7 +342,7 @@ export const PlaylistAnalyzer: React.FC = () => {
     const leastViewedVideo = filteredVideos.reduce((min, v) => v.views < min.views ? v : min, filteredVideos[0]);
     const mostLikedVideo = filteredVideos.reduce((max, v) => v.likes > max.likes ? v : max, filteredVideos[0]);
     const mostCommentedVideo = filteredVideos.reduce((max, v) => v.comments > max.comments ? v : max, filteredVideos[0]);
-    
+
     const videosWithDuration = filteredVideos.map(v => ({ ...v, durationSeconds: convertDurationToSeconds(v.duration) }));
     const longestVideo = videosWithDuration.reduce((max, v) => v.durationSeconds > max.durationSeconds ? v : max, videosWithDuration[0]);
     const shortestVideo = videosWithDuration.reduce((min, v) => v.durationSeconds < min.durationSeconds ? v : min, videosWithDuration[0]);
@@ -357,10 +357,10 @@ export const PlaylistAnalyzer: React.FC = () => {
       video.tags.forEach(tag => {
         tagCount[tag] = (tagCount[tag] || 0) + 1;
       });
-      
+
       categoryCount[video.categoryId] = (categoryCount[video.categoryId] || 0) + 1;
       languageCount[video.language] = (languageCount[video.language] || 0) + 1;
-      
+
       const month = new Date(video.publishedAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
       uploadPattern[month] = (uploadPattern[month] || 0) + 1;
     });
@@ -482,7 +482,7 @@ export const PlaylistAnalyzer: React.FC = () => {
 
     const shortVideos = videos.filter(v => convertDurationToSeconds(v.duration) < 60).length;
     const longVideos = videos.filter(v => convertDurationToSeconds(v.duration) > 600).length;
-    
+
     if (shortVideos > longVideos * 2) {
       recommendations.push("Consider adding some longer-form content for better watch time");
     } else if (longVideos > shortVideos * 2) {
@@ -526,7 +526,7 @@ export const PlaylistAnalyzer: React.FC = () => {
 
       const channelIds = Array.from(new Set(videos.map(v => v.channelId)));
       const channels = await fetchChannelDetails(channelIds);
-      
+
       const analysisResult = calculateAnalysis(videos, channels);
       setAnalysis(analysisResult);
       setShowResults(true);
@@ -595,7 +595,7 @@ export const PlaylistAnalyzer: React.FC = () => {
     <S.PageWrapper>
       {/* Left Sidebar Ad */}
       <S.AdSidebar position="left">
-        <AdSense 
+        <AdSense
           slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
           format="vertical"
         />
@@ -603,7 +603,7 @@ export const PlaylistAnalyzer: React.FC = () => {
 
       {/* Right Sidebar Ad */}
       <S.AdSidebar position="right">
-        <AdSense 
+        <AdSense
           slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
           format="vertical"
         />
@@ -615,385 +615,473 @@ export const PlaylistAnalyzer: React.FC = () => {
           Back to Tools
         </S.BackButton>
 
-{/* Enhanced Header Section with Integrated Search */}
-<S.EnhancedHeader backgroundImage={toolConfig.image}>
-  <S.HeaderOverlay />
-  <S.HeaderContent>
-    <S.ToolIconContainer>
-      <i className={toolConfig.icon}></i>
-    </S.ToolIconContainer>
-    
-    <S.HeaderTextContent>
-      <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
-      <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
-      
-      <S.FeaturesList>
-        {toolConfig.features.map((feature, index) => (
-          <S.FeatureItem key={index}>
-            <i className="bx bx-check-circle"></i>
-            <span>{feature}</span>
-          </S.FeatureItem>
-        ))}
-      </S.FeaturesList>
+        {/* Enhanced Header Section with Integrated Search */}
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
 
-      {/* Integrated Search Bar */}
-      <S.HeaderSearchContainer>
-        <S.HeaderSearchBar>
-          <S.HeaderSearchInput
-            type="text"
-            value={playlistUrl}
-            onChange={(e) => setPlaylistUrl(e.target.value)}
-            placeholder="Enter YouTube playlist URL for analysis"
-            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-          />
-          <S.HeaderSearchButton onClick={handleSearch} disabled={isLoading}>
-            {isLoading ? (
-              <i className='bx bx-loader-alt bx-spin'></i>
-            ) : (
-              <i className='bx bx-search'></i>
-            )}
-          </S.HeaderSearchButton>
-        </S.HeaderSearchBar>
-      </S.HeaderSearchContainer>
-    </S.HeaderTextContent>
-  </S.HeaderContent>
-</S.EnhancedHeader>
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
 
-        <S.SearchContainer>
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
+                ))}
+              </S.FeaturesList>
 
-          <S.ControlsContainer>
-            <S.FilterToggle onClick={() => setShowFilters(!showFilters)}>
-              <i className="bx bx-filter"></i>
-              Advanced Filters
-            </S.FilterToggle>
-          </S.ControlsContainer>
-        </S.SearchContainer>
+{/* Integrated Search Bar */}
+<S.HeaderSearchContainer>
+  <S.HeaderSearchBar>
+    <S.HeaderSearchInput
+      type="text"
+      value={playlistUrl}
+      onChange={(e) => setPlaylistUrl(e.target.value)}
+      placeholder="Enter YouTube playlist URL for analysis"
+      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+    />
+    <S.HeaderSearchButton onClick={handleSearch} aria-label="Search">
+      <i className="bx bx-search" />
+    </S.HeaderSearchButton>
+  </S.HeaderSearchBar>
+</S.HeaderSearchContainer>
 
-        {showFilters && (
-          <S.FiltersContainer>
-            <S.FilterGrid>
-              <S.FilterGroup>
-                <S.FilterLabel>Minimum Views</S.FilterLabel>
-                <S.FilterSelect
-                  value={filters.minViews}
-                  onChange={(e) => setFilters({...filters, minViews: parseInt(e.target.value)})}
-                >
-                  <option value={0}>Any</option>
-                  <option value={1000}>1K+</option>
-                  <option value={10000}>10K+</option>
-                  <option value={100000}>100K+</option>
-                  <option value={1000000}>1M+</option>
-                </S.FilterSelect>
-              </S.FilterGroup>
+          </S.HeaderTextContent>
+        </S.HeaderContent>
+      </S.EnhancedHeader>
 
-              <S.FilterGroup>
-                <S.FilterLabel>Max Videos</S.FilterLabel>
-                <S.FilterSelect
-                  value={filters.maxVideos}
-                  onChange={(e) => setFilters({...filters, maxVideos: parseInt(e.target.value)})}
-                >
-                  <option value={50}>50 videos</option>
-                  <option value={100}>100 videos</option>
-                  <option value={500}>500 videos</option>
-                  <option value={1000}>1000 videos</option>
-                </S.FilterSelect>
-              </S.FilterGroup>
+      <S.SearchContainer>
 
-              <S.FilterGroup>
-                <S.FilterLabel>Sort By</S.FilterLabel>
-                <S.FilterSelect
-                  value={filters.sortBy}
-                  onChange={(e) => setFilters({...filters, sortBy: e.target.value as any})}
-                >
-                  <option value="views">Views</option>
-                  <option value="likes">Likes</option>
-                  <option value="comments">Comments</option>
-                  <option value="date">Upload Date</option>
-                  <option value="duration">Duration</option>
-                </S.FilterSelect>
-              </S.FilterGroup>
+        <S.ControlsContainer>
+          <S.FilterToggle onClick={() => setShowFilters(!showFilters)}>
+            <i className="bx bx-filter"></i>
+            Advanced Filters
+          </S.FilterToggle>
+        </S.ControlsContainer>
+      </S.SearchContainer>
 
-              <S.FilterGroup>
-                <S.FilterLabel>Channel Filter</S.FilterLabel>
-                <S.FilterInput
-                  type="text"
-                  value={filters.channelFilter}
-                  onChange={(e) => setFilters({...filters, channelFilter: e.target.value})}
-                  placeholder="Filter by channel name..."
-                />
-              </S.FilterGroup>
-            </S.FilterGrid>
+      {showFilters && (
+        <S.FiltersContainer>
+          <S.FilterGrid>
+            <S.FilterGroup>
+              <S.FilterLabel>Minimum Views</S.FilterLabel>
+              <S.FilterSelect
+                value={filters.minViews}
+                onChange={(e) => setFilters({ ...filters, minViews: parseInt(e.target.value) })}
+              >
+                <option value={0}>Any</option>
+                <option value={1000}>1K+</option>
+                <option value={10000}>10K+</option>
+                <option value={100000}>100K+</option>
+                <option value={1000000}>1M+</option>
+              </S.FilterSelect>
+            </S.FilterGroup>
 
-            <S.CheckboxGroup>
-              <S.Checkbox
-                type="checkbox"
-                id="topPerformers"
-                checked={filters.showOnlyTopPerformers}
-                onChange={(e) => setFilters({...filters, showOnlyTopPerformers: e.target.checked})}
+            <S.FilterGroup>
+              <S.FilterLabel>Max Videos</S.FilterLabel>
+              <S.FilterSelect
+                value={filters.maxVideos}
+                onChange={(e) => setFilters({ ...filters, maxVideos: parseInt(e.target.value) })}
+              >
+                <option value={50}>50 videos</option>
+                <option value={100}>100 videos</option>
+                <option value={500}>500 videos</option>
+                <option value={1000}>1000 videos</option>
+              </S.FilterSelect>
+            </S.FilterGroup>
+
+            <S.FilterGroup>
+              <S.FilterLabel>Sort By</S.FilterLabel>
+              <S.FilterSelect
+                value={filters.sortBy}
+                onChange={(e) => setFilters({ ...filters, sortBy: e.target.value as any })}
+              >
+                <option value="views">Views</option>
+                <option value="likes">Likes</option>
+                <option value="comments">Comments</option>
+                <option value="date">Upload Date</option>
+                <option value="duration">Duration</option>
+              </S.FilterSelect>
+            </S.FilterGroup>
+
+            <S.FilterGroup>
+              <S.FilterLabel>Channel Filter</S.FilterLabel>
+              <S.FilterInput
+                type="text"
+                value={filters.channelFilter}
+                onChange={(e) => setFilters({ ...filters, channelFilter: e.target.value })}
+                placeholder="Filter by channel name..."
               />
-              <S.CheckboxLabel htmlFor="topPerformers">
-                Show only top-performing videos (above average views)
-              </S.CheckboxLabel>
-            </S.CheckboxGroup>
-          </S.FiltersContainer>
-        )}
+            </S.FilterGroup>
+          </S.FilterGrid>
 
-        <S.ResultsContainer className={showResults ? 'visible' : ''}>
-          {isLoading ? (
-            <S.LoadingContainer>
-              <i className='bx bx-loader-alt bx-spin'></i>
-              <p>Analyzing playlist and gathering insights...</p>
-            </S.LoadingContainer>
-          ) : analysis && playlistInfo ? (
-            <>
-              <S.PlaylistHeader>
-                <S.PlaylistInfo>
-                  <S.PlaylistTitle>{playlistInfo.snippet.title}</S.PlaylistTitle>
-                  <S.PlaylistMeta>
-                    <S.MetaItem>
-                      <i className="bx bx-user"></i>
-                      {playlistInfo.snippet.channelTitle}
-                    </S.MetaItem>
-                    <S.MetaItem>
-                      <i className="bx bx-calendar"></i>
-                      Created {new Date(playlistInfo.snippet.publishedAt).toLocaleDateString()}
-                    </S.MetaItem>
-                  </S.PlaylistMeta>
-                </S.PlaylistInfo>
-                <S.PlaylistActions>
-                  <S.ActionButton onClick={exportAnalysis}>
-                    <i className="bx bx-download"></i>
-                    Export Analysis
-                  </S.ActionButton>
-                  <S.ActionButton 
-                    onClick={() => window.open(`https://www.youtube.com/playlist?list=${playlistId}`, '_blank')}
-                  >
-                    <i className="bx bx-link"></i>
-                    View Playlist
-                  </S.ActionButton>
-                </S.PlaylistActions>
-              </S.PlaylistHeader>
+          <S.CheckboxGroup>
+            <S.Checkbox
+              type="checkbox"
+              id="topPerformers"
+              checked={filters.showOnlyTopPerformers}
+              onChange={(e) => setFilters({ ...filters, showOnlyTopPerformers: e.target.checked })}
+            />
+            <S.CheckboxLabel htmlFor="topPerformers">
+              Show only top-performing videos (above average views)
+            </S.CheckboxLabel>
+          </S.CheckboxGroup>
+        </S.FiltersContainer>
+      )}
 
-              <S.ScoreSection>
-                <S.ScoreCard>
-                  <S.ScoreTitle>Quality Score</S.ScoreTitle>
-                  <S.ScoreValue score={analysis.qualityScore}>{analysis.qualityScore.toFixed(1)}</S.ScoreValue>
-                  <S.ScoreDescription>Based on views and engagement</S.ScoreDescription>
-                </S.ScoreCard>
-                <S.ScoreCard>
-                  <S.ScoreTitle>Consistency Score</S.ScoreTitle>
-                  <S.ScoreValue score={analysis.consistencyScore}>{analysis.consistencyScore.toFixed(1)}</S.ScoreValue>
-                  <S.ScoreDescription>Performance stability</S.ScoreDescription>
-                </S.ScoreCard>
-                <S.ScoreCard>
-                  <S.ScoreTitle>Discoverability Score</S.ScoreTitle>
-                  <S.ScoreValue score={analysis.discoverabilityScore}>{analysis.discoverabilityScore.toFixed(1)}</S.ScoreValue>
-                  <S.ScoreDescription>SEO and tagging quality</S.ScoreDescription>
-                </S.ScoreCard>
-                <S.ScoreCard>
-                  <S.ScoreTitle>Overall Score</S.ScoreTitle>
-                  <S.ScoreValue score={analysis.performanceScore}>{analysis.performanceScore.toFixed(1)}</S.ScoreValue>
-                  <S.ScoreDescription>Combined performance</S.ScoreDescription>
-                </S.ScoreCard>
-              </S.ScoreSection>
+      {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+      {!showResults && (
+        <S.EducationalSection>
+          <S.EducationalContent>
+            <S.SectionSubTitle>How to Use the Playlist Analyzer</S.SectionSubTitle>
 
-              <S.StatsGrid>
-                <S.StatCard>
-                  <S.StatIcon className="bx bx-show"></S.StatIcon>
-                  <S.StatValue>{analysis.totalViews.toLocaleString()}</S.StatValue>
-                  <S.StatLabel>Total Views</S.StatLabel>
-                </S.StatCard>
+            <S.EducationalText>
+              Our Playlist Analyzer provides comprehensive insights into any YouTube playlist's performance,
+              content distribution, and audience engagement patterns. Discover trends, identify top performers,
+              and understand what makes playlists successful with detailed analytics and actionable recommendations.
+            </S.EducationalText>
 
-                <S.StatCard>
-                  <S.StatIcon className="bx bx-video"></S.StatIcon>
-                  <S.StatValue>{analysis.totalVideos}</S.StatValue>
-                  <S.StatLabel>Videos</S.StatLabel>
-                </S.StatCard>
+            <S.StepByStep>
+              <S.StepItem>
+                <S.StepNumberCircle>1</S.StepNumberCircle>
+                <S.StepContent>
+                  <S.PlaylistAnalyzerStepTitle>Enter Playlist URL</S.PlaylistAnalyzerStepTitle>
+                  <S.EducationalText>
+                    Paste any YouTube playlist URL into the search bar. Our system automatically extracts
+                    the playlist ID and begins comprehensive analysis of all videos, channels, and performance
+                    metrics within the playlist.
+                  </S.EducationalText>
+                </S.StepContent>
+              </S.StepItem>
 
-                <S.StatCard>
-                  <S.StatIcon className="bx bx-group"></S.StatIcon>
-                  <S.StatValue>{analysis.totalChannels}</S.StatValue>
-                  <S.StatLabel>Channels</S.StatLabel>
-                </S.StatCard>
+              <S.StepItem>
+                <S.StepNumberCircle>2</S.StepNumberCircle>
+                <S.StepContent>
+                  <S.PlaylistAnalyzerStepTitle>Comprehensive Data Analysis</S.PlaylistAnalyzerStepTitle>
+                  <S.EducationalText>
+                    The analyzer processes video metadata, view counts, engagement metrics, upload patterns,
+                    channel information, and content categorization. Advanced filters allow you to customize
+                    the analysis by views, date ranges, channels, and performance thresholds.
+                  </S.EducationalText>
+                </S.StepContent>
+              </S.StepItem>
 
-                <S.StatCard>
-                  <S.StatIcon className="bx bx-time"></S.StatIcon>
-                  <S.StatValue>{formatDuration(analysis.totalDuration)}</S.StatValue>
-                  <S.StatLabel>Duration</S.StatLabel>
-                </S.StatCard>
+              <S.StepItem>
+                <S.StepNumberCircle>3</S.StepNumberCircle>
+                <S.StepContent>
+                  <S.PlaylistAnalyzerStepTitle>Review Insights & Recommendations</S.PlaylistAnalyzerStepTitle>
+                  <S.EducationalText>
+                    Examine detailed performance scores, top performers, channel distribution, and content
+                    patterns. Use the insights and recommendations to optimize playlist organization,
+                    identify content gaps, and improve overall playlist performance.
+                  </S.EducationalText>
+                </S.StepContent>
+              </S.StepItem>
+            </S.StepByStep>
+          </S.EducationalContent>
 
-                <S.StatCard>
-                  <S.StatIcon className="bx bx-like"></S.StatIcon>
-                  <S.StatValue>{analysis.totalLikes.toLocaleString()}</S.StatValue>
-                  <S.StatLabel>Total Likes</S.StatLabel>
-                </S.StatCard>
+          <S.EducationalContent>
+            <S.SectionSubTitle>Playlist Analysis Metrics</S.SectionSubTitle>
 
-                <S.StatCard>
-                  <S.StatIcon className="bx bx-comment"></S.StatIcon>
-                  <S.StatValue>{analysis.totalComments.toLocaleString()}</S.StatValue>
-                  <S.StatLabel>Comments</S.StatLabel>
-                </S.StatCard>
+            <S.FeatureList>
+              <S.FeatureListItem>
+                <i className="bx bx-check-circle"></i>
+                <span><strong>Performance Scoring:</strong> Quality, consistency, and discoverability scores based on comprehensive metrics</span>
+              </S.FeatureListItem>
+              <S.FeatureListItem>
+                <i className="bx bx-check-circle"></i>
+                <span><strong>Content Distribution:</strong> Analysis of categories, tags, languages, and upload patterns across videos</span>
+              </S.FeatureListItem>
+              <S.FeatureListItem>
+                <i className="bx bx-check-circle"></i>
+                <span><strong>Channel Analysis:</strong> Detailed breakdown of contributing channels and their influence on playlist performance</span>
+              </S.FeatureListItem>
+              <S.FeatureListItem>
+                <i className="bx bx-check-circle"></i>
+                <span><strong>Engagement Metrics:</strong> Like-to-view ratios, comment engagement, and audience interaction patterns</span>
+              </S.FeatureListItem>
+              <S.FeatureListItem>
+                <i className="bx bx-check-circle"></i>
+                <span><strong>Top Performers:</strong> Identification of most viewed, liked, and commented videos within the playlist</span>
+              </S.FeatureListItem>
+              <S.FeatureListItem>
+                <i className="bx bx-check-circle"></i>
+                <span><strong>Temporal Analysis:</strong> Upload frequency patterns and playlist evolution over time</span>
+              </S.FeatureListItem>
+            </S.FeatureList>
 
-                <S.StatCard>
-                  <S.StatIcon className="bx bx-trending-up"></S.StatIcon>
-                  <S.StatValue>{(analysis.engagementRate * 100).toFixed(2)}%</S.StatValue>
-                  <S.StatLabel>Engagement</S.StatLabel>
-                </S.StatCard>
+            <S.EducationalText>
+              Use this comprehensive analysis to understand playlist dynamics, optimize content curation,
+              identify successful patterns, and make data-driven decisions for playlist improvement.
+              Perfect for content creators, curators, and marketers analyzing playlist performance and
+              audience engagement strategies.
+            </S.EducationalText>
+          </S.EducationalContent>
+        </S.EducationalSection>
+      )}
 
-                <S.StatCard>
-                  <S.StatIcon className="bx bx-calendar"></S.StatIcon>
-                  <S.StatValue>{analysis.timeSpan}</S.StatValue>
-                  <S.StatLabel>Days Span</S.StatLabel>
-                </S.StatCard>
-              </S.StatsGrid>
-
-              <S.AnalysisGrid>
-                <S.AnalysisSection>
-                  <S.SectionTitle>
-                    <i className="bx bx-trophy"></i>
-                    Top Performers
-                  </S.SectionTitle>
-                  <S.PerformerList>
-                    <S.PerformerItem>
-                      <S.PerformerLabel>Most Viewed:</S.PerformerLabel>
-                      <S.PerformerValue>{analysis.mostViewedVideo.title}</S.PerformerValue>
-                      <S.PerformerStat>{analysis.mostViewedVideo.views.toLocaleString()} views</S.PerformerStat>
-                    </S.PerformerItem>
-                    <S.PerformerItem>
-                      <S.PerformerLabel>Most Liked:</S.PerformerLabel>
-                      <S.PerformerValue>{analysis.mostLikedVideo.title}</S.PerformerValue>
-                      <S.PerformerStat>{analysis.mostLikedVideo.likes.toLocaleString()} likes</S.PerformerStat>
-                    </S.PerformerItem>
-                    <S.PerformerItem>
-                      <S.PerformerLabel>Most Discussed:</S.PerformerLabel>
-                      <S.PerformerValue>{analysis.mostCommentedVideo.title}</S.PerformerValue>
-                      <S.PerformerStat>{analysis.mostCommentedVideo.comments.toLocaleString()} comments</S.PerformerStat>
-                    </S.PerformerItem>
-                  </S.PerformerList>
-                </S.AnalysisSection>
-
-                <S.AnalysisSection>
-                  <S.SectionTitle>
+      <S.ResultsContainer className={showResults ? 'visible' : ''}>
+        {isLoading ? (
+          <S.LoadingContainer>
+            <i className='bx bx-loader-alt bx-spin'></i>
+            <p>Analyzing playlist and gathering insights...</p>
+          </S.LoadingContainer>
+        ) : analysis && playlistInfo ? (
+          <>
+            <S.PlaylistHeader>
+              <S.PlaylistInfo>
+                <S.PlaylistTitle>{playlistInfo.snippet.title}</S.PlaylistTitle>
+                <S.PlaylistMeta>
+                  <S.MetaItem>
                     <i className="bx bx-user"></i>
-                    All Channels ({analysis.totalChannels})
-                  </S.SectionTitle>
-                  <S.ChannelList>
-                    {Array.from(analysis.channels.values()).map((channel) => (
-                      <S.ChannelItem key={channel.id}>
-                        <S.ChannelLogo src={channel.thumbnailUrl} alt={`${channel.title} logo`} />
-                        <S.ChannelInfo>
-                          <S.ChannelName>{channel.title}</S.ChannelName>
-                          <S.ChannelStats>
-                            {channel.subscriberCount.toLocaleString()} subscribers
-                          </S.ChannelStats>
-                        </S.ChannelInfo>
-                      </S.ChannelItem>
-                    ))}
-                  </S.ChannelList>
-                </S.AnalysisSection>
+                    {playlistInfo.snippet.channelTitle}
+                  </S.MetaItem>
+                  <S.MetaItem>
+                    <i className="bx bx-calendar"></i>
+                    Created {new Date(playlistInfo.snippet.publishedAt).toLocaleDateString()}
+                  </S.MetaItem>
+                </S.PlaylistMeta>
+              </S.PlaylistInfo>
+              <S.PlaylistActions>
+                <S.ActionButton onClick={exportAnalysis}>
+                  <i className="bx bx-download"></i>
+                  Export Analysis
+                </S.ActionButton>
+                <S.ActionButton
+                  onClick={() => window.open(`https://www.youtube.com/playlist?list=${playlistId}`, '_blank')}
+                >
+                  <i className="bx bx-link"></i>
+                  View Playlist
+                </S.ActionButton>
+              </S.PlaylistActions>
+            </S.PlaylistHeader>
 
-                <S.AnalysisSection>
-                  <S.SectionTitle>
-                    <i className="bx bx-tag"></i>
-                    Popular Tags
-                  </S.SectionTitle>
-                  <S.CategoryList>
-                    {analysis.topTags.slice(0, 8).map(([tag, count]) => (
-                      <S.CategoryItem key={tag}>
-                        <S.CategoryName>{tag}</S.CategoryName>
-                        <S.CategoryCount>{count} videos</S.CategoryCount>
-                      </S.CategoryItem>
-                    ))}
-                  </S.CategoryList>
-                </S.AnalysisSection>
+            <S.ScoreSection>
+              <S.ScoreCard>
+                <S.ScoreTitle>Quality Score</S.ScoreTitle>
+                <S.ScoreValue score={analysis.qualityScore}>{analysis.qualityScore.toFixed(1)}</S.ScoreValue>
+                <S.ScoreDescription>Based on views and engagement</S.ScoreDescription>
+              </S.ScoreCard>
+              <S.ScoreCard>
+                <S.ScoreTitle>Consistency Score</S.ScoreTitle>
+                <S.ScoreValue score={analysis.consistencyScore}>{analysis.consistencyScore.toFixed(1)}</S.ScoreValue>
+                <S.ScoreDescription>Performance stability</S.ScoreDescription>
+              </S.ScoreCard>
+              <S.ScoreCard>
+                <S.ScoreTitle>Discoverability Score</S.ScoreTitle>
+                <S.ScoreValue score={analysis.discoverabilityScore}>{analysis.discoverabilityScore.toFixed(1)}</S.ScoreValue>
+                <S.ScoreDescription>SEO and tagging quality</S.ScoreDescription>
+              </S.ScoreCard>
+              <S.ScoreCard>
+                <S.ScoreTitle>Overall Score</S.ScoreTitle>
+                <S.ScoreValue score={analysis.performanceScore}>{analysis.performanceScore.toFixed(1)}</S.ScoreValue>
+                <S.ScoreDescription>Combined performance</S.ScoreDescription>
+              </S.ScoreCard>
+            </S.ScoreSection>
 
-                <S.AnalysisSection>
-                  <S.SectionTitle>
-                    <i className="bx bx-category"></i>
-                    Content Categories
-                  </S.SectionTitle>
-                  <S.CategoryList>
-                    {analysis.categories.slice(0, 5).map(([categoryId, count]) => (
-                      <S.CategoryItem key={categoryId}>
-                        <S.CategoryName>
-                          {videoCategories[categoryId] || `Category ${categoryId}`}
-                        </S.CategoryName>
-                        <S.CategoryCount>{count} videos</S.CategoryCount>
-                      </S.CategoryItem>
-                    ))}
-                  </S.CategoryList>
-                </S.AnalysisSection>
-              </S.AnalysisGrid>
+            <S.StatsGrid>
+              <S.StatCard>
+                <S.StatIcon className="bx bx-show"></S.StatIcon>
+                <S.StatValue>{analysis.totalViews.toLocaleString()}</S.StatValue>
+                <S.StatLabel>Total Views</S.StatLabel>
+              </S.StatCard>
 
-              {analysis.insights.length > 0 && (
-                <S.InsightsSection>
-                  <S.SectionTitle>
-                    <i className="bx bx-bulb"></i>
-                    Key Insights
-                  </S.SectionTitle>
-                  <S.InsightsList>
-                    {analysis.insights.map((insight, index) => (
-                      <S.InsightItem key={index}>
-                        <i className="bx bx-check-circle"></i>
-                        {insight}
-                      </S.InsightItem>
-                    ))}
-                  </S.InsightsList>
-                </S.InsightsSection>
+              <S.StatCard>
+                <S.StatIcon className="bx bx-video"></S.StatIcon>
+                <S.StatValue>{analysis.totalVideos}</S.StatValue>
+                <S.StatLabel>Videos</S.StatLabel>
+              </S.StatCard>
+
+              <S.StatCard>
+                <S.StatIcon className="bx bx-group"></S.StatIcon>
+                <S.StatValue>{analysis.totalChannels}</S.StatValue>
+                <S.StatLabel>Channels</S.StatLabel>
+              </S.StatCard>
+
+              <S.StatCard>
+                <S.StatIcon className="bx bx-time"></S.StatIcon>
+                <S.StatValue>{formatDuration(analysis.totalDuration)}</S.StatValue>
+                <S.StatLabel>Duration</S.StatLabel>
+              </S.StatCard>
+
+              <S.StatCard>
+                <S.StatIcon className="bx bx-like"></S.StatIcon>
+                <S.StatValue>{analysis.totalLikes.toLocaleString()}</S.StatValue>
+                <S.StatLabel>Total Likes</S.StatLabel>
+              </S.StatCard>
+
+              <S.StatCard>
+                <S.StatIcon className="bx bx-comment"></S.StatIcon>
+                <S.StatValue>{analysis.totalComments.toLocaleString()}</S.StatValue>
+                <S.StatLabel>Comments</S.StatLabel>
+              </S.StatCard>
+
+              <S.StatCard>
+                <S.StatIcon className="bx bx-trending-up"></S.StatIcon>
+                <S.StatValue>{(analysis.engagementRate * 100).toFixed(2)}%</S.StatValue>
+                <S.StatLabel>Engagement</S.StatLabel>
+              </S.StatCard>
+
+              <S.StatCard>
+                <S.StatIcon className="bx bx-calendar"></S.StatIcon>
+                <S.StatValue>{analysis.timeSpan}</S.StatValue>
+                <S.StatLabel>Days Span</S.StatLabel>
+              </S.StatCard>
+            </S.StatsGrid>
+
+            <S.AnalysisGrid>
+              <S.AnalysisSection>
+                <S.SectionTitle>
+                  <i className="bx bx-trophy"></i>
+                  Top Performers
+                </S.SectionTitle>
+                <S.PerformerList>
+                  <S.PerformerItem>
+                    <S.PerformerLabel>Most Viewed:</S.PerformerLabel>
+                    <S.PerformerValue>{analysis.mostViewedVideo.title}</S.PerformerValue>
+                    <S.PerformerStat>{analysis.mostViewedVideo.views.toLocaleString()} views</S.PerformerStat>
+                  </S.PerformerItem>
+                  <S.PerformerItem>
+                    <S.PerformerLabel>Most Liked:</S.PerformerLabel>
+                    <S.PerformerValue>{analysis.mostLikedVideo.title}</S.PerformerValue>
+                    <S.PerformerStat>{analysis.mostLikedVideo.likes.toLocaleString()} likes</S.PerformerStat>
+                  </S.PerformerItem>
+                  <S.PerformerItem>
+                    <S.PerformerLabel>Most Discussed:</S.PerformerLabel>
+                    <S.PerformerValue>{analysis.mostCommentedVideo.title}</S.PerformerValue>
+                    <S.PerformerStat>{analysis.mostCommentedVideo.comments.toLocaleString()} comments</S.PerformerStat>
+                  </S.PerformerItem>
+                </S.PerformerList>
+              </S.AnalysisSection>
+
+              <S.AnalysisSection>
+                <S.SectionTitle>
+                  <i className="bx bx-user"></i>
+                  All Channels ({analysis.totalChannels})
+                </S.SectionTitle>
+                <S.ChannelList>
+                  {Array.from(analysis.channels.values()).map((channel) => (
+                    <S.ChannelItem key={channel.id}>
+                      <S.ChannelLogo src={channel.thumbnailUrl} alt={`${channel.title} logo`} />
+                      <S.ChannelInfo>
+                        <S.ChannelName>{channel.title}</S.ChannelName>
+                        <S.ChannelStats>
+                          {channel.subscriberCount.toLocaleString()} subscribers
+                        </S.ChannelStats>
+                      </S.ChannelInfo>
+                    </S.ChannelItem>
+                  ))}
+                </S.ChannelList>
+              </S.AnalysisSection>
+
+              <S.AnalysisSection>
+                <S.SectionTitle>
+                  <i className="bx bx-tag"></i>
+                  Popular Tags
+                </S.SectionTitle>
+                <S.CategoryList>
+                  {analysis.topTags.slice(0, 8).map(([tag, count]) => (
+                    <S.CategoryItem key={tag}>
+                      <S.CategoryName>{tag}</S.CategoryName>
+                      <S.CategoryCount>{count} videos</S.CategoryCount>
+                    </S.CategoryItem>
+                  ))}
+                </S.CategoryList>
+              </S.AnalysisSection>
+
+              <S.AnalysisSection>
+                <S.SectionTitle>
+                  <i className="bx bx-category"></i>
+                  Content Categories
+                </S.SectionTitle>
+                <S.CategoryList>
+                  {analysis.categories.slice(0, 5).map(([categoryId, count]) => (
+                    <S.CategoryItem key={categoryId}>
+                      <S.CategoryName>
+                        {videoCategories[categoryId] || `Category ${categoryId}`}
+                      </S.CategoryName>
+                      <S.CategoryCount>{count} videos</S.CategoryCount>
+                    </S.CategoryItem>
+                  ))}
+                </S.CategoryList>
+              </S.AnalysisSection>
+            </S.AnalysisGrid>
+
+            {analysis.insights.length > 0 && (
+              <S.InsightsSection>
+                <S.SectionTitle>
+                  <i className="bx bx-bulb"></i>
+                  Key Insights
+                </S.SectionTitle>
+                <S.InsightsList>
+                  {analysis.insights.map((insight, index) => (
+                    <S.InsightItem key={index}>
+                      <i className="bx bx-check-circle"></i>
+                      {insight}
+                    </S.InsightItem>
+                  ))}
+                </S.InsightsList>
+              </S.InsightsSection>
+            )}
+
+            {analysis.recommendations.length > 0 && (
+              <S.RecommendationsSection>
+                <S.SectionTitle>
+                  <i className="bx bx-star"></i>
+                  Recommendations
+                </S.SectionTitle>
+                <S.RecommendationsList>
+                  {analysis.recommendations.map((recommendation, index) => (
+                    <S.RecommendationItem key={index}>
+                      <i className="bx bx-right-arrow-alt"></i>
+                      {recommendation}
+                    </S.RecommendationItem>
+                  ))}
+                </S.RecommendationsList>
+              </S.RecommendationsSection>
+            )}
+
+            <S.VideoSection>
+              <S.VideoSectionHeader>
+                <S.SectionTitle>
+                  <i className="bx bx-video-recording"></i>
+                  Videos in Playlist ({analysis.totalVideos})
+                </S.SectionTitle>
+                <S.ToggleButton onClick={() => setShowDetailedVideos(!showDetailedVideos)}>
+                  {showDetailedVideos ? 'Hide Videos' : 'Show Videos'}
+                </S.ToggleButton>
+              </S.VideoSectionHeader>
+
+              {showDetailedVideos && (
+                <S.VideoGrid>
+                  {videos.slice(0, 20).map(renderVideoCard)}
+                  {videos.length > 20 && (
+                    <S.ShowMoreButton onClick={() => setShowDetailedVideos(false)}>
+                      Only showing first 20 videos. Click "View Playlist" to see all.
+                    </S.ShowMoreButton>
+                  )}
+                </S.VideoGrid>
               )}
+            </S.VideoSection>
 
-              {analysis.recommendations.length > 0 && (
-                <S.RecommendationsSection>
-                  <S.SectionTitle>
-                    <i className="bx bx-star"></i>
-                    Recommendations
-                  </S.SectionTitle>
-                  <S.RecommendationsList>
-                    {analysis.recommendations.map((recommendation, index) => (
-                      <S.RecommendationItem key={index}>
-                        <i className="bx bx-right-arrow-alt"></i>
-                        {recommendation}
-                      </S.RecommendationItem>
-                    ))}
-                  </S.RecommendationsList>
-                </S.RecommendationsSection>
-              )}
-
-              <S.VideoSection>
-                <S.VideoSectionHeader>
-                  <S.SectionTitle>
-                    <i className="bx bx-video-recording"></i>
-                    Videos in Playlist ({analysis.totalVideos})
-                  </S.SectionTitle>
-                  <S.ToggleButton onClick={() => setShowDetailedVideos(!showDetailedVideos)}>
-                    {showDetailedVideos ? 'Hide Videos' : 'Show Videos'}
-                  </S.ToggleButton>
-                </S.VideoSectionHeader>
-                
-                {showDetailedVideos && (
-                  <S.VideoGrid>
-                    {videos.slice(0, 20).map(renderVideoCard)}
-                    {videos.length > 20 && (
-                      <S.ShowMoreButton onClick={() => setShowDetailedVideos(false)}>
-                        Only showing first 20 videos. Click "View Playlist" to see all.
-                      </S.ShowMoreButton>
-                    )}
-                  </S.VideoGrid>
-                )}
-              </S.VideoSection>
-
-              {/* Bottom Ad for smaller screens */}
-              <S.BottomAdContainer>
-                <AdSense 
-                  slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-                  format="horizontal"
-                />
-              </S.BottomAdContainer>
-            </>
-          ) : null}
-        </S.ResultsContainer>
-      </S.MainContainer>
-    </S.PageWrapper>
+            {/* Bottom Ad for smaller screens */}
+            <S.BottomAdContainer>
+              <AdSense
+                slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
+                format="horizontal"
+              />
+            </S.BottomAdContainer>
+          </>
+        ) : null}
+      </S.ResultsContainer>
+    </S.MainContainer>
+    </S.PageWrapper >
   );
 };
 

@@ -433,6 +433,112 @@ export const ChannelAnalyzer: React.FC = () => {
           </S.HeaderContent>
         </S.EnhancedHeader>
 
+        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE */}
+        {!showResults && (
+          <S.EducationalSection>
+            
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Channel Analyzer</S.SectionSubTitle>
+              
+              <S.ContentText>
+                Our Channel Analyzer works with any public YouTube channel, providing insights that help you 
+                understand performance patterns, identify optimization opportunities, and develop strategic 
+                improvements. Here's how to get the most comprehensive analysis from our tool.
+              </S.ContentText>
+
+              <S.StepByStep>
+                <S.StepItem>
+                  <S.StepNumber>1</S.StepNumber>
+                  <S.StepContent>
+                    <S.StepTitle>Enter Channel Information</S.StepTitle>
+                    <S.ContentText>
+                      Input any YouTube channel URL, handle, or channel ID. Our system accepts various formats 
+                      including youtube.com/channel/UC..., youtube.com/@channelname, youtube.com/c/channelname, 
+                      or direct channel IDs. The analyzer automatically processes the input and locates the channel.
+                    </S.ContentText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumber>2</S.StepNumber>
+                  <S.StepContent>
+                    <S.StepTitle>Comprehensive Data Collection</S.StepTitle>
+                    <S.ContentText>
+                      The analyzer fetches channel metadata, subscriber statistics, video performance data, 
+                      upload patterns, and engagement metrics. This process takes 15-30 seconds as we collect 
+                      data from multiple sources and calculate advanced metrics for comprehensive analysis.
+                    </S.ContentText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumber>3</S.StepNumber>
+                  <S.StepContent>
+                    <S.StepTitle>Advanced Analytics Processing</S.StepTitle>
+                    <S.ContentText>
+                      Our system calculates growth rates, engagement patterns, content consistency scores, 
+                      and optimization opportunities. We analyze historical performance, identify trending 
+                      content patterns, and benchmark against similar channels for contextual insights.
+                    </S.ContentText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumber>4</S.StepNumber>
+                  <S.StepContent>
+                    <S.StepTitle>Strategic Recommendations</S.StepTitle>
+                    <S.ContentText>
+                      Review detailed analysis results including growth opportunities, content optimization 
+                      suggestions, and strategic recommendations. Use these insights to improve channel 
+                      performance, optimize content strategy, and accelerate subscriber growth.
+                    </S.ContentText>
+                  </S.StepContent>
+                </S.StepItem>
+              </S.StepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>What Insights Are Provided?</S.SectionSubTitle>
+              
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span>Complete subscriber growth analysis with trend identification and growth rate calculations</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span>Content performance patterns across different video types, lengths, and topics</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span>Upload consistency analysis and optimal posting schedule recommendations</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span>Channel SEO optimization score including title, description, and keyword analysis</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span>Audience engagement metrics with like-to-view and comment-to-view ratio analysis</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span>Content gaps analysis revealing untapped topics and optimization opportunities</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span>Channel branding assessment including thumbnail consistency and visual identity</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span>Competitive benchmarking against similar channels in your niche and subscriber range</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+          </S.EducationalSection>
+        )}
+
         <S.ResultsContainer className={showResults ? 'visible' : ''}>
           {isLoading ? (
             <S.LoadingContainer>

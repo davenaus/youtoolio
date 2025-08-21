@@ -363,7 +363,7 @@ export const Changelog: React.FC = () => {
           ))}
         </Timeline>
 
-        <div style={{ textAlign: 'center', marginTop: '3rem', padding: '2rem', background: '#374151', borderRadius: '12px' }}>
+        <div style={{ textAlign: 'center', marginTop: '3rem', padding: '2rem', background: '#1A1A1D', borderRadius: '12px' }}>
           <h3 style={{ color: '#F3F4F6', marginBottom: '1rem' }}>What's Coming Next?</h3>
           <p style={{ color: '#9CA3AF', marginBottom: '1.5rem' }}>
             We're constantly working on new features based on creator feedback. Have an idea for a tool 

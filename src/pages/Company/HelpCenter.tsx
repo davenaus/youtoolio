@@ -162,7 +162,7 @@ const FAQQuestion = styled.button<{ isOpen: boolean }>`
 `;
 
 const FAQAnswer = styled.div<{ isOpen: boolean }>`
-  padding: ${({ isOpen }) => isOpen ? '0 1.5rem 1.5rem 1.5rem' : '0 1.5rem'};
+  padding: ${({ isOpen }) => isOpen ? '1rem 1.5rem 1.5rem 1.5rem' : '0 1.5rem'};
   max-height: ${({ isOpen }) => isOpen ? '500px' : '0'};
   overflow: hidden;
   transition: all 0.3s ease;
