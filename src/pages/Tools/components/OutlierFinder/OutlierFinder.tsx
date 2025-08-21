@@ -393,7 +393,87 @@ export const OutlierFinder: React.FC = () => {
             </S.FilterToggle>
           </S.ControlsContainer>
 
-        {searchHistory.length > 0 && !showResults && (
+
+
+                {showFilters && (
+          <S.FiltersContainer>
+            <S.FilterGrid>
+              <S.FilterGroup>
+                <S.FilterLabel>Minimum Views</S.FilterLabel>
+                <S.FilterSelect
+                  value={filters.minViews}
+                  onChange={(e) => setFilters({...filters, minViews: parseInt(e.target.value)})}
+                >
+                  <option value={0}>Any</option>
+                  <option value={1000}>1K+</option>
+                  <option value={10000}>10K+</option>
+                  <option value={100000}>100K+</option>
+                  <option value={1000000}>1M+</option>
+                </S.FilterSelect>
+              </S.FilterGroup>
+
+              <S.FilterGroup>
+                <S.FilterLabel>Video Age (days)</S.FilterLabel>
+                <S.FilterSelect
+                  value={filters.maxAge}
+                  onChange={(e) => setFilters({...filters, maxAge: parseInt(e.target.value)})}
+                >
+                  <option value={7}>Last week</option>
+                  <option value={30}>Last month</option>
+                  <option value={90}>Last 3 months</option>
+                  <option value={365}>Last year</option>
+                  <option value={9999}>All time</option>
+                </S.FilterSelect>
+              </S.FilterGroup>
+
+              <S.FilterGroup>
+                <S.FilterLabel>Channel Size</S.FilterLabel>
+                <S.FilterSelect
+                  value={`${filters.minSubscribers}-${filters.maxSubscribers}`}
+                  onChange={(e) => {
+                    const [min, max] = e.target.value.split('-').map(Number);
+                    setFilters({...filters, minSubscribers: min, maxSubscribers: max});
+                  }}
+                >
+                  <option value="0-10000000">Any size</option>
+                  <option value="0-1000">Micro (0-1K)</option>
+                  <option value="1000-10000">Small (1K-10K)</option>
+                  <option value="10000-100000">Medium (10K-100K)</option>
+                  <option value="100000-1000000">Large (100K-1M)</option>
+                  <option value="1000000-10000000">Huge (1M+)</option>
+                </S.FilterSelect>
+              </S.FilterGroup>
+
+              <S.FilterGroup>
+                <S.FilterLabel>Sort By</S.FilterLabel>
+                <S.FilterSelect
+                  value={filters.sortBy}
+                  onChange={(e) => setFilters({...filters, sortBy: e.target.value as any})}
+                >
+                  <option value="ratio">View/Sub Ratio</option>
+                  <option value="views">Total Views</option>
+                  <option value="engagement">Engagement Rate</option>
+                  <option value="viral">Viral Score</option>
+                </S.FilterSelect>
+              </S.FilterGroup>
+
+              <S.FilterGroup>
+                <S.FilterLabel>Results Count</S.FilterLabel>
+                <S.FilterSelect
+                  value={resultCount}
+                  onChange={(e) => setResultCount(parseInt(e.target.value))}
+                >
+                  <option value={5}>Top 5</option>
+                  <option value={10}>Top 10</option>
+                  <option value={15}>Top 15</option>
+                  <option value={20}>Top 20</option>
+                </S.FilterSelect>
+              </S.FilterGroup>
+            </S.FilterGrid>
+          </S.FiltersContainer>
+        )}
+
+                {searchHistory.length > 0 && !showResults && (
           <S.SearchHistory>
             <S.HistoryLabel>Recent searches:</S.HistoryLabel>
             <S.HistoryTags>
@@ -497,83 +577,7 @@ export const OutlierFinder: React.FC = () => {
           </S.EducationalSection>
         )}
 
-        {showFilters && (
-          <S.FiltersContainer>
-            <S.FilterGrid>
-              <S.FilterGroup>
-                <S.FilterLabel>Minimum Views</S.FilterLabel>
-                <S.FilterSelect
-                  value={filters.minViews}
-                  onChange={(e) => setFilters({...filters, minViews: parseInt(e.target.value)})}
-                >
-                  <option value={0}>Any</option>
-                  <option value={1000}>1K+</option>
-                  <option value={10000}>10K+</option>
-                  <option value={100000}>100K+</option>
-                  <option value={1000000}>1M+</option>
-                </S.FilterSelect>
-              </S.FilterGroup>
 
-              <S.FilterGroup>
-                <S.FilterLabel>Video Age (days)</S.FilterLabel>
-                <S.FilterSelect
-                  value={filters.maxAge}
-                  onChange={(e) => setFilters({...filters, maxAge: parseInt(e.target.value)})}
-                >
-                  <option value={7}>Last week</option>
-                  <option value={30}>Last month</option>
-                  <option value={90}>Last 3 months</option>
-                  <option value={365}>Last year</option>
-                  <option value={9999}>All time</option>
-                </S.FilterSelect>
-              </S.FilterGroup>
-
-              <S.FilterGroup>
-                <S.FilterLabel>Channel Size</S.FilterLabel>
-                <S.FilterSelect
-                  value={`${filters.minSubscribers}-${filters.maxSubscribers}`}
-                  onChange={(e) => {
-                    const [min, max] = e.target.value.split('-').map(Number);
-                    setFilters({...filters, minSubscribers: min, maxSubscribers: max});
-                  }}
-                >
-                  <option value="0-10000000">Any size</option>
-                  <option value="0-1000">Micro (0-1K)</option>
-                  <option value="1000-10000">Small (1K-10K)</option>
-                  <option value="10000-100000">Medium (10K-100K)</option>
-                  <option value="100000-1000000">Large (100K-1M)</option>
-                  <option value="1000000-10000000">Huge (1M+)</option>
-                </S.FilterSelect>
-              </S.FilterGroup>
-
-              <S.FilterGroup>
-                <S.FilterLabel>Sort By</S.FilterLabel>
-                <S.FilterSelect
-                  value={filters.sortBy}
-                  onChange={(e) => setFilters({...filters, sortBy: e.target.value as any})}
-                >
-                  <option value="ratio">View/Sub Ratio</option>
-                  <option value="views">Total Views</option>
-                  <option value="engagement">Engagement Rate</option>
-                  <option value="viral">Viral Score</option>
-                </S.FilterSelect>
-              </S.FilterGroup>
-
-              <S.FilterGroup>
-                <S.FilterLabel>Results Count</S.FilterLabel>
-                <S.FilterSelect
-                  value={resultCount}
-                  onChange={(e) => setResultCount(parseInt(e.target.value))}
-                >
-                  <option value={5}>Top 5</option>
-                  <option value={10}>Top 10</option>
-                  <option value={15}>Top 15</option>
-                  <option value={20}>Top 20</option>
-                </S.FilterSelect>
-              </S.FilterGroup>
-            </S.FilterGrid>
-          </S.FiltersContainer>
-        )}
 
         <S.ResultsContainer className={showResults ? 'visible' : ''}>
           {isLoading ? (
