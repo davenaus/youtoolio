@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { Button } from '../../components/Button/Button';
+import { AdSense } from '../../components/AdSense/AdSense';
 
 
 
@@ -1089,6 +1090,13 @@ export const Home: React.FC = () => {
         </FeaturesGrid>
       </FeaturesSection>
 
+      {/* AdSense - Between Features and Learning Path */}
+      <AdSense 
+        slot={process.env.REACT_APP_ADSENSE_SLOT_CONTENT || ''}
+        format="horizontal"
+        style={{ margin: '2rem auto', maxWidth: '1200px', padding: '0 2rem' }}
+      />
+
       {/* Interactive Learning Path Section - Replaces Educational Section */}
       <LearningPathSection>
         <SectionHeader>
@@ -1160,6 +1168,12 @@ export const Home: React.FC = () => {
         </PathContainer>
       </LearningPathSection>
 
+      {/* AdSense - Before CTA Section */}
+      <AdSense 
+        slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
+        format="rectangle"
+        style={{ margin: '3rem auto', maxWidth: '1200px', padding: '0 2rem' }}
+      />
 
       {/* CTA Section */}
       <CTASection>
