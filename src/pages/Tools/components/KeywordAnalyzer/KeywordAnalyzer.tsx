@@ -682,7 +682,7 @@ export const KeywordAnalyzer: React.FC = () => {
                   <span>{formatViewCount(slot.avgViews)} avg views</span>
                 </S.MobileSummaryStats>
               </S.MobileSummaryBar>
-            ))}
+            ))} 
           </S.MobileSummaryContainer>
         ) : (
           <S.HeatmapContainer style={isIntegrated ? { transform: 'scale(1)'} : {}}>
