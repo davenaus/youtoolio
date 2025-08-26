@@ -35,22 +35,47 @@ function extractVideoId(input: string): string {
 }
 
 async function getInnertubeKey(videoId: string, signal: AbortSignal) {
-  const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
-    headers: { 'Accept-Language': 'en', 'User-Agent': 'Mozilla/5.0' },
-    signal
+const res = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+headers: { 
+  'Accept-Language': 'en', 
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+  },
+  signal
   });
-  if (!res.ok) throw new Error(`watch page status ${res.status}`);
-  const html = await res.text();
+if (!res.ok) throw new Error(`watch page status ${res.status}`);
+const html = await res.text();
 
-  const m = html.match(/"INNERTUBE_API_KEY":"([^"]+)"/);
-  if (m?.[1]) return m[1];
+// Primary method
+const m = html.match(/"INNERTUBE_API_KEY":"([^"]+)"/); 
+if (m?.[1]) return m[1];
 
-  // Fallback: parse HTML more thoroughly
-  const scriptRegex = /"INNERTUBE_API_KEY":"([^"]+)"/g;
-  let match;
-  while ((match = scriptRegex.exec(html)) !== null) {
-    if (match[1]) return match[1];
+// More thorough search methods
+const patterns = [
+  /"INNERTUBE_API_KEY":"([^"]+)"/g,
+    /INNERTUBE_API_KEY":"([^"]+)"/g,
+    /innertubeApiKey":"([^"]+)"/g,
+    /"innertubeApiKey":"([^"]+)"/g
+  ];
+
+  for (const pattern of patterns) {
+    const matches = html.matchAll(pattern);
+    for (const match of matches) {
+      if (match[1] && match[1].length > 10) {
+        return match[1];
+      }
+    }
   }
+
+  // Script tag search (manual parsing since we can't use node-html-parser)
+  const scriptMatches = html.match(/<script[^>]*>([\s\S]*?)<\/script>/gi);
+  if (scriptMatches) {
+    for (const scriptTag of scriptMatches) {
+      const scriptContent = scriptTag.replace(/<\/?script[^>]*>/gi, '');
+      const keyMatch = scriptContent.match(/"INNERTUBE_API_KEY":"([^"]+)"/); 
+      if (keyMatch?.[1]) return keyMatch[1];
+    }
+  }
+  
   throw new Error('INNERTUBE_API_KEY not found');
 }
 
@@ -335,6 +360,8 @@ export default async function handler(req: Request) {
       similarityThreshold: Number(body?.options?.similarityThreshold ?? 0.85),
     };
 
+    console.log('Processing video:', urlOrId, 'with options:', options);
+
     if (!urlOrId || typeof urlOrId !== 'string') {
       return new Response(JSON.stringify({ error: 'Provide urlOrId' }), {
         status: 400,
@@ -346,20 +373,42 @@ export default async function handler(req: Request) {
     }
 
     const videoId = extractVideoId(urlOrId);
+    console.log('Extracted video ID:', videoId);
+    
     const controller = new AbortController();
-    const key = await getInnertubeKey(videoId, controller.signal);
+    
+    let key: string;
+    try {
+      key = await getInnertubeKey(videoId, controller.signal);
+      console.log('Got INNERTUBE key:', key.substring(0, 10) + '...');
+    } catch (error) {
+      console.error('Failed to get INNERTUBE key:', error);
+      throw error;
+    }
 
     let cues: RawCue[];
     try {
+      console.log('Trying transcript JSON method...');
       cues = await tryGetTranscriptJSON(key, videoId, controller.signal);
-    } catch {
-      cues = await fallbackTimedText(videoId, key, controller.signal);
+      console.log('Success with JSON method, got', cues.length, 'cues');
+    } catch (jsonError) {
+      console.log('JSON method failed:', jsonError.message);
+      console.log('Trying fallback timedtext method...');
+      try {
+        cues = await fallbackTimedText(videoId, key, controller.signal);
+        console.log('Success with fallback method, got', cues.length, 'cues');
+      } catch (fallbackError) {
+        console.error('Both methods failed:', fallbackError.message);
+        throw fallbackError;
+      }
     }
 
     // Clean-up pipeline
     if (options.dedupe) cues = smartDedupe(cues, { windowMs: options.overlapWindowMs!, sim: options.similarityThreshold! });
     cues = joinAdjacent(cues, options.joinAdjacentThresholdMs || 0);
     cues = dropShort(cues, options.minDurationMs || 0);
+
+    console.log('Final processed cues:', cues.length);
 
     // Build text output
     let textOut: string | undefined;
@@ -385,8 +434,10 @@ export default async function handler(req: Request) {
       },
     });
   } catch (err: any) {
+    console.error('Handler error:', err);
     return new Response(JSON.stringify({ 
-      error: err.message || 'Unknown error' 
+      error: err.message || 'Unknown error',
+      details: err.stack || 'No stack trace available'
     }), {
       status: 500,
       headers: {
