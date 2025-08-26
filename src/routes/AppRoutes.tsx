@@ -37,6 +37,7 @@ import { ColorPickerFromImage } from '../pages/Tools/components/ColorPickerFromI
 import { KeywordAnalyzer } from '../pages/Tools/components/KeywordAnalyzer/KeywordAnalyzer';
 import { ChannelIdFinder } from '../pages/Tools/components/ChannelIdFinder/ChannelIdFinder';
 import { ModerationChecker } from '../pages/Tools/components/ModerationChecker/ModerationChecker';
+import { YouTubeTranscript } from '../pages/Tools/components/YouTubeTranscript/YouTubeTranscript';
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -107,6 +108,8 @@ export const AppRoutes: React.FC = () => {
       <Route path="/tools/keyword-analyzer/:keyword" element={<KeywordAnalyzer />} />
       <Route path="/tools/channel-id-finder" element={<ChannelIdFinder />} />
       <Route path="/tools/moderation-checker" element={<ModerationChecker />} />
+      <Route path="/tools/youtube-transcript" element={<YouTubeTranscript />} />
+      <Route path="/tools/youtube-transcript/:videoId" element={<YouTubeTranscript />} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>

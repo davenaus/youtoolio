@@ -72,6 +72,17 @@ const tools: Tool[] = [
     image: 'https://64.media.tumblr.com/b12f0a4e3b88cf8409200338965cf706/0e01452f9f6dd974-5e/s2048x3072/00de80d7d1ca44cb236d21cab0adbe20fc5bbfb9.jpg',
   },
   {
+    id: 'youtube-transcript',
+    name: 'YouTube Transcript Downloader',
+    description: 'Extract and download YouTube video transcripts in multiple formats with smart processing options.',
+    icon: 'bx bx-text',
+    category: 'Utilities',
+    tags: ['Transcript', 'Download', 'Text', 'Subtitles', 'Export'],
+    url: '/tools/youtube-transcript',
+    isNew: true,
+    image: 'https://64.media.tumblr.com/b12f0a4e3b88cf8409200338965cf706/0e01452f9f6dd974-5e/s2048x3072/00de80d7d1ca44cb236d21cab0adbe20fc5bbfb9.jpg',
+  },
+  {
     id: 'tag-generator',
     name: 'Tag Generator',
     description: 'Generate optimized tags for your videos using AI and trend analysis to improve discoverability.',
