@@ -444,7 +444,7 @@ export const OutlierFinder: React.FC = () => {
                 </S.FilterSelect>
               </S.FilterGroup>
 
-              <S.FilterGroup>
+              <S.FilterGroup> 
                 <S.FilterLabel>Sort By</S.FilterLabel>
                 <S.FilterSelect
                   value={filters.sortBy}
