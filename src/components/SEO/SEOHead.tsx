@@ -1,6 +1,5 @@
 // src/components/SEO/SEOHead.tsx
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
 
 interface SEOHeadProps {
   title: string;
@@ -31,8 +30,8 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   const keywordsString = keywords.join(', ');
 
   return (
-    <Helmet>
-      {/* Basic Meta Tags */}
+    <>
+      {/* Basic Meta Tags - React 19 Native Support */}
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       {keywords.length > 0 && <meta name="keywords" content={keywordsString} />}
@@ -70,6 +69,6 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
           {JSON.stringify(structuredData)}
         </script>
       )}
-    </Helmet>
+    </>
   );
 };
