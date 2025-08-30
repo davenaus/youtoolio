@@ -603,7 +603,7 @@ const StepFeatures = styled.div`
   gap: 0.5rem;
 `;
 
-const FeatureTag = styled.span`
+const FeatureTag = styled.a`
   background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}20, ${({ theme }) => theme.colors.red4}20);
   border: 1px solid ${({ theme }) => theme.colors.red3}40;
   color: ${({ theme }) => theme.colors.red4};
@@ -611,6 +611,17 @@ const FeatureTag = styled.span`
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-block;
+  
+  &:hover {
+    background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}40, ${({ theme }) => theme.colors.red4}40);
+    border-color: ${({ theme }) => theme.colors.red3};
+    transform: translateY(-1px);
+    color: ${({ theme }) => theme.colors.red5};
+  }
 `;
 
 // Data Dashboard Science Section - Replaces Science-Based Cards
@@ -1121,11 +1132,11 @@ export const Home: React.FC = () => {
                   and where your biggest opportunities lie. 
                 </StepDescription>
                 <StepFeatures>
-                  <FeatureTag>Channel Analyzer</FeatureTag>
-                  <FeatureTag>Video Analyzer</FeatureTag>
-                  <FeatureTag>Keyword Analyzer</FeatureTag>
-                  <FeatureTag>Outlier Finder</FeatureTag>
-                  <FeatureTag>Comment Downloader</FeatureTag>
+                  <FeatureTag href="/tools/channel-analyzer">Channel Analyzer</FeatureTag>
+                  <FeatureTag href="/tools/video-analyzer">Video Analyzer</FeatureTag>
+                  <FeatureTag href="/tools/keyword-analyzer">Keyword Analyzer</FeatureTag>
+                  <FeatureTag href="/tools/outlier-finder">Outlier Finder</FeatureTag>
+                  <FeatureTag href="/tools/comment-downloader">Comment Downloader</FeatureTag>
                 </StepFeatures>
               </StepContent>
             </LearningStep>
@@ -1140,9 +1151,9 @@ export const Home: React.FC = () => {
                   Implement data-driven improvements to your content strategy. 
                 </StepDescription>
                 <StepFeatures>
-                  <FeatureTag>Channel Consultant</FeatureTag>
-                  <FeatureTag>Tag Generator</FeatureTag>
-                  <FeatureTag>Thumbnail Tester</FeatureTag>
+                  <FeatureTag href="/tools/channel-consultant">Channel Consultant</FeatureTag>
+                  <FeatureTag href="/tools/tag-generator">Tag Generator</FeatureTag>
+                  <FeatureTag href="/tools/thumbnail-tester">Thumbnail Tester</FeatureTag>
                 </StepFeatures>
               </StepContent>
             </LearningStep>
@@ -1157,10 +1168,10 @@ export const Home: React.FC = () => {
                   Upgrade your workflow using YouTool, by utilizing new tools to help develope your channel and brand. 
                 </StepDescription>
                 <StepFeatures>
-                  <FeatureTag>QR Code Generator</FeatureTag>
-                  <FeatureTag>Thumbnail Downloader</FeatureTag>
-                  <FeatureTag>Subscriber Link Creator</FeatureTag>
-                  <FeatureTag>Color Picker</FeatureTag>
+                  <FeatureTag href="/tools/qr-code-generator">QR Code Generator</FeatureTag>
+                  <FeatureTag href="/tools/thumbnail-downloader">Thumbnail Downloader</FeatureTag>
+                  <FeatureTag href="/tools/subscribe-link-generator">Subscribe Link Generator</FeatureTag>
+                  <FeatureTag href="/tools/color-picker-from-image">Color Picker</FeatureTag>
                 </StepFeatures>
               </StepContent>
             </LearningStep>

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AdSense } from '../../../../components/AdSense/AdSense';
+import { ToolPageWrapper } from '../../../../components/ToolPageWrapper';
 import * as S from './styles';
 import moment from 'moment';
 

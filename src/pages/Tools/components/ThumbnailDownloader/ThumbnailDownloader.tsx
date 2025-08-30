@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AdSense } from '../../../../components/AdSense/AdSense';
+import { ToolPageWrapper } from '../../../../components/ToolPageWrapper';
 import * as S from './styles';
 
 interface ThumbnailData {
@@ -367,7 +368,12 @@ export const ThumbnailDownloader: React.FC = () => {
   );
 
   return (
-    <S.PageWrapper>
+    <ToolPageWrapper 
+      toolKey="thumbnail-downloader" 
+      videoId={videoId}
+      customTitle={thumbnailData ? `Download ${thumbnailData.title} Thumbnail - YouTool.io` : undefined}
+    >
+      <S.PageWrapper>
       {/* Left Sidebar Ad */}
       <S.AdSidebar position="left">
         <AdSense 
@@ -731,6 +737,7 @@ export const ThumbnailDownloader: React.FC = () => {
         </S.BottomAdContainer>
       </S.MainContainer>
     </S.PageWrapper>
+    </ToolPageWrapper>
   );
 };
 
