@@ -10,7 +10,7 @@ interface AdSenseProps {
 }
 
 const AdContainer = styled.div<{ format?: string }>`
-  display: none;
+  display: flex;
   justify-content: center;
   align-items: center;
   background: ${({ theme }) => theme.colors.dark3};
@@ -18,6 +18,7 @@ const AdContainer = styled.div<{ format?: string }>`
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   padding: 1rem;
   margin: 1rem 0;
+  position: relative; /* Ensure ads are not fixed */
   min-height: ${({ format }) => {
     switch (format) {
       case 'vertical':
@@ -35,6 +36,17 @@ const AdContainer = styled.div<{ format?: string }>`
   @media (max-width: 768px) {
     min-height: ${({ format }) => format === 'vertical' ? '300px' : '100px'};
     padding: 0.5rem;
+  }
+  
+  /* Prevent any fixed/sticky positioning that could cause scroll issues */
+  &, & > * {
+    position: relative;
+  }
+  
+  /* Ensure AdSense elements stay within normal document flow */
+  ins.adsbygoogle {
+    position: relative !important;
+    display: block !important;
   }
 `;
 

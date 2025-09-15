@@ -131,9 +131,8 @@ export const PageWrapper = styled.div`
 `;
 
 export const AdSidebar = styled.div<{ position: 'left' | 'right' }>`
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
+  position: absolute;
+  top: 100px;
   ${({ position }) => position}: 20px;
   width: 160px;
   z-index: 10;

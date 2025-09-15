@@ -1,6 +1,16 @@
 // src/components/Button/styles.ts
 import styled, { css } from 'styled-components';
 
+// Responsive breakpoints
+const breakpoints = {
+  xs: '480px',
+  sm: '640px', 
+  md: '768px',
+  lg: '1024px',
+  xl: '1280px',
+  xxl: '1536px'
+};
+
 interface StyledButtonProps {
   variant: 'primary' | 'secondary' | 'danger';
   size: 'sm' | 'md' | 'lg';
@@ -66,18 +76,57 @@ const getSizeStyles = (size: string) => {
         padding: 0.5rem 1rem;
         font-size: 0.875rem;
         border-radius: ${({ theme }) => theme.borderRadius.md};
+        min-height: 36px;
+        
+        @media (max-width: ${breakpoints.xs}) {
+          padding: 0.625rem 1.25rem;
+          font-size: 0.875rem;
+          min-height: 40px;
+        }
+        
+        @media (max-width: ${breakpoints.md}) {
+          min-height: 38px;
+        }
       `;
     case 'md':
       return css`
         padding: 0.75rem 1.5rem;
         font-size: 1rem;
         border-radius: ${({ theme }) => theme.borderRadius.lg};
+        min-height: 42px;
+        
+        @media (max-width: ${breakpoints.xs}) {
+          padding: 0.875rem 1.75rem;
+          font-size: 1rem;
+          min-height: 44px; /* Better touch target */
+        }
+        
+        @media (max-width: ${breakpoints.md}) {
+          min-height: 44px;
+        }
       `;
     case 'lg':
       return css`
         padding: 1rem 2rem;
         font-size: 1.125rem;
         border-radius: ${({ theme }) => theme.borderRadius.lg};
+        min-height: 48px;
+        
+        @media (max-width: ${breakpoints.xs}) {
+          padding: 1rem 2rem;
+          font-size: 1.125rem;
+          min-height: 48px; /* Optimal touch target */
+        }
+        
+        @media (max-width: ${breakpoints.md}) {
+          min-height: 48px;
+        }
+        
+        @media (min-width: ${breakpoints.xl}) {
+          padding: 1.125rem 2.25rem;
+          font-size: 1.25rem;
+          min-height: 52px;
+        }
       `;
     default:
       return '';
@@ -114,6 +163,24 @@ export const StyledButton = styled.button<StyledButtonProps>`
   &:focus {
     outline: none;
     box-shadow: 0 0 0 3px rgba(125, 0, 0, 0.3);
+  }
+  
+  /* Enhanced touch targets for mobile */
+  @media (max-width: ${breakpoints.md}) {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
+  /* Better spacing on small screens */
+  @media (max-width: ${breakpoints.xs}) {
+    gap: 0.375rem;
+    
+    ${({ fullWidth }) =>
+      fullWidth &&
+      css`
+        max-width: 100%;
+        width: 100%;
+      `}
   }
 `;
 

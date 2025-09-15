@@ -494,98 +494,7 @@ export const CommentPicker: React.FC = () => {
           </S.HeaderContent>
         </S.EnhancedHeader>
 
-        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
-        {!showResults && !isLoading && totalComments === 0 && (
-          <S.EducationalSection>
-            <S.EducationalContent>
-              <S.SectionSubTitle>How to Use the Comment Picker</S.SectionSubTitle>
-              
-              <S.EducationalText>
-                Our Comment Picker tool randomly selects winners from YouTube video comments with complete 
-                fairness and transparency. Perfect for giveaways, contests, and promotions, it includes 
-                advanced filtering options to ensure you pick from exactly the right audience.
-              </S.EducationalText>
-
-              <S.StepByStep>
-                <S.StepItem>
-                  <S.StepNumberCircle>1</S.StepNumberCircle>
-                  <S.StepContent>
-                    <S.StepTitle>Enter Video URL</S.StepTitle>
-                    <S.EducationalText>
-                      Paste the YouTube video URL from your giveaway or contest post. Our system will 
-                      automatically fetch all comments from the video, including engagement metrics 
-                      like likes and posting timestamps for comprehensive filtering.
-                    </S.EducationalText>
-                  </S.StepContent>
-                </S.StepItem>
-
-                <S.StepItem>
-                  <S.StepNumberCircle>2</S.StepNumberCircle>
-                  <S.StepContent>
-                    <S.StepTitle>Apply Filters (Optional)</S.StepTitle>
-                    <S.EducationalText>
-                      Use advanced filters to refine your selection criteria. Filter by minimum likes, 
-                      specific keywords, date ranges, comment length, or exclude the channel owner. 
-                      Enable multiple winner mode to select several winners at once.
-                    </S.EducationalText>
-                  </S.StepContent>
-                </S.StepItem>
-
-                <S.StepItem>
-                  <S.StepNumberCircle>3</S.StepNumberCircle>
-                  <S.StepContent>
-                    <S.StepTitle>Pick Random Winners</S.StepTitle>
-                    <S.EducationalText>
-                      Click the selection button to randomly pick winners from eligible comments. 
-                      Watch the dramatic selection animation, then export winner details or pick 
-                      new winners as needed. All selections are completely random and fair.
-                    </S.EducationalText>
-                  </S.StepContent>
-                </S.StepItem>
-              </S.StepByStep>
-            </S.EducationalContent>
-
-            <S.EducationalContent>
-              <S.SectionSubTitle>Fair & Transparent Selection</S.SectionSubTitle>
-              
-              <S.FeatureList>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Truly Random Selection:</strong> Uses cryptographically secure randomization for completely fair winner picking</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Advanced Filtering:</strong> Filter by likes, keywords, dates, comment length, and channel ownership</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Multiple Winners:</strong> Select up to 10 winners simultaneously for larger giveaways</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Export Winners:</strong> Download winner details for record keeping and contact purposes</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Winner History:</strong> Track previous winners to avoid duplicate selections across multiple draws</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Engagement Analytics:</strong> View comment statistics and engagement metrics for better insights</span>
-                </S.FeatureListItem>
-              </S.FeatureList>
-
-              <S.EducationalText>
-                Ideal for YouTubers, marketers, and businesses running contests or giveaways. The tool 
-                ensures complete fairness while providing the flexibility to target specific audience 
-                segments through intelligent filtering. Build trust with your audience through transparent, 
-                verifiable random selection processes.
-              </S.EducationalText>
-            </S.EducationalContent>
-          </S.EducationalSection>
-        )}
-
-        <S.ToggleContainer>
+                <S.ToggleContainer>
             <S.ToggleButton 
               onClick={() => setShowFilters(!showFilters)}
               className={showFilters ? 'active' : ''}
@@ -683,6 +592,99 @@ export const CommentPicker: React.FC = () => {
             </S.CheckboxGroup>
           </S.FiltersContainer>
         )}
+
+        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {!showResults && !isLoading && totalComments === 0 && (
+          <S.EducationalSection>
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Comment Picker</S.SectionSubTitle>
+              
+              <S.EducationalText>
+                Our Comment Picker tool randomly selects winners from YouTube video comments with complete 
+                fairness and transparency. Perfect for giveaways, contests, and promotions, it includes 
+                advanced filtering options to ensure you pick from exactly the right audience.
+              </S.EducationalText>
+
+              <S.StepByStep>
+                <S.StepItem>
+                  <S.StepNumberCircle>1</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Enter Video URL</S.StepTitle>
+                    <S.EducationalText>
+                      Paste the YouTube video URL from your giveaway or contest post. Our system will 
+                      automatically fetch all comments from the video, including engagement metrics 
+                      like likes and posting timestamps for comprehensive filtering.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>2</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Apply Filters (Optional)</S.StepTitle>
+                    <S.EducationalText>
+                      Use advanced filters to refine your selection criteria. Filter by minimum likes, 
+                      specific keywords, date ranges, comment length, or exclude the channel owner. 
+                      Enable multiple winner mode to select several winners at once.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+
+                <S.StepItem>
+                  <S.StepNumberCircle>3</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Pick Random Winners</S.StepTitle>
+                    <S.EducationalText>
+                      Click the selection button to randomly pick winners from eligible comments. 
+                      Watch the dramatic selection animation, then export winner details or pick 
+                      new winners as needed. All selections are completely random and fair.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+              </S.StepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Fair & Transparent Selection</S.SectionSubTitle>
+              
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Truly Random Selection:</strong> Uses cryptographically secure randomization for completely fair winner picking</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Advanced Filtering:</strong> Filter by likes, keywords, dates, comment length, and channel ownership</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Multiple Winners:</strong> Select up to 10 winners simultaneously for larger giveaways</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Export Winners:</strong> Download winner details for record keeping and contact purposes</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Winner History:</strong> Track previous winners to avoid duplicate selections across multiple draws</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Engagement Analytics:</strong> View comment statistics and engagement metrics for better insights</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+
+              <S.EducationalText>
+                Ideal for YouTubers, marketers, and businesses running contests or giveaways. The tool 
+                ensures complete fairness while providing the flexibility to target specific audience 
+                segments through intelligent filtering. Build trust with your audience through transparent, 
+                verifiable random selection processes.
+              </S.EducationalText>
+            </S.EducationalContent>
+          </S.EducationalSection>
+        )}
+
+
 
         {isLoading && (
           <S.LoadingContainer>

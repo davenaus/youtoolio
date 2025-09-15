@@ -15,6 +15,41 @@ export const GlobalStyles = createGlobalStyle`
     color: ${({ theme }) => theme.colors.text.primary};
     line-height: 1.6;
     overflow-x: hidden;
+    scroll-behavior: auto; /* Disable smooth scrolling for route changes */
+  }
+  
+  /* Ensure consistent scroll behavior */
+  html {
+    scroll-behavior: auto;
+  }
+  
+  /* Prevent any conflicting scroll behaviors */
+  * {
+    scroll-behavior: auto !important;
+  }
+  
+  /* Ensure body and html don't have conflicting positioning */
+  body {
+    position: relative;
+  }
+  
+  /* Reset any potential scroll restoration interference */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+  
+  /* Global safeguard against sticky ads */
+  .adsbygoogle,
+  [class*="ad-"],
+  [class*="Ad"] {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
   }
 
   #root {

@@ -30,6 +30,16 @@ const pulse = keyframes`
   50% { transform: scale(1.05); }
 `;
 
+// Responsive breakpoints
+const breakpoints = {
+  xs: '480px',
+  sm: '640px', 
+  md: '937px',
+  lg: '1024px',
+  xl: '1280px',
+  xxl: '1536px'
+};
+
 // Styled Components
 const Container = styled.div`
   min-height: 100vh;
@@ -46,9 +56,18 @@ const HeroSection = styled.section`
   background: linear-gradient(135deg, ${({ theme }) => theme.colors.dark2} 0%, ${({ theme }) => theme.colors.dark3} 100%);
   padding-top: 2rem;
   
-  @media (max-width: 768px) {
-    padding-top: 3rem;
+  @media (max-width: ${breakpoints.xs}) {
+    padding-top: 1rem;
+    min-height: calc(100vh - 2rem);
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
+    padding-top: 2rem;
     min-height: calc(100vh - 1rem);
+  }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    padding-top: 3rem;
   }
 `;
 
@@ -73,11 +92,28 @@ const ContentWrapper = styled.div`
   position: relative;
   z-index: 2;
 
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.xs}) {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    text-align: center;
+    padding: 0 1rem;
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
     grid-template-columns: 1fr;
     gap: 2rem;
     text-align: center;
     padding: 0 1.5rem;
+  }
+  
+  @media (max-width: ${breakpoints.lg}) {
+    gap: 3rem;
+  }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    max-width: 1400px;
+    gap: 5rem;
+    padding: 0 3rem;
   }
 `;
 
@@ -88,7 +124,11 @@ const HeroContent = styled.div`
 const Logo = styled.div`
   margin-bottom: 2rem;
   
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.xs}) {
+    margin-bottom: 1rem;
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
     margin-bottom: 1.5rem;
   }
 `;
@@ -97,8 +137,16 @@ const LogoImage = styled.img`
   height: 60px;
   width: auto;
   
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.xs}) {
+    height: 40px;
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
     height: 50px;
+  }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    height: 70px;
   }
 `;
 
@@ -108,10 +156,31 @@ const HeroTitle = styled.h1`
   line-height: 1.1;
   margin-bottom: 1.5rem;
   
-  @media (max-width: 768px) {
-    font-size: 2.2rem;
+  @media (max-width: ${breakpoints.xs}) {
+    font-size: 1.8rem;
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
+  }
+  
+  @media (max-width: ${breakpoints.sm}) {
+    font-size: 2rem;
     line-height: 1.2;
     margin-bottom: 1rem;
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
+    font-size: 2.4rem;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+  
+  @media (max-width: ${breakpoints.lg}) {
+    font-size: 3rem;
+  }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    font-size: 4rem;
+    margin-bottom: 2rem;
   }
 `;
 
@@ -128,10 +197,28 @@ const HeroSubtitle = styled.p`
   line-height: 1.6;
   margin-bottom: 2rem;
   
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.xs}) {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    padding: 0;
+    line-height: 1.5;
+  }
+  
+  @media (max-width: ${breakpoints.sm}) {
+    font-size: 1.1rem;
+    margin-bottom: 1.25rem;
+    padding: 0 0.25rem;
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
     font-size: 1.1rem;
     margin-bottom: 1.5rem;
     padding: 0 0.5rem;
+  }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    font-size: 1.375rem;
+    margin-bottom: 2.5rem;
   }
 `;
 
@@ -140,11 +227,50 @@ const HeroButtons = styled.div`
   gap: 1rem;
   margin-bottom: 3rem;
 
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.xs}) {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    width: 100%;
+    
+    button {
+      width: 100%;
+      max-width: 280px;
+      min-height: 44px; /* Better touch target */
+    }
+  }
+  
+  @media (max-width: ${breakpoints.sm}) {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.75rem;
+    
+    button {
+      min-width: 200px;
+      min-height: 44px;
+    }
+  }
+
+  @media (max-width: ${breakpoints.md}) {
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
     margin-bottom: 2rem;
+    
+    button {
+      min-height: 44px;
+    }
+  }
+  
+  @media (min-width: ${breakpoints.lg}) {
+    gap: 1.25rem;
+  }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    gap: 1.5rem;
+    margin-bottom: 3.5rem;
   }
 `;
 
@@ -153,8 +279,24 @@ const HeroStats = styled.div`
   grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
   
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.xs}) {
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  @media (max-width: ${breakpoints.sm}) {
     gap: 1rem;
+    margin-top: 0.75rem;
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    gap: 3rem;
     margin-top: 1rem;
   }
 `;
@@ -168,20 +310,51 @@ const StatNumber = styled.div`
   font-weight: 700;
   color: ${({ theme }) => theme.colors.red4};
   margin-bottom: 0.5rem;
+  
+  @media (max-width: ${breakpoints.xs}) {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  @media (max-width: ${breakpoints.sm}) {
+    font-size: 1.75rem;
+    margin-bottom: 0.375rem;
+  }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
 `;
 
 const StatLabel = styled.div`
   font-size: 0.9rem;
   color: ${({ theme }) => theme.colors.text.muted};
+  
+  @media (max-width: ${breakpoints.xs}) {
+    font-size: 0.75rem;
+    line-height: 1.3;
+  }
+  
+  @media (max-width: ${breakpoints.sm}) {
+    font-size: 0.8rem;
+  }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    font-size: 1rem;
+  }
 `;
 
 const HeroVisual = styled.div`
   animation: ${fadeInUp} 0.8s ease-out 0.2s both;
   position: relative;
 
-   @media (max-width: 768px) {
-    font-size: 1rem;
-    margin-bottom: 20px;
+  @media (max-width: ${breakpoints.xs}) {
+    margin-top: 1rem;
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
+    margin-top: 1.5rem;
   }
 `;
 
@@ -252,9 +425,20 @@ const FeaturesSection = styled.section`
   padding: 6rem 0;
   background: ${({ theme }) => theme.colors.dark1};
 
-       @media (max-width: 768px) {
-    font-size: 1rem;
-    padding: 30px;
+  @media (max-width: ${breakpoints.xs}) {
+    padding: 2rem 0;
+  }
+  
+  @media (max-width: ${breakpoints.sm}) {
+    padding: 3rem 0;
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
+    padding: 4rem 0;
+  }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    padding: 8rem 0;
   }
 `;
 
@@ -283,8 +467,23 @@ const SectionTitle = styled.h2`
   color: ${({ theme }) => theme.colors.text.primary};
   margin-bottom: 1rem;
 
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.xs}) {
+    font-size: 1.75rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  @media (max-width: ${breakpoints.sm}) {
     font-size: 2rem;
+    margin-bottom: 0.875rem;
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
+    font-size: 2.25rem;
+  }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
   }
 `;
 
@@ -301,6 +500,34 @@ const FeaturesGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 2rem;
+  
+  @media (max-width: ${breakpoints.xs}) {
+    padding: 0 1rem;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  @media (max-width: ${breakpoints.sm}) {
+    padding: 0 1.5rem;
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  @media (max-width: ${breakpoints.lg}) {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    max-width: 1400px;
+    padding: 0 3rem;
+    gap: 2.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  }
 `;
 
 const FeatureCard = styled.div`
@@ -401,8 +628,23 @@ const CTATitle = styled.h2`
   color: ${({ theme }) => theme.colors.text.primary};
   margin-bottom: 1rem;
 
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.xs}) {
+    font-size: 1.75rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  @media (max-width: ${breakpoints.sm}) {
     font-size: 2rem;
+    margin-bottom: 0.875rem;
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
+    font-size: 2.5rem;
+  }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
   }
 `;
 
@@ -442,11 +684,21 @@ const LearningPathSection = styled.section`
   position: relative;
   overflow: hidden;
 
-     @media (max-width: 768px) {
-    font-size: 1rem;
-    padding: 30px;
+  @media (max-width: ${breakpoints.xs}) {
+    padding: 2rem 0;
   }
   
+  @media (max-width: ${breakpoints.sm}) {
+    padding: 3rem 0;
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
+    padding: 4rem 0;
+  }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    padding: 8rem 0;
+  }
 `;
 
 const PathContainer = styled.div`
@@ -490,14 +742,29 @@ const LearningStep = styled.div`
   &:nth-child(even) {
     flex-direction: row-reverse;
     
-    @media (max-width: 768px) {
+    @media (max-width: ${breakpoints.md}) {
       flex-direction: row;
     }
   }
   
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.xs}) {
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+  
+  @media (max-width: ${breakpoints.sm}) {
+    gap: 1rem;
+    margin-bottom: 2.25rem;
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
     gap: 1rem;
     margin-bottom: 2.5rem;
+  }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    gap: 3rem;
+    margin-bottom: 5rem;
   }
 `;
 
@@ -528,10 +795,28 @@ const StepIcon = styled.div`
     mask-composite: exclude;
   }
   
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.xs}) {
+    width: 50px;
+    height: 50px;
+    font-size: 1.25rem;
+  }
+  
+  @media (max-width: ${breakpoints.sm}) {
     width: 60px;
     height: 60px;
     font-size: 1.5rem;
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
+    width: 80px;
+    height: 80px;
+    font-size: 1.75rem;
+  }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    width: 140px;
+    height: 140px;
+    font-size: 3rem;
   }
 `;
 
@@ -568,7 +853,19 @@ const StepContent = styled.div`
     }
   }
   
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.xs}) {
+    padding: 1rem;
+    
+    &::before {
+      left: -10px !important;
+      right: auto !important;
+      border-right-color: ${({ theme }) => theme.colors.dark5} !important;
+      border-left-color: transparent !important;
+      border-width: 10px;
+    }
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
     padding: 1.5rem;
     
     &::before {
@@ -578,6 +875,10 @@ const StepContent = styled.div`
       border-left-color: transparent !important;
     }
   }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    padding: 3rem;
+  }
 `;
 
 const StepTitle = styled.h3`
@@ -586,8 +887,23 @@ const StepTitle = styled.h3`
   color: ${({ theme }) => theme.colors.text.primary};
   margin-bottom: 1rem;
   
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.xs}) {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  @media (max-width: ${breakpoints.sm}) {
     font-size: 1.4rem;
+    margin-bottom: 0.875rem;
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
+    font-size: 1.5rem;
+  }
+  
+  @media (min-width: ${breakpoints.xl}) {
+    font-size: 2rem;
+    margin-bottom: 1.25rem;
   }
 `;
 
@@ -904,9 +1220,21 @@ const VideoModalContent = styled.div`
   cursor: default;
   z-index: 1001;
 
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.xs}) {
+    width: 98vw;
+    height: 55vw;
+    max-height: 300px;
+  }
+  
+  @media (max-width: ${breakpoints.sm}) {
     width: 95vw;
     height: 53.4vw;
+    max-height: 400px;
+  }
+  
+  @media (max-width: ${breakpoints.md}) {
+    width: 92vw;
+    height: 51.75vw;
   }
 `;
 
@@ -922,12 +1250,21 @@ const VideoModalClose = styled.button`
   z-index: 1002;
   padding: 0.5rem;
   transition: color 0.2s ease;
+  min-height: 44px;
+  min-width: 44px;
 
   &:hover {
     color: ${({ theme }) => theme.colors.red4};
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.xs}) {
+    top: -60px;
+    right: -10px;
+    font-size: 1.25rem;
+    padding: 0.75rem;
+  }
+  
+  @media (max-width: ${breakpoints.sm}) {
     top: -50px;
     right: -10px;
     font-size: 1.5rem;
