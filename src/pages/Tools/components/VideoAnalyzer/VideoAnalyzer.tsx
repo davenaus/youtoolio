@@ -1,10 +1,12 @@
 // src/pages/Tools/components/VideoAnalyzer/VideoAnalyzer.tsx - IMPROVED VERSION
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AdSense } from '../../../../components/AdSense/AdSense';
 import { ToolPageWrapper } from '../../../../components/ToolPageWrapper';
 import * as S from './styles';
 import moment from 'moment';
+import { ANALYTICS_QUESTIONS, AnalyticsQuestion } from './analyticsQuestions';
+import { AnalyticsCalculator, AnalyticsResult } from './analyticsCalculator';
 
 interface VideoAnalysis {
   basicMetrics: {
@@ -58,9 +60,12 @@ interface VideoAnalysis {
       title: string;
       views: number;
       url: string;
+      publishedAt: string;
+      daysAgo: number;
     } | null;
     recentUploadRate: string;
     subscriberToViewRatio: number;
+    bestVideoTimeframe: string;
   };
 
   performanceScores: {
@@ -84,6 +89,7 @@ interface ChannelVideo {
   likeCount: number;
   commentCount: number;
   thumbnails: any;
+  duration?: number;
 }
 
 const VideoAnalyzer: React.FC = () => {
@@ -98,6 +104,87 @@ const VideoAnalyzer: React.FC = () => {
   const [analysisResults, setAnalysisResults] = useState<VideoAnalysis | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // AI Chatbot Interface States
+  const [chatQuery, setChatQuery] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedDropdownIndex, setSelectedDropdownIndex] = useState(-1);
+  const [askVideoType, setAskVideoType] = useState<'long-form' | 'shorts'>('long-form');
+  const [analyticsResults, setAnalyticsResults] = useState<{ [key: string]: AnalyticsResult }>({});
+  const [calculatingQuestion, setCalculatingQuestion] = useState<string | null>(null);
+  const [selectedResult, setSelectedResult] = useState<AnalyticsResult | null>(null);
+  const [conversationHistory, setConversationHistory] = useState<Array<{
+    type: 'user' | 'assistant';
+    content: string;
+    result?: AnalyticsResult;
+    timestamp: Date;
+  }>>([]);
+
+  // Enhanced search function with fuzzy matching
+  const searchQuestions = useMemo(() => {
+    if (!chatQuery.trim()) return [];
+
+    const query = chatQuery.toLowerCase();
+    const words = query.split(' ').filter(word => word.length > 0);
+    
+    const scoredQuestions = ANALYTICS_QUESTIONS
+      .filter(question => {
+        // Filter by video type
+        return question.videoType === 'both' || question.videoType === askVideoType;
+      })
+      .map(question => {
+        let score = 0;
+        const searchableText = [
+          question.question,
+          question.category,
+          question.description,
+          ...question.tags
+        ].join(' ').toLowerCase();
+
+        // Exact phrase match gets highest score
+        if (searchableText.includes(query)) {
+          score += 100;
+        }
+
+        // All words present gets high score
+        const allWordsPresent = words.every(word => searchableText.includes(word));
+        if (allWordsPresent) {
+          score += 50;
+        }
+
+        // Individual word matches
+        words.forEach(word => {
+          if (searchableText.includes(word)) {
+            score += 10;
+          }
+        });
+
+        // Question text matches get bonus
+        if (question.question.toLowerCase().includes(query)) {
+          score += 30;
+        }
+
+        // Category matches get bonus
+        if (question.category.toLowerCase().includes(query)) {
+          score += 20;
+        }
+
+        // Tag matches get bonus
+        question.tags.forEach(tag => {
+          if (tag.toLowerCase().includes(query)) {
+            score += 15;
+          }
+        });
+
+        return { question, score };
+      })
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8) // Limit to 8 suggestions
+      .map(({ question }) => question);
+
+    return scoredQuestions;
+  }, [chatQuery, askVideoType]);
 
   const toolConfig = {
     name: 'Video Analyzer',
@@ -117,7 +204,55 @@ const VideoAnalyzer: React.FC = () => {
       setVideoUrl(`https://youtube.com/watch?v=${videoId}`);
       handleAnalyze(videoId);
     }
+    // Don't default to Ask tab anymore - let user navigate there after analysis
   }, [videoId]);
+
+  // Switch to overview tab when analysis results become available
+  useEffect(() => {
+    if (analysisResults && videoData && channelData) {
+      // Only switch to overview if we're not already on a valid tab
+      if (activeTab === 'ask' && !analysisResults) {
+        setActiveTab('overview');
+      }
+    }
+  }, [analysisResults, videoData, channelData]);
+
+  // Handle keyboard navigation for dropdown
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!showDropdown || searchQuestions.length === 0) return;
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setSelectedDropdownIndex(prev => 
+            prev < searchQuestions.length - 1 ? prev + 1 : 0
+          );
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setSelectedDropdownIndex(prev => 
+            prev > 0 ? prev - 1 : searchQuestions.length - 1
+          );
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (selectedDropdownIndex >= 0 && selectedDropdownIndex < searchQuestions.length) {
+            handleQuestionSelect(searchQuestions[selectedDropdownIndex]);
+          } else if (searchQuestions.length > 0) {
+            handleQuestionSelect(searchQuestions[0]);
+          }
+          break;
+        case 'Escape':
+          setShowDropdown(false);
+          setSelectedDropdownIndex(-1);
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showDropdown, searchQuestions, selectedDropdownIndex]);
 
   const downloadThumbnail = async (url: string, filename?: string) => {
     try {
@@ -139,7 +274,10 @@ const VideoAnalyzer: React.FC = () => {
 
   const handleTagAnalyze = (tag: string) => {
     const encodedTag = encodeURIComponent(tag.trim());
-    navigate(`/tools/keyword-analyzer/${encodedTag}`);
+    const keywordAnalyzerUrl = `/tools/keyword-analyzer/${encodedTag}`;
+    
+    // Open in new tab
+    window.open(keywordAnalyzerUrl, '_blank', 'noopener,noreferrer');
   };
 
   const extractVideoId = (url: string): string | null => {
@@ -223,7 +361,7 @@ const VideoAnalyzer: React.FC = () => {
     return data.items[0];
   };
 
-  const fetchChannelVideos = async (channelId: string, maxResults: number = 20): Promise<ChannelVideo[]> => {
+  const fetchChannelVideos = async (channelId: string, maxResults: number = 50): Promise<ChannelVideo[]> => {
     const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_4;
     
     try {
@@ -245,7 +383,7 @@ const VideoAnalyzer: React.FC = () => {
       
       const videosResponse = await fetch(
         `https://www.googleapis.com/youtube/v3/videos?` +
-        `part=statistics,snippet&id=${videoIds}&key=${API_KEY}`
+        `part=statistics,snippet,contentDetails&id=${videoIds}&key=${API_KEY}`
       );
       
       const videosData = await videosResponse.json();
@@ -257,7 +395,8 @@ const VideoAnalyzer: React.FC = () => {
         viewCount: parseInt(video.statistics.viewCount || '0'),
         likeCount: parseInt(video.statistics.likeCount || '0'),
         commentCount: parseInt(video.statistics.commentCount || '0'),
-        thumbnails: video.snippet.thumbnails
+        thumbnails: video.snippet.thumbnails,
+        duration: parseDuration(video.contentDetails.duration)
       }));
     } catch (error) {
       console.error('Error fetching channel videos:', error);
@@ -299,38 +438,98 @@ const VideoAnalyzer: React.FC = () => {
   };
 
   const calculateScores = (videoData: any, contentAnalysis: VideoAnalysis['contentAnalysis']) => {
-    // SEO Score calculation
+    // SEO Score calculation (0-100)
     let seoScore = 0;
-    if (contentAnalysis.titleLength >= 40 && contentAnalysis.titleLength <= 60) seoScore += 30;
-    else if (contentAnalysis.titleLength >= 30 && contentAnalysis.titleLength <= 70) seoScore += 20;
-    else seoScore += 10;
     
-    if (contentAnalysis.descriptionLength >= 200) seoScore += 25;
-    else if (contentAnalysis.descriptionLength >= 100) seoScore += 15;
-    else seoScore += 5;
+    // Title optimization (35 points max)
+    if (contentAnalysis.titleLength >= 50 && contentAnalysis.titleLength <= 60) {
+      seoScore += 35; // Perfect length
+    } else if (contentAnalysis.titleLength >= 40 && contentAnalysis.titleLength <= 70) {
+      seoScore += 25; // Good length
+    } else if (contentAnalysis.titleLength >= 30 && contentAnalysis.titleLength <= 80) {
+      seoScore += 15; // Acceptable length
+    } else {
+      seoScore += 5; // Poor length
+    }
     
-    if (contentAnalysis.tagCount >= 10) seoScore += 25;
-    else if (contentAnalysis.tagCount >= 5) seoScore += 15;
-    else seoScore += 5;
+    // Description optimization (30 points max)
+    if (contentAnalysis.descriptionLength >= 250) {
+      seoScore += 30; // Comprehensive description
+    } else if (contentAnalysis.descriptionLength >= 150) {
+      seoScore += 20; // Good description
+    } else if (contentAnalysis.descriptionLength >= 100) {
+      seoScore += 10; // Minimal description
+    } else {
+      seoScore += 2; // Very poor description
+    }
     
-    if (contentAnalysis.hashtags.length > 0) seoScore += 10;
-    if (contentAnalysis.descriptionHasLinks) seoScore += 10;
+    // Tag optimization (20 points max)
+    if (contentAnalysis.tagCount >= 15) {
+      seoScore += 20; // Excellent tag usage
+    } else if (contentAnalysis.tagCount >= 10) {
+      seoScore += 15; // Good tag usage
+    } else if (contentAnalysis.tagCount >= 5) {
+      seoScore += 10; // Adequate tag usage
+    } else if (contentAnalysis.tagCount >= 1) {
+      seoScore += 5; // Minimal tag usage
+    }
+    // 0 points for no tags
     
-    // Engagement Score calculation
+    // Hashtag usage (8 points max)
+    if (contentAnalysis.hashtags.length >= 3 && contentAnalysis.hashtags.length <= 15) {
+      seoScore += 8; // Optimal hashtag usage
+    } else if (contentAnalysis.hashtags.length >= 1) {
+      seoScore += 4; // Some hashtag usage
+    }
+    
+    // External links (7 points max)
+    if (contentAnalysis.descriptionLinkCount >= 1 && contentAnalysis.descriptionLinkCount <= 5) {
+      seoScore += 7; // Good link usage
+    } else if (contentAnalysis.descriptionLinkCount > 5) {
+      seoScore += 3; // Too many links (potential spam)
+    }
+    
+    // Engagement Score calculation (0-100) - Based on realistic YouTube benchmarks
     const views = parseInt(videoData.statistics.viewCount || '0');
     const likes = parseInt(videoData.statistics.likeCount || '0');
     const comments = parseInt(videoData.statistics.commentCount || '0');
     const engagementRate = views > 0 ? ((likes + comments) / views) * 100 : 0;
     
     let engagementScore = 0;
-    if (engagementRate > 5) engagementScore = 100;
-    else if (engagementRate > 3) engagementScore = 80;
-    else if (engagementRate > 2) engagementScore = 60;
-    else if (engagementRate > 1) engagementScore = 40;
-    else engagementScore = Math.min(20, engagementRate * 20);
     
-    // Optimization Score (combined metric)
-    const optimizationScore = Math.round((seoScore + engagementScore) / 2);
+    // Realistic engagement rate benchmarks for YouTube
+    if (engagementRate >= 8) {
+      engagementScore = 100; // Viral/exceptional content
+    } else if (engagementRate >= 6) {
+      engagementScore = 90; // Excellent engagement
+    } else if (engagementRate >= 4) {
+      engagementScore = 80; // Very good engagement
+    } else if (engagementRate >= 3) {
+      engagementScore = 70; // Good engagement
+    } else if (engagementRate >= 2) {
+      engagementScore = 60; // Above average engagement
+    } else if (engagementRate >= 1.5) {
+      engagementScore = 50; // Average engagement
+    } else if (engagementRate >= 1) {
+      engagementScore = 40; // Below average engagement
+    } else if (engagementRate >= 0.5) {
+      engagementScore = 25; // Poor engagement
+    } else {
+      engagementScore = 10; // Very poor engagement
+    }
+    
+    // Bonus points for consistent engagement patterns
+    const likeRatio = views > 0 ? (likes / views) * 100 : 0;
+    const commentRatio = views > 0 ? (comments / views) * 100 : 0;
+    
+    // Bonus for balanced engagement (not just likes or just comments)
+    if (likeRatio > 0.5 && commentRatio > 0.1) {
+      engagementScore = Math.min(100, engagementScore + 5);
+    }
+    
+    // Optimization Score calculation (weighted average)
+    // SEO is slightly more important for discoverability, but engagement drives the algorithm
+    const optimizationScore = Math.round((seoScore * 0.4) + (engagementScore * 0.6));
     
     return {
       seoScore: Math.min(100, Math.round(seoScore)),
@@ -485,6 +684,90 @@ const VideoAnalyzer: React.FC = () => {
     return { strengths, improvements, recommendations };
   };
 
+  const handleQuestionSelect = async (question: AnalyticsQuestion) => {
+    // Check if we have the necessary data
+    if (!videoData || !channelData || channelVideos.length === 0) {
+      // Add error message to conversation
+      const errorMessage = {
+        type: 'assistant' as const,
+        content: 'Please analyze a video first to get analytics results! Go to the Overview tab and enter a YouTube URL.',
+        timestamp: new Date()
+      };
+      setConversationHistory(prev => [...prev, errorMessage]);
+      setChatQuery('');
+      setShowDropdown(false);
+      return;
+    }
+
+    // Add user question to conversation
+    const userMessage = {
+      type: 'user' as const,
+      content: question.question,
+      timestamp: new Date()
+    };
+    setConversationHistory(prev => [...prev, userMessage]);
+
+    setCalculatingQuestion(question.id);
+    setChatQuery('');
+    setShowDropdown(false);
+    
+    try {
+      // Add a small delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      const calculator = new AnalyticsCalculator(videoData, channelData, channelVideos);
+      const result = calculator.calculateAnswer(question);
+      
+      setAnalyticsResults(prev => ({
+        ...prev,
+        [question.id]: result
+      }));
+
+      // Add assistant response to conversation
+      const assistantMessage = {
+        type: 'assistant' as const,
+        content: result.answer,
+        result: result,
+        timestamp: new Date()
+      };
+      setConversationHistory(prev => [...prev, assistantMessage]);
+      
+    } catch (error) {
+      console.error('Error calculating analytics:', error);
+      const errorMessage = {
+        type: 'assistant' as const,
+        content: 'Sorry, there was an error calculating this analytics question. Please try again.',
+        timestamp: new Date()
+      };
+      setConversationHistory(prev => [...prev, errorMessage]);
+    } finally {
+      setCalculatingQuestion(null);
+    }
+  };
+
+  const handleChatSubmit = () => {
+    if (!chatQuery.trim()) return;
+    
+    if (searchQuestions.length > 0) {
+      handleQuestionSelect(searchQuestions[0]);
+    } else {
+      // Add user message and no results found
+      const userMessage = {
+        type: 'user' as const,
+        content: chatQuery,
+        timestamp: new Date()
+      };
+      const assistantMessage = {
+        type: 'assistant' as const,
+        content: `I couldn't find any analytics questions matching "${chatQuery}". Try asking about video performance, engagement metrics, or upload patterns.`,
+        timestamp: new Date()
+      };
+      setConversationHistory(prev => [...prev, userMessage, assistantMessage]);
+      setChatQuery('');
+      setShowDropdown(false);
+    }
+  };
+
   const performAnalysis = async (videoData: any, channelData: any, channelVideos: ChannelVideo[]): Promise<VideoAnalysis> => {
     const postDate = moment(videoData.snippet.publishedAt);
     const contentAnalysis = analyzeContent(videoData);
@@ -527,9 +810,34 @@ const VideoAnalyzer: React.FC = () => {
     if (recentEngagement > olderEngagement * 1.1) engagementTrend = 'improving';
     else if (recentEngagement < olderEngagement * 0.9) engagementTrend = 'declining';
     
-    // Find best performing video
-    const bestVideo = channelVideos.length > 0 
-      ? channelVideos.reduce((best, video) => video.viewCount > best.viewCount ? video : best, channelVideos[0])
+    // Find best performing video from recent uploads (last 6 months from today)
+    const sixMonthsAgo = moment().subtract(6, 'months');
+    const recentBestVideos = channelVideos.filter(video => 
+      moment(video.publishedAt).isAfter(sixMonthsAgo)
+    );
+
+    // If no videos in last 6 months, expand to 12 months
+    const videosToConsider = recentBestVideos.length > 0 
+      ? recentBestVideos 
+      : channelVideos.filter(video => moment(video.publishedAt).isAfter(moment().subtract(12, 'months')));
+
+    // If still no videos, use the 10 most recent videos
+    const finalVideosToConsider = videosToConsider.length > 0 
+      ? videosToConsider 
+      : channelVideos.slice(0, 10);
+
+    const bestVideo = finalVideosToConsider.length > 0 
+      ? finalVideosToConsider.reduce((best, video) => {
+          // Consider both view count and engagement rate for "best" video
+          const currentEngagement = (video.likeCount + video.commentCount) / Math.max(video.viewCount, 1);
+          const bestEngagement = (best.likeCount + best.commentCount) / Math.max(best.viewCount, 1);
+          
+          // Prioritize videos with high views and good engagement
+          const currentScore = video.viewCount * (1 + currentEngagement * 100);
+          const bestScore = best.viewCount * (1 + bestEngagement * 100);
+          
+          return currentScore > bestScore ? video : best;
+        }, finalVideosToConsider[0])
       : null;
     
     // Calculate recent upload rate (last 30 days)
@@ -550,10 +858,15 @@ const VideoAnalyzer: React.FC = () => {
       bestPerformingVideo: bestVideo ? {
         title: bestVideo.title,
         views: bestVideo.viewCount,
-        url: `https://youtube.com/watch?v=${bestVideo.id}`
+        url: `https://youtube.com/watch?v=${bestVideo.id}`,
+        publishedAt: bestVideo.publishedAt,
+        daysAgo: moment().diff(moment(bestVideo.publishedAt), 'days')
       } : null,
       recentUploadRate,
-      subscriberToViewRatio: totalChannelViews / Math.max(parseInt(channelData.statistics.subscriberCount || '1'), 1)
+      subscriberToViewRatio: totalChannelViews / Math.max(parseInt(channelData.statistics.subscriberCount || '1'), 1),
+      bestVideoTimeframe: recentBestVideos.length > 0 ? 'last 6 months' : 
+                         videosToConsider.length > 0 ? 'last 12 months' : 
+                         'recent uploads'
     };
     
     const insights = generateInsights(videoData, contentAnalysis, scores, channelMetrics);
@@ -613,6 +926,9 @@ const VideoAnalyzer: React.FC = () => {
     setIsLoading(true);
     setShowResults(false);
     setLoadingStage('Fetching video data...');
+    
+    // Clear conversation history when analyzing new video
+    setConversationHistory([]);
 
     try {
       const video = await fetchVideoData(targetId);
@@ -629,6 +945,15 @@ const VideoAnalyzer: React.FC = () => {
       const analysis = await performAnalysis(video, channel, videos);
       setAnalysisResults(analysis);
       setShowResults(true);
+      
+      // Add welcome message to conversation
+      const welcomeMessage = {
+        type: 'assistant' as const,
+        content: `Hi! I've analyzed "${video.snippet.title}" and I'm ready to answer your analytics questions. What would you like to know about this video's performance?`,
+        timestamp: new Date()
+      };
+      setConversationHistory([welcomeMessage]);
+      
     } catch (error) {
       console.error('Error:', error);
       alert(`An error occurred while analyzing the video: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -947,12 +1272,27 @@ const VideoAnalyzer: React.FC = () => {
           <S.DetailSection>
             <S.DetailTitle>
               <i className="bx bx-trophy"></i>
-              Best Performing Recent Video
+              Best Performing Video ({analysisResults.channelMetrics.bestVideoTimeframe})
             </S.DetailTitle>
             <S.BestVideoCard>
               <S.BestVideoTitle>{analysisResults.channelMetrics.bestPerformingVideo.title}</S.BestVideoTitle>
               <S.BestVideoStats>
-                <span><i className="bx bx-show"></i> {analysisResults.channelMetrics.bestPerformingVideo.views.toLocaleString()} views</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <span>
+                    <i className="bx bx-show"></i> 
+                    {analysisResults.channelMetrics.bestPerformingVideo.views.toLocaleString()} views
+                  </span>
+                  <span style={{ 
+                    fontSize: '0.85rem', 
+                    color: 'rgba(255,255,255,0.7)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}>
+                    <i className="bx bx-calendar"></i> 
+                    {analysisResults.channelMetrics.bestPerformingVideo.daysAgo} days ago
+                  </span>
+                </div>
                 <S.WatchButton 
                   onClick={() => window.open(analysisResults.channelMetrics.bestPerformingVideo?.url, '_blank')}
                 >
@@ -1061,6 +1401,300 @@ const VideoAnalyzer: React.FC = () => {
             ))}
           </S.InsightSection>
         )}
+      </S.TabContent>
+    );
+  };
+
+  const renderAskTab = () => {
+    return (
+      <S.TabContent>
+        <S.AskSection>
+          <S.ChatbotContainer>
+            <S.ChatbotHeader>
+              <S.ChatbotAvatar>
+                <i className="bx bx-diamond"></i>
+              </S.ChatbotAvatar>
+              <S.ChatbotHeaderText>
+                <S.ChatbotTitle>Video Analytics Assistant</S.ChatbotTitle>
+                <S.ChatbotSubtitle>
+                  Ask me anything about this video's performance, channel metrics, or optimization opportunities
+                </S.ChatbotSubtitle>
+              </S.ChatbotHeaderText>
+              <S.VideoTypeToggle>
+                <S.VideoTypeOption
+                  isActive={askVideoType === 'long-form'}
+                  onClick={() => setAskVideoType('long-form')}
+                >
+                  <i className="bx bx-video"></i>
+                  Long-form
+                </S.VideoTypeOption>
+                <S.VideoTypeOption
+                  isActive={askVideoType === 'shorts'}
+                  onClick={() => setAskVideoType('shorts')}
+                >
+                  <i className="bx bx-mobile"></i>
+                  Shorts
+                </S.VideoTypeOption>
+              </S.VideoTypeToggle>
+            </S.ChatbotHeader>
+
+            <S.ConversationArea>
+              {conversationHistory.length === 0 ? (
+                <S.WelcomeMessage>
+                  <S.WelcomeIcon>
+                    <i className="bx bx-chat"></i>
+                  </S.WelcomeIcon>
+                  <S.WelcomeText>
+                    {videoData ? (
+                      <>
+                        <S.WelcomeTitle>Ready to analyze!</S.WelcomeTitle>
+                        <S.WelcomeDescription>
+                          I have all the data for "{videoData.snippet?.title}". Ask me anything about its performance, 
+                          engagement, SEO, or optimization opportunities.
+                        </S.WelcomeDescription>
+                      </>
+                    ) : (
+                      <>
+                        <S.WelcomeTitle>Welcome to Analytics Assistant!</S.WelcomeTitle>
+                        <S.WelcomeDescription>
+                          First, analyze a video using the search bar above. Then come back here to ask detailed 
+                          questions about performance, engagement metrics, and optimization strategies.
+                        </S.WelcomeDescription>
+                      </>
+                    )}
+                  </S.WelcomeText>
+                  {videoData && (
+                    <S.SuggestedQuestions>
+                      <S.SuggestedTitle>Try asking about:</S.SuggestedTitle>
+                      <S.SuggestedList>
+                        <S.SuggestedItem onClick={() => setChatQuery("average engagement rate")}>
+                          <i className="bx bx-heart"></i>
+                          Average engagement rate
+                        </S.SuggestedItem>
+                        <S.SuggestedItem onClick={() => setChatQuery("upload frequency")}>
+                          <i className="bx bx-calendar"></i>
+                          Upload frequency patterns
+                        </S.SuggestedItem>
+                        <S.SuggestedItem onClick={() => setChatQuery("video length performance")}>
+                          <i className="bx bx-time"></i>
+                          Video length analysis
+                        </S.SuggestedItem>
+                        <S.SuggestedItem onClick={() => setChatQuery("view milestones")}>
+                          <i className="bx bx-trophy"></i>
+                          View milestone performance
+                        </S.SuggestedItem>
+                      </S.SuggestedList>
+                    </S.SuggestedQuestions>
+                  )}
+                </S.WelcomeMessage>
+              ) : (
+                <S.MessagesContainer>
+                  {conversationHistory.map((message, index) => (
+                    <S.MessageGroup key={index} isUser={message.type === 'user'}>
+                      <S.MessageAvatar isUser={message.type === 'user'}>
+                        {message.type === 'user' ? (
+                          <i className="bx bx-user"></i>
+                        ) : (
+                          <i className="bx bx-diamond"></i>
+                        )}
+                      </S.MessageAvatar>
+                      <S.MessageBubble isUser={message.type === 'user'}>
+                        <S.MessageContent>{message.content}</S.MessageContent>
+                        {message.result && (
+                          <S.ResultPreview onClick={() => setSelectedResult(message.result!)}>
+                            <S.ResultPreviewIcon>
+                              <i className="bx bx-chart"></i>
+                            </S.ResultPreviewIcon>
+                            <S.ResultPreviewText>
+                              <S.ResultPreviewTitle>View detailed results</S.ResultPreviewTitle>
+                              <S.ResultPreviewSubtitle>
+                                {message.result.details.length} data points • {message.result.insights.length} insights
+                              </S.ResultPreviewSubtitle>
+                            </S.ResultPreviewText>
+                            <S.ResultPreviewArrow>
+                              <i className="bx bx-chevron-right"></i>
+                            </S.ResultPreviewArrow>
+                          </S.ResultPreview>
+                        )}
+                        <S.MessageTimestamp>
+                          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </S.MessageTimestamp>
+                      </S.MessageBubble>
+                    </S.MessageGroup>
+                  ))}
+                  {calculatingQuestion && (
+                    <S.MessageGroup isUser={false}>
+                      <S.MessageAvatar isUser={false}>
+                        <i className="bx bx-diamond"></i>
+                      </S.MessageAvatar>
+                      <S.MessageBubble isUser={false}>
+                        <S.TypingIndicator>
+                          <S.TypingDot style={{ animationDelay: '0ms' }} />
+                          <S.TypingDot style={{ animationDelay: '200ms' }} />
+                          <S.TypingDot style={{ animationDelay: '400ms' }} />
+                          Analyzing data...
+                        </S.TypingIndicator>
+                      </S.MessageBubble>
+                    </S.MessageGroup>
+                  )}
+                </S.MessagesContainer>
+              )}
+            </S.ConversationArea>
+
+            <S.ChatInputContainer>
+              <S.ChatInputWrapper>
+                <S.ChatInput
+                  type="text"
+                  value={chatQuery}
+                  onChange={(e) => {
+                    setChatQuery(e.target.value);
+                    setShowDropdown(e.target.value.length > 0);
+                    setSelectedDropdownIndex(-1);
+                  }}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleChatSubmit();
+                    }
+                  }}
+                  placeholder="Ask about video performance, engagement, optimization..."
+                  disabled={calculatingQuestion !== null}
+                />
+                <S.ChatSendButton 
+                  onClick={handleChatSubmit}
+                  disabled={!chatQuery.trim() || calculatingQuestion !== null}
+                >
+                  {calculatingQuestion ? (
+                    <i className="bx bx-loader-alt bx-spin"></i>
+                  ) : (
+                    <i className="bx bx-send"></i>
+                  )}
+                </S.ChatSendButton>
+              </S.ChatInputWrapper>
+
+              {showDropdown && searchQuestions.length > 0 && (
+                <S.SuggestionsDropdown>
+                  <S.DropdownHeader>
+                    <i className="bx bx-lightbulb"></i>
+                    Suggested questions:
+                  </S.DropdownHeader>
+                  {searchQuestions.map((question, index) => (
+                    <S.DropdownItem
+                      key={question.id}
+                      isSelected={index === selectedDropdownIndex}
+                      onClick={() => handleQuestionSelect(question)}
+                    >
+                      <S.DropdownItemContent>
+                        <S.DropdownItemTitle>{question.question}</S.DropdownItemTitle>
+                        <S.DropdownItemMeta>
+                          <S.DropdownItemCategory>{question.category}</S.DropdownItemCategory>
+                          <S.DropdownItemComplexity complexity={question.complexity}>
+                            {question.complexity}
+                          </S.DropdownItemComplexity>
+                        </S.DropdownItemMeta>
+                      </S.DropdownItemContent>
+                      <S.DropdownItemIcon>
+                        <i className="bx bx-chevron-right"></i>
+                      </S.DropdownItemIcon>
+                    </S.DropdownItem>
+                  ))}
+                </S.SuggestionsDropdown>
+              )}
+            </S.ChatInputContainer>
+          </S.ChatbotContainer>
+
+          {selectedResult && (
+            <S.ResultsModal>
+              <S.ResultsModalBackdrop onClick={() => setSelectedResult(null)} />
+              <S.ResultsModalContent>
+                <S.ResultsHeader>
+                  <S.ResultsTitle>
+                    <i className="bx bx-chart"></i>
+                    Analytics Result
+                  </S.ResultsTitle>
+                  <S.ResultsCloseButton onClick={() => setSelectedResult(null)}>
+                    <i className="bx bx-x"></i>
+                  </S.ResultsCloseButton>
+                </S.ResultsHeader>
+
+                <S.ResultsBody>
+                  <S.QuestionDisplay>
+                    <S.QuestionLabel>Question</S.QuestionLabel>
+                    <S.QuestionText>{selectedResult.question}</S.QuestionText>
+                  </S.QuestionDisplay>
+
+                  <S.AnswerDisplay>
+                    <S.AnswerLabel>Answer</S.AnswerLabel>
+                    <S.AnswerValue>{selectedResult.answer}</S.AnswerValue>
+                  </S.AnswerDisplay>
+
+                  {selectedResult.details.length > 0 && (
+                    <S.DetailsSection>
+                      <S.DetailsTitle>
+                        <i className="bx bx-info-circle"></i>
+                        Details
+                      </S.DetailsTitle>
+                      <S.DetailsList>
+                        {selectedResult.details.map((detail, index) => (
+                          <S.DetailItem key={index}>
+                            <i className="bx bx-dot-circle"></i>
+                            {detail}
+                          </S.DetailItem>
+                        ))}
+                      </S.DetailsList>
+                    </S.DetailsSection>
+                  )}
+
+                  {selectedResult.insights.length > 0 && (
+                    <S.InsightsSection>
+                      <S.InsightsTitle>
+                        <i className="bx bx-bulb"></i>
+                        Insights & Recommendations
+                      </S.InsightsTitle>
+                      <S.InsightsList>
+                        {selectedResult.insights.map((insight, index) => (
+                          <S.ResultsInsightItem key={index}>
+                            <i className="bx bx-right-arrow-alt"></i>
+                            {insight}
+                          </S.ResultsInsightItem>
+                        ))}
+                      </S.InsightsList>
+                    </S.InsightsSection>
+                  )}
+
+                  {selectedResult.charts && (
+                    <S.ChartsSection>
+                      <S.ChartsTitle>
+                        <i className="bx bx-bar-chart-alt-2"></i>
+                        Visual Data
+                      </S.ChartsTitle>
+                      <S.SimpleChart>
+                        {selectedResult.charts.labels.map((label, index) => (
+                          <S.ChartItem key={index}>
+                            <S.ChartLabel>{label}</S.ChartLabel>
+                            <S.ChartBar>
+                              <S.ChartBarFill 
+                                width={selectedResult.charts ? (selectedResult.charts.data[index] / Math.max(...selectedResult.charts.data)) * 100 : 0}
+                              />
+                            </S.ChartBar>
+                            <S.ChartValue>{selectedResult.charts?.data[index] || 0}</S.ChartValue>
+                          </S.ChartItem>
+                        ))}
+                      </S.SimpleChart>
+                    </S.ChartsSection>
+                  )}
+                </S.ResultsBody>
+
+                <S.ResultsFooter>
+                  <S.ResultsNote>
+                    <i className="bx bx-info-circle"></i>
+                    Results calculated from {channelVideos.length} most recent videos using YouTube API data
+                  </S.ResultsNote>
+                </S.ResultsFooter>
+              </S.ResultsModalContent>
+            </S.ResultsModal>
+          )}
+        </S.AskSection>
       </S.TabContent>
     );
   };
@@ -1222,101 +1856,131 @@ const VideoAnalyzer: React.FC = () => {
           </S.EducationalSection>
         )}
 
-        <S.ResultsContainer className={showResults ? 'visible' : ''}>
+        <S.ResultsContainer className={showResults || activeTab === 'ask' ? 'visible' : ''}>
           {isLoading ? (
             <S.LoadingContainer>
               <i className='bx bx-loader-alt bx-spin'></i>
               <p>{loadingStage || 'Analyzing video...'}</p>
             </S.LoadingContainer>
-          ) : videoData && channelData && analysisResults ? (
+          ) : (activeTab === 'ask' || (videoData && channelData && analysisResults)) ? (
             <>
-              <S.VideoInfo>
-                <S.ThumbnailContainer>
-                  <S.Thumbnail
-                    src={videoData.snippet.thumbnails.maxres?.url || videoData.snippet.thumbnails.high.url}
-                    alt={videoData.snippet.title}
-                  />
-                  <S.ThumbnailOverlay>
-                    <S.DownloadThumbnailButton 
-                      onClick={() => downloadThumbnail(
-                        videoData.snippet.thumbnails.maxres?.url || videoData.snippet.thumbnails.high.url,
-                        `${videoData.snippet.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_thumbnail.jpg`
-                      )}
-                    >
-                      <i className="bx bx-download"></i>
-                      Download Thumbnail
-                    </S.DownloadThumbnailButton>
-                  </S.ThumbnailOverlay>
-                  <S.VideoDuration>
-                    {analysisResults.technicalDetails.durationFormatted}
-                  </S.VideoDuration>
-                </S.ThumbnailContainer>
-                
-                <S.VideoDetails>
-                  <S.VideoTitle>{videoData.snippet.title}</S.VideoTitle>
-                  <S.ChannelInfo>
-                    <S.ChannelLogo
-                      src={channelData.snippet.thumbnails.default.url}
-                      alt={channelData.snippet.title}
+              {(videoData && channelData && analysisResults) && (
+                <S.VideoInfo>
+                  <S.ThumbnailContainer>
+                    <S.Thumbnail
+                      src={videoData.snippet.thumbnails.maxres?.url || videoData.snippet.thumbnails.high.url}
+                      alt={videoData.snippet.title}
                     />
-                    <S.ChannelText>
-                      <S.ChannelName>{channelData.snippet.title}</S.ChannelName>
-                      <S.SubscriberCount>
-                        {parseInt(channelData.statistics.subscriberCount).toLocaleString()} subscribers
-                      </S.SubscriberCount>
-                    </S.ChannelText>
-                  </S.ChannelInfo>
-                  <S.ViewVideoButton 
-                    onClick={() => window.open(`https://youtube.com/watch?v=${videoId || extractVideoId(videoUrl)}`, '_blank')}
-                  >
-                    <i className="bx bx-play"></i>
-                    Watch on YouTube
-                  </S.ViewVideoButton>
-                </S.VideoDetails>
-              </S.VideoInfo>
+<S.ThumbnailOverlay>
+  <S.DownloadThumbnailButton 
+    onClick={() => {
+      // Create a cleaner filename
+      const cleanTitle = videoData.snippet.title
+        .replace(/[^\w\s-]/g, '') // Remove special chars except word chars, spaces, and hyphens
+        .replace(/\s+/g, '_') // Replace spaces with single underscore
+        .replace(/_+/g, '_') // Replace multiple underscores with single
+        .replace(/^_|_$/g, '') // Remove leading/trailing underscores
+        .toLowerCase()
+        .substring(0, 50); // Limit to 50 characters
+      
+      downloadThumbnail(
+        videoData.snippet.thumbnails.maxres?.url || videoData.snippet.thumbnails.high.url,
+        `${cleanTitle || 'youtube_video'}_thumbnail.jpg`
+      );
+    }}
+  >
+    <i className="bx bx-download"></i>
+    Download Thumbnail
+  </S.DownloadThumbnailButton>
+</S.ThumbnailOverlay>
+                    <S.VideoDuration>
+                      {analysisResults.technicalDetails.durationFormatted}
+                    </S.VideoDuration>
+                  </S.ThumbnailContainer>
+                  
+                  <S.VideoDetails>
+                    <S.VideoTitle>{videoData.snippet.title}</S.VideoTitle>
+                    <S.ChannelInfo>
+                      <S.ChannelLogo
+                        src={channelData.snippet.thumbnails.default.url}
+                        alt={channelData.snippet.title}
+                      />
+                      <S.ChannelText>
+                        <S.ChannelName>{channelData.snippet.title}</S.ChannelName>
+                        <S.SubscriberCount>
+                          {parseInt(channelData.statistics.subscriberCount).toLocaleString()} subscribers
+                        </S.SubscriberCount>
+                      </S.ChannelText>
+                    </S.ChannelInfo>
+                    <S.ViewVideoButton 
+                      onClick={() => window.open(`https://youtube.com/watch?v=${videoId || extractVideoId(videoUrl)}`, '_blank')}
+                    >
+                      <i className="bx bx-play"></i>
+                      Watch on YouTube
+                    </S.ViewVideoButton>
+                  </S.VideoDetails>
+                </S.VideoInfo>
+              )}
 
               <S.TabNavigation>
                 <S.TabButton
                   isActive={activeTab === 'overview'}
                   onClick={() => setActiveTab('overview')}
+                  disabled={!videoData || !channelData || !analysisResults}
                 >
                   <i className="bx bx-chart"></i>
-                  Overview
+                  <span>Overview</span>
                 </S.TabButton>
                 <S.TabButton
                   isActive={activeTab === 'details'}
                   onClick={() => setActiveTab('details')}
+                  disabled={!videoData || !channelData || !analysisResults}
                 >
                   <i className="bx bx-info-circle"></i>
-                  Details
+                  <span>Details</span>
                 </S.TabButton>
                 <S.TabButton
                   isActive={activeTab === 'channel'}
                   onClick={() => setActiveTab('channel')}
+                  disabled={!videoData || !channelData || !analysisResults}
                 >
                   <i className="bx bx-user"></i>
-                  Channel
+                  <span>Channel</span>
                 </S.TabButton>
                 <S.TabButton
                   isActive={activeTab === 'insights'}
                   onClick={() => setActiveTab('insights')}
+                  disabled={!videoData || !channelData || !analysisResults}
                 >
                   <i className="bx bx-bulb"></i>
-                  Insights
+                  <span>Insights</span>
                 </S.TabButton>
+                {/* Only show Ask tab after video analysis */}
+                {(videoData && channelData && analysisResults) && (
+                  <S.TabButton
+                    isActive={activeTab === 'ask'}
+                    onClick={() => setActiveTab('ask')}
+                  >
+                    <i className="bx bx-diamond"></i>
+                    <span>Ask</span>
+                  </S.TabButton>
+                )}
               </S.TabNavigation>
 
               {activeTab === 'overview' && renderOverviewTab()}
               {activeTab === 'details' && renderDetailsTab()}
               {activeTab === 'channel' && renderChannelTab()}
               {activeTab === 'insights' && renderInsightsTab()}
+              {activeTab === 'ask' && renderAskTab()}
 
-              <S.BottomAdContainer>
-                <AdSense 
-                  slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-                  format="horizontal"
-                />
-              </S.BottomAdContainer>
+              {(videoData && channelData && analysisResults) && (
+                <S.BottomAdContainer>
+                  <AdSense 
+                    slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
+                    format="horizontal"
+                  />
+                </S.BottomAdContainer>
+              )}
             </>
           ) : null}
         </S.ResultsContainer>

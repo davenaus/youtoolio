@@ -284,11 +284,11 @@ export const PressKit: React.FC = () => {
               <div className="fact-label">Free Tools</div>
             </FactCard>
             <FactCard>
-              <div className="fact-number">1M+</div>
+              <div className="fact-number">50k+</div>
               <div className="fact-label">Videos Analyzed</div>
             </FactCard>
             <FactCard>
-              <div className="fact-number">50K+</div>
+              <div className="fact-number">1K+</div>
               <div className="fact-label">Creators Helped</div>
             </FactCard>
           </FactSheet>

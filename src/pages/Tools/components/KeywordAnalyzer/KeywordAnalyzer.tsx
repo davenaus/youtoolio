@@ -16,6 +16,7 @@ interface YouTubeVideo {
   channelId: string;
   duration: string;
   tags: string[];
+  relevanceScore?: number;
 }
 
 interface UploadTimeData {
@@ -102,6 +103,67 @@ export const KeywordAnalyzer: React.FC = () => {
     localStorage.setItem('keyword_history', JSON.stringify(newHistory));
   };
 
+  const calculateRelevanceScore = (video: YouTubeVideo, keyword: string): number => {
+    let score = 0;
+    const keywordLower = keyword.toLowerCase();
+    const titleLower = video.title.toLowerCase();
+    const descriptionLower = video.description.toLowerCase();
+    const tagsLower = video.tags.map(tag => tag.toLowerCase());
+
+    // Exact keyword match in title (highest weight)
+    if (titleLower.includes(keywordLower)) {
+      score += 40;
+      // Bonus for keyword at the beginning of title
+      if (titleLower.startsWith(keywordLower)) {
+        score += 20;
+      }
+    }
+
+    // Partial keyword matches in title
+    const keywordWords = keywordLower.split(' ');
+    keywordWords.forEach(word => {
+      if (word.length > 2 && titleLower.includes(word)) {
+        score += 10;
+      }
+    });
+
+    // Keyword in description
+    if (descriptionLower.includes(keywordLower)) {
+      score += 15;
+    }
+
+    // Keyword in tags
+    tagsLower.forEach(tag => {
+      if (tag.includes(keywordLower)) {
+        score += 15;
+      }
+      keywordWords.forEach(word => {
+        if (word.length > 2 && tag.includes(word)) {
+          score += 5;
+        }
+      });
+    });
+
+    // Performance indicators
+    const engagementRate = video.likes / Math.max(1, video.views);
+    if (engagementRate > 0.01) score += 10; // Good engagement
+    if (engagementRate > 0.03) score += 10; // Excellent engagement
+
+    // View threshold bonus
+    if (video.views > 10000) score += 5;
+    if (video.views > 100000) score += 10;
+    if (video.views > 1000000) score += 15;
+
+    // Recency bonus (within last 6 months)
+    const videoAge = Date.now() - new Date(video.publishedAt).getTime();
+    const sixMonthsInMs = 6 * 30 * 24 * 60 * 60 * 1000;
+    if (videoAge < sixMonthsInMs) {
+      score += 10;
+    }
+
+    return Math.min(100, score);
+  };
+
   const fetchYouTubeData = async (searchTerm: string): Promise<YouTubeVideo[]> => {
     const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_2;
     
@@ -110,13 +172,15 @@ export const KeywordAnalyzer: React.FC = () => {
     }
 
     try {
-      // Search for videos with multiple queries to get broader data
+      // Enhanced search queries for better relevance
       const searchQueries = [
         searchTerm,
+        `"${searchTerm}"`, // Exact phrase match
         `${searchTerm} tutorial`,
         `${searchTerm} guide`,
         `how to ${searchTerm}`,
-        `${searchTerm} tips`
+        `${searchTerm} tips`,
+        `${searchTerm} review`
       ];
 
       let allVideos: YouTubeVideo[] = [];
@@ -126,7 +190,7 @@ export const KeywordAnalyzer: React.FC = () => {
           const searchResponse = await fetch(
             `https://www.googleapis.com/youtube/v3/search?` +
             `part=snippet&type=video&q=${encodeURIComponent(query)}&` +
-            `maxResults=20&order=relevance&key=${API_KEY}&publishedAfter=${new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()}`
+            `maxResults=25&order=relevance&key=${API_KEY}&publishedAfter=${new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()}`
           );
 
           if (!searchResponse.ok) continue;
@@ -148,10 +212,10 @@ export const KeywordAnalyzer: React.FC = () => {
             const videos: YouTubeVideo[] = searchData.items.map((searchItem: any) => {
               const statsItem = statsData.items.find((stat: any) => stat.id === searchItem.id.videoId);
               
-              return {
+              const video: YouTubeVideo = {
                 id: searchItem.id.videoId,
                 title: searchItem.snippet.title,
-                description: searchItem.snippet.description,
+                description: searchItem.snippet.description || '',
                 thumbnail: searchItem.snippet.thumbnails.medium?.url || searchItem.snippet.thumbnails.default.url,
                 views: parseInt(statsItem?.statistics?.viewCount || '0'),
                 likes: parseInt(statsItem?.statistics?.likeCount || '0'),
@@ -161,7 +225,19 @@ export const KeywordAnalyzer: React.FC = () => {
                 duration: statsItem?.contentDetails?.duration || 'PT0S',
                 tags: statsItem?.snippet?.tags || []
               };
-            }).filter((video: YouTubeVideo) => video.views > 100); // Filter minimum views
+
+              // Calculate relevance score
+              video.relevanceScore = calculateRelevanceScore(video, searchTerm);
+              
+              return video;
+            }).filter((video: YouTubeVideo) => {
+              // Enhanced filtering criteria
+              return video.views >= 1000 && // Minimum 1K views
+                     video.relevanceScore! >= 20 && // Minimum relevance score
+                     video.title.length > 10 && // Avoid spam titles
+                     !video.title.toLowerCase().includes('live stream') && // Exclude live streams
+                     !video.title.toLowerCase().includes('compilation'); // Exclude compilations
+            });
 
             allVideos = [...allVideos, ...videos];
           }
@@ -171,13 +247,17 @@ export const KeywordAnalyzer: React.FC = () => {
         }
       }
 
-      // Remove duplicates and get top performers
+      // Remove duplicates and sort by relevance score combined with performance
       const uniqueVideos = allVideos.filter((video, index, self) => 
         index === self.findIndex(v => v.id === video.id)
       );
 
-      // Sort by views and take top 100
-      return uniqueVideos.sort((a, b) => b.views - a.views).slice(0, 100);
+      // Enhanced sorting algorithm: combine relevance and performance
+      return uniqueVideos.sort((a, b) => {
+        const scoreA = (a.relevanceScore || 0) * 0.6 + Math.log10(a.views + 1) * 0.4;
+        const scoreB = (b.relevanceScore || 0) * 0.6 + Math.log10(b.views + 1) * 0.4;
+        return scoreB - scoreA;
+      }).slice(0, 80); // Take top 80 most relevant videos
 
     } catch (error) {
       console.error('YouTube API Error:', error);
@@ -241,57 +321,42 @@ export const KeywordAnalyzer: React.FC = () => {
     const totalLikes = videos.reduce((sum, video) => sum + video.likes, 0);
     const averageViews = totalViews / videos.length;
     const averageLikes = totalLikes / videos.length;
+    const averageRelevance = videos.reduce((sum, video) => sum + (video.relevanceScore || 0), 0) / videos.length;
 
     // 1. Content Volume Factor (0-25 points)
-    // Based on number of quality videos for the keyword
-    const volumeFactor = Math.min(25, (videos.length / 4) * 25);
+    const volumeFactor = Math.min(25, (videos.length / 6) * 25);
 
     // 2. Performance Factor (0-30 points)
-    // Based on average views and engagement
     const performanceLog = Math.log10(Math.max(1, averageViews));
     const performanceFactor = Math.min(30, (performanceLog / 7) * 30);
 
-    // 3. Growth Potential Factor (0-25 points)
-    // Based on recent videos performance vs older ones
-    const recentVideos = videos.filter(v => 
-      new Date(v.publishedAt) > new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
-    );
-    const recentAvgViews = recentVideos.length > 0 ? 
-      recentVideos.reduce((sum, v) => sum + v.views, 0) / recentVideos.length : 0;
-    const growthRatio = recentAvgViews / Math.max(1, averageViews);
-    const growthFactor = Math.min(25, growthRatio * 20);
+    // 3. Relevance Factor (0-25 points) - NEW
+    const relevanceFactor = Math.min(25, (averageRelevance / 100) * 25);
 
     // 4. Engagement Quality Factor (0-20 points)
-    // Based on likes-to-views ratio
     const engagementRate = averageLikes / Math.max(1, averageViews);
     const engagementFactor = Math.min(20, engagementRate * 2000);
 
-    const tagScore = Math.round(volumeFactor + performanceFactor + growthFactor + engagementFactor);
+    const tagScore = Math.round(volumeFactor + performanceFactor + relevanceFactor + engagementFactor);
     return Math.min(100, Math.max(1, tagScore));
   };
 
   const calculateSearchVolume = (videos: YouTubeVideo[]): { label: 'Low' | 'Moderate' | 'High' | 'Very High'; score: number } => {
     const totalViews = videos.reduce((sum, video) => sum + video.views, 0);
     const averageViews = totalViews / videos.length;
+    const averageRelevance = videos.reduce((sum, video) => sum + (video.relevanceScore || 0), 0) / videos.length;
     
-    // More balanced scoring algorithm
-    // 1. Base score from video count (0-30 points)
-    const videoCountScore = Math.min(30, (videos.length / 100) * 30);
+    // Enhanced scoring with relevance consideration
+    const videoCountScore = Math.min(30, (videos.length / 80) * 30);
+    const viewsScore = Math.min(35, (Math.log10(Math.max(1, averageViews)) - 3) * 8);
+    const relevanceScore = Math.min(20, (averageRelevance / 100) * 20);
     
-    // 2. Average views score (0-40 points) - logarithmic scale
-    const viewsScore = Math.min(40, (Math.log10(Math.max(1, averageViews)) - 2) * 8);
-    
-    // 3. Recent activity bonus (0-20 points)
     const recentVideos = videos.filter(video => 
       new Date(video.publishedAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     );
-    const recentActivityScore = Math.min(20, (recentVideos.length / videos.length) * 20);
+    const recentActivityScore = Math.min(15, (recentVideos.length / videos.length) * 15);
     
-    // 4. Upload frequency score (0-10 points)
-    const uploadFrequencyScore = Math.min(10, (videos.length / 10) * 2);
-    
-    // Combine scores with realistic distribution
-    const rawScore = videoCountScore + viewsScore + recentActivityScore + uploadFrequencyScore;
+    const rawScore = videoCountScore + viewsScore + relevanceScore + recentActivityScore;
     const volumeScore = Math.max(1, Math.min(100, rawScore));
     
     let label: 'Low' | 'Moderate' | 'High' | 'Very High';
@@ -313,11 +378,9 @@ export const KeywordAnalyzer: React.FC = () => {
     const dominantChannels = Object.values(channelCount).filter(count => count > 2).length;
     const dominanceScore = (dominantChannels / videos.length) * 30;
     
-    // Keyword optimization
-    const optimizedTitles = videos.filter(video => 
-      video.title.toLowerCase().includes(keyword.toLowerCase())
-    ).length;
-    const optimizationScore = (optimizedTitles / videos.length) * 40;
+    // Keyword optimization (enhanced)
+    const highRelevanceVideos = videos.filter(video => (video.relevanceScore || 0) > 50).length;
+    const optimizationScore = (highRelevanceVideos / videos.length) * 40;
     
     // Recent competition
     const recentUploads = videos.filter(video => 
@@ -355,7 +418,7 @@ export const KeywordAnalyzer: React.FC = () => {
       throw new Error('No video data available for analysis');
     }
 
-    // Calculate main metrics using rapidtags.io methodology
+    // Calculate main metrics using enhanced algorithm
     const tagScore = calculateTagScore(videos, keyword);
     const searchVolume = calculateSearchVolume(videos);
     const competitiveness = calculateCompetitiveness(videos, keyword);
@@ -372,13 +435,13 @@ export const KeywordAnalyzer: React.FC = () => {
     // Engagement rate calculation
     const engagementRate = Number(((averageLikes / Math.max(1, averageViews)) * 100).toFixed(2));
     
-    // Views per day calculation (similar to rapidtags.io)
+    // Views per day calculation - FIXED to whole number
     const avgDaysOld = videos.reduce((sum, video) => {
       const daysSinceUpload = (Date.now() - new Date(video.publishedAt).getTime()) / (1000 * 60 * 60 * 24);
       return sum + daysSinceUpload;
     }, 0) / videos.length;
     
-    const viewsPerDay = Number((averageViews / Math.max(1, avgDaysOld)).toFixed(12));
+    const viewsPerDay = Math.round(averageViews / Math.max(1, avgDaysOld)); // FIXED: Round to whole number
     
     // Upload time analysis
     const uploadTimeDistribution = analyzeUploadTimes(videos);
@@ -462,12 +525,12 @@ export const KeywordAnalyzer: React.FC = () => {
       competitivenessScore: competitiveness.score,
       trend,
       relatedKeywords,
-      topVideos: videos.slice(0, 10),
+      topVideos: videos.slice(0, 12), // Show top 12 most relevant videos
       uploadTimeDistribution,
       insights: {
         averageViews,
         averageViewCount: formatViewCount(averageViews),
-        viewsPerDay,
+        viewsPerDay, // Now a whole number
         averageLength,
         bestUploadDays,
         bestUploadTimes,
@@ -585,22 +648,19 @@ export const KeywordAnalyzer: React.FC = () => {
 
   // Upload Time Distribution Chart Component
   const UploadTimeChart: React.FC<{ data: UploadTimeData[] }> = ({ data }) => {
-    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 1700);
     const [isIntegrated, setIsIntegrated] = useState(false);
     
     useEffect(() => {
-      const handleResize = () => setIsMobile(window.innerWidth <= 768);
+      const handleResize = () => setIsMobile(window.innerWidth <= 1700);
       window.addEventListener('resize', handleResize);
       return () => window.removeEventListener('resize', handleResize);
     }, []);
     
     useEffect(() => {
       // Check if this chart is inside an integrated container
-      const checkIntegrated = () => {
-        const chartElement = document.querySelector('.integrated');
-        setIsIntegrated(!!chartElement);
-      };
-      checkIntegrated();
+      const chartElement = document.querySelector('.integrated');
+      setIsIntegrated(!!chartElement);
     }, []);
     
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -1042,7 +1102,7 @@ export const KeywordAnalyzer: React.FC = () => {
 
               <S.MetricCard>
                 <S.MetricLabel>Views Per Day (avg)</S.MetricLabel>
-                <S.DetailedMetricValue>{results.insights.viewsPerDay.toFixed(12)}</S.DetailedMetricValue>
+                <S.DetailedMetricValue>{results.insights.viewsPerDay.toLocaleString()}</S.DetailedMetricValue>
               </S.MetricCard>
 
               <S.MetricCard>

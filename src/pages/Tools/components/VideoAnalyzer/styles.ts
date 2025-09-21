@@ -22,6 +22,22 @@ const pulseGlow = keyframes`
   50% { box-shadow: 0 0 40px rgba(229, 72, 72, 0.8); }
 `;
 
+const typing = keyframes`
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-10px); }
+`;
+
+const slideInFromBottom = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
 // Educational Content Styled Components - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL
 export const EducationalSection = styled.div`
   margin-bottom: 3rem;
@@ -140,7 +156,7 @@ export const AdSidebar = styled.div<{ position: 'left' | 'right' }>`
   width: 160px;
   z-index: 10;
   
-  @media (max-width: 1275px) {
+  @media (max-width: 1700px) {
     display: none;
   }
 `;
@@ -151,6 +167,10 @@ export const MainContainer = styled.div`
   margin: 0 auto;
   padding: 2rem;
   position: relative;
+  
+  @media (max-width: 1700px) {
+    max-width: 900px;
+  }
   
   @media (max-width: 768px) {
     padding: 1rem;
@@ -523,14 +543,20 @@ export const TabNavigation = styled.div`
   }
 `;
 
-export const TabButton = styled.button<{ isActive: boolean }>`
+export const TabButton = styled.button<{ isActive: boolean; disabled?: boolean }>`
   background: transparent;
-  color: ${({ isActive, theme }) => isActive ? theme.colors.red3 : theme.colors.text.muted};
+  color: ${({ isActive, disabled, theme }) => 
+    disabled ? theme.colors.text.muted + '60' :
+    isActive ? theme.colors.red3 : theme.colors.text.muted
+  };
   border: none;
-  border-bottom: 3px solid ${({ isActive, theme }) => isActive ? theme.colors.red3 : 'transparent'};
+  border-bottom: 3px solid ${({ isActive, disabled, theme }) => 
+    disabled ? 'transparent' :
+    isActive ? theme.colors.red3 : 'transparent'
+  };
   padding: 1rem 1.5rem;
   margin-bottom: -2px;
-  cursor: pointer;
+  cursor: ${({ disabled }) => disabled ? 'not-allowed' : 'pointer'};
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -538,22 +564,44 @@ export const TabButton = styled.button<{ isActive: boolean }>`
   font-size: 0.95rem;
   font-weight: 600;
   transition: all 0.3s ease;
+  opacity: ${({ disabled }) => disabled ? 0.5 : 1};
   
-  &:hover {
+  &:hover:not(:disabled) {
     color: ${({ theme }) => theme.colors.text.primary};
     background: ${({ theme }) => theme.colors.dark3};
+  }
+  
+  &:disabled {
+    pointer-events: none;
   }
   
   i {
     font-size: 1.1rem;
   }
   
+  span {
+    display: inline;
+  }
+  
   @media (max-width: 768px) {
     flex: 1;
-    min-width: 120px;
+    min-width: 80px;
     justify-content: center;
-    padding: 0.75rem 1rem;
-    font-size: 0.9rem;
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+    
+    span {
+      display: none;
+    }
+    
+    i {
+      font-size: 1.3rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.625rem 0.25rem;
+    min-width: 60px;
   }
 `;
 
@@ -676,7 +724,7 @@ export const ScoreBar = styled.div`
   width: 100%;
   height: 10px;
   background: ${({ theme }) => theme.colors.dark5};
-  border-radius: ${({ theme }) => theme.borderRadius.full};
+  border-radius: 8px;
   margin-top: 1rem;
   overflow: hidden;
   position: relative;
@@ -701,7 +749,7 @@ export const ScoreBarFill = styled.div<{ width: number }>`
   height: 100%;
   width: ${({ width }) => width}%;
   background: linear-gradient(90deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
-  border-radius: ${({ theme }) => theme.borderRadius.full};
+  border-radius: 8px;
   transition: width 1s ease-out;
   position: relative;
   
@@ -917,7 +965,7 @@ export const Tag = styled.span`
   background: ${({ theme }) => theme.colors.dark4};
   color: ${({ theme }) => theme.colors.text.secondary};
   padding: 0.5rem 1rem;
-  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 500;
   border: 1px solid ${({ theme }) => theme.colors.dark5};
@@ -934,7 +982,7 @@ export const AnalyzableTag = styled.span`
   background: ${({ theme }) => theme.colors.dark4};
   color: ${({ theme }) => theme.colors.text.secondary};
   padding: 0.5rem 1rem;
-  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 500;
   border: 1px solid ${({ theme }) => theme.colors.dark5};
@@ -1158,10 +1206,6 @@ export const ChannelInsight = styled.div<{ type: 'success' | 'warning' | 'info' 
   }
 `;
 
-
-
-
-
 // Header Search Components
 export const HeaderSearchContainer = styled.div`
   margin-top: 2rem;
@@ -1252,10 +1296,6 @@ export const HeaderSearchButton = styled.button`
   }
 `;
 
-
-
-
-
 export const HeaderTextContent = styled.div`
   flex: 1;
   color: ${({ theme }) => theme.colors.text.primary};
@@ -1314,10 +1354,6 @@ export const FeatureItem = styled.div`
     opacity: 0.9;
   }
 `;
-
-
-
-
 
 export const EnhancedHeader = styled.div<{ backgroundImage: string }>`
   position: relative;
@@ -1388,5 +1424,928 @@ export const HeaderContent = styled.div`
     flex-direction: column;
     text-align: center;
     gap: 1.5rem;
+  }
+`;
+
+// Chatbot Interface Styled Components
+export const AskSection = styled.div`
+  animation: ${fadeIn} 0.4s ease-out;
+`;
+
+export const ChatbotContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 600px;
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  overflow: hidden;
+  
+  @media (max-width: 768px) {
+    height: 500px;
+  }
+`;
+
+export const ChatbotHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  background: ${({ theme }) => theme.colors.dark4};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+  
+  @media (max-width: 768px) {
+    flex-wrap: wrap;
+    padding: 1rem 1.5rem;
+    gap: 0.75rem;
+  }
+`;
+
+export const ChatbotAvatar = styled.div`
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  
+  i {
+    font-size: 1.5rem;
+    color: ${({ theme }) => theme.colors.white};
+  }
+  
+  @media (max-width: 768px) {
+    width: 40px;
+    height: 40px;
+    
+    i {
+      font-size: 1.25rem;
+    }
+  }
+`;
+
+export const ChatbotHeaderText = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+export const ChatbotTitle = styled.h3`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+  }
+`;
+
+export const ChatbotSubtitle = styled.p`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.4;
+  
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+  }
+`;
+
+export const VideoTypeToggle = styled.div`
+  display: flex;
+  background: ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  overflow: hidden;
+  
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+`;
+
+export const VideoTypeOption = styled.button<{ isActive: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: ${({ isActive, theme }) => isActive ? theme.colors.red3 : 'transparent'};
+  color: ${({ isActive, theme }) => isActive ? theme.colors.white : theme.colors.text.secondary};
+  border: none;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: ${({ isActive, theme }) => isActive ? theme.colors.red4 : theme.colors.dark4};
+    color: ${({ isActive, theme }) => isActive ? theme.colors.white : theme.colors.text.primary};
+  }
+  
+  i {
+    font-size: 1rem;
+  }
+  
+  @media (max-width: 768px) {
+    flex: 1;
+    justify-content: center;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8rem;
+  }
+`;
+
+export const ConversationArea = styled.div`
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  
+  /* Custom scrollbar */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: ${({ theme }) => theme.colors.dark5};
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: ${({ theme }) => theme.colors.red3};
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: ${({ theme }) => theme.colors.red4};
+  }
+`;
+
+export const WelcomeMessage = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 2rem;
+`;
+
+export const WelcomeIcon = styled.div`
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  
+  i {
+    font-size: 2.5rem;
+    color: ${({ theme }) => theme.colors.white};
+  }
+`;
+
+export const WelcomeText = styled.div`
+  margin-bottom: 2rem;
+`;
+
+export const WelcomeTitle = styled.h3`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+`;
+
+export const WelcomeDescription = styled.p`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 400px;
+`;
+
+export const SuggestedQuestions = styled.div`
+  width: 100%;
+  max-width: 500px;
+`;
+
+export const SuggestedTitle = styled.h4`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  text-align: left;
+`;
+
+export const SuggestedList = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+`;
+
+export const SuggestedItem = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: ${({ theme }) => theme.colors.dark4};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.red3};
+    color: ${({ theme }) => theme.colors.white};
+    border-color: ${({ theme }) => theme.colors.red3};
+    transform: translateY(-2px);
+    box-shadow: ${({ theme }) => theme.shadows.sm};
+  }
+  
+  i {
+    color: ${({ theme }) => theme.colors.red3};
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    transition: color 0.3s ease;
+  }
+  
+  &:hover i {
+    color: ${({ theme }) => theme.colors.white};
+  }
+`;
+
+export const MessagesContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 0;
+`;
+
+export const MessageGroup = styled.div<{ isUser: boolean }>`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  ${({ isUser }) => isUser ? 'flex-direction: row-reverse;' : ''}
+  animation: ${slideInFromBottom} 0.3s ease-out;
+`;
+
+export const MessageAvatar = styled.div<{ isUser: boolean }>`
+  width: 32px;
+  height: 32px;
+  background: ${({ isUser, theme }) => 
+    isUser 
+      ? `linear-gradient(135deg, ${theme.colors.dark5}, ${theme.colors.dark4})`
+      : `linear-gradient(135deg, ${theme.colors.red4}, ${theme.colors.red5})`
+  };
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  
+  i {
+    font-size: 1rem;
+    color: ${({ theme }) => theme.colors.white};
+  }
+`;
+
+export const MessageBubble = styled.div<{ isUser: boolean }>`
+  max-width: 80%;
+  background: ${({ isUser, theme }) => 
+    isUser ? theme.colors.dark5 : theme.colors.dark4
+  };
+  border: 1px solid ${({ isUser, theme }) => 
+    isUser ? theme.colors.dark5 : theme.colors.dark4
+  };
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1rem;
+  position: relative;
+  
+  ${({ isUser }) => isUser ? 'margin-left: auto;' : ''}
+  
+  @media (max-width: 768px) {
+    max-width: 90%;
+  }
+`;
+
+export const MessageContent = styled.div`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+`;
+
+export const MessageTimestamp = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.8rem;
+  text-align: right;
+`;
+
+export const TypingIndicator = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.9rem;
+  font-style: italic;
+`;
+
+export const TypingDot = styled.div`
+  width: 6px;
+  height: 6px;
+  background: ${({ theme }) => theme.colors.red3};
+  border-radius: 50%;
+  animation: ${typing} 1.5s infinite;
+`;
+
+export const ResultPreview = styled.div`
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: ${({ theme }) => theme.colors.dark4};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.red3};
+    border-color: ${({ theme }) => theme.colors.red3};
+    color: ${({ theme }) => theme.colors.white};
+  }
+`;
+
+export const ResultPreviewIcon = styled.div`
+  width: 32px;
+  height: 32px;
+  background: ${({ theme }) => theme.colors.red3};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  
+  i {
+    font-size: 1rem;
+    color: ${({ theme }) => theme.colors.white};
+  }
+`;
+
+export const ResultPreviewText = styled.div`
+  flex: 1;
+`;
+
+export const ResultPreviewTitle = styled.div`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+`;
+
+export const ResultPreviewSubtitle = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.8rem;
+`;
+
+export const ResultPreviewArrow = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  
+  i {
+    font-size: 1.2rem;
+  }
+`;
+
+export const ChatInputContainer = styled.div`
+  position: relative;
+  border-top: 1px solid ${({ theme }) => theme.colors.dark5};
+  background: ${({ theme }) => theme.colors.dark4};
+`;
+
+export const ChatInputWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  gap: 0.75rem;
+`;
+
+export const ChatInput = styled.input`
+  flex: 1;
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 0.75rem 1rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 0.95rem;
+  resize: none;
+  transition: all 0.3s ease;
+  
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.text.muted};
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.red3};
+    background: ${({ theme }) => theme.colors.dark4};
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+export const ChatSendButton = styled.button`
+  width: 40px;
+  height: 40px;
+  background: ${({ theme }) => theme.colors.red3};
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  color: ${({ theme }) => theme.colors.white};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  
+  &:hover:not(:disabled) {
+    background: ${({ theme }) => theme.colors.red4};
+    transform: scale(1.05);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  i {
+    font-size: 1.1rem;
+  }
+`;
+
+export const SuggestionsDropdown = styled.div`
+  position: absolute;
+  bottom: 100%;
+  left: 1rem;
+  right: 1rem;
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: ${({ theme }) => theme.shadows.xl};
+  animation: ${slideInFromBottom} 0.2s ease-out;
+  
+  /* Custom scrollbar */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: ${({ theme }) => theme.colors.dark5};
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: ${({ theme }) => theme.colors.red3};
+    border-radius: 3px;
+  }
+`;
+
+export const DropdownHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: ${({ theme }) => theme.colors.dark4};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.85rem;
+  font-weight: 600;
+  
+  i {
+    color: ${({ theme }) => theme.colors.red3};
+  }
+`;
+
+export const DropdownItem = styled.div<{ isSelected: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: ${({ isSelected, theme }) => isSelected ? theme.colors.red3 : 'transparent'};
+  color: ${({ isSelected, theme }) => isSelected ? theme.colors.white : theme.colors.text.primary};
+  
+  &:hover {
+    background: ${({ theme }) => theme.colors.red3};
+    color: ${({ theme }) => theme.colors.white};
+  }
+  
+  &:not(:last-child) {
+    border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+  }
+`;
+
+export const DropdownItemContent = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+export const DropdownItemTitle = styled.div`
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-bottom: 0.25rem;
+`;
+
+export const DropdownItemMeta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+`;
+
+export const DropdownItemCategory = styled.span`
+  font-size: 0.8rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  opacity: 0.8;
+`;
+
+export const DropdownItemComplexity = styled.span<{ complexity: 'simple' | 'medium' | 'complex' }>`
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  text-transform: capitalize;
+  
+  background: ${({ complexity, theme }) =>
+    complexity === 'simple'
+      ? 'rgba(34, 197, 94, 0.15)'
+      : complexity === 'medium'
+      ? 'rgba(251, 191, 36, 0.15)'
+      : 'rgba(239, 68, 68, 0.15)'
+  };
+  
+  color: ${({ complexity, theme }) =>
+    complexity === 'simple'
+      ? theme.colors.success
+      : complexity === 'medium'
+      ? theme.colors.warning
+      : theme.colors.error
+  };
+  
+  border: 1px solid ${({ complexity, theme }) =>
+    complexity === 'simple'
+      ? theme.colors.success
+      : complexity === 'medium'
+      ? theme.colors.warning
+      : theme.colors.error
+  };
+`;
+
+export const DropdownItemIcon = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  flex-shrink: 0;
+  
+  i {
+    font-size: 1rem;
+  }
+`;
+
+// Results Modal Styled Components
+export const ResultsModal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  animation: ${fadeIn} 0.3s ease-out;
+`;
+
+export const ResultsModalBackdrop = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+`;
+
+export const ResultsModalContent = styled.div`
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  max-height: 80vh;
+  background: ${({ theme }) => theme.colors.dark2};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+`;
+
+export const ResultsHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem;
+  background: ${({ theme }) => theme.colors.dark3};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+`;
+
+export const ResultsTitle = styled.h2`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  
+  i {
+    color: ${({ theme }) => theme.colors.red3};
+    font-size: 1.8rem;
+  }
+`;
+
+export const ResultsCloseButton = styled.button`
+  background: transparent;
+  border: none;
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  transition: all 0.3s ease;
+  
+  &:hover {
+    color: ${({ theme }) => theme.colors.text.primary};
+    background: ${({ theme }) => theme.colors.dark5};
+  }
+`;
+
+export const ResultsBody = styled.div`
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  
+  /* Custom scrollbar */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: ${({ theme }) => theme.colors.dark5};
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: ${({ theme }) => theme.colors.red3};
+    border-radius: 4px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: ${({ theme }) => theme.colors.red4};
+  }
+`;
+
+export const QuestionDisplay = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1.5rem;
+`;
+
+export const QuestionLabel = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+`;
+
+export const QuestionText = styled.h4`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.4;
+  
+  /* Ensure long questions wrap properly */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+`;
+
+export const AnswerDisplay = styled.div`
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red1}, ${({ theme }) => theme.colors.red2});
+  border: 1px solid ${({ theme }) => theme.colors.red3};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 2rem;
+  text-align: center;
+`;
+
+export const AnswerLabel = styled.div`
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+`;
+
+export const AnswerValue = styled.div`
+  color: ${({ theme }) => theme.colors.white};
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+`;
+
+export const DetailsSection = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1.5rem;
+`;
+
+export const DetailsTitle = styled.h3`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  
+  i {
+    color: ${({ theme }) => theme.colors.red3};
+  }
+`;
+
+export const DetailsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+export const InsightsSection = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1.5rem;
+`;
+
+export const InsightsTitle = styled.h3`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  
+  i {
+    color: ${({ theme }) => theme.colors.warning};
+  }
+`;
+
+export const ChartsSection = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1.5rem;
+`;
+
+export const ChartsTitle = styled.h3`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
+  
+  i {
+    color: ${({ theme }) => theme.colors.info};
+  }
+`;
+
+export const SimpleChart = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+export const ChartItem = styled.div`
+  display: grid;
+  grid-template-columns: 120px 1fr 80px;
+  align-items: center;
+  gap: 1rem;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 100px 1fr 60px;
+    gap: 0.75rem;
+  }
+`;
+
+export const ChartLabel = styled.div`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.9rem;
+  font-weight: 600;
+`;
+
+export const ChartBar = styled.div`
+  height: 24px;
+  background: ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  overflow: hidden;
+  position: relative;
+`;
+
+export const ChartBarFill = styled.div<{ width: number }>`
+  height: 100%;
+  width: ${({ width }) => width}%;
+  background: linear-gradient(90deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  transition: width 1s ease-out;
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: ${shimmer} 2s infinite;
+  }
+`;
+
+export const ChartValue = styled.div`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: right;
+`;
+
+export const ResultsFooter = styled.div`
+  padding: 1.5rem 2rem;
+  background: ${({ theme }) => theme.colors.dark3};
+  border-top: 1px solid ${({ theme }) => theme.colors.dark5};
+`;
+
+export const ResultsNote = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.9rem;
+  
+  i {
+    color: ${({ theme }) => theme.colors.red3};
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+`;
+
+export const ResultsInsightItem = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  line-height: 1.5;
+  
+  i {
+    color: ${({ theme }) => theme.colors.warning};
+    font-size: 1rem;
+    margin-top: 0.1rem;
+    flex-shrink: 0;
   }
 `;

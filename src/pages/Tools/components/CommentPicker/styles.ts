@@ -138,7 +138,7 @@ export const AdSidebar = styled.div<{ position: 'left' | 'right' }>`
   width: 160px;
   z-index: 10;
   
-  @media (max-width: 1275px) {
+  @media (max-width: 1700px) {
     display: none;
   }
 `;

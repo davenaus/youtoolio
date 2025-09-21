@@ -161,7 +161,7 @@ export const ChannelAnalyzer: React.FC = () => {
     
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/channels?` +
-      `part=snippet,statistics,brandingSettings,status,topicDetails&` +
+      `part=snippet,statistics,brandingSettings,status,topicDetails,contentDetails&` +
       `id=${channelId}&key=${API_KEY}`
     );
     
@@ -173,6 +173,10 @@ export const ChannelAnalyzer: React.FC = () => {
     if (!data.items?.[0]) {
       throw new Error('Channel not found');
     }
+    
+    // Debug logging - check console to see what topicDetails contains
+    console.log('Topic Details from API:', data.items[0].topicDetails);
+    
     return data.items[0];
   };
 
@@ -340,10 +344,14 @@ export const ChannelAnalyzer: React.FC = () => {
     return keywords.split(',').map(keyword => keyword.trim()).filter(keyword => keyword.length > 0);
   };
 
-  const getTopicCategory = (topicDetails: any): string => {
-    if (!topicDetails?.topicCategories) return 'Not specified';
+  const getTopicCategory = (topicDetails: any, channelData: any): string => {
+    // Debug logging - remove this after fixing
+    console.log('Topic Details:', topicDetails);
+    console.log('Channel Title:', channelData?.snippet?.title);
     
+    // Enhanced category mapping with more comprehensive IDs
     const categoryMap: { [key: string]: string } = {
+      // Main categories
       '/m/04rlf': 'Music',
       '/m/02jjt': 'Entertainment', 
       '/m/09s1f': 'Comedy',
@@ -355,14 +363,82 @@ export const ChannelAnalyzer: React.FC = () => {
       '/m/06ntj': 'Sports',
       '/m/0f2f9': 'News & Politics',
       '/m/01k8wb': 'Knowledge',
-      '/m/098wr': 'Science & Technology'
+      '/m/098wr': 'Science & Technology',
+      '/m/07c1v': 'Technology',
+      '/m/02vx4': 'Film & Animation',
+      '/m/01sjng': 'Pets & Animals',
+      '/m/068hy': 'Travel & Events',
+      '/m/05fw6t': 'Travel',
+      '/m/02vxn': 'Food',
+      '/m/05qt0': 'Education',
+      '/m/07yv9': 'Vehicles',
+      
+      // Additional specific categories
+      '/m/025zzc': 'Attractions',
+      '/m/02w3_vh': 'Beauty',
+      '/m/09xp_': 'Business',
+      '/m/02p0szs': 'Children',
+      '/m/02ntfj': 'Consumer Electronics',
+      '/m/0jbk': 'Cooking',
+      '/m/013_1c': 'Crafts'
     };
 
-    const categories = topicDetails.topicCategories.map((cat: string) => 
-      categoryMap[cat] || 'Other'
-    );
+    // Check if topicDetails exists and has categories
+    if (topicDetails?.topicCategories && Array.isArray(topicDetails.topicCategories) && topicDetails.topicCategories.length > 0) {
+      const categories = topicDetails.topicCategories.map((cat: string) => {
+        return categoryMap[cat] || null;
+      }).filter((cat: string | null) => cat !== null);
+      
+      if (categories.length > 0) {
+        return categories.join(', ');
+      }
+    }
     
-    return categories.join(', ');
+    // Fallback 1: Try to infer from channel title
+    const channelTitle = channelData?.snippet?.title?.toLowerCase() || '';
+    const titleKeywords = {
+      'music': 'Music',
+      'gaming': 'Gaming', 
+      'game': 'Gaming',
+      'tech': 'Technology',
+      'food': 'Food',
+      'cooking': 'Food',
+      'travel': 'Travel',
+      'sport': 'Sports',
+      'news': 'News',
+      'comedy': 'Comedy',
+      'education': 'Education',
+      'fitness': 'Health & Fitness',
+      'beauty': 'Beauty',
+      'fashion': 'Fashion',
+      'business': 'Business',
+      'review': 'Reviews',
+      'tutorial': 'Education'
+    };
+    
+    for (const [keyword, category] of Object.entries(titleKeywords)) {
+      if (channelTitle.includes(keyword)) {
+        return category;
+      }
+    }
+    
+    // Fallback 2: Try to infer from channel description
+    const channelDescription = channelData?.snippet?.description?.toLowerCase() || '';
+    for (const [keyword, category] of Object.entries(titleKeywords)) {
+      if (channelDescription.includes(keyword)) {
+        return category;
+      }
+    }
+    
+    // Fallback 3: Try to infer from channel keywords
+    const channelKeywords = channelData?.brandingSettings?.channel?.keywords?.toLowerCase() || '';
+    for (const [keyword, category] of Object.entries(titleKeywords)) {
+      if (channelKeywords.includes(keyword)) {
+        return category;
+      }
+    }
+    
+    return 'General Content';
   };
 
   return (
@@ -606,7 +682,7 @@ export const ChannelAnalyzer: React.FC = () => {
                 <S.MetricCard>
                   <S.MetricIcon className="bx bx-star"></S.MetricIcon>
                   <S.MetricValue>
-                    {'⭐'.repeat(calculateOverallScore(analysisResults))}{'☆'.repeat(5 - calculateOverallScore(analysisResults))}
+                    {'★'.repeat(calculateOverallScore(analysisResults))}{'☆'.repeat(5 - calculateOverallScore(analysisResults))}
                   </S.MetricValue>
                   <S.MetricLabel>Overall Score</S.MetricLabel>
                 </S.MetricCard>
@@ -754,13 +830,31 @@ export const ChannelAnalyzer: React.FC = () => {
                     <S.CategoryItem>
                       <S.CategoryLabel>Primary Category:</S.CategoryLabel>
                       <S.CategoryValue>
-                        {getTopicCategory(channelData.topicDetails)}
+                        {getTopicCategory(channelData.topicDetails, channelData)}
                       </S.CategoryValue>
                     </S.CategoryItem>
                     <S.CategoryItem>
                       <S.CategoryLabel>Content Type:</S.CategoryLabel>
                       <S.CategoryValue>
-                        {channelData.status?.madeForKids ? 'Made for Kids' : 'General Audience'}
+                        {(() => {
+                          // Check multiple sources for content type determination
+                          if (channelData.status?.madeForKids === true) return 'Made for Kids';
+                          if (channelData.status?.madeForKids === false) return 'General Audience';
+                          
+                          // Fallback: analyze topic categories for content type hints
+                          const topics = channelData.topicDetails?.topicCategories || [];
+                          const kidsTopics = ['/m/0kt51', '/m/01sjng']; // Health/fitness, pets - often family friendly
+                          const matureTopics = ['/m/0f2f9', '/m/04rlf']; // News/politics, music - often general audience
+                          
+                          if (topics.some((topic: string) => kidsTopics.includes(topic))) {
+                            return 'Family-Friendly Content';
+                          }
+                          if (topics.some((topic: string) => matureTopics.includes(topic))) {
+                            return 'General Audience';
+                          }
+                          
+                          return 'Content Type Not Specified';
+                        })()}
                       </S.CategoryValue>
                     </S.CategoryItem>
                     {channelData.snippet.country && (
@@ -819,10 +913,10 @@ export const ChannelAnalyzer: React.FC = () => {
                         {(() => {
                           const daysSinceCreation = Math.floor((Date.now() - new Date(channelData.snippet.publishedAt).getTime()) / (1000 * 60 * 60 * 24));
                           const videosPerDay = parseInt(channelData.statistics.videoCount) / daysSinceCreation;
-                          if (videosPerDay > 0.5) return "🟢 Highly consistent (Daily content)";
-                          if (videosPerDay > 0.14) return "🟡 Moderately consistent (Weekly content)";
-                          if (videosPerDay > 0.03) return "🟠 Irregular (Monthly content)";
-                          return "🔴 Inconsistent (Sporadic uploads)";
+                          if (videosPerDay > 0.5) return "Highly consistent (Daily content)";
+                          if (videosPerDay > 0.14) return "Moderately consistent (Weekly content)";
+                          if (videosPerDay > 0.03) return "Irregular (Monthly content)";
+                          return "Inconsistent (Sporadic uploads)";
                         })()}
                       </S.MetricDescription>
                     </S.StrategyMetric>
@@ -832,14 +926,12 @@ export const ChannelAnalyzer: React.FC = () => {
                       <S.MetricDescription>
                         {(() => {
                           const subs = parseInt(channelData.statistics.subscriberCount);
-                          const monthsOld = Math.floor((Date.now() - new Date(channelData.snippet.publishedAt).getTime()) / (1000 * 60 * 60 * 24 * 30));
-                          const subsPerMonth = subs / monthsOld;
                           
-                          if (subs < 1000) return "🌱 Discovery Phase (Building foundation)";
-                          if (subs < 10000) return "📈 Growth Phase (Building audience)";
-                          if (subs < 100000) return "🚀 Expansion Phase (Scaling content)";
-                          if (subs < 1000000) return "⭐ Established Phase (Strong presence)";
-                          return "👑 Authority Phase (Industry leader)";
+                          if (subs < 1000) return "Discovery Phase (Building foundation)";
+                          if (subs < 10000) return "Growth Phase (Building audience)";
+                          if (subs < 100000) return "Expansion Phase (Scaling content)";
+                          if (subs < 1000000) return "Established Phase (Strong presence)";
+                          return "Authority Phase (Industry leader)";
                         })()}
                       </S.MetricDescription>
                     </S.StrategyMetric>
@@ -849,11 +941,11 @@ export const ChannelAnalyzer: React.FC = () => {
                       <S.MetricDescription>
                         {(() => {
                           const videosCount = parseInt(channelData.statistics.videoCount);
-                          if (videosCount > 1000) return "📚 High Volume Creator (1000+ videos)";
-                          if (videosCount > 500) return "📖 Regular Publisher (500+ videos)";
-                          if (videosCount > 100) return "📝 Active Creator (100+ videos)";
-                          if (videosCount > 20) return "✏️ Emerging Creator (20+ videos)";
-                          return "🆕 New Creator (Starting journey)";
+                          if (videosCount > 1000) return "High Volume Creator (1000+ videos)";
+                          if (videosCount > 500) return "Regular Publisher (500+ videos)";
+                          if (videosCount > 100) return "Active Creator (100+ videos)";
+                          if (videosCount > 20) return "Emerging Creator (20+ videos)";
+                          return "New Creator (Starting journey)";
                         })()}
                       </S.MetricDescription>
                     </S.StrategyMetric>
@@ -869,14 +961,14 @@ export const ChannelAnalyzer: React.FC = () => {
                           if (channelData.brandingSettings?.channel?.unsubscribedTrailer) score += 20;
                           if (playlistData.length > 0) score += 20;
                           
-                          const getScoreColor = (s: number) => {
-                            if (s >= 80) return "🟢";
-                            if (s >= 60) return "🟡";
-                            if (s >= 40) return "🟠";
-                            return "🔴";
+                          const getScoreLevel = (s: number) => {
+                            if (s >= 80) return "Excellent";
+                            if (s >= 60) return "Good";
+                            if (s >= 40) return "Fair";
+                            return "Needs Improvement";
                           };
                           
-                          return `${getScoreColor(score)} ${score}/100 - Channel optimization score`;
+                          return `${getScoreLevel(score)} - ${score}/100 optimization score`;
                         })()}
                       </S.MetricDescription>
                     </S.StrategyMetric>
@@ -895,11 +987,11 @@ export const ChannelAnalyzer: React.FC = () => {
                       <S.MetricDescription>
                         {(() => {
                           const viewToSubRatio = parseInt(channelData.statistics.viewCount) / parseInt(channelData.statistics.subscriberCount);
-                          if (viewToSubRatio < 50) return "🔥 Excellent (High conversion rate)";
-                          if (viewToSubRatio < 100) return "✅ Good (Solid conversion)";
-                          if (viewToSubRatio < 200) return "⚡ Average (Room for improvement)";
-                          if (viewToSubRatio < 500) return "📊 Below Average (Focus on retention)";
-                          return "⚠️ Low (Needs engagement strategy)";
+                          if (viewToSubRatio < 50) return "Excellent (High conversion rate)";
+                          if (viewToSubRatio < 100) return "Good (Solid conversion)";
+                          if (viewToSubRatio < 200) return "Average (Room for improvement)";
+                          if (viewToSubRatio < 500) return "Below Average (Focus on retention)";
+                          return "Low (Needs engagement strategy)";
                         })()}
                       </S.MetricDescription>
                       <S.EngagementDetail>
@@ -915,11 +1007,11 @@ export const ChannelAnalyzer: React.FC = () => {
                           const subscribers = parseInt(channelData.statistics.subscriberCount);
                           const discoverabilityRatio = avgViews / subscribers;
                           
-                          if (discoverabilityRatio > 2) return "🌟 Viral Potential (High organic reach)";
-                          if (discoverabilityRatio > 1.5) return "🚀 Strong Discovery (Good algorithm favor)";
-                          if (discoverabilityRatio > 1) return "📈 Moderate Reach (Steady growth)";
-                          if (discoverabilityRatio > 0.5) return "🎯 Subscriber-Focused (Loyal audience)";
-                          return "💤 Limited Reach (Needs SEO work)";
+                          if (discoverabilityRatio > 2) return "Viral Potential (High organic reach)";
+                          if (discoverabilityRatio > 1.5) return "Strong Discovery (Good algorithm favor)";
+                          if (discoverabilityRatio > 1) return "Moderate Reach (Steady growth)";
+                          if (discoverabilityRatio > 0.5) return "Subscriber-Focused (Loyal audience)";
+                          return "Limited Reach (Needs SEO work)";
                         })()}
                       </S.MetricDescription>
                       <S.EngagementDetail>
@@ -936,11 +1028,11 @@ export const ChannelAnalyzer: React.FC = () => {
                           const videos = parseInt(channelData.statistics.videoCount);
                           const authorityScore = (subs * 0.4) + (views * 0.0001) + (videos * 10);
                           
-                          if (authorityScore > 50000) return "👑 Industry Authority (Highly influential)";
-                          if (authorityScore > 20000) return "🏆 Established Expert (Strong influence)";
-                          if (authorityScore > 8000) return "⭐ Rising Authority (Growing influence)";
-                          if (authorityScore > 2000) return "📢 Emerging Voice (Building credibility)";
-                          return "🌱 New Contributor (Starting journey)";
+                          if (authorityScore > 50000) return "Industry Authority (Highly influential)";
+                          if (authorityScore > 20000) return "Established Expert (Strong influence)";
+                          if (authorityScore > 8000) return "Rising Authority (Growing influence)";
+                          if (authorityScore > 2000) return "Emerging Voice (Building credibility)";
+                          return "New Contributor (Starting journey)";
                         })()}
                       </S.MetricDescription>
                       <S.EngagementDetail>
@@ -953,14 +1045,12 @@ export const ChannelAnalyzer: React.FC = () => {
                       <S.MetricDescription>
                         {(() => {
                           const daysSinceLastVideo = Math.floor((Date.now() - new Date(latestVideoData.snippet.publishedAt).getTime()) / (1000 * 60 * 60 * 24));
-                          const channelAgeMonths = Math.floor((Date.now() - new Date(channelData.snippet.publishedAt).getTime()) / (1000 * 60 * 60 * 24 * 30));
-                          const subsPerMonth = parseInt(channelData.statistics.subscriberCount) / channelAgeMonths;
                           
-                          if (daysSinceLastVideo > 30) return "😴 Dormant (Inactive for 30+ days)";
-                          if (daysSinceLastVideo > 14) return "⏳ Slowing (2+ weeks since upload)";
-                          if (daysSinceLastVideo > 7) return "📅 Regular (Weekly schedule)";
-                          if (daysSinceLastVideo > 3) return "🔥 Active (Multiple uploads/week)";
-                          return "⚡ Highly Active (Daily content)";
+                          if (daysSinceLastVideo > 30) return "Dormant (Inactive for 30+ days)";
+                          if (daysSinceLastVideo > 14) return "Slowing (2+ weeks since upload)";
+                          if (daysSinceLastVideo > 7) return "Regular (Weekly schedule)";
+                          if (daysSinceLastVideo > 3) return "Active (Multiple uploads/week)";
+                          return "Highly Active (Daily content)";
                         })()}
                       </S.MetricDescription>
                       <S.EngagementDetail>
