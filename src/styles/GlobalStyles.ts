@@ -18,6 +18,15 @@ export const GlobalStyles = createGlobalStyle`
     scroll-behavior: auto; /* Disable smooth scrolling for route changes */
   }
   
+    
+  /* Global 80% scaling - makes everything 20% smaller */
+  body {
+    zoom: 0.9;
+    transform-origin: top left;
+  }
+  
+  
+
   /* Ensure consistent scroll behavior */
   html {
     scroll-behavior: auto;
