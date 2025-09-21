@@ -478,7 +478,7 @@ export const ChannelInfo = styled.div`
 export const ChannelLogo = styled.img`
   width: 40px;
   height: 40px;
-  border-radius: ${({ theme }) => theme.borderRadius.full};
+  border-radius: 8px;
   border: 2px solid ${({ theme }) => theme.colors.dark5};
 `;
 
@@ -1701,7 +1701,7 @@ export const MessageAvatar = styled.div<{ isUser: boolean }>`
       ? `linear-gradient(135deg, ${theme.colors.dark5}, ${theme.colors.dark4})`
       : `linear-gradient(135deg, ${theme.colors.red4}, ${theme.colors.red5})`
   };
-  border-radius: ${({ theme }) => theme.borderRadius.full};
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2277,7 +2277,7 @@ export const ChartLabel = styled.div`
 export const ChartBar = styled.div`
   height: 24px;
   background: ${({ theme }) => theme.colors.dark5};
-  border-radius: ${({ theme }) => theme.borderRadius.full};
+  border-radius: 8px;
   overflow: hidden;
   position: relative;
 `;
@@ -2286,7 +2286,7 @@ export const ChartBarFill = styled.div<{ width: number }>`
   height: 100%;
   width: ${({ width }) => width}%;
   background: linear-gradient(90deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
-  border-radius: ${({ theme }) => theme.borderRadius.full};
+  border-radius: 8px;
   transition: width 1s ease-out;
   position: relative;
   
