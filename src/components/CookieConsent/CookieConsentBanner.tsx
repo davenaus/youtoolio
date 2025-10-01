@@ -239,7 +239,6 @@ const ModalActions = styled.div`
 interface CookieConsent {
   necessary: boolean;
   analytics: boolean;
-  advertising: boolean;
   preferences: boolean;
 }
 
@@ -256,7 +255,6 @@ export const CookieConsentBanner: React.FC = () => {
   const [consent, setConsent] = useState<CookieConsent>({
     necessary: true,
     analytics: false,
-    advertising: false,
     preferences: false
   });
 
@@ -277,7 +275,6 @@ export const CookieConsentBanner: React.FC = () => {
     if (window.gtag) {
       window.gtag('consent', 'update', {
         analytics_storage: consentData.analytics ? 'granted' : 'denied',
-        ad_storage: consentData.advertising ? 'granted' : 'denied',
       });
     }
   };
@@ -286,7 +283,6 @@ export const CookieConsentBanner: React.FC = () => {
     const allConsent = {
       necessary: true,
       analytics: true,
-      advertising: true,
       preferences: true
     };
     saveConsent(allConsent);
@@ -296,7 +292,6 @@ export const CookieConsentBanner: React.FC = () => {
     const necessaryOnly = {
       necessary: true,
       analytics: false,
-      advertising: false,
       preferences: false
     };
     saveConsent(necessaryOnly);
@@ -322,8 +317,8 @@ export const CookieConsentBanner: React.FC = () => {
           <BannerText>
             <BannerTitle>🍪 We use cookies to improve your experience</BannerTitle>
             <BannerDescription>
-              We use cookies and similar technologies to provide essential functionality, 
-              analyze usage, and show relevant ads. You can manage your preferences anytime. 
+              We use cookies and similar technologies to provide essential functionality 
+              and analyze usage. You can manage your preferences anytime. 
               See our <a onClick={() => navigate('/cookie-policy')}>Cookie Policy</a> for details.
             </BannerDescription>
           </BannerText>
@@ -380,23 +375,6 @@ export const CookieConsentBanner: React.FC = () => {
             </OptionDescription>
           </CookieOption>
 
-          <CookieOption>
-            <OptionHeader>
-              <h4>Advertising Cookies</h4>
-              <Toggle>
-                <input 
-                  type="checkbox" 
-                  checked={consent.advertising}
-                  onChange={() => handleToggle('advertising')}
-                />
-                <span></span>
-              </Toggle>
-            </OptionHeader>
-            <OptionDescription>
-              Used to show relevant ads and measure ad performance. 
-              May be set by our advertising partners.
-            </OptionDescription>
-          </CookieOption>
 
           <CookieOption>
             <OptionHeader>

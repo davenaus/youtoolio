@@ -1,7 +1,6 @@
 // src/pages/Tools/components/ChannelIdFinder/ChannelIdFinder.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AdSense } from '../../../../components/AdSense/AdSense';
 import * as S from './styles';
 
 interface ChannelInfo {
@@ -308,22 +307,6 @@ export const ChannelIdFinder: React.FC = () => {
 
   return (
     <S.PageWrapper>
-      {/* Left Sidebar Ad */}
-      <S.AdSidebar position="left">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
-      {/* Right Sidebar Ad */}
-      <S.AdSidebar position="right">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -401,7 +384,7 @@ export const ChannelIdFinder: React.FC = () => {
           </S.HistorySection>
         )}
 
-        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {/* Educational Content Section */}
         {!showResults && !isSearching && (
           <S.EducationalSection>
             <S.EducationalContent>
@@ -782,14 +765,6 @@ export const ChannelIdFinder: React.FC = () => {
             </S.QuickActions>
           </S.ResultsContainer>
         )}
-
-        {/* Bottom Ad */}
-        <S.BottomAdContainer>
-          <AdSense 
-            slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-            format="horizontal"
-          />
-        </S.BottomAdContainer>
       </S.MainContainer>
     </S.PageWrapper>
   );

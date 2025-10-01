@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { DocumentMeta } from '../../hooks/useDocumentMeta';
 import styled, { keyframes } from 'styled-components';
 import { Button } from '../../components/Button/Button';
-import { AdSense } from '../../components/AdSense/AdSense';
 
 
 
@@ -1338,14 +1337,14 @@ export const Home: React.FC = () => {
       {/* React 19 Native Metadata Support */}
       <DocumentMeta
         title="YouTool.io - Free YouTube Tools for Creators"
-        description="Professional-grade YouTube tools to help you analyze, optimize, and grow your channel. All completely free. Video analytics, SEO tools, thumbnail testing, and more."
+        description="Professional-grade YouTube tools to help you analyze, optimize, and grow your channel. Video analytics, SEO tools, thumbnail testing, and more."
         keywords="YouTube tools, YouTube analytics, video SEO, thumbnail tester, channel analyzer, YouTube growth, free YouTube tools, video optimization"
         canonical="https://youtool.io/"
         ogTitle="YouTool.io - Free YouTube Tools for Creators"
-        ogDescription="Professional-grade YouTube tools to help you analyze, optimize, and grow your channel. All completely free."
+        ogDescription="Professional-grade YouTube tools to help you analyze, optimize, and grow your channel."
         ogImage="https://youtool.io/og-image.jpg"
         twitterTitle="YouTool.io - Free YouTube Tools for Creators"
-        twitterDescription="Professional-grade YouTube tools to help you analyze, optimize, and grow your channel. All completely free."
+        twitterDescription="Professional-grade YouTube tools to help you analyze, optimize, and grow your channel."
         twitterImage="https://youtool.io/twitter-image.jpg"
       />
       {/* Hero Section */}
@@ -1397,9 +1396,9 @@ export const Home: React.FC = () => {
                 <StatNumber>50K+</StatNumber>
                 <StatLabel>Videos Analyzed</StatLabel>
               </HeroStat>
-              <HeroStat>
-                <StatNumber>100%</StatNumber>
-                <StatLabel>Free Forever</StatLabel>
+                            <HeroStat>
+                <StatNumber>1K+</StatNumber>
+                <StatLabel>Creators Helped</StatLabel>
               </HeroStat>
             </HeroStats>
           </HeroContent>
@@ -1452,12 +1451,6 @@ export const Home: React.FC = () => {
         </FeaturesGrid>
       </FeaturesSection>
 
-      {/* AdSense - Between Features and Learning Path */}
-      <AdSense 
-        slot={process.env.REACT_APP_ADSENSE_SLOT_CONTENT || ''}
-        format="horizontal"
-        style={{ margin: '2rem auto', maxWidth: '1200px', padding: '0 2rem' }}
-      />
 
       {/* Interactive Learning Path Section - Replaces Educational Section */}
       <LearningPathSection>
@@ -1529,13 +1522,6 @@ export const Home: React.FC = () => {
           </LearningPath>
         </PathContainer>
       </LearningPathSection>
-
-      {/* AdSense - Before CTA Section */}
-      <AdSense 
-        slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-        format="rectangle"
-        style={{ margin: '3rem auto', maxWidth: '1200px', padding: '0 2rem' }}
-      />
 
       {/* CTA Section */}
       <CTASection>

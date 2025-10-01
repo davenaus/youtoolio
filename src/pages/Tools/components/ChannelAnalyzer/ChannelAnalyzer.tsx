@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import moment from 'moment';
-import { AdSense } from '../../../../components/AdSense/AdSense';
 import { Button } from '../../../../components/Button/Button';
 import * as S from './styles';
 
@@ -443,22 +442,6 @@ export const ChannelAnalyzer: React.FC = () => {
 
   return (
     <S.PageWrapper>
-      {/* Left Sidebar Ad */}
-      <S.AdSidebar position="left">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
-      {/* Right Sidebar Ad */}
-      <S.AdSidebar position="right">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -509,7 +492,7 @@ export const ChannelAnalyzer: React.FC = () => {
           </S.HeaderContent>
         </S.EnhancedHeader>
 
-        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE */}
+        {/* Educational Content Section */}
         {!showResults && (
           <S.EducationalSection>
             
@@ -1061,13 +1044,6 @@ export const ChannelAnalyzer: React.FC = () => {
                 </S.DetailedSection>
               </S.DetailedAnalysisGrid>
 
-              {/* Bottom Ad for smaller screens */}
-              <S.BottomAdContainer>
-                <AdSense 
-                  slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-                  format="horizontal"
-                />
-              </S.BottomAdContainer>
             </>
           ) : null}
         </S.ResultsContainer>

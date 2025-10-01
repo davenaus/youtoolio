@@ -271,7 +271,7 @@ export const PressKit: React.FC = () => {
             About YouTool
           </h2>
           <p>
-            YouTool is a free platform providing professional-grade YouTube analytics and optimization 
+            YouTool is a toolkit platform providing professional-grade YouTube analytics and optimization 
             tools to creators of all sizes. Founded by creators for creators, our mission is to 
             democratize access to powerful analytics tools that were previously only available 
             to large channels with significant budgets.
@@ -280,11 +280,7 @@ export const PressKit: React.FC = () => {
           <h3>Key Facts</h3>
           <FactSheet>
             <FactCard>
-              <div className="fact-number">15+</div>
-              <div className="fact-label">Free Tools</div>
-            </FactCard>
-            <FactCard>
-              <div className="fact-number">50k+</div>
+              <div className="fact-number">50K+</div>
               <div className="fact-label">Videos Analyzed</div>
             </FactCard>
             <FactCard>

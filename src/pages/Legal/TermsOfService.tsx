@@ -281,7 +281,7 @@ export const TermsOfService: React.FC = () => {
           <h3>Limitation of Liability</h3>
           <ul>
             <li>We are not liable for any business decisions made using our data</li>
-            <li>Maximum liability is limited to the amount paid for services (currently $0)</li>
+            <li>Maximum liability is limited to the amount paid for services</li>
             <li>We are not responsible for third-party actions or content</li>
             <li>Users assume all risks associated with data usage</li>
           </ul>

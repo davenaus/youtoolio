@@ -1,12 +1,11 @@
 // src/pages/Tools/components/ColorPickerFromImage/ColorPickerFromImage.tsx
 import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AdSense } from '../../../../components/AdSense/AdSense';
 import * as S from './styles';
 
 const ColorPickerFromImage: React.FC = () => {
   const navigate = useNavigate();
-  
+
   // State declarations
   const [imagePreview, setImagePreview] = useState<string>('');
   const [isDragging, setIsDragging] = useState(false);
@@ -17,35 +16,35 @@ const ColorPickerFromImage: React.FC = () => {
   const [isActive, setIsActive] = useState(false);
 
   const [imageUrl, setImageUrl] = useState('');
-const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-const handleUrlUpload = async () => {
-  if (!imageUrl) return;
+  const handleUrlUpload = async () => {
+    if (!imageUrl) return;
 
-  setIsLoading(true);
-  try {
-    const response = await fetch(imageUrl);
-    const blob = await response.blob();
-    const file = new File([blob], 'image-from-url', { type: blob.type });
-    handleFileUpload(file);
-  } catch (error) {
-    alert('Failed to fetch image. Please check the URL.');
-    console.error(error);
-  }
-  setIsLoading(false);
-};
+    setIsLoading(true);
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const file = new File([blob], 'image-from-url', { type: blob.type });
+      handleFileUpload(file);
+    } catch (error) {
+      alert('Failed to fetch image. Please check the URL.');
+      console.error(error);
+    }
+    setIsLoading(false);
+  };
 
-const toolConfig = {
-  name: 'Color Picker from Image',
-  description: 'Upload or paste any image and click anywhere to instantly copy the hex color.',
-  icon: 'bx bxs-eyedropper',
+  const toolConfig = {
+    name: 'Color Picker from Image',
+    description: 'Upload or paste any image and click anywhere to instantly copy the hex color.',
+    icon: 'bx bxs-eyedropper',
     image: 'https://64.media.tumblr.com/f55e2ae2e5b16799fd5889c64b3fe36b/0e01452f9f6dd974-0e/s2048x3072/09051a8561ff4ab1cc8a5fa3b4b3d81f8a3a720d.jpg',
-  features: [
-    'Drag & Drop Image Support',
-    'Hover to Preview Colors',
-    'Supports JPG, PNG, GIF, WebP'
-  ]
-};
+    features: [
+      'Drag & Drop Image Support',
+      'Hover to Preview Colors',
+      'Supports JPG, PNG, GIF, WebP'
+    ]
+  };
 
 
   // Refs
@@ -141,7 +140,7 @@ const toolConfig = {
   // Color picker handlers
   const handleImageMouseMove = useCallback((e: React.MouseEvent<HTMLImageElement>) => {
     if (!isActive) return;
-    
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -170,7 +169,7 @@ const toolConfig = {
 
   const handleImageClick = useCallback(async (e: React.MouseEvent<HTMLImageElement>) => {
     if (!isActive || !previewColor) return;
-    
+
     try {
       await navigator.clipboard.writeText(previewColor);
       setCopyFeedback(previewColor);
@@ -232,54 +231,38 @@ const toolConfig = {
 
   return (
     <S.PageWrapper>
-      {/* Left Sidebar Ad */}
-      <S.AdSidebar position="left">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
-      {/* Right Sidebar Ad */}
-      <S.AdSidebar position="right">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
       <S.MainContainer>
-                <S.BackButton onClick={() => navigate('/tools')}>
-                  <i className="bx bx-arrow-back"></i>
-                  Back to Tools
-                </S.BackButton>
-        
-<S.EnhancedHeader backgroundImage={toolConfig.image}>
-  <S.HeaderOverlay />
-  <S.HeaderContent>
-    <S.ToolIconContainer>
-      <i className={toolConfig.icon}></i>
-    </S.ToolIconContainer>
+        <S.BackButton onClick={() => navigate('/tools')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Tools
+        </S.BackButton>
 
-    <S.HeaderTextContent>
-      <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
-      <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+        <S.EnhancedHeader backgroundImage={toolConfig.image}>
+          <S.HeaderOverlay />
+          <S.HeaderContent>
+            <S.ToolIconContainer>
+              <i className={toolConfig.icon}></i>
+            </S.ToolIconContainer>
 
-      <S.FeaturesList>
-        {toolConfig.features.map((feature, index) => (
-          <S.FeatureItem key={index}>
-            <i className="bx bx-check-circle"></i>
-            <span>{feature}</span>
-          </S.FeatureItem>
-        ))}
-      </S.FeaturesList>
+            <S.HeaderTextContent>
+              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
 
-      {/* Integrated Search Bar */}
-      <S.HeaderSearchContainer>
-      </S.HeaderSearchContainer>
-    </S.HeaderTextContent>
-  </S.HeaderContent>
-</S.EnhancedHeader>
+              <S.FeaturesList>
+                {toolConfig.features.map((feature, index) => (
+                  <S.FeatureItem key={index}>
+                    <i className="bx bx-check-circle"></i>
+                    <span>{feature}</span>
+                  </S.FeatureItem>
+                ))}
+              </S.FeaturesList>
+
+              {/* Integrated Search Bar */}
+              <S.HeaderSearchContainer>
+              </S.HeaderSearchContainer>
+            </S.HeaderTextContent>
+          </S.HeaderContent>
+        </S.EnhancedHeader>
 
         {/* Upload Section */}
         {!imagePreview && (
@@ -288,7 +271,7 @@ const toolConfig = {
               <S.StepNumber>1</S.StepNumber>
               <S.StepTitle>Upload or Paste Your Image</S.StepTitle>
             </S.StepIndicator>
-            
+
             <S.UploadContainer
               $isDragging={isDragging}
               onDragEnter={handleDragIn}
@@ -304,7 +287,7 @@ const toolConfig = {
                 <S.UploadText>
                   Upload any image to start picking colors with precision
                 </S.UploadText>
-                
+
                 <S.UploadActions>
                   <S.UploadButton onClick={handleChooseFile}>
                     <i className="bx bx-image-add"></i>
@@ -315,15 +298,15 @@ const toolConfig = {
                     Paste from Clipboard
                   </S.UploadButton>
                 </S.UploadActions>
-                
+
                 <S.UploadHint>or drag and drop</S.UploadHint>
-                
+
                 <S.SupportedFormats>
                   Supports: JPG, PNG, GIF, WebP, BMP
                 </S.SupportedFormats>
               </S.UploadContent>
             </S.UploadContainer>
-            
+
             <S.FileInput
               ref={fileInputRef}
               type="file"
@@ -334,15 +317,15 @@ const toolConfig = {
         )}
 
 
-        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {/* Educational Content Section */}
         {!imagePreview && (
           <S.EducationalSection>
             <S.EducationalContent>
               <S.SectionSubTitle>How to Use the Color Picker</S.SectionSubTitle>
-              
+
               <S.EducationalText>
-                Our Color Picker tool allows you to extract exact color values from any image with pixel-perfect 
-                precision. Simply upload an image, hover to preview colors, and click to copy hex codes instantly. 
+                Our Color Picker tool allows you to extract exact color values from any image with pixel-perfect
+                precision. Simply upload an image, hover to preview colors, and click to copy hex codes instantly.
                 Perfect for designers, developers, and artists who need precise color matching and extraction.
               </S.EducationalText>
 
@@ -352,8 +335,8 @@ const toolConfig = {
                   <S.StepContent>
                     <S.StepTitle>Upload Your Image</S.StepTitle>
                     <S.EducationalText>
-                      Upload any image file (JPG, PNG, GIF, WebP, BMP) using drag-and-drop, file chooser, 
-                      or paste directly from your clipboard. The tool maintains original image quality 
+                      Upload any image file (JPG, PNG, GIF, WebP, BMP) using drag-and-drop, file chooser,
+                      or paste directly from your clipboard. The tool maintains original image quality
                       for accurate color sampling across all pixels.
                     </S.EducationalText>
                   </S.StepContent>
@@ -364,8 +347,8 @@ const toolConfig = {
                   <S.StepContent>
                     <S.StepTitle>Preview & Pick Colors</S.StepTitle>
                     <S.EducationalText>
-                      Move your mouse over any part of the image to see a live preview of the color 
-                      value. The preview cursor shows both the color swatch and corresponding hex code 
+                      Move your mouse over any part of the image to see a live preview of the color
+                      value. The preview cursor shows both the color swatch and corresponding hex code
                       in real-time as you explore different areas of your image.
                     </S.EducationalText>
                   </S.StepContent>
@@ -376,8 +359,8 @@ const toolConfig = {
                   <S.StepContent>
                     <S.StepTitle>Copy & Save Colors</S.StepTitle>
                     <S.EducationalText>
-                      Click anywhere on the image to instantly copy the hex color code to your clipboard. 
-                      All picked colors are automatically saved to your history for easy access and 
+                      Click anywhere on the image to instantly copy the hex color code to your clipboard.
+                      All picked colors are automatically saved to your history for easy access and
                       comparison throughout your design workflow.
                     </S.EducationalText>
                   </S.StepContent>
@@ -387,7 +370,7 @@ const toolConfig = {
 
             <S.EducationalContent>
               <S.SectionSubTitle>Precision Color Extraction</S.SectionSubTitle>
-              
+
               <S.FeatureList>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
@@ -416,9 +399,9 @@ const toolConfig = {
               </S.FeatureList>
 
               <S.EducationalText>
-                Essential for web developers needing exact color matches, graphic designers extracting brand 
-                colors from references, and digital artists seeking color inspiration from photographs. 
-                The tool preserves image quality and provides professional-grade color accuracy for all 
+                Essential for web developers needing exact color matches, graphic designers extracting brand
+                colors from references, and digital artists seeking color inspiration from photographs.
+                The tool preserves image quality and provides professional-grade color accuracy for all
                 your creative and technical projects.
               </S.EducationalText>
             </S.EducationalContent>
@@ -458,7 +441,7 @@ const toolConfig = {
                   onMouseLeave={handleImageMouseLeave}
                   onClick={handleImageClick}
                 />
-                
+
                 {/* Color Preview Cursor */}
                 {previewColor && isActive && (
                   <S.ColorPreviewCursor
@@ -501,10 +484,10 @@ const toolConfig = {
                     Clear History
                   </S.ClearHistoryButton>
                 </S.HistoryHeader>
-                
+
                 <S.ColorsGrid>
                   {pickedColors.map((color, index) => (
-                    <S.ColorCard 
+                    <S.ColorCard
                       key={`${color}-${index}`}
                       $color={color}
                       onClick={() => copyColor(color)}
@@ -526,14 +509,6 @@ const toolConfig = {
 
         {/* Hidden canvas for color processing */}
         <canvas ref={canvasRef} style={{ display: 'none' }} />
-
-        {/* Bottom Ad */}
-        <S.BottomAdContainer>
-          <AdSense 
-            slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-            format="horizontal"
-          />
-        </S.BottomAdContainer>
       </S.MainContainer>
     </S.PageWrapper>
   );

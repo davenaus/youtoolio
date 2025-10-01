@@ -219,14 +219,13 @@ export const AboutUs: React.FC = () => {
             <h3>Our Mission</h3>
             <p>
               To democratize YouTube analytics by providing powerful, professional-grade tools 
-              that are completely free and accessible to creators of all sizes.
+              that are accessible to creators of all sizes.
             </p>
           </MissionBox>
 
           <h3>What We Believe</h3>
           <p>We believe that great content creators shouldn't be held back by expensive tools or lack of data insights. That's why we've committed to keeping YouTool:</p>
           <ul>
-            <li><strong>100% Free:</strong> No hidden fees, no premium tiers, no paywalls</li>
             <li><strong>Easy to Use:</strong> Professional tools shouldn't require a degree to understand</li>
             <li><strong>Privacy-Focused:</strong> Your data belongs to you, not to us</li>
             <li><strong>Creator-First:</strong> Built by creators, for creators</li>
@@ -244,10 +243,6 @@ export const AboutUs: React.FC = () => {
             <StatCard>
               <div className="stat-number">50K+</div>
               <div className="stat-label">Videos Analyzed</div>
-            </StatCard>
-            <StatCard>
-              <div className="stat-number">15+</div>
-              <div className="stat-label">Free Tools</div>
             </StatCard>
             <StatCard>
               <div className="stat-number">1K+</div>

@@ -1,7 +1,6 @@
 // src/pages/Tools/components/OutlierFinder/OutlierFinder.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AdSense } from '../../../../components/AdSense/AdSense';
 import * as S from './styles';
 
 interface OutlierResult {
@@ -64,7 +63,7 @@ export const OutlierFinder: React.FC = () => {
       setIsShorts(type === 'shorts');
       handleAnalyze(decodedQuery, type === 'shorts');
     }
-    
+
     // Load search history from localStorage
     const history = localStorage.getItem('outlier_search_history');
     if (history) {
@@ -83,7 +82,7 @@ export const OutlierFinder: React.FC = () => {
       alert('Please enter a search query');
       return;
     }
-    
+
     saveSearchHistory(query);
     const encodedQuery = encodeURIComponent(query);
     navigate(`/tools/outlier-finder/${encodedQuery}/${isShorts ? 'shorts' : 'videos'}`);
@@ -133,17 +132,17 @@ export const OutlierFinder: React.FC = () => {
     );
     const data = await response.json();
     if (data.error) throw new Error(data.error.message);
-  
+
     return data.items.filter((video: any) => {
       const duration = parseDuration(video.contentDetails.duration);
       const views = parseInt(video.statistics.viewCount) || 0;
       const age = getVideoAgeInDays(video.snippet.publishedAt);
-      
+
       // Apply filters
       if (views < filters.minViews) return false;
       if (age > filters.maxAge) return false;
       if (filters.showOnlyRecent && age > 30) return false;
-      
+
       return isShorts ? duration <= 60 : duration > 60;
     });
   };
@@ -152,7 +151,7 @@ export const OutlierFinder: React.FC = () => {
     const channelIdsSet = new Set<string>();
     videos.forEach(video => channelIdsSet.add(video.snippet.channelId));
     const channelIds = Array.from(channelIdsSet).join(',');
-    
+
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/channels?` +
       `part=statistics,snippet&id=${channelIds}&key=${API_KEY}`
@@ -168,12 +167,12 @@ export const OutlierFinder: React.FC = () => {
     const comments = parseInt(video.statistics.commentCount) || 0;
     const subscribers = parseInt(channel.statistics.subscriberCount) || 1;
     const age = getVideoAgeInDays(video.snippet.publishedAt);
-    
+
     // Viral score considers multiple factors
     const viewToSubRatio = views / subscribers;
     const engagementRate = (likes + comments) / Math.max(views, 1);
     const timeDecay = Math.max(0.1, 1 - (age / 365)); // Newer videos get higher score
-    
+
     return (viewToSubRatio * engagementRate * timeDecay * 100);
   };
 
@@ -181,21 +180,21 @@ export const OutlierFinder: React.FC = () => {
     const outliers = videos.map(video => {
       const channel = channels.find(c => c.id === video.snippet.channelId);
       if (!channel) return null;
-      
+
       const views = parseInt(video.statistics.viewCount) || 0;
       const likes = parseInt(video.statistics.likeCount) || 0;
       const comments = parseInt(video.statistics.commentCount) || 0;
       const subscribers = parseInt(channel.statistics.subscriberCount) || 1;
-      
+
       // Apply subscriber filters
       if (subscribers < filters.minSubscribers || subscribers > filters.maxSubscribers) {
         return null;
       }
-      
+
       const ratio = views / subscribers;
       const engagementRate = (likes + comments) / Math.max(views, 1);
       const viralScore = calculateViralScore(video, channel);
-      
+
       return { video, channel, ratio, engagementRate, viralScore };
     }).filter((item): item is OutlierResult => item !== null);
 
@@ -210,8 +209,8 @@ export const OutlierFinder: React.FC = () => {
     if (!matches) return 0;
     const [, hours, minutes, seconds] = matches;
     return (parseInt(hours || '0') * 3600) +
-           (parseInt(minutes || '0') * 60) +
-           parseInt(seconds || '0');
+      (parseInt(minutes || '0') * 60) +
+      parseInt(seconds || '0');
   };
 
   const getVideoAgeInDays = (publishedAt: string): number => {
@@ -232,7 +231,7 @@ export const OutlierFinder: React.FC = () => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
-    
+
     if (hours > 0) {
       return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
@@ -271,7 +270,7 @@ export const OutlierFinder: React.FC = () => {
   const applyCurrentFilters = () => {
     if (results.length > 0) {
       const filtered = calculateOutliers(
-        results.map(r => r.video), 
+        results.map(r => r.video),
         results.map(r => r.channel)
       );
       setResults(filtered);
@@ -303,22 +302,6 @@ export const OutlierFinder: React.FC = () => {
 
   return (
     <S.PageWrapper>
-      {/* Left Sidebar Ad */}
-      <S.AdSidebar position="left">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
-      {/* Right Sidebar Ad */}
-      <S.AdSidebar position="right">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -332,11 +315,11 @@ export const OutlierFinder: React.FC = () => {
             <S.ToolIconContainer>
               <i className={toolConfig.icon}></i>
             </S.ToolIconContainer>
-            
+
             <S.HeaderTextContent>
               <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
               <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
-              
+
               <S.FeaturesList>
                 {toolConfig.features.map((feature, index) => (
                   <S.FeatureItem key={index}>
@@ -370,39 +353,39 @@ export const OutlierFinder: React.FC = () => {
         </S.EnhancedHeader>
 
         <S.ControlsContainer>
-            <S.ToggleContainer>
-              <S.ToggleButton 
-                onClick={() => handleToggle(false)}
-                className={!isShorts ? 'active' : ''}
-              >
-                <i className="bx bx-play"></i>
-                Videos
-              </S.ToggleButton>
-              <S.ToggleButton 
-                onClick={() => handleToggle(true)}
-                className={isShorts ? 'active' : ''}
-              >
-                <i className="bx bx-mobile"></i>
-                Shorts
-              </S.ToggleButton>
-            </S.ToggleContainer>
+          <S.ToggleContainer>
+            <S.ToggleButton
+              onClick={() => handleToggle(false)}
+              className={!isShorts ? 'active' : ''}
+            >
+              <i className="bx bx-play"></i>
+              Videos
+            </S.ToggleButton>
+            <S.ToggleButton
+              onClick={() => handleToggle(true)}
+              className={isShorts ? 'active' : ''}
+            >
+              <i className="bx bx-mobile"></i>
+              Shorts
+            </S.ToggleButton>
+          </S.ToggleContainer>
 
-            <S.FilterToggle onClick={() => setShowFilters(!showFilters)}>
-              <i className="bx bx-filter"></i>
-              Filters
-            </S.FilterToggle>
-          </S.ControlsContainer>
+          <S.FilterToggle onClick={() => setShowFilters(!showFilters)}>
+            <i className="bx bx-filter"></i>
+            Filters
+          </S.FilterToggle>
+        </S.ControlsContainer>
 
 
 
-                {showFilters && (
+        {showFilters && (
           <S.FiltersContainer>
             <S.FilterGrid>
               <S.FilterGroup>
                 <S.FilterLabel>Minimum Views</S.FilterLabel>
                 <S.FilterSelect
                   value={filters.minViews}
-                  onChange={(e) => setFilters({...filters, minViews: parseInt(e.target.value)})}
+                  onChange={(e) => setFilters({ ...filters, minViews: parseInt(e.target.value) })}
                 >
                   <option value={0}>Any</option>
                   <option value={1000}>1K+</option>
@@ -416,7 +399,7 @@ export const OutlierFinder: React.FC = () => {
                 <S.FilterLabel>Video Age (days)</S.FilterLabel>
                 <S.FilterSelect
                   value={filters.maxAge}
-                  onChange={(e) => setFilters({...filters, maxAge: parseInt(e.target.value)})}
+                  onChange={(e) => setFilters({ ...filters, maxAge: parseInt(e.target.value) })}
                 >
                   <option value={7}>Last week</option>
                   <option value={30}>Last month</option>
@@ -432,7 +415,7 @@ export const OutlierFinder: React.FC = () => {
                   value={`${filters.minSubscribers}-${filters.maxSubscribers}`}
                   onChange={(e) => {
                     const [min, max] = e.target.value.split('-').map(Number);
-                    setFilters({...filters, minSubscribers: min, maxSubscribers: max});
+                    setFilters({ ...filters, minSubscribers: min, maxSubscribers: max });
                   }}
                 >
                   <option value="0-10000000">Any size</option>
@@ -444,11 +427,11 @@ export const OutlierFinder: React.FC = () => {
                 </S.FilterSelect>
               </S.FilterGroup>
 
-              <S.FilterGroup> 
+              <S.FilterGroup>
                 <S.FilterLabel>Sort By</S.FilterLabel>
                 <S.FilterSelect
                   value={filters.sortBy}
-                  onChange={(e) => setFilters({...filters, sortBy: e.target.value as any})}
+                  onChange={(e) => setFilters({ ...filters, sortBy: e.target.value as any })}
                 >
                   <option value="ratio">View/Sub Ratio</option>
                   <option value="views">Total Views</option>
@@ -473,7 +456,7 @@ export const OutlierFinder: React.FC = () => {
           </S.FiltersContainer>
         )}
 
-                {searchHistory.length > 0 && !showResults && (
+        {searchHistory.length > 0 && !showResults && (
           <S.SearchHistory>
             <S.HistoryLabel>Recent searches:</S.HistoryLabel>
             <S.HistoryTags>
@@ -486,15 +469,15 @@ export const OutlierFinder: React.FC = () => {
           </S.SearchHistory>
         )}
 
-        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {/* Educational Content Section */}
         {!showResults && (
           <S.EducationalSection>
             <S.EducationalContent>
               <S.SectionSubTitle>How to Use the Outlier Finder</S.SectionSubTitle>
-              
+
               <S.EducationalText>
-                Our Outlier Finder identifies videos that significantly outperform typical view-to-subscriber ratios 
-                in any topic or niche. This powerful tool helps you discover viral content patterns, successful 
+                Our Outlier Finder identifies videos that significantly outperform typical view-to-subscriber ratios
+                in any topic or niche. This powerful tool helps you discover viral content patterns, successful
                 content strategies, and trending topics by analyzing performance metrics across YouTube.
               </S.EducationalText>
 
@@ -504,8 +487,8 @@ export const OutlierFinder: React.FC = () => {
                   <S.StepContent>
                     <S.OutlierFinderStepTitle>Enter Search Query</S.OutlierFinderStepTitle>
                     <S.EducationalText>
-                      Type any keyword, topic, or niche you want to analyze. Choose between regular videos 
-                      or YouTube Shorts depending on the content format you're interested in studying. 
+                      Type any keyword, topic, or niche you want to analyze. Choose between regular videos
+                      or YouTube Shorts depending on the content format you're interested in studying.
                       Our algorithm searches through thousands of videos to find the top performers.
                     </S.EducationalText>
                   </S.StepContent>
@@ -516,8 +499,8 @@ export const OutlierFinder: React.FC = () => {
                   <S.StepContent>
                     <S.OutlierFinderStepTitle>Customize Filters</S.OutlierFinderStepTitle>
                     <S.EducationalText>
-                      Apply advanced filters to narrow your search by minimum views, video age, channel size, 
-                      and sorting preferences. Filter by channel subscriber count to find outliers from 
+                      Apply advanced filters to narrow your search by minimum views, video age, channel size,
+                      and sorting preferences. Filter by channel subscriber count to find outliers from
                       small creators or established channels. Sort results by view ratio, engagement, or viral score.
                     </S.EducationalText>
                   </S.StepContent>
@@ -528,8 +511,8 @@ export const OutlierFinder: React.FC = () => {
                   <S.StepContent>
                     <S.OutlierFinderStepTitle>Analyze Performance Data</S.OutlierFinderStepTitle>
                     <S.EducationalText>
-                      Review detailed metrics including view-to-subscriber ratios, engagement rates, and viral 
-                      scores for each outlier video. Use these insights to understand what makes content go viral 
+                      Review detailed metrics including view-to-subscriber ratios, engagement rates, and viral
+                      scores for each outlier video. Use these insights to understand what makes content go viral
                       and apply these patterns to your own content strategy.
                     </S.EducationalText>
                   </S.StepContent>
@@ -539,7 +522,7 @@ export const OutlierFinder: React.FC = () => {
 
             <S.EducationalContent>
               <S.SectionSubTitle>Understanding Outlier Metrics</S.SectionSubTitle>
-              
+
               <S.FeatureList>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
@@ -568,9 +551,9 @@ export const OutlierFinder: React.FC = () => {
               </S.FeatureList>
 
               <S.EducationalText>
-                Use outlier analysis to understand what content resonates with audiences, identify successful 
-                content strategies, discover trending topics, and find inspiration for your own viral content. 
-                This tool is invaluable for content creators, marketers, and researchers studying YouTube trends 
+                Use outlier analysis to understand what content resonates with audiences, identify successful
+                content strategies, discover trending topics, and find inspiration for your own viral content.
+                This tool is invaluable for content creators, marketers, and researchers studying YouTube trends
                 and viral content patterns.
               </S.EducationalText>
             </S.EducationalContent>
@@ -618,7 +601,7 @@ export const OutlierFinder: React.FC = () => {
 
                     <S.VideoInfo>
                       <S.VideoTitle>{result.video.snippet.title}</S.VideoTitle>
-                      
+
                       <S.ChannelInfo>
                         <S.ChannelName>{result.video.snippet.channelTitle}</S.ChannelName>
                         <S.VideoDate>{formatDate(result.video.snippet.publishedAt)}</S.VideoDate>
@@ -630,19 +613,19 @@ export const OutlierFinder: React.FC = () => {
                           <S.StatValue>{parseInt(result.video.statistics.viewCount).toLocaleString()}</S.StatValue>
                           <S.StatLabel>views</S.StatLabel>
                         </S.StatItem>
-                        
+
                         <S.StatItem>
                           <S.StatIcon className="bx bx-group"></S.StatIcon>
                           <S.StatValue>{parseInt(result.channel.statistics.subscriberCount).toLocaleString()}</S.StatValue>
                           <S.StatLabel>subs</S.StatLabel>
                         </S.StatItem>
-                        
+
                         <S.StatItem>
                           <S.StatIcon className="bx bx-like"></S.StatIcon>
                           <S.StatValue>{parseInt(result.video.statistics.likeCount || '0').toLocaleString()}</S.StatValue>
                           <S.StatLabel>likes</S.StatLabel>
                         </S.StatItem>
-                        
+
                         <S.StatItem>
                           <S.StatIcon className="bx bx-comment"></S.StatIcon>
                           <S.StatValue>{parseInt(result.video.statistics.commentCount || '0').toLocaleString()}</S.StatValue>
@@ -681,14 +664,6 @@ export const OutlierFinder: React.FC = () => {
                   </S.ResultCard>
                 ))}
               </S.ResultsList>
-
-        {/* Bottom Ad */}
-        <S.BottomAdContainer>
-          <AdSense 
-            slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-            format="horizontal"
-          />
-        </S.BottomAdContainer>
             </>
           ) : showResults && (
             <S.NoResults>

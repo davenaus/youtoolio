@@ -1,7 +1,6 @@
 // src/pages/Tools/components/YouTubeCalculator/YouTubeCalculator.tsx
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AdSense } from '../../../../components/AdSense/AdSense';
 import * as S from './styles';
 
 interface CategoryRates {
@@ -55,7 +54,7 @@ const categoryRates: { [key: string]: CategoryRates } = {
 };
 
 const countryMultipliers: { [key: string]: number } = {
-  US: 1.0, UK: 0.85, CA: 0.82, AU: 0.78, DE: 0.72, FR: 0.68, JP: 0.65, 
+  US: 1.0, UK: 0.85, CA: 0.82, AU: 0.78, DE: 0.72, FR: 0.68, JP: 0.65,
   KR: 0.58, BR: 0.35, IN: 0.28, MX: 0.25, RU: 0.22, CN: 0.18
 };
 
@@ -76,12 +75,12 @@ export const YouTubeCalculator: React.FC = () => {
       'Advanced analytics'
     ]
   };
-  
+
   // Basic video data
   const [videoLength, setVideoLength] = useState<number>(10);
   const [views, setViews] = useState<number>(10000);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  
+
   // Channel data
   const [channelData, setChannelData] = useState<ChannelData>({
     subscribers: 1000,
@@ -91,17 +90,17 @@ export const YouTubeCalculator: React.FC = () => {
     country: 'US',
     isMonetized: true
   });
-  
+
   // Advanced settings
   const [premiumTraffic, setPremiumTraffic] = useState<number>(15);
   const [seasonalMultiplier, setSeasonalMultiplier] = useState<number>(1.0);
   const [adBlockRate, setAdBlockRate] = useState<number>(25);
   const [ctr, setCtr] = useState<number>(2.1);
-  
+
   // Results and history
   const [earningsBreakdown, setEarningsBreakdown] = useState<EarningsBreakdown | null>(null);
   const [calculationHistory, setCalculationHistory] = useState<CalculationHistory[]>([]);
-  
+
   // Load calculation history
   useEffect(() => {
     const history = localStorage.getItem('youtube_calc_history');
@@ -113,14 +112,14 @@ export const YouTubeCalculator: React.FC = () => {
       })));
     }
   }, []);
-  
+
   const saveToHistory = useCallback((calculation: Omit<CalculationHistory, 'id' | 'date'>) => {
     const newEntry: CalculationHistory = {
       ...calculation,
       id: Date.now().toString(),
       date: new Date()
     };
-    
+
     const newHistory = [newEntry, ...calculationHistory].slice(0, 10);
     setCalculationHistory(newHistory);
     localStorage.setItem('youtube_calc_history', JSON.stringify(newHistory));
@@ -128,13 +127,13 @@ export const YouTubeCalculator: React.FC = () => {
 
   const calculateEarnings = useCallback((): EarningsBreakdown => {
     if (!selectedCategory) return { adRevenue: 0, membershipRevenue: 0, sponsorshipRevenue: 0, merchandiseRevenue: 0, totalRevenue: 0, yearlyProjection: 0 };
-    
+
     const category = categoryRates[selectedCategory];
     const countryMultiplier = countryMultipliers[channelData.country] || 0.5;
-    
+
     // Base CPM calculation (much more conservative)
     let baseCpm = category.cpm * countryMultiplier;
-    
+
     // Video length factor (more realistic)
     let lengthMultiplier = 1;
     if (videoLength >= 8) {
@@ -142,52 +141,52 @@ export const YouTubeCalculator: React.FC = () => {
     } else if (videoLength < 4) {
       lengthMultiplier = 0.7; // Penalty for very short videos
     }
-    
+
     // Premium traffic adjustment (reduced impact)
     const premiumAdjustment = 1 + (premiumTraffic / 100 * 0.2);
-    
+
     // Engagement adjustment (smaller impact)
     const engagementAdjustment = 1 + ((channelData.engagementRate - 2) * 0.05);
-    
+
     // Ad block adjustment (realistic ad block rates)
     const effectiveViews = views * (1 - adBlockRate / 100);
-    
+
     // Only 40-60% of views typically see ads (realistic monetized views)
     const monetizedViews = effectiveViews * 0.5;
-    
+
     // Seasonal adjustment
     baseCpm *= seasonalMultiplier;
-    
+
     // CTR adjustment (smaller impact)
     const ctrAdjustment = ctr / 2.1; // 2.1% is average CTR
-    
+
     // Final CPM (more realistic)
     const finalCpm = baseCpm * lengthMultiplier * premiumAdjustment * engagementAdjustment * ctrAdjustment;
-    
+
     // Calculate ad revenue (YouTube takes 45%, creator gets 55%)
     const grossAdRevenue = (monetizedViews / 1000) * finalCpm;
     const adRevenue = grossAdRevenue * 0.55; // YouTube's actual revenue split
-    
+
     // Much more conservative other revenue streams
-    
+
     // Membership revenue (very conservative)
-    const membershipRevenue = channelData.subscribers > 1000 ? 
+    const membershipRevenue = channelData.subscribers > 1000 ?
       Math.min((channelData.subscribers / 10000) * (views / channelData.avgViews) * 0.5, adRevenue * 0.1) : 0;
-    
+
     // Sponsorship potential (very conservative, only for larger channels)
-    const sponsorshipRevenue = channelData.subscribers > 50000 ? 
+    const sponsorshipRevenue = channelData.subscribers > 50000 ?
       (views / 10000) * 0.2 * (channelData.engagementRate / 5) : 0;
-    
+
     // Merchandise potential (very conservative)
-    const merchandiseRevenue = channelData.subscribers > 10000 ? 
+    const merchandiseRevenue = channelData.subscribers > 10000 ?
       views * 0.0001 * (channelData.engagementRate / 8) : 0;
-    
+
     const totalRevenue = adRevenue + membershipRevenue + sponsorshipRevenue + merchandiseRevenue;
-    
+
     // More realistic yearly projection (assumes consistent performance with some growth)
     const monthlyRevenue = totalRevenue * 4; // 4 videos per month assumption
-    const yearlyProjection = monthlyRevenue * 12 * (1 + Math.min(channelData.engagementRate / 100, 0.05)); 
-    
+    const yearlyProjection = monthlyRevenue * 12 * (1 + Math.min(channelData.engagementRate / 100, 0.05));
+
     return {
       adRevenue: Math.max(0, adRevenue),
       membershipRevenue: Math.max(0, membershipRevenue),
@@ -200,13 +199,13 @@ export const YouTubeCalculator: React.FC = () => {
 
   const handleCalculate = async () => {
     setIsCalculating(true);
-    
+
     // Simulate calculation time for premium feel
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
+
     const earnings = calculateEarnings();
     setEarningsBreakdown(earnings);
-    
+
     // Save to history
     saveToHistory({
       views,
@@ -214,7 +213,7 @@ export const YouTubeCalculator: React.FC = () => {
       earnings,
       videoLength
     });
-    
+
     setCurrentStep('results');
     setIsCalculating(false);
   };
@@ -236,23 +235,23 @@ export const YouTubeCalculator: React.FC = () => {
 
   const getOptimizationTips = () => {
     const tips = [];
-    
+
     if (videoLength < 8) {
       tips.push({ icon: 'bx-time', text: 'Consider videos 8+ minutes for mid-roll ads', type: 'warning' as const });
     }
-    
+
     if (channelData.engagementRate < 3) {
       tips.push({ icon: 'bx-heart', text: 'Improve engagement with CTAs and community posts', type: 'info' as const });
     }
-    
+
     if (premiumTraffic < 20) {
       tips.push({ icon: 'bx-target-lock', text: 'Target higher-value demographics', type: 'success' as const });
     }
-    
+
     if (channelData.subscribers < 10000) {
       tips.push({ icon: 'bx-user-plus', text: 'Focus on subscriber growth for sponsorship opportunities', type: 'info' as const });
     }
-    
+
     return tips;
   };
 
@@ -282,22 +281,6 @@ export const YouTubeCalculator: React.FC = () => {
 
   return (
     <S.PageWrapper>
-      {/* Left Sidebar Ad */}
-      <S.AdSidebar position="left">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
-      {/* Right Sidebar Ad */}
-      <S.AdSidebar position="right">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -311,11 +294,11 @@ export const YouTubeCalculator: React.FC = () => {
             <S.ToolIconContainer>
               <i className={toolConfig.icon}></i>
             </S.ToolIconContainer>
-            
+
             <S.HeaderTextContent>
               <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
               <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
-              
+
               <S.FeaturesList>
                 {toolConfig.features.map((feature, index) => (
                   <S.FeatureItem key={index}>
@@ -337,7 +320,7 @@ export const YouTubeCalculator: React.FC = () => {
               <i className="bx bx-video"></i>
               Video Details
             </S.SectionTitle>
-            
+
             <S.StatsGrid>
               <S.StatCard>
                 <S.StatIcon>
@@ -348,7 +331,7 @@ export const YouTubeCalculator: React.FC = () => {
                   <S.StatLabel>Expected Views</S.StatLabel>
                 </S.StatContent>
               </S.StatCard>
-              
+
               <S.StatCard>
                 <S.StatIcon>
                   <i className="bx bx-time"></i>
@@ -358,7 +341,7 @@ export const YouTubeCalculator: React.FC = () => {
                   <S.StatLabel>Video Length</S.StatLabel>
                 </S.StatContent>
               </S.StatCard>
-              
+
               <S.StatCard>
                 <S.StatIcon>
                   <i className="bx bx-category"></i>
@@ -448,8 +431,8 @@ export const YouTubeCalculator: React.FC = () => {
             </S.CategorySection>
 
             <S.ActionButtons>
-              <S.PrimaryButton 
-                onClick={() => setCurrentStep('channel')} 
+              <S.PrimaryButton
+                onClick={() => setCurrentStep('channel')}
                 disabled={!selectedCategory}
               >
                 <i className="bx bx-right-arrow-alt"></i>
@@ -466,7 +449,7 @@ export const YouTubeCalculator: React.FC = () => {
               <i className="bx bx-user"></i>
               Channel Information
             </S.SectionTitle>
-            
+
             <S.ChannelGrid>
               <S.ChannelCard>
                 <S.CardTitle>
@@ -615,7 +598,7 @@ export const YouTubeCalculator: React.FC = () => {
               <i className="bx bx-cog"></i>
               Advanced Revenue Factors
             </S.SectionTitle>
-            
+
             <S.AdvancedGrid>
               <S.AdvancedCard>
                 <S.CardTitle>
@@ -795,7 +778,7 @@ export const YouTubeCalculator: React.FC = () => {
                       {((earningsBreakdown.adRevenue / earningsBreakdown.totalRevenue) * 100).toFixed(1)}%
                     </S.RevenuePercentage>
                   </S.RevenueItem>
-                  
+
                   {earningsBreakdown.membershipRevenue > 0 && (
                     <S.RevenueItem>
                       <S.RevenueIcon color="#4ecdc4">
@@ -810,7 +793,7 @@ export const YouTubeCalculator: React.FC = () => {
                       </S.RevenuePercentage>
                     </S.RevenueItem>
                   )}
-                  
+
                   {earningsBreakdown.sponsorshipRevenue > 0 && (
                     <S.RevenueItem>
                       <S.RevenueIcon color="#f9ca24">
@@ -825,7 +808,7 @@ export const YouTubeCalculator: React.FC = () => {
                       </S.RevenuePercentage>
                     </S.RevenueItem>
                   )}
-                  
+
                   {earningsBreakdown.merchandiseRevenue > 0 && (
                     <S.RevenueItem>
                       <S.RevenueIcon color="#6c5ce7">
@@ -929,14 +912,6 @@ export const YouTubeCalculator: React.FC = () => {
             </S.ActionButtons>
           </S.ResultSection>
         )}
-
-        {/* Bottom Ad */}
-        <S.BottomAdContainer>
-          <AdSense 
-            slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-            format="horizontal"
-          />
-        </S.BottomAdContainer>
       </S.MainContainer>
     </S.PageWrapper>
   );

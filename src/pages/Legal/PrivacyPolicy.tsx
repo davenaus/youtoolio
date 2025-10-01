@@ -206,7 +206,6 @@ export const PrivacyPolicy: React.FC = () => {
             <li><strong>YouTube API:</strong> We use YouTube's API to retrieve public data for analysis</li>
             <li><strong>Analytics Providers:</strong> Google Analytics, Vercel Analytics for usage statistics</li>
             <li><strong>Hosting Services:</strong> Vercel for website hosting and performance</li>
-            <li><strong>Advertising:</strong> Google AdSense for displaying relevant advertisements</li>
           </ul>
 
           <h3>Legal Requirements</h3>
@@ -230,12 +229,7 @@ export const PrivacyPolicy: React.FC = () => {
             <li>Contact us to request information about data we may have collected</li>
           </ul>
 
-          <h3>Advertising Choices</h3>
-          <ul>
-            <li>Use ad blockers to prevent advertisement display</li>
-            <li>Adjust Google Ad personalization settings</li>
-            <li>Opt out of interest-based advertising</li>
-          </ul>
+
 
           <h2>Security Measures</h2>
           <p>
@@ -259,7 +253,7 @@ export const PrivacyPolicy: React.FC = () => {
 
           <h3>Google Services</h3>
           <p>
-            We use Google Analytics and Google AdSense. These services are governed by Google's Privacy Policy. 
+            We use Google Analytics for website analytics. This service is governed by Google's Privacy Policy. 
             You can learn more about how Google uses data at <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a>.
           </p>
 

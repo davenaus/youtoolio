@@ -1,7 +1,6 @@
 // src/pages/Tools/components/QRCodeGenerator/QRCodeGenerator.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AdSense } from '../../../../components/AdSense/AdSense';
 import * as S from './styles';
 
 interface QRConfig {
@@ -29,7 +28,7 @@ export const QRCodeGenerator: React.FC = () => {
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [generatedQR, setGeneratedQR] = useState<GeneratedQR | null>(null);
   const [qrHistory, setQrHistory] = useState<string[]>([]);
-  
+
   // Tool configuration
   const toolConfig = {
     name: 'QR Code Generator',
@@ -42,7 +41,7 @@ export const QRCodeGenerator: React.FC = () => {
       'High resolution output'
     ]
   };
-  
+
   const [config, setConfig] = useState<QRConfig>({
     url: '',
     size: 1000,
@@ -73,7 +72,7 @@ export const QRCodeGenerator: React.FC = () => {
 
   const validateUrl = (url: string): boolean => {
     if (!url.trim()) return false;
-    
+
     // Allow various types of content
     const patterns = [
       /^https?:\/\/.+/i, // URLs
@@ -83,7 +82,7 @@ export const QRCodeGenerator: React.FC = () => {
       /^wifi:T:.+/i,     // WiFi
       /^[^:]+$/          // Plain text
     ];
-    
+
     return patterns.some(pattern => pattern.test(url));
   };
 
@@ -92,7 +91,7 @@ export const QRCodeGenerator: React.FC = () => {
       alert('Please enter valid content for your QR code');
       return;
     }
-    
+
     saveToHistory(config.url);
     setCurrentStep('customize');
   };
@@ -104,12 +103,12 @@ export const QRCodeGenerator: React.FC = () => {
         alert('Please select a valid image file');
         return;
       }
-      
+
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
         alert('Logo file must be smaller than 5MB');
         return;
       }
-      
+
       setLogoFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -141,11 +140,11 @@ export const QRCodeGenerator: React.FC = () => {
     });
 
     const baseUrl = `https://api.qrserver.com/v1/create-qr-code/?${params.toString()}`;
-    
+
     try {
       const response = await fetch(baseUrl);
       if (!response.ok) throw new Error('Failed to generate QR code');
-      
+
       const blob = await response.blob();
       return URL.createObjectURL(blob);
     } catch (error) {
@@ -167,7 +166,7 @@ export const QRCodeGenerator: React.FC = () => {
 
       const qrImg = new Image();
       qrImg.crossOrigin = 'anonymous';
-      
+
       qrImg.onload = () => {
         ctx.drawImage(qrImg, 0, 0, config.size, config.size);
 
@@ -189,7 +188,7 @@ export const QRCodeGenerator: React.FC = () => {
             ctx.beginPath();
             ctx.arc(config.size / 2, config.size / 2, logoSize / 2, 0, 2 * Math.PI);
             ctx.clip();
-            
+
             ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
             ctx.restore();
 
@@ -200,7 +199,7 @@ export const QRCodeGenerator: React.FC = () => {
           resolve(canvas.toDataURL(`image/${config.format.toLowerCase()}`));
         }
       };
-      
+
       qrImg.onerror = () => reject('Failed to load QR code image');
       qrImg.src = qrUrl;
     });
@@ -208,17 +207,17 @@ export const QRCodeGenerator: React.FC = () => {
 
   const handleGenerate = async () => {
     setIsGenerating(true);
-    
+
     try {
       const qrUrl = await generateQRCode();
       const finalQR = config.hasLogo && logoFile ? await addLogoToQR(qrUrl) : qrUrl;
-      
+
       setGeneratedQR({
         dataUrl: finalQR,
         downloadUrl: finalQR,
         config: { ...config }
       });
-      
+
       setCurrentStep('result');
     } catch (error) {
       console.error('Error generating QR code:', error);
@@ -230,7 +229,7 @@ export const QRCodeGenerator: React.FC = () => {
 
   const downloadQR = () => {
     if (!generatedQR) return;
-    
+
     const link = document.createElement('a');
     link.href = generatedQR.downloadUrl;
     link.download = `qrcode_${Date.now()}.${config.format.toLowerCase()}`;
@@ -241,7 +240,7 @@ export const QRCodeGenerator: React.FC = () => {
 
   const copyQR = async () => {
     if (!generatedQR) return;
-    
+
     try {
       const response = await fetch(generatedQR.dataUrl);
       const blob = await response.blob();
@@ -256,13 +255,13 @@ export const QRCodeGenerator: React.FC = () => {
 
   const shareQR = async () => {
     if (!generatedQR) return;
-    
+
     if (navigator.share) {
       try {
         const response = await fetch(generatedQR.dataUrl);
         const blob = await response.blob();
         const file = new File([blob], `qrcode.${config.format.toLowerCase()}`, { type: blob.type });
-        
+
         await navigator.share({
           title: 'QR Code',
           text: `QR Code for: ${config.url}`,
@@ -291,13 +290,13 @@ export const QRCodeGenerator: React.FC = () => {
 
   const getQRContent = () => {
     const { url } = config;
-    
+
     if (url.startsWith('http')) return { type: 'Website', icon: 'bx bx-globe', color: '#4285f4' };
     if (url.startsWith('mailto:')) return { type: 'Email', icon: 'bx bx-envelope', color: '#ea4335' };
     if (url.startsWith('tel:')) return { type: 'Phone', icon: 'bx bx-phone', color: '#34a853' };
     if (url.startsWith('sms:')) return { type: 'SMS', icon: 'bx bx-message', color: '#fbbc05' };
     if (url.startsWith('wifi:')) return { type: 'WiFi', icon: 'bx bx-wifi', color: '#9c27b0' };
-    
+
     return { type: 'Text', icon: 'bx-text', color: '#607d8b' };
   };
 
@@ -331,22 +330,6 @@ export const QRCodeGenerator: React.FC = () => {
 
   return (
     <S.PageWrapper>
-      {/* Left Sidebar Ad */}
-      <S.AdSidebar position="left">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
-      {/* Right Sidebar Ad */}
-      <S.AdSidebar position="right">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -360,11 +343,11 @@ export const QRCodeGenerator: React.FC = () => {
             <S.ToolIconContainer>
               <i className={toolConfig.icon}></i>
             </S.ToolIconContainer>
-            
+
             <S.HeaderTextContent>
               <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
               <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
-              
+
               <S.FeaturesList>
                 {toolConfig.features.map((feature, index) => (
                   <S.FeatureItem key={index}>
@@ -386,26 +369,26 @@ export const QRCodeGenerator: React.FC = () => {
               <i className="bx bx-edit"></i>
               What do you want to encode?
             </S.SectionTitle>
-            
+
             <S.ContentTypeGrid>
               <S.ContentTypeCard onClick={() => setConfig(prev => ({ ...prev, url: 'https://' }))}>
                 <i className="bx bx-globe"></i>
                 <div>Website URL</div>
                 <span>Link to any website</span>
               </S.ContentTypeCard>
-              
+
               <S.ContentTypeCard onClick={() => setConfig(prev => ({ ...prev, url: 'mailto:' }))}>
                 <i className="bx bx-envelope"></i>
                 <div>Email Address</div>
                 <span>Send an email</span>
               </S.ContentTypeCard>
-              
+
               <S.ContentTypeCard onClick={() => setConfig(prev => ({ ...prev, url: 'tel:' }))}>
                 <i className="bx bx-phone"></i>
                 <div>Phone Number</div>
                 <span>Make a call</span>
               </S.ContentTypeCard>
-              
+
               <S.ContentTypeCard onClick={() => setConfig(prev => ({ ...prev, url: 'sms:' }))}>
                 <i className="bx bx-message"></i>
                 <div>SMS Message</div>
@@ -473,15 +456,15 @@ export const QRCodeGenerator: React.FC = () => {
                   <i className="bx bx-palette"></i>
                   Colors
                 </S.CardTitle>
-                
+
                 <S.ColorPresets>
                   {getPresetColors().map((preset, index) => (
                     <S.ColorPreset
                       key={index}
-                      onClick={() => setConfig(prev => ({ 
-                        ...prev, 
-                        foregroundColor: preset.fg, 
-                        backgroundColor: preset.bg 
+                      onClick={() => setConfig(prev => ({
+                        ...prev,
+                        foregroundColor: preset.fg,
+                        backgroundColor: preset.bg
                       }))}
                     >
                       <S.PresetSwatch fg={preset.fg} bg={preset.bg} />
@@ -521,7 +504,7 @@ export const QRCodeGenerator: React.FC = () => {
                   <i className="bx bx-cog"></i>
                   Settings
                 </S.CardTitle>
-                
+
                 <S.SettingItem>
                   <label>Size:</label>
                   <S.SizeSelector>
@@ -571,7 +554,7 @@ export const QRCodeGenerator: React.FC = () => {
                   <i className="bx bx-image"></i>
                   Logo (Optional)
                 </S.CardTitle>
-                
+
                 {!logoPreview ? (
                   <S.LogoUpload onClick={() => fileInputRef.current?.click()}>
                     <i className="bx bx-image-add"></i>
@@ -593,7 +576,7 @@ export const QRCodeGenerator: React.FC = () => {
                     </S.LogoActions>
                   </S.LogoPreview>
                 )}
-                
+
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -659,7 +642,7 @@ export const QRCodeGenerator: React.FC = () => {
                   <i className="bx bx-download"></i>
                   Download & Share
                 </S.CardTitle>
-                
+
                 <S.ActionsList>
                   <S.ActionItem onClick={downloadQR}>
                     <i className="bx bx-download"></i>
@@ -668,7 +651,7 @@ export const QRCodeGenerator: React.FC = () => {
                       <span>High resolution {config.format}</span>
                     </div>
                   </S.ActionItem>
-                  
+
                   <S.ActionItem onClick={copyQR}>
                     <i className="bx bx-copy"></i>
                     <div>
@@ -676,7 +659,7 @@ export const QRCodeGenerator: React.FC = () => {
                       <span>Quick sharing</span>
                     </div>
                   </S.ActionItem>
-                  
+
                   <S.ActionItem onClick={shareQR}>
                     <i className="bx bx-share"></i>
                     <div>
@@ -697,14 +680,6 @@ export const QRCodeGenerator: React.FC = () => {
 
         {/* Hidden canvas for logo processing */}
         <canvas ref={canvasRef} style={{ display: 'none' }} />
-
-        {/* Bottom Ad */}
-        <S.BottomAdContainer>
-          <AdSense 
-            slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-            format="horizontal"
-          />
-        </S.BottomAdContainer>
       </S.MainContainer>
     </S.PageWrapper>
   );

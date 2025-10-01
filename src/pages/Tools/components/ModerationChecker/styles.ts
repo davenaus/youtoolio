@@ -122,24 +122,13 @@ export const BottomAdContainer = styled.div`
     display: none;
   }
 `;
+
 export const PageWrapper = styled.div`
   min-height: 100vh;
   background: ${({ theme }) => theme.colors.dark2};
   display: flex;
   justify-content: center;
   position: relative;
-`;
-
-export const AdSidebar = styled.div<{ position: 'left' | 'right' }>`
-  position: absolute;
-  top: 100px;
-  ${({ position }) => position}: 20px;
-  width: 160px;
-  z-index: 10;
-  
-  @media (max-width: 1700px) {
-    display: none;
-  }
 `;
 
 export const MainContainer = styled.div`

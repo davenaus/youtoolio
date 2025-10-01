@@ -48,18 +48,6 @@ export const GlobalStyles = createGlobalStyle`
       scroll-behavior: auto;
     }
   }
-  
-  /* Global safeguard against sticky ads */
-  .adsbygoogle,
-  [class*="ad-"],
-  [class*="Ad"] {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    transform: none !important;
-  }
 
   #root {
     min-height: 100%;

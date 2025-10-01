@@ -1,7 +1,6 @@
 // src/pages/Tools/components/ThumbnailDownloader/ThumbnailDownloader.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AdSense } from '../../../../components/AdSense/AdSense';
 import { ToolPageWrapper } from '../../../../components/ToolPageWrapper';
 import * as S from './styles';
 
@@ -66,7 +65,7 @@ export const ThumbnailDownloader: React.FC = () => {
       setUrl(videoUrl);
       handleAnalyze(videoId);
     }
-    
+
     // Load download history
     const history = localStorage.getItem('thumbnail_download_history');
     if (history) {
@@ -97,7 +96,7 @@ export const ThumbnailDownloader: React.FC = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!url.trim()) {
       alert('Please enter a YouTube video URL');
       return;
@@ -128,11 +127,11 @@ export const ThumbnailDownloader: React.FC = () => {
   const handleAnalyze = async (id: string) => {
     setIsLoading(true);
     setCurrentStep('preview');
-    
+
     try {
       const data = await fetchThumbnail(id);
       setThumbnailData(data);
-      
+
       // Auto-select best quality
       if (data.thumbnails.maxres) {
         setSelectedQuality('maxres');
@@ -153,11 +152,11 @@ export const ThumbnailDownloader: React.FC = () => {
 
   const fetchThumbnail = async (videoId: string): Promise<ThumbnailData> => {
     const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_2;
-    
+
     if (!API_KEY) {
       throw new Error('YouTube API key not configured');
     }
-    
+
     try {
       const response = await fetch(
         `https://www.googleapis.com/youtube/v3/videos?` +
@@ -165,13 +164,13 @@ export const ThumbnailDownloader: React.FC = () => {
         `key=${API_KEY}&` +
         `part=snippet,statistics,contentDetails`
       );
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch video data');
       }
-      
+
       const data = await response.json();
-      
+
       if (!data.items?.[0]) {
         throw new Error('Video not found');
       }
@@ -200,7 +199,7 @@ export const ThumbnailDownloader: React.FC = () => {
     if (!thumbnailData) return [];
 
     const qualities: ThumbnailQuality[] = [];
-    
+
     if (thumbnailData.thumbnails.maxres) {
       qualities.push({
         name: 'Maximum Resolution',
@@ -210,7 +209,7 @@ export const ThumbnailDownloader: React.FC = () => {
         recommended: true
       });
     }
-    
+
     if (thumbnailData.thumbnails.standard) {
       qualities.push({
         name: 'Standard Quality',
@@ -219,21 +218,21 @@ export const ThumbnailDownloader: React.FC = () => {
         height: 480
       });
     }
-    
+
     qualities.push({
       name: 'High Quality',
       key: 'high',
       width: 480,
       height: 360
     });
-    
+
     qualities.push({
       name: 'Medium Quality',
       key: 'medium',
       width: 320,
       height: 180
     });
-    
+
     qualities.push({
       name: 'Low Quality',
       key: 'default',
@@ -246,17 +245,17 @@ export const ThumbnailDownloader: React.FC = () => {
 
   const downloadThumbnail = async (quality: keyof ThumbnailData['thumbnails']) => {
     if (!thumbnailData) return;
-    
+
     const thumbnailUrl = thumbnailData.thumbnails[quality]?.url;
     if (!thumbnailUrl) return;
 
     setIsDownloading(quality);
-    
+
     try {
       const image = await fetch(thumbnailUrl);
       const imageBlob = await image.blob();
       const imageURL = URL.createObjectURL(imageBlob);
-      
+
       const cleanTitle = thumbnailData.title
         .replace(/[^a-z0-9]/gi, '_')
         .toLowerCase()
@@ -279,11 +278,11 @@ export const ThumbnailDownloader: React.FC = () => {
         title: thumbnailData.title,
         downloadedAt: new Date().toISOString()
       };
-      
+
       const updatedHistory = [newHistory, ...downloadHistory.filter(h => h.url !== thumbnailUrl)].slice(0, 10);
       setDownloadHistory(updatedHistory);
       localStorage.setItem('thumbnail_download_history', JSON.stringify(updatedHistory));
-      
+
       setCurrentStep('download');
     } catch (error) {
       console.error('Error downloading thumbnail:', error);
@@ -296,7 +295,7 @@ export const ThumbnailDownloader: React.FC = () => {
 
   const downloadAllQualities = async () => {
     const qualities = getAvailableQualities();
-    
+
     for (const quality of qualities) {
       await downloadThumbnail(quality.key);
       // Small delay between downloads
@@ -306,7 +305,7 @@ export const ThumbnailDownloader: React.FC = () => {
 
   const copyThumbnailUrl = async (quality: keyof ThumbnailData['thumbnails']) => {
     if (!thumbnailData) return;
-    
+
     const thumbnailUrl = thumbnailData.thumbnails[quality]?.url;
     if (!thumbnailUrl) return;
 
@@ -322,11 +321,11 @@ export const ThumbnailDownloader: React.FC = () => {
   const formatDuration = (duration: string): string => {
     const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
     if (!match) return 'Unknown';
-    
+
     const hours = parseInt(match[1] || '0') || 0;
     const minutes = parseInt(match[2] || '0') || 0;
     const seconds = parseInt(match[3] || '0') || 0;
-    
+
     if (hours > 0) {
       return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
@@ -368,375 +367,351 @@ export const ThumbnailDownloader: React.FC = () => {
   );
 
   return (
-    <ToolPageWrapper 
-      toolKey="thumbnail-downloader" 
+    <ToolPageWrapper
+      toolKey="thumbnail-downloader"
       videoId={videoId}
       customTitle={thumbnailData ? `Download ${thumbnailData.title} Thumbnail - YouTool.io` : undefined}
     >
       <S.PageWrapper>
-      {/* Left Sidebar Ad */}
-      <S.AdSidebar position="left">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
+        <S.MainContainer>
+          <S.BackButton onClick={() => navigate('/tools')}>
+            <i className="bx bx-arrow-back"></i>
+            Back to Tools
+          </S.BackButton>
 
-      {/* Right Sidebar Ad */}
-      <S.AdSidebar position="right">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
+          {/* Enhanced Header Section with Integrated Search */}
+          <S.EnhancedHeader backgroundImage={toolConfig.image}>
+            <S.HeaderOverlay />
+            <S.HeaderContent>
+              <S.ToolIconContainer>
+                <i className={toolConfig.icon}></i>
+              </S.ToolIconContainer>
 
-      <S.MainContainer>
-        <S.BackButton onClick={() => navigate('/tools')}>
-          <i className="bx bx-arrow-back"></i>
-          Back to Tools
-        </S.BackButton>
+              <S.HeaderTextContent>
+                <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+                <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
 
-        {/* Enhanced Header Section with Integrated Search */}
-        <S.EnhancedHeader backgroundImage={toolConfig.image}>
-          <S.HeaderOverlay />
-          <S.HeaderContent>
-            <S.ToolIconContainer>
-              <i className={toolConfig.icon}></i>
-            </S.ToolIconContainer>
-            
-            <S.HeaderTextContent>
-              <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
-              <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
-              
-              <S.FeaturesList>
-                {toolConfig.features.map((feature, index) => (
-                  <S.FeatureItem key={index}>
-                    <i className="bx bx-check-circle"></i>
-                    <span>{feature}</span>
-                  </S.FeatureItem>
-                ))}
-              </S.FeaturesList>
-
-              {/* Integrated Search Bar */}
-              <S.HeaderSearchContainer>
-                <S.HeaderSearchBar>
-                  <S.HeaderSearchInput
-                    type="text"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="Enter YouTube video URL to download thumbnail"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleHeaderSearch();
-                      }
-                    }}
-                  />
-                  <S.HeaderSearchButton onClick={handleHeaderSearch} disabled={isLoading}>
-                    {isLoading ? (
-                      <i className='bx bx-loader-alt bx-spin'></i>
-                    ) : (
-                      <i className='bx bx-download'></i>
-                    )}
-                  </S.HeaderSearchButton>
-                </S.HeaderSearchBar>
-              </S.HeaderSearchContainer>
-            </S.HeaderTextContent>
-          </S.HeaderContent>
-        </S.EnhancedHeader>
-
-        {renderStepIndicator()}
-
-        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
-        {currentStep === 'input' && (
-          <S.EducationalSection>
-            
-            <S.EducationalContent>
-              <S.SectionSubTitle>How to Use the Thumbnail Downloader</S.SectionSubTitle>
-              
-              <S.EducationalText>
-                Our Thumbnail Downloader provides instant access to high-quality YouTube video thumbnails 
-                in multiple resolutions. Whether you need thumbnails for design inspiration, content creation, 
-                or competitive analysis, this tool delivers crisp, original-quality images directly to your device.
-              </S.EducationalText>
-
-              <S.StepByStep>
-                <S.StepItem>
-                  <S.StepNumberCircle>1</S.StepNumberCircle>
-                  <S.StepContent>
-                    <S.StepTitle>Enter Video URL</S.StepTitle>
-                    <S.EducationalText>
-                      Paste any YouTube video URL into the search bar. Our system accepts various formats 
-                      including youtube.com/watch?v=, youtu.be/, youtube.com/embed/, and youtube.com/shorts/ 
-                      links. You can also enter just the video ID directly.
-                    </S.EducationalText>
-                  </S.StepContent>
-                </S.StepItem>
-
-                <S.StepItem>
-                  <S.StepNumberCircle>2</S.StepNumberCircle>
-                  <S.StepContent>
-                    <S.StepTitle>Preview Thumbnails</S.StepTitle>
-                    <S.EducationalText>
-                      View the video information and preview the thumbnail in your selected quality. 
-                      Choose from multiple resolution options including maximum resolution (1280×720), 
-                      standard quality (640×480), high quality (480×360), medium (320×180), and low quality (120×90).
-                    </S.EducationalText>
-                  </S.StepContent>
-                </S.StepItem>
-
-                <S.StepItem>
-                  <S.StepNumberCircle>3</S.StepNumberCircle>
-                  <S.StepContent>
-                    <S.StepTitle>Download Instantly</S.StepTitle>
-                    <S.EducationalText>
-                      Click download to save the thumbnail directly to your device. The file is automatically 
-                      named with the video title and resolution for easy organization. Use advanced options 
-                      to download all qualities at once or copy direct URLs.
-                    </S.EducationalText>
-                  </S.StepContent>
-                </S.StepItem>
-              </S.StepByStep>
-            </S.EducationalContent>
-
-            <S.EducationalContent>
-              <S.SectionSubTitle>Available Thumbnail Qualities & Use Cases</S.SectionSubTitle>
-              
-              <S.FeatureList>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Maximum Resolution (1280×720):</strong> Perfect for website headers, blog posts, social media covers, and professional presentations requiring crisp, high-quality images</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Standard Quality (640×480):</strong> Ideal for email newsletters, medium-sized web content, and applications where file size balance is important</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>High Quality (480×360):</strong> Great for social media posts, thumbnails for video galleries, and content management systems</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Medium Quality (320×180):</strong> Suitable for mobile applications, small web widgets, and situations requiring faster loading times</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Low Quality (120×90):</strong> Perfect for generating previews, creating image catalogs, and applications requiring minimal bandwidth usage</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Batch Download Option:</strong> Download all available resolutions simultaneously for comprehensive thumbnail collections and future-proofing your design assets</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Direct URL Access:</strong> Copy thumbnail URLs for integration into content management systems, automated workflows, and API implementations</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Download History:</strong> Track recently downloaded thumbnails with automatic history management for easy re-access and project organization</span>
-                </S.FeatureListItem>
-              </S.FeatureList>
-            </S.EducationalContent>
-
-          </S.EducationalSection>
-        )}
-
-        {/* Step 1: URL Input */}
-        {currentStep === 'input' && (
-          <S.InputSection>
-
-
-
-            {downloadHistory.length > 0 && (
-              <S.HistorySection>
-                <S.HistoryTitle>Recent downloads:</S.HistoryTitle>
-                <S.HistoryList>
-                  {downloadHistory.slice(0, 5).map((item, index) => (
-                    <S.HistoryItem key={index} onClick={() => window.open(item.url, '_blank')}>
-                      <S.HistoryThumbnail src={item.url} alt={item.title} />
-                      <S.HistoryInfo>
-                        <S.HistoryItemTitle>{item.title}</S.HistoryItemTitle>
-                        <S.HistoryDate>{formatDate(item.downloadedAt)}</S.HistoryDate>
-                      </S.HistoryInfo>
-                    </S.HistoryItem>
+                <S.FeaturesList>
+                  {toolConfig.features.map((feature, index) => (
+                    <S.FeatureItem key={index}>
+                      <i className="bx bx-check-circle"></i>
+                      <span>{feature}</span>
+                    </S.FeatureItem>
                   ))}
-                </S.HistoryList>
-              </S.HistorySection>
-            )}
-          </S.InputSection>
-        )}
+                </S.FeaturesList>
 
-        {/* Step 2: Preview */}
-        {currentStep === 'preview' && (
-          <S.PreviewSection>
-            {isLoading ? (
-              <S.LoadingContainer>
-                <i className='bx bx-loader-alt bx-spin'></i>
-                <p>Fetching video information and thumbnails...</p>
-              </S.LoadingContainer>
-            ) : thumbnailData ? (
-              <>
+                {/* Integrated Search Bar */}
+                <S.HeaderSearchContainer>
+                  <S.HeaderSearchBar>
+                    <S.HeaderSearchInput
+                      type="text"
+                      value={url}
+                      onChange={(e) => setUrl(e.target.value)}
+                      placeholder="Enter YouTube video URL to download thumbnail"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleHeaderSearch();
+                        }
+                      }}
+                    />
+                    <S.HeaderSearchButton onClick={handleHeaderSearch} disabled={isLoading}>
+                      {isLoading ? (
+                        <i className='bx bx-loader-alt bx-spin'></i>
+                      ) : (
+                        <i className='bx bx-download'></i>
+                      )}
+                    </S.HeaderSearchButton>
+                  </S.HeaderSearchBar>
+                </S.HeaderSearchContainer>
+              </S.HeaderTextContent>
+            </S.HeaderContent>
+          </S.EnhancedHeader>
 
-                <S.VideoInfo>
-                  <S.VideoDetails>
-                    <S.VideoTitle>{thumbnailData.title}</S.VideoTitle>
-                    <S.VideoMeta>
-                      <S.MetaItem>
-                        <i className="bx bx-user"></i>
-                        {thumbnailData.channelTitle}
-                      </S.MetaItem>
-                      <S.MetaItem>
-                        <i className="bx bx-calendar"></i>
-                        {formatDate(thumbnailData.publishedAt)}
-                      </S.MetaItem>
-                      <S.MetaItem>
-                        <i className="bx bx-show"></i>
-                        {parseInt(thumbnailData.viewCount).toLocaleString()} views
-                      </S.MetaItem>
-                      <S.MetaItem>
-                        <i className="bx bx-time"></i>
-                        {formatDuration(thumbnailData.duration)}
-                      </S.MetaItem>
-                    </S.VideoMeta>
-                  </S.VideoDetails>
-                </S.VideoInfo>
+          {renderStepIndicator()}
 
-                <S.ThumbnailPreview>
-                  <S.PreviewImage
-                    src={thumbnailData.thumbnails[selectedQuality]?.url || thumbnailData.url}
-                    alt={thumbnailData.title}
-                  />
-                  <S.QualityInfo>
-                    {(() => {
-                      const quality = getAvailableQualities().find(q => q.key === selectedQuality);
-                      return quality ? `${quality.width} × ${quality.height} pixels` : 'Unknown resolution';
-                    })()}
-                  </S.QualityInfo>
-                </S.ThumbnailPreview>
+          {/* Educational Content Section */}
+          {currentStep === 'input' && (
+            <S.EducationalSection>
+
+              <S.EducationalContent>
+                <S.SectionSubTitle>How to Use the Thumbnail Downloader</S.SectionSubTitle>
+
+                <S.EducationalText>
+                  Our Thumbnail Downloader provides instant access to high-quality YouTube video thumbnails
+                  in multiple resolutions. Whether you need thumbnails for design inspiration, content creation,
+                  or competitive analysis, this tool delivers crisp, original-quality images directly to your device.
+                </S.EducationalText>
+
+                <S.StepByStep>
+                  <S.StepItem>
+                    <S.StepNumberCircle>1</S.StepNumberCircle>
+                    <S.StepContent>
+                      <S.StepTitle>Enter Video URL</S.StepTitle>
+                      <S.EducationalText>
+                        Paste any YouTube video URL into the search bar. Our system accepts various formats
+                        including youtube.com/watch?v=, youtu.be/, youtube.com/embed/, and youtube.com/shorts/
+                        links. You can also enter just the video ID directly.
+                      </S.EducationalText>
+                    </S.StepContent>
+                  </S.StepItem>
+
+                  <S.StepItem>
+                    <S.StepNumberCircle>2</S.StepNumberCircle>
+                    <S.StepContent>
+                      <S.StepTitle>Preview Thumbnails</S.StepTitle>
+                      <S.EducationalText>
+                        View the video information and preview the thumbnail in your selected quality.
+                        Choose from multiple resolution options including maximum resolution (1280×720),
+                        standard quality (640×480), high quality (480×360), medium (320×180), and low quality (120×90).
+                      </S.EducationalText>
+                    </S.StepContent>
+                  </S.StepItem>
+
+                  <S.StepItem>
+                    <S.StepNumberCircle>3</S.StepNumberCircle>
+                    <S.StepContent>
+                      <S.StepTitle>Download Instantly</S.StepTitle>
+                      <S.EducationalText>
+                        Click download to save the thumbnail directly to your device. The file is automatically
+                        named with the video title and resolution for easy organization. Use advanced options
+                        to download all qualities at once or copy direct URLs.
+                      </S.EducationalText>
+                    </S.StepContent>
+                  </S.StepItem>
+                </S.StepByStep>
+              </S.EducationalContent>
+
+              <S.EducationalContent>
+                <S.SectionSubTitle>Available Thumbnail Qualities & Use Cases</S.SectionSubTitle>
+
+                <S.FeatureList>
+                  <S.FeatureListItem>
+                    <i className="bx bx-check-circle"></i>
+                    <span><strong>Maximum Resolution (1280×720):</strong> Perfect for website headers, blog posts, social media covers, and professional presentations requiring crisp, high-quality images</span>
+                  </S.FeatureListItem>
+                  <S.FeatureListItem>
+                    <i className="bx bx-check-circle"></i>
+                    <span><strong>Standard Quality (640×480):</strong> Ideal for email newsletters, medium-sized web content, and applications where file size balance is important</span>
+                  </S.FeatureListItem>
+                  <S.FeatureListItem>
+                    <i className="bx bx-check-circle"></i>
+                    <span><strong>High Quality (480×360):</strong> Great for social media posts, thumbnails for video galleries, and content management systems</span>
+                  </S.FeatureListItem>
+                  <S.FeatureListItem>
+                    <i className="bx bx-check-circle"></i>
+                    <span><strong>Medium Quality (320×180):</strong> Suitable for mobile applications, small web widgets, and situations requiring faster loading times</span>
+                  </S.FeatureListItem>
+                  <S.FeatureListItem>
+                    <i className="bx bx-check-circle"></i>
+                    <span><strong>Low Quality (120×90):</strong> Perfect for generating previews, creating image catalogs, and applications requiring minimal bandwidth usage</span>
+                  </S.FeatureListItem>
+                  <S.FeatureListItem>
+                    <i className="bx bx-check-circle"></i>
+                    <span><strong>Batch Download Option:</strong> Download all available resolutions simultaneously for comprehensive thumbnail collections and future-proofing your design assets</span>
+                  </S.FeatureListItem>
+                  <S.FeatureListItem>
+                    <i className="bx bx-check-circle"></i>
+                    <span><strong>Direct URL Access:</strong> Copy thumbnail URLs for integration into content management systems, automated workflows, and API implementations</span>
+                  </S.FeatureListItem>
+                  <S.FeatureListItem>
+                    <i className="bx bx-check-circle"></i>
+                    <span><strong>Download History:</strong> Track recently downloaded thumbnails with automatic history management for easy re-access and project organization</span>
+                  </S.FeatureListItem>
+                </S.FeatureList>
+              </S.EducationalContent>
+
+            </S.EducationalSection>
+          )}
+
+          {/* Step 1: URL Input */}
+          {currentStep === 'input' && (
+            <S.InputSection>
 
 
-                <S.ActionButtons>
-                  <S.SecondaryButton onClick={() => setCurrentStep('input')}>
-                    <i className="bx bx-left-arrow-alt"></i>
-                    Back
-                  </S.SecondaryButton>
-                  
-                  <S.AdvancedToggle onClick={() => setShowAdvanced(!showAdvanced)}>
-                    <i className="bx bx-cog"></i>
-                    Advanced Options
-                  </S.AdvancedToggle>
-                  
-                  <S.PrimaryButton 
-                    onClick={() => downloadThumbnail(selectedQuality)}
-                    disabled={!!isDownloading}
-                  >
-                    {isDownloading === selectedQuality ? (
-                      <>
-                        <i className="bx bx-loader-alt bx-spin"></i>
-                        Downloading...
-                      </>
-                    ) : (
-                      <>
-                        <i className="bx bx-download"></i>
-                        Download Thumbnail
-                      </>
-                    )}
-                  </S.PrimaryButton>
-                </S.ActionButtons>
 
-                {showAdvanced && (
-                  <S.AdvancedOptions>
-                    <S.AdvancedTitle>Advanced Download Options</S.AdvancedTitle>
-                    <S.AdvancedGrid>
-                      <S.AdvancedOption onClick={() => downloadAllQualities()}>
-                        <i className="bx bx-download"></i>
-                        <div>
-                          <div>Download All Qualities</div>
-                          <span>Get all available resolutions</span>
-                        </div>
-                      </S.AdvancedOption>
-                      
-                      <S.AdvancedOption onClick={() => copyThumbnailUrl(selectedQuality)}>
-                        <i className="bx bx-copy"></i>
-                        <div>
-                          <div>Copy Direct URL</div>
-                          <span>Copy thumbnail link to clipboard</span>
-                        </div>
-                      </S.AdvancedOption>
-                      
-                      <S.AdvancedOption onClick={() => window.open(thumbnailData.thumbnails[selectedQuality]?.url, '_blank')}>
-                        <i className="bx bx-link-external"></i>
-                        <div>
-                          <div>Open in New Tab</div>
-                          <span>View full-size thumbnail</span>
-                        </div>
-                      </S.AdvancedOption>
-                    </S.AdvancedGrid>
-                  </S.AdvancedOptions>
-                )}
-              </>
-            ) : null}
-          </S.PreviewSection>
-        )}
+              {downloadHistory.length > 0 && (
+                <S.HistorySection>
+                  <S.HistoryTitle>Recent downloads:</S.HistoryTitle>
+                  <S.HistoryList>
+                    {downloadHistory.slice(0, 5).map((item, index) => (
+                      <S.HistoryItem key={index} onClick={() => window.open(item.url, '_blank')}>
+                        <S.HistoryThumbnail src={item.url} alt={item.title} />
+                        <S.HistoryInfo>
+                          <S.HistoryItemTitle>{item.title}</S.HistoryItemTitle>
+                          <S.HistoryDate>{formatDate(item.downloadedAt)}</S.HistoryDate>
+                        </S.HistoryInfo>
+                      </S.HistoryItem>
+                    ))}
+                  </S.HistoryList>
+                </S.HistorySection>
+              )}
+            </S.InputSection>
+          )}
 
-        {/* Step 3: Download Complete */}
-        {currentStep === 'download' && thumbnailData && (
-          <S.ResultSection>
-            <S.SectionTitle>
-              <i className="bx bx-check-circle"></i>
-              Download Complete!
-            </S.SectionTitle>
+          {/* Step 2: Preview */}
+          {currentStep === 'preview' && (
+            <S.PreviewSection>
+              {isLoading ? (
+                <S.LoadingContainer>
+                  <i className='bx bx-loader-alt bx-spin'></i>
+                  <p>Fetching video information and thumbnails...</p>
+                </S.LoadingContainer>
+              ) : thumbnailData ? (
+                <>
 
-            <S.SuccessMessage>
-              <S.SuccessIcon>
+                  <S.VideoInfo>
+                    <S.VideoDetails>
+                      <S.VideoTitle>{thumbnailData.title}</S.VideoTitle>
+                      <S.VideoMeta>
+                        <S.MetaItem>
+                          <i className="bx bx-user"></i>
+                          {thumbnailData.channelTitle}
+                        </S.MetaItem>
+                        <S.MetaItem>
+                          <i className="bx bx-calendar"></i>
+                          {formatDate(thumbnailData.publishedAt)}
+                        </S.MetaItem>
+                        <S.MetaItem>
+                          <i className="bx bx-show"></i>
+                          {parseInt(thumbnailData.viewCount).toLocaleString()} views
+                        </S.MetaItem>
+                        <S.MetaItem>
+                          <i className="bx bx-time"></i>
+                          {formatDuration(thumbnailData.duration)}
+                        </S.MetaItem>
+                      </S.VideoMeta>
+                    </S.VideoDetails>
+                  </S.VideoInfo>
+
+                  <S.ThumbnailPreview>
+                    <S.PreviewImage
+                      src={thumbnailData.thumbnails[selectedQuality]?.url || thumbnailData.url}
+                      alt={thumbnailData.title}
+                    />
+                    <S.QualityInfo>
+                      {(() => {
+                        const quality = getAvailableQualities().find(q => q.key === selectedQuality);
+                        return quality ? `${quality.width} × ${quality.height} pixels` : 'Unknown resolution';
+                      })()}
+                    </S.QualityInfo>
+                  </S.ThumbnailPreview>
+
+
+                  <S.ActionButtons>
+                    <S.SecondaryButton onClick={() => setCurrentStep('input')}>
+                      <i className="bx bx-left-arrow-alt"></i>
+                      Back
+                    </S.SecondaryButton>
+
+                    <S.AdvancedToggle onClick={() => setShowAdvanced(!showAdvanced)}>
+                      <i className="bx bx-cog"></i>
+                      Advanced Options
+                    </S.AdvancedToggle>
+
+                    <S.PrimaryButton
+                      onClick={() => downloadThumbnail(selectedQuality)}
+                      disabled={!!isDownloading}
+                    >
+                      {isDownloading === selectedQuality ? (
+                        <>
+                          <i className="bx bx-loader-alt bx-spin"></i>
+                          Downloading...
+                        </>
+                      ) : (
+                        <>
+                          <i className="bx bx-download"></i>
+                          Download Thumbnail
+                        </>
+                      )}
+                    </S.PrimaryButton>
+                  </S.ActionButtons>
+
+                  {showAdvanced && (
+                    <S.AdvancedOptions>
+                      <S.AdvancedTitle>Advanced Download Options</S.AdvancedTitle>
+                      <S.AdvancedGrid>
+                        <S.AdvancedOption onClick={() => downloadAllQualities()}>
+                          <i className="bx bx-download"></i>
+                          <div>
+                            <div>Download All Qualities</div>
+                            <span>Get all available resolutions</span>
+                          </div>
+                        </S.AdvancedOption>
+
+                        <S.AdvancedOption onClick={() => copyThumbnailUrl(selectedQuality)}>
+                          <i className="bx bx-copy"></i>
+                          <div>
+                            <div>Copy Direct URL</div>
+                            <span>Copy thumbnail link to clipboard</span>
+                          </div>
+                        </S.AdvancedOption>
+
+                        <S.AdvancedOption onClick={() => window.open(thumbnailData.thumbnails[selectedQuality]?.url, '_blank')}>
+                          <i className="bx bx-link-external"></i>
+                          <div>
+                            <div>Open in New Tab</div>
+                            <span>View full-size thumbnail</span>
+                          </div>
+                        </S.AdvancedOption>
+                      </S.AdvancedGrid>
+                    </S.AdvancedOptions>
+                  )}
+                </>
+              ) : null}
+            </S.PreviewSection>
+          )}
+
+          {/* Step 3: Download Complete */}
+          {currentStep === 'download' && thumbnailData && (
+            <S.ResultSection>
+              <S.SectionTitle>
                 <i className="bx bx-check-circle"></i>
-              </S.SuccessIcon>
-              <S.SuccessText>
-                <h3>Thumbnail downloaded successfully!</h3>
-                <p>The thumbnail for "{thumbnailData.title}" has been saved to your downloads folder.</p>
-              </S.SuccessText>
-            </S.SuccessMessage>
+                Download Complete!
+              </S.SectionTitle>
 
-            <S.NextActions>
-              <S.NextActionsTitle>What's next?</S.NextActionsTitle>
-              <S.NextActionsList>
-                <S.NextAction onClick={startOver}>
-                  <i className="bx bx-refresh"></i>
-                  <div>
-                    <div>Download Another</div>
-                    <span>Get thumbnails from another video</span>
-                  </div>
-                </S.NextAction>
-                
-                <S.NextAction onClick={() => downloadAllQualities()}>
-                  <i className="bx bx-download"></i>
-                  <div>
-                    <div>Download All Qualities</div>
-                    <span>Get all available resolutions</span>
-                  </div>
-                </S.NextAction>
-                
-                <S.NextAction onClick={() => navigate('/tools/video-analyzer/' + extractVideoId(url))}>
-                  <i className="bx bx-line-chart"></i>
-                  <div>
-                    <div>Analyze This Video</div>
-                    <span>Get detailed video insights</span>
-                  </div>
-                </S.NextAction>
-              </S.NextActionsList>
-            </S.NextActions>
-          </S.ResultSection>
-        )}
+              <S.SuccessMessage>
+                <S.SuccessIcon>
+                  <i className="bx bx-check-circle"></i>
+                </S.SuccessIcon>
+                <S.SuccessText>
+                  <h3>Thumbnail downloaded successfully!</h3>
+                  <p>The thumbnail for "{thumbnailData.title}" has been saved to your downloads folder.</p>
+                </S.SuccessText>
+              </S.SuccessMessage>
 
-        {/* Bottom Ad */}
-        <S.BottomAdContainer>
-          <AdSense 
-            slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-            format="horizontal"
-          />
-        </S.BottomAdContainer>
-      </S.MainContainer>
-    </S.PageWrapper>
+              <S.NextActions>
+                <S.NextActionsTitle>What's next?</S.NextActionsTitle>
+                <S.NextActionsList>
+                  <S.NextAction onClick={startOver}>
+                    <i className="bx bx-refresh"></i>
+                    <div>
+                      <div>Download Another</div>
+                      <span>Get thumbnails from another video</span>
+                    </div>
+                  </S.NextAction>
+
+                  <S.NextAction onClick={() => downloadAllQualities()}>
+                    <i className="bx bx-download"></i>
+                    <div>
+                      <div>Download All Qualities</div>
+                      <span>Get all available resolutions</span>
+                    </div>
+                  </S.NextAction>
+
+                  <S.NextAction onClick={() => navigate('/tools/video-analyzer/' + extractVideoId(url))}>
+                    <i className="bx bx-line-chart"></i>
+                    <div>
+                      <div>Analyze This Video</div>
+                      <span>Get detailed video insights</span>
+                    </div>
+                  </S.NextAction>
+                </S.NextActionsList>
+              </S.NextActions>
+            </S.ResultSection>
+          )}
+        </S.MainContainer>
+      </S.PageWrapper>
     </ToolPageWrapper>
   );
 };

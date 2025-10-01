@@ -1,7 +1,6 @@
 // src/pages/Tools/components/KeywordAnalyzer/KeywordAnalyzer.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AdSense } from '../../../../components/AdSense/AdSense';
 import * as S from './styles';
 
 interface YouTubeVideo {
@@ -803,20 +802,6 @@ export const KeywordAnalyzer: React.FC = () => {
 
   return (
     <S.PageWrapper>
-      <S.AdSidebar position="left">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
-      <S.AdSidebar position="right">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -872,7 +857,7 @@ export const KeywordAnalyzer: React.FC = () => {
           </S.ErrorMessage>
         )}
 
-        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {/* Educational Content Section */}
         {!showResults && !isAnalyzing && (
           <S.EducationalSection>
             
@@ -1289,13 +1274,6 @@ export const KeywordAnalyzer: React.FC = () => {
             </S.TopVideosSection>
           </S.ResultsContainer>
         )}
-
-        <S.BottomAdContainer>
-          <AdSense 
-            slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-            format="horizontal"
-          />
-        </S.BottomAdContainer>
       </S.MainContainer>
     </S.PageWrapper>
   );

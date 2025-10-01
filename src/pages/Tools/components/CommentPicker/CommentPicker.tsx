@@ -1,7 +1,6 @@
 // src/pages/Tools/components/CommentPicker/CommentPicker.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AdSense } from '../../../../components/AdSense/AdSense';
 import * as S from './styles';
 
 import confetti from 'canvas-confetti';
@@ -428,22 +427,6 @@ export const CommentPicker: React.FC = () => {
 
   return (
     <S.PageWrapper>
-      {/* Left Sidebar Ad */}
-      <S.AdSidebar position="left">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
-      {/* Right Sidebar Ad */}
-      <S.AdSidebar position="right">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -593,7 +576,7 @@ export const CommentPicker: React.FC = () => {
           </S.FiltersContainer>
         )}
 
-        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {/* Educational Content Section */}
         {!showResults && !isLoading && totalComments === 0 && (
           <S.EducationalSection>
             <S.EducationalContent>
@@ -810,14 +793,6 @@ export const CommentPicker: React.FC = () => {
                 </S.PreviousWinnersList>
               </S.PreviousWinnersSection>
             )}
-
-            {/* Bottom Ad for smaller screens */}
-            <S.BottomAdContainer>
-              <AdSense 
-                slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-                format="horizontal"
-              />
-            </S.BottomAdContainer>
           </S.ResultsContainer>
         )}
       </S.MainContainer>

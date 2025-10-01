@@ -1,7 +1,6 @@
 // src/pages/Tools/components/ThumbnailTester/ThumbnailTester.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AdSense } from '../../../../components/AdSense/AdSense';
 import * as S from './styles';
 
 interface PreviewScenario {
@@ -184,7 +183,7 @@ export const ThumbnailTester: React.FC = () => {
     }
 
     setIsLoading(true);
-    
+
     try {
       const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
       if (!API_KEY) {
@@ -208,18 +207,18 @@ export const ThumbnailTester: React.FC = () => {
       }
 
       const video = data.items[0];
-      const thumbnail = video.snippet.thumbnails.maxres?.url || 
-                       video.snippet.thumbnails.high?.url || 
-                       video.snippet.thumbnails.medium?.url;
-      
+      const thumbnail = video.snippet.thumbnails.maxres?.url ||
+        video.snippet.thumbnails.high?.url ||
+        video.snippet.thumbnails.medium?.url;
+
       setThumbnailUrl(thumbnail);
       setTitle(video.snippet.title);
       setChannelName(video.snippet.channelTitle);
-      
+
       // Clear the input field
       const input = document.querySelector('input[placeholder*="YouTube video URL"]') as HTMLInputElement;
       if (input) input.value = '';
-      
+
       alert('Thumbnail loaded successfully!');
     } catch (error) {
       console.error('Error loading thumbnail:', error);
@@ -283,123 +282,123 @@ export const ThumbnailTester: React.FC = () => {
     }
   };
 
-const fetchChannelVideos = async (channelUrl: string): Promise<ChannelVideo[]> => {
-  const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_3;
-  const channelId = extractChannelId(channelUrl);
-  
-  if (!channelId) {
-    throw new Error('Invalid YouTube channel URL');
-  }
+  const fetchChannelVideos = async (channelUrl: string): Promise<ChannelVideo[]> => {
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_3;
+    const channelId = extractChannelId(channelUrl);
 
-  try {
-    // First try to get channel directly
-    let channelResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?` +
-      `part=snippet,contentDetails&` +
-      `id=${channelId}&key=${API_KEY}`
-    );
-    let channelData = await channelResponse.json();
+    if (!channelId) {
+      throw new Error('Invalid YouTube channel URL');
+    }
 
-    // If not found, try searching by username for @handle channels
-    if (!channelData.items?.length && channelUrl.includes('@')) {
-      const searchResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?` +
-        `part=snippet&type=channel&` +
-        `q=${channelId}&key=${API_KEY}`
+    try {
+      // First try to get channel directly
+      let channelResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?` +
+        `part=snippet,contentDetails&` +
+        `id=${channelId}&key=${API_KEY}`
       );
-      const searchData = await searchResponse.json();
-      
-      if (searchData.items?.length) {
-        const foundChannelId = searchData.items[0].id.channelId;
-        channelResponse = await fetch(
-          `https://www.googleapis.com/youtube/v3/channels?` +
-          `part=snippet,contentDetails&` +
-          `id=${foundChannelId}&key=${API_KEY}`
+      let channelData = await channelResponse.json();
+
+      // If not found, try searching by username for @handle channels
+      if (!channelData.items?.length && channelUrl.includes('@')) {
+        const searchResponse = await fetch(
+          `https://www.googleapis.com/youtube/v3/search?` +
+          `part=snippet&type=channel&` +
+          `q=${channelId}&key=${API_KEY}`
         );
-        channelData = await channelResponse.json();
+        const searchData = await searchResponse.json();
+
+        if (searchData.items?.length) {
+          const foundChannelId = searchData.items[0].id.channelId;
+          channelResponse = await fetch(
+            `https://www.googleapis.com/youtube/v3/channels?` +
+            `part=snippet,contentDetails&` +
+            `id=${foundChannelId}&key=${API_KEY}`
+          );
+          channelData = await channelResponse.json();
+        }
       }
+
+      if (!channelData.items?.length) {
+        throw new Error('Channel not found');
+      }
+
+      const channelIcon = channelData.items[0].snippet.thumbnails.default.url;
+      const channelTitle = channelData.items[0].snippet.title;
+      const uploadsPlaylistId = channelData.items[0].contentDetails.relatedPlaylists.uploads;
+
+      // Get videos from uploads playlist (fetch more to account for filtering)
+      const videosResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/playlistItems?` +
+        `part=snippet&playlistId=${uploadsPlaylistId}&` +
+        `maxResults=50&key=${API_KEY}`
+      );
+
+      if (!videosResponse.ok) {
+        throw new Error('Failed to fetch channel videos');
+      }
+
+      const videosData = await videosResponse.json();
+
+      if (!videosData.items?.length) {
+        throw new Error('No videos found for this channel');
+      }
+
+      // Extract video IDs to get detailed video information including duration
+      const videoIds = videosData.items.map((item: any) => item.snippet.resourceId.videoId).join(',');
+
+      // Fetch video details including duration and contentDetails
+      const videoDetailsResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?` +
+        `part=snippet,contentDetails&` +
+        `id=${videoIds}&` +
+        `key=${API_KEY}`
+      );
+
+      if (!videoDetailsResponse.ok) {
+        throw new Error('Failed to fetch video details');
+      }
+
+      const videoDetailsData = await videoDetailsResponse.json();
+
+      // Function to convert YouTube duration format (PT4M13S) to seconds
+      const parseDuration = (duration: string): number => {
+        const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+        if (!match) return 0;
+
+        const hours = parseInt(match[1] || '0');
+        const minutes = parseInt(match[2] || '0');
+        const seconds = parseInt(match[3] || '0');
+
+        return hours * 3600 + minutes * 60 + seconds;
+      };
+
+      // Filter out Shorts (videos under 60 seconds) and process videos
+      const longFormatVideos = videoDetailsData.items
+        .filter((video: any) => {
+          const durationInSeconds = parseDuration(video.contentDetails.duration);
+          // Filter out videos shorter than 60 seconds (Shorts)
+          return durationInSeconds >= 60;
+        })
+        .slice(0, 11) // Take first 11 long-format videos
+        .map((video: any) => ({
+          thumbnail: video.snippet.thumbnails.medium?.url || video.snippet.thumbnails.default?.url,
+          title: video.snippet.title,
+          channelTitle: channelTitle,
+          profilePicture: channelIcon,
+          isUser: false
+        }));
+
+      if (longFormatVideos.length === 0) {
+        throw new Error('No long-format videos found for this channel (only Shorts available)');
+      }
+
+      return longFormatVideos;
+    } catch (error) {
+      console.error('Error fetching channel videos:', error);
+      throw error;
     }
-
-    if (!channelData.items?.length) {
-      throw new Error('Channel not found');
-    }
-
-    const channelIcon = channelData.items[0].snippet.thumbnails.default.url;
-    const channelTitle = channelData.items[0].snippet.title;
-    const uploadsPlaylistId = channelData.items[0].contentDetails.relatedPlaylists.uploads;
-
-    // Get videos from uploads playlist (fetch more to account for filtering)
-    const videosResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/playlistItems?` +
-      `part=snippet&playlistId=${uploadsPlaylistId}&` +
-      `maxResults=50&key=${API_KEY}`
-    );
-    
-    if (!videosResponse.ok) {
-      throw new Error('Failed to fetch channel videos');
-    }
-    
-    const videosData = await videosResponse.json();
-
-    if (!videosData.items?.length) {
-      throw new Error('No videos found for this channel');
-    }
-
-    // Extract video IDs to get detailed video information including duration
-    const videoIds = videosData.items.map((item: any) => item.snippet.resourceId.videoId).join(',');
-    
-    // Fetch video details including duration and contentDetails
-    const videoDetailsResponse = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?` +
-      `part=snippet,contentDetails&` +
-      `id=${videoIds}&` +
-      `key=${API_KEY}`
-    );
-    
-    if (!videoDetailsResponse.ok) {
-      throw new Error('Failed to fetch video details');
-    }
-    
-    const videoDetailsData = await videoDetailsResponse.json();
-
-    // Function to convert YouTube duration format (PT4M13S) to seconds
-    const parseDuration = (duration: string): number => {
-      const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-      if (!match) return 0;
-      
-      const hours = parseInt(match[1] || '0');
-      const minutes = parseInt(match[2] || '0');
-      const seconds = parseInt(match[3] || '0');
-      
-      return hours * 3600 + minutes * 60 + seconds;
-    };
-
-    // Filter out Shorts (videos under 60 seconds) and process videos
-    const longFormatVideos = videoDetailsData.items
-      .filter((video: any) => {
-        const durationInSeconds = parseDuration(video.contentDetails.duration);
-        // Filter out videos shorter than 60 seconds (Shorts)
-        return durationInSeconds >= 60;
-      })
-      .slice(0, 11) // Take first 11 long-format videos
-      .map((video: any) => ({
-        thumbnail: video.snippet.thumbnails.medium?.url || video.snippet.thumbnails.default?.url,
-        title: video.snippet.title,
-        channelTitle: channelTitle,
-        profilePicture: channelIcon,
-        isUser: false
-      }));
-
-    if (longFormatVideos.length === 0) {
-      throw new Error('No long-format videos found for this channel (only Shorts available)');
-    }
-
-    return longFormatVideos;
-  } catch (error) {
-    console.error('Error fetching channel videos:', error);
-    throw error;
-  }
-};
+  };
 
   const handleCompareWithTrending = async () => {
     if (!thumbnailUrl) {
@@ -615,22 +614,6 @@ const fetchChannelVideos = async (channelUrl: string): Promise<ChannelVideo[]> =
 
   return (
     <S.PageWrapper>
-      {/* Left Sidebar Ad */}
-      <S.AdSidebar position="left">
-        <AdSense
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
-      {/* Right Sidebar Ad */}
-      <S.AdSidebar position="right">
-        <AdSense
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -644,11 +627,11 @@ const fetchChannelVideos = async (channelUrl: string): Promise<ChannelVideo[]> =
             <S.ToolIconContainer>
               <i className={toolConfig.icon}></i>
             </S.ToolIconContainer>
-            
+
             <S.HeaderTextContent>
               <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
               <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
-              
+
               <S.FeaturesList>
                 {toolConfig.features.map((feature, index) => (
                   <S.FeatureItem key={index}>
@@ -863,14 +846,6 @@ const fetchChannelVideos = async (channelUrl: string): Promise<ChannelVideo[]> =
             </S.ActionButtons>
           </S.ComparisonSection>
         )}
-
-        {/* Bottom Ad */}
-        <S.BottomAdContainer>
-          <AdSense
-            slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-            format="horizontal"
-          />
-        </S.BottomAdContainer>
       </S.MainContainer>
     </S.PageWrapper>
   );

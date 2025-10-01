@@ -1,7 +1,6 @@
 // src/pages/Tools/components/ChannelConsultant/ChannelConsultant.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AdSense } from '../../../../components/AdSense/AdSense';
 import * as S from './styles';
 
 interface ChannelData {
@@ -206,22 +205,6 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
 
   return (
     <S.PageWrapper>
-      {/* Left Sidebar Ad */}
-      <S.AdSidebar position="left">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
-      {/* Right Sidebar Ad */}
-      <S.AdSidebar position="right">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -272,7 +255,7 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
           </S.HeaderContent>
         </S.EnhancedHeader>
 
-        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {/* Educational Content Section */}
         {!showResults && !isLoading && (
           <S.EducationalSection>
             <S.EducationalContent>
@@ -480,13 +463,6 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
                 </S.AILinksSection>
               </S.ActionsSection>
 
-              {/* Bottom Ad for smaller screens */}
-              <S.BottomAdContainer>
-                <AdSense 
-                  slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-                  format="horizontal"
-                />
-              </S.BottomAdContainer>
             </S.ResultCard>
           ) : null}
         </S.ResultsContainer>

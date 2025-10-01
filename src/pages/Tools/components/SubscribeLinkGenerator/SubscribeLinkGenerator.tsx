@@ -1,7 +1,6 @@
 // src/pages/Tools/components/SubscribeLinkGenerator/SubscribeLinkGenerator.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AdSense } from '../../../../components/AdSense/AdSense';
 import * as S from './styles';
 
 interface ChannelInfo {
@@ -64,7 +63,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
       setUrl(channelId);
       handleSubmit(undefined, channelId);
     }
-    
+
     // Load search history
     const history = localStorage.getItem('subscribe_history');
     if (history) {
@@ -103,7 +102,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
     try {
       // Try multiple methods to find the channel
       let channelData = null;
-      
+
       // Method 1: Try by handle
       let response = await fetch(
         `https://www.googleapis.com/youtube/v3/channels?` +
@@ -125,7 +124,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
           `key=${API_KEY}`
         );
         data = await response.json();
-        
+
         if (data.items && data.items.length > 0) {
           // Get full channel info
           const channelId = data.items[0].id.channelId;
@@ -155,7 +154,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
         `key=${API_KEY}`
       );
       const uploadsData = await uploadsResponse.json();
-      
+
       const uploads: RecentVideo[] = uploadsData.items?.map((video: any) => ({
         id: video.id.videoId,
         title: video.snippet.title,
@@ -230,7 +229,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
 
   const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>, directHandle?: string) => {
     if (e) e.preventDefault();
-    
+
     const handle = directHandle || extractChannelHandle(url);
     if (!handle) {
       alert('Please enter a valid YouTube channel URL or handle');
@@ -245,7 +244,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
       const info = await fetchChannelInfo(handle);
       setChannelInfo(info);
       saveToHistory(handle);
-      
+
       // Optional: Update URL without navigation to allow direct linking
       if (window.history && window.history.pushState) {
         const newUrl = `/tools/subscribe-link-generator/${handle}`;
@@ -273,7 +272,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
     const response = await fetch(qrUrl);
     const blob = await response.blob();
     const downloadUrl = URL.createObjectURL(blob);
-    
+
     const link = document.createElement('a');
     link.href = downloadUrl;
     link.download = `${channelInfo?.title}_subscribe_qr.png`;
@@ -285,7 +284,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
 
   const shareChannel = async () => {
     if (!channelInfo) return;
-    
+
     const shareData = {
       title: `Subscribe to ${channelInfo.title}`,
       text: `Check out this YouTube channel: ${channelInfo.title}`,
@@ -319,22 +318,6 @@ export const SubscribeLinkGenerator: React.FC = () => {
 
   return (
     <S.PageWrapper>
-      {/* Left Sidebar Ad */}
-      <S.AdSidebar position="left">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
-      {/* Right Sidebar Ad */}
-      <S.AdSidebar position="right">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -348,11 +331,11 @@ export const SubscribeLinkGenerator: React.FC = () => {
             <S.ToolIconContainer>
               <i className={toolConfig.icon}></i>
             </S.ToolIconContainer>
-            
+
             <S.HeaderTextContent>
               <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
               <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
-              
+
               <S.FeaturesList>
                 {toolConfig.features.map((feature, index) => (
                   <S.FeatureItem key={index}>
@@ -399,15 +382,15 @@ export const SubscribeLinkGenerator: React.FC = () => {
           </S.HistorySection>
         )}
 
-        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {/* Educational Content Section */}
         {!channelInfo && !isLoading && (
           <S.EducationalSection>
             <S.EducationalContent>
               <S.SectionSubTitle>How to Use the Subscribe Link Generator</S.SectionSubTitle>
-              
+
               <S.EducationalText>
-                Our Subscribe Link Generator creates professional subscription links and channel preview cards 
-                for YouTube creators. Generate multiple link variations, download QR codes, and get tools to 
+                Our Subscribe Link Generator creates professional subscription links and channel preview cards
+                for YouTube creators. Generate multiple link variations, download QR codes, and get tools to
                 help grow your subscriber base with optimized subscription experiences.
               </S.EducationalText>
 
@@ -417,8 +400,8 @@ export const SubscribeLinkGenerator: React.FC = () => {
                   <S.StepContent>
                     <S.SubscribeLinkGeneratorStepTitle>Enter Channel Information</S.SubscribeLinkGeneratorStepTitle>
                     <S.EducationalText>
-                      Input your YouTube channel URL, @handle, or channel ID. Our system automatically 
-                      fetches channel metadata including subscriber count, video statistics, and recent 
+                      Input your YouTube channel URL, @handle, or channel ID. Our system automatically
+                      fetches channel metadata including subscriber count, video statistics, and recent
                       uploads to create a comprehensive channel preview.
                     </S.EducationalText>
                   </S.StepContent>
@@ -429,8 +412,8 @@ export const SubscribeLinkGenerator: React.FC = () => {
                   <S.StepContent>
                     <S.SubscribeLinkGeneratorStepTitle>Generate Multiple Link Variations</S.SubscribeLinkGeneratorStepTitle>
                     <S.EducationalText>
-                      Access various subscribe link formats including direct subscription links, channel 
-                      homepage links, and specialized URLs for different marketing purposes. Each variation 
+                      Access various subscribe link formats including direct subscription links, channel
+                      homepage links, and specialized URLs for different marketing purposes. Each variation
                       is optimized for specific use cases and platforms.
                     </S.EducationalText>
                   </S.StepContent>
@@ -441,8 +424,8 @@ export const SubscribeLinkGenerator: React.FC = () => {
                   <S.StepContent>
                     <S.SubscribeLinkGeneratorStepTitle>Download & Share Assets</S.SubscribeLinkGeneratorStepTitle>
                     <S.EducationalText>
-                      Copy generated links, download QR codes for offline promotion, and use the channel 
-                      preview cards for social media marketing. Share your channel professionally across 
+                      Copy generated links, download QR codes for offline promotion, and use the channel
+                      preview cards for social media marketing. Share your channel professionally across
                       different platforms and marketing materials.
                     </S.EducationalText>
                   </S.StepContent>
@@ -452,7 +435,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
 
             <S.EducationalContent>
               <S.SectionSubTitle>Subscribe Link Features</S.SectionSubTitle>
-              
+
               <S.FeatureList>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
@@ -481,8 +464,8 @@ export const SubscribeLinkGenerator: React.FC = () => {
               </S.FeatureList>
 
               <S.EducationalText>
-                Perfect for content creators, marketers, and businesses looking to grow their YouTube presence. 
-                Use these professional subscription tools to increase subscriber conversion rates, enhance 
+                Perfect for content creators, marketers, and businesses looking to grow their YouTube presence.
+                Use these professional subscription tools to increase subscriber conversion rates, enhance
                 marketing campaigns, and create consistent branding across all promotional materials.
               </S.EducationalText>
             </S.EducationalContent>
@@ -509,7 +492,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
                   }}
                 />
               )}
-              
+
               <S.ChannelContent>
                 <S.ChannelHeader>
                   <S.ChannelAvatar src={channelInfo.thumbnail} alt={channelInfo.title} />
@@ -535,7 +518,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
                       </S.MetaItem>
                     </S.ChannelMeta>
                   </S.ChannelInfo>
-                  
+
                   <S.ChannelActions>
                     <S.ActionButton onClick={shareChannel}>
                       <i className="bx bx-share"></i>
@@ -546,7 +529,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
 
                 {channelInfo.description && (
                   <S.ChannelDescription>
-                    {channelInfo.description.length > 200 
+                    {channelInfo.description.length > 200
                       ? channelInfo.description.substring(0, 200) + '...'
                       : channelInfo.description
                     }
@@ -581,7 +564,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
                 <i className="bx bx-link"></i>
                 Subscribe Link Variations
               </S.SectionTitle>
-              
+
               <S.LinkVariations>
                 {getLinkVariations(channelInfo.customUrl).map((variation, index) => (
                   <S.LinkCard key={index}>
@@ -592,9 +575,9 @@ export const SubscribeLinkGenerator: React.FC = () => {
                         <S.LinkDescription>{variation.description}</S.LinkDescription>
                       </S.LinkInfo>
                     </S.LinkHeader>
-                    
+
                     <S.LinkUrl>{variation.url}</S.LinkUrl>
-                    
+
                     <S.LinkActions>
                       <S.CopyButton
                         onClick={() => handleCopy(variation.url, variation.name)}
@@ -612,7 +595,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
                           </>
                         )}
                       </S.CopyButton>
-                      
+
                       <S.QRButton onClick={() => downloadQRCode(variation.url)}>
                         <i className="bx bx-qr"></i>
                         QR Code
@@ -622,14 +605,6 @@ export const SubscribeLinkGenerator: React.FC = () => {
                 ))}
               </S.LinkVariations>
             </S.LinksSection>
-
-            {/* Bottom Ad for smaller screens */}
-            <S.BottomAdContainer>
-              <AdSense 
-                slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-                format="horizontal"
-              />
-            </S.BottomAdContainer>
           </S.ResultsContainer>
         )}
       </S.MainContainer>

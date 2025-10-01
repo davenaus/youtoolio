@@ -1,7 +1,6 @@
 // src/pages/Tools/components/TagGenerator/TagGenerator.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AdSense } from '../../../../components/AdSense/AdSense';
 import * as S from './styles';
 
 interface VideoDetails {
@@ -100,7 +99,7 @@ export const TagGenerator: React.FC = () => {
 
     setIsLoading(true);
     setShowResults(false);
-    
+
     try {
       const results = await generateAdvancedTags(title);
       setGeneratedTags(results.tags);
@@ -166,7 +165,7 @@ export const TagGenerator: React.FC = () => {
         detailsData.items.forEach((video: VideoDetails) => {
           processedVideos.push(video);
           const videoTags = video.snippet.tags || [];
-          
+
           videoTags.forEach(tag => {
             const analysis = analyzeTag(tag, video, searchTerm);
             if (analysis.score > 0) {
@@ -254,7 +253,7 @@ export const TagGenerator: React.FC = () => {
 
   const categorizeTag = (tag: string): string => {
     const lowercaseTag = tag.toLowerCase();
-    
+
     if (lowercaseTag.includes('tutorial') || lowercaseTag.includes('how to') || lowercaseTag.includes('guide')) {
       return 'educational';
     }
@@ -270,14 +269,14 @@ export const TagGenerator: React.FC = () => {
     if (lowercaseTag.includes('music') || lowercaseTag.includes('song') || lowercaseTag.includes('cover')) {
       return 'music';
     }
-    
+
     return 'general';
   };
 
   const categorizeAndRankTags = (tagAnalysis: TagAnalysis[], videos: VideoDetails[], searchTerm: string) => {
     // Consolidate duplicate tags
     const tagMap = new Map<string, TagAnalysis>();
-    
+
     tagAnalysis.forEach(analysis => {
       const existing = tagMap.get(analysis.tag.toLowerCase());
       if (existing) {
@@ -343,7 +342,7 @@ export const TagGenerator: React.FC = () => {
   const generateSuggestedTags = (searchTerm: string, existingTags: TagAnalysis[]): string[] => {
     const suggestions: string[] = [];
     const currentYear = new Date().getFullYear();
-    
+
     // Time-based suggestions
     suggestions.push(
       `${searchTerm} ${currentYear}`,
@@ -363,14 +362,14 @@ export const TagGenerator: React.FC = () => {
       );
     }
 
-    return suggestions.filter(tag => 
+    return suggestions.filter(tag =>
       !existingTags.some(existing => existing.tag.toLowerCase() === tag.toLowerCase())
     );
   };
 
   const getTopCategories = (tags: TagAnalysis[]): string[] => {
     const categoryCount = new Map<string, number>();
-    
+
     tags.forEach(tag => {
       const count = categoryCount.get(tag.category) || 0;
       categoryCount.set(tag.category, count + 1);
@@ -383,15 +382,15 @@ export const TagGenerator: React.FC = () => {
   };
 
   const calculateEstimatedReach = (videos: VideoDetails[]): number => {
-    const totalViews = videos.reduce((sum, video) => 
+    const totalViews = videos.reduce((sum, video) =>
       sum + parseInt(video.statistics.viewCount || '0'), 0
     );
     return Math.floor(totalViews / videos.length);
   };
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) 
+    setSelectedTags(prev =>
+      prev.includes(tag)
         ? prev.filter(t => t !== tag)
         : [...prev, tag]
     );
@@ -448,22 +447,6 @@ export const TagGenerator: React.FC = () => {
 
   return (
     <S.PageWrapper>
-      {/* Left Sidebar Ad */}
-      <S.AdSidebar position="left">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
-      {/* Right Sidebar Ad */}
-      <S.AdSidebar position="right">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -477,11 +460,11 @@ export const TagGenerator: React.FC = () => {
             <S.ToolIconContainer>
               <i className={toolConfig.icon}></i>
             </S.ToolIconContainer>
-            
+
             <S.HeaderTextContent>
               <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
               <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
-              
+
               <S.FeaturesList>
                 {toolConfig.features.map((feature, index) => (
                   <S.FeatureItem key={index}>
@@ -573,16 +556,16 @@ export const TagGenerator: React.FC = () => {
           </S.FiltersContainer>
         )}
 
-        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {/* Educational Content Section */}
         {!showResults && (
           <S.EducationalSection>
-            
+
             <S.EducationalContent>
               <S.SectionSubTitle>How to Use the Tag Generator</S.SectionSubTitle>
-              
+
               <S.EducationalText>
-                Our Tag Generator helps you discover high-performing YouTube tags using advanced keyword research 
-                and competitor analysis. Generate targeted tags that improve video discoverability, boost search rankings, 
+                Our Tag Generator helps you discover high-performing YouTube tags using advanced keyword research
+                and competitor analysis. Generate targeted tags that improve video discoverability, boost search rankings,
                 and reach the right audience for maximum engagement and growth.
               </S.EducationalText>
 
@@ -592,8 +575,8 @@ export const TagGenerator: React.FC = () => {
                   <S.StepContent>
                     <S.StepTitle>Enter Your Topic</S.StepTitle>
                     <S.EducationalText>
-                      Input your main video topic, target keyword, or seed phrase into the generator above. 
-                      Our system analyzes related terms, trending keywords, and successful tag patterns 
+                      Input your main video topic, target keyword, or seed phrase into the generator above.
+                      Our system analyzes related terms, trending keywords, and successful tag patterns
                       to provide comprehensive tag suggestions tailored to your content.
                     </S.EducationalText>
                   </S.StepContent>
@@ -604,8 +587,8 @@ export const TagGenerator: React.FC = () => {
                   <S.StepContent>
                     <S.StepTitle>Advanced Tag Analysis</S.StepTitle>
                     <S.EducationalText>
-                      Our algorithm examines search volume, competition levels, and trending patterns 
-                      to suggest optimal tags. We analyze successful videos in your niche to identify 
+                      Our algorithm examines search volume, competition levels, and trending patterns
+                      to suggest optimal tags. We analyze successful videos in your niche to identify
                       high-performing tag combinations and keyword opportunities.
                     </S.EducationalText>
                   </S.StepContent>
@@ -616,8 +599,8 @@ export const TagGenerator: React.FC = () => {
                   <S.StepContent>
                     <S.StepTitle>Copy & Optimize</S.StepTitle>
                     <S.EducationalText>
-                      Select from generated tags based on relevance and search potential. Copy tags 
-                      directly to your clipboard for easy pasting into YouTube Studio. Use our optimization 
+                      Select from generated tags based on relevance and search potential. Copy tags
+                      directly to your clipboard for easy pasting into YouTube Studio. Use our optimization
                       tips to maximize tag effectiveness and improve video discoverability.
                     </S.EducationalText>
                   </S.StepContent>
@@ -627,7 +610,7 @@ export const TagGenerator: React.FC = () => {
 
             <S.EducationalContent>
               <S.SectionSubTitle>Tag Optimization Features</S.SectionSubTitle>
-              
+
               <S.FeatureList>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
@@ -736,7 +719,7 @@ export const TagGenerator: React.FC = () => {
                     </S.ActionButtons>
                   )}
                 </S.SelectedTagsHeader>
-                
+
                 {selectedTags.length > 0 ? (
                   <S.SelectedTagsGrid>
                     {selectedTags.map((tag, index) => (
@@ -774,7 +757,7 @@ export const TagGenerator: React.FC = () => {
                     </S.CategoryDescription>
                     <S.TagGrid>
                       {generatedTags.suggested.map((tag, index) => (
-                        <S.TagChip 
+                        <S.TagChip
                           key={index}
                           selected={selectedTags.includes(tag)}
                           category="suggested"
@@ -806,7 +789,7 @@ export const TagGenerator: React.FC = () => {
                   </S.CategoryDescription>
                   <S.TagGrid>
                     {generatedTags.highPerformance.map((tag, index) => (
-                      <S.TagChip 
+                      <S.TagChip
                         key={index}
                         selected={selectedTags.includes(tag)}
                         category="high-performance"
@@ -837,7 +820,7 @@ export const TagGenerator: React.FC = () => {
                   </S.CategoryDescription>
                   <S.TagGrid>
                     {generatedTags.trending.map((tag, index) => (
-                      <S.TagChip 
+                      <S.TagChip
                         key={index}
                         selected={selectedTags.includes(tag)}
                         category="trending"
@@ -868,7 +851,7 @@ export const TagGenerator: React.FC = () => {
                   </S.CategoryDescription>
                   <S.TagGrid>
                     {generatedTags.niche.map((tag, index) => (
-                      <S.TagChip 
+                      <S.TagChip
                         key={index}
                         selected={selectedTags.includes(tag)}
                         category="niche"
@@ -899,7 +882,7 @@ export const TagGenerator: React.FC = () => {
                   </S.CategoryDescription>
                   <S.TagGrid>
                     {generatedTags.longtail.map((tag, index) => (
-                      <S.TagChip 
+                      <S.TagChip
                         key={index}
                         selected={selectedTags.includes(tag)}
                         category="longtail"
@@ -919,14 +902,6 @@ export const TagGenerator: React.FC = () => {
                   Start Over
                 </S.ResetButton>
               </S.ActionBar>
-
-              {/* Bottom Ad for smaller screens */}
-              <S.BottomAdContainer>
-                <AdSense 
-                  slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-                  format="horizontal"
-                />
-              </S.BottomAdContainer>
             </>
           ) : null}
         </S.ResultsContainer>

@@ -394,7 +394,7 @@ export const YouTubeSEOOptimization: React.FC = () => {
 
           <HighlightBox>
             <h4>Ready to Optimize Your Channel?</h4>
-            <p>Use YouTool's comprehensive SEO suite to analyze your current performance, research profitable keywords, and optimize your content for maximum discoverability. Start your free analysis today!</p>
+            <p>Use YouTool's comprehensive SEO suite to analyze your current performance, research profitable keywords, and optimize your content for maximum discoverability. Start your analysis today!</p>
           </HighlightBox>
         </Content>
       </ContentWrapper>

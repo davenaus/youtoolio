@@ -6,7 +6,7 @@ const pulseGlow = keyframes`
   50% { box-shadow: 0 0 40px rgba(229, 72, 72, 0.8); }
 `;
 
-// Educational Content Styled Components - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL
+// Educational Content Styled Components 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
@@ -121,18 +121,6 @@ export const PageWrapper = styled.div`
   display: flex;
   justify-content: center;
   position: relative;
-`;
-
-export const AdSidebar = styled.div<{ position: 'left' | 'right' }>`
-  position: absolute;
-  top: 100px;
-  ${({ position }) => position}: 20px;
-  width: 160px;
-  z-index: 10;
-  
-  @media (max-width: 1700px) {
-    display: none;
-  }
 `;
 
 export const MainContainer = styled.div`

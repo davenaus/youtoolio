@@ -1,7 +1,6 @@
 // src/pages/Tools/components/VideoAnalyzer/VideoAnalyzer.tsx - IMPROVED VERSION
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AdSense } from '../../../../components/AdSense/AdSense';
 import { ToolPageWrapper } from '../../../../components/ToolPageWrapper';
 import * as S from './styles';
 import moment from 'moment';
@@ -22,7 +21,7 @@ interface VideoAnalysis {
     commentToViewRatio: number;
     subscribers: number;
   };
-  
+
   technicalDetails: {
     videoId: string;
     duration: number;
@@ -104,7 +103,7 @@ const VideoAnalyzer: React.FC = () => {
   const [analysisResults, setAnalysisResults] = useState<VideoAnalysis | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
-  
+
   // AI Chatbot Interface States
   const [chatQuery, setChatQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -126,7 +125,7 @@ const VideoAnalyzer: React.FC = () => {
 
     const query = chatQuery.toLowerCase();
     const words = query.split(' ').filter(word => word.length > 0);
-    
+
     const scoredQuestions = ANALYTICS_QUESTIONS
       .filter(question => {
         // Filter by video type
@@ -225,13 +224,13 @@ const VideoAnalyzer: React.FC = () => {
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setSelectedDropdownIndex(prev => 
+          setSelectedDropdownIndex(prev =>
             prev < searchQuestions.length - 1 ? prev + 1 : 0
           );
           break;
         case 'ArrowUp':
           e.preventDefault();
-          setSelectedDropdownIndex(prev => 
+          setSelectedDropdownIndex(prev =>
             prev > 0 ? prev - 1 : searchQuestions.length - 1
           );
           break;
@@ -275,7 +274,7 @@ const VideoAnalyzer: React.FC = () => {
   const handleTagAnalyze = (tag: string) => {
     const encodedTag = encodeURIComponent(tag.trim());
     const keywordAnalyzerUrl = `/tools/keyword-analyzer/${encodedTag}`;
-    
+
     // Open in new tab
     window.open(keywordAnalyzerUrl, '_blank', 'noopener,noreferrer');
   };
@@ -287,7 +286,7 @@ const VideoAnalyzer: React.FC = () => {
 
     const regExpVideo = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const regExpShorts = /^.*(youtu.be\/|shorts\/)([^#\&\?]*).*/;
-    
+
     const matchVideo = url.match(regExpVideo);
     const matchShorts = url.match(regExpShorts);
 
@@ -303,7 +302,7 @@ const VideoAnalyzer: React.FC = () => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
-    
+
     if (hours > 0) {
       return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
@@ -313,11 +312,11 @@ const VideoAnalyzer: React.FC = () => {
   const parseDuration = (duration: string): number => {
     const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
     if (!match) return 0;
-    
+
     const hours = parseInt(match[1] || '0');
     const minutes = parseInt(match[2] || '0');
     const seconds = parseInt(match[3] || '0');
-    
+
     return hours * 3600 + minutes * 60 + seconds;
   };
 
@@ -326,16 +325,16 @@ const VideoAnalyzer: React.FC = () => {
     if (!API_KEY) {
       throw new Error('YouTube API key not configured');
     }
-    
+
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/videos?` +
       `part=snippet,contentDetails,statistics,status&id=${videoId}&key=${API_KEY}`
     );
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch video data');
     }
-    
+
     const data = await response.json();
     if (!data.items?.[0]) {
       throw new Error('Video not found');
@@ -349,11 +348,11 @@ const VideoAnalyzer: React.FC = () => {
       `https://www.googleapis.com/youtube/v3/channels?` +
       `part=snippet,statistics,contentDetails&id=${channelId}&key=${API_KEY}`
     );
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch channel data');
     }
-    
+
     const data = await response.json();
     if (!data.items?.[0]) {
       throw new Error('Channel not found');
@@ -363,31 +362,31 @@ const VideoAnalyzer: React.FC = () => {
 
   const fetchChannelVideos = async (channelId: string, maxResults: number = 50): Promise<ChannelVideo[]> => {
     const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_4;
-    
+
     try {
       const channelResponse = await fetch(
         `https://www.googleapis.com/youtube/v3/channels?` +
         `part=contentDetails&id=${channelId}&key=${API_KEY}`
       );
-      
+
       const channelData = await channelResponse.json();
       const uploadsPlaylistId = channelData.items[0].contentDetails.relatedPlaylists.uploads;
-      
+
       const playlistResponse = await fetch(
         `https://www.googleapis.com/youtube/v3/playlistItems?` +
         `part=snippet&playlistId=${uploadsPlaylistId}&maxResults=${maxResults}&key=${API_KEY}`
       );
-      
+
       const playlistData = await playlistResponse.json();
       const videoIds = playlistData.items.map((item: any) => item.snippet.resourceId.videoId).join(',');
-      
+
       const videosResponse = await fetch(
         `https://www.googleapis.com/youtube/v3/videos?` +
         `part=statistics,snippet,contentDetails&id=${videoIds}&key=${API_KEY}`
       );
-      
+
       const videosData = await videosResponse.json();
-      
+
       return videosData.items.map((video: any) => ({
         id: video.id,
         title: video.snippet.title,
@@ -423,7 +422,7 @@ const VideoAnalyzer: React.FC = () => {
   const analyzeContent = (videoData: any): VideoAnalysis['contentAnalysis'] => {
     const description = videoData.snippet.description || '';
     const title = videoData.snippet.title || '';
-    
+
     return {
       titleLength: title.length,
       titleWordCount: title.split(' ').filter((w: string) => w.length > 0).length,
@@ -440,7 +439,7 @@ const VideoAnalyzer: React.FC = () => {
   const calculateScores = (videoData: any, contentAnalysis: VideoAnalysis['contentAnalysis']) => {
     // SEO Score calculation (0-100)
     let seoScore = 0;
-    
+
     // Title optimization (35 points max)
     if (contentAnalysis.titleLength >= 50 && contentAnalysis.titleLength <= 60) {
       seoScore += 35; // Perfect length
@@ -451,7 +450,7 @@ const VideoAnalyzer: React.FC = () => {
     } else {
       seoScore += 5; // Poor length
     }
-    
+
     // Description optimization (30 points max)
     if (contentAnalysis.descriptionLength >= 250) {
       seoScore += 30; // Comprehensive description
@@ -462,7 +461,7 @@ const VideoAnalyzer: React.FC = () => {
     } else {
       seoScore += 2; // Very poor description
     }
-    
+
     // Tag optimization (20 points max)
     if (contentAnalysis.tagCount >= 15) {
       seoScore += 20; // Excellent tag usage
@@ -474,29 +473,29 @@ const VideoAnalyzer: React.FC = () => {
       seoScore += 5; // Minimal tag usage
     }
     // 0 points for no tags
-    
+
     // Hashtag usage (8 points max)
     if (contentAnalysis.hashtags.length >= 3 && contentAnalysis.hashtags.length <= 15) {
       seoScore += 8; // Optimal hashtag usage
     } else if (contentAnalysis.hashtags.length >= 1) {
       seoScore += 4; // Some hashtag usage
     }
-    
+
     // External links (7 points max)
     if (contentAnalysis.descriptionLinkCount >= 1 && contentAnalysis.descriptionLinkCount <= 5) {
       seoScore += 7; // Good link usage
     } else if (contentAnalysis.descriptionLinkCount > 5) {
       seoScore += 3; // Too many links (potential spam)
     }
-    
+
     // Engagement Score calculation (0-100) - Based on realistic YouTube benchmarks
     const views = parseInt(videoData.statistics.viewCount || '0');
     const likes = parseInt(videoData.statistics.likeCount || '0');
     const comments = parseInt(videoData.statistics.commentCount || '0');
     const engagementRate = views > 0 ? ((likes + comments) / views) * 100 : 0;
-    
+
     let engagementScore = 0;
-    
+
     // Realistic engagement rate benchmarks for YouTube
     if (engagementRate >= 8) {
       engagementScore = 100; // Viral/exceptional content
@@ -517,20 +516,20 @@ const VideoAnalyzer: React.FC = () => {
     } else {
       engagementScore = 10; // Very poor engagement
     }
-    
+
     // Bonus points for consistent engagement patterns
     const likeRatio = views > 0 ? (likes / views) * 100 : 0;
     const commentRatio = views > 0 ? (comments / views) * 100 : 0;
-    
+
     // Bonus for balanced engagement (not just likes or just comments)
     if (likeRatio > 0.5 && commentRatio > 0.1) {
       engagementScore = Math.min(100, engagementScore + 5);
     }
-    
+
     // Optimization Score calculation (weighted average)
     // SEO is slightly more important for discoverability, but engagement drives the algorithm
     const optimizationScore = Math.round((seoScore * 0.4) + (engagementScore * 0.6));
-    
+
     return {
       seoScore: Math.min(100, Math.round(seoScore)),
       engagementScore: Math.min(100, Math.round(engagementScore)),
@@ -539,7 +538,7 @@ const VideoAnalyzer: React.FC = () => {
   };
 
   const generateInsights = (
-    videoData: any, 
+    videoData: any,
     contentAnalysis: VideoAnalysis['contentAnalysis'],
     scores: VideoAnalysis['performanceScores'],
     channelMetrics: VideoAnalysis['channelMetrics']
@@ -547,47 +546,47 @@ const VideoAnalyzer: React.FC = () => {
     const strengths: string[] = [];
     const improvements: string[] = [];
     const recommendations: string[] = [];
-    
+
     const views = parseInt(videoData.statistics.viewCount || '0');
     const likes = parseInt(videoData.statistics.likeCount || '0');
     const comments = parseInt(videoData.statistics.commentCount || '0');
     const duration = parseDuration(videoData.contentDetails.duration);
-    
+
     // Analyze strengths with specific data
     if (scores.engagementScore > 60) {
-      strengths.push(`Excellent engagement rate of ${(scores.engagementScore/10).toFixed(1)}% - significantly above YouTube average of 4%`);
+      strengths.push(`Excellent engagement rate of ${(scores.engagementScore / 10).toFixed(1)}% - significantly above YouTube average of 4%`);
     } else if (scores.engagementScore > 40) {
       strengths.push(`Good engagement rate of ${((likes + comments) / views * 100).toFixed(2)}% - above typical performance`);
     }
-    
+
     if (contentAnalysis.titleLength >= 40 && contentAnalysis.titleLength <= 60) {
       strengths.push(`Perfect title length (${contentAnalysis.titleLength} chars) maximizes visibility in search and suggested videos`);
     }
-    
+
     if (contentAnalysis.tagCount >= 15) {
       strengths.push(`Excellent tag optimization with ${contentAnalysis.tagCount} tags covering multiple search variations`);
     } else if (contentAnalysis.tagCount >= 10) {
       strengths.push(`Good tag coverage with ${contentAnalysis.tagCount} tags helping discoverability`);
     }
-    
+
     if (contentAnalysis.descriptionLength >= 300) {
       strengths.push(`Comprehensive description (${contentAnalysis.descriptionLength} chars) provides strong SEO signals`);
     }
-    
+
     if (duration >= 600) {
       const hours = Math.floor(duration / 3600);
       const minutes = Math.floor((duration % 3600) / 60);
       const secs = Math.floor(duration % 60);
-      const durationFormatted = hours > 0 
+      const durationFormatted = hours > 0
         ? `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
         : `${minutes}:${secs.toString().padStart(2, '0')}`;
       strengths.push(`Video length (${durationFormatted}) optimal for mid-roll ads and watch time metrics`);
     }
-    
+
     if (channelMetrics.viewsComparison === 'above') {
       strengths.push(`Performing ${Math.round(views / channelMetrics.avgViewsPerVideo * 100 - 100)}% better than channel average`);
     }
-    
+
     // Identify specific improvements needed
     const engagementRate = (likes + comments) / views * 100;
     if (engagementRate < 2) {
@@ -598,7 +597,7 @@ const VideoAnalyzer: React.FC = () => {
       improvements.push(`Engagement rate of ${engagementRate.toFixed(2)}% is below optimal (target: 4-6%)`);
       recommendations.push(`Test ending screens with specific questions to boost comments by 30-50%`);
     }
-    
+
     // Title optimization
     if (contentAnalysis.titleLength < 40) {
       improvements.push(`Title too short (${contentAnalysis.titleLength} chars) - missing keyword opportunities`);
@@ -608,7 +607,7 @@ const VideoAnalyzer: React.FC = () => {
       improvements.push(`Title too long (${contentAnalysis.titleLength} chars) - will be truncated in search`);
       recommendations.push(`Shorten title to 50-60 chars. Move less important words to description`);
     }
-    
+
     // Tag optimization
     if (contentAnalysis.tagCount < 5) {
       improvements.push(`Only ${contentAnalysis.tagCount} tags used - severely limiting discoverability`);
@@ -618,7 +617,7 @@ const VideoAnalyzer: React.FC = () => {
       improvements.push(`Limited tags (${contentAnalysis.tagCount}) reducing search visibility`);
       recommendations.push(`Add ${10 - contentAnalysis.tagCount} more specific long-tail keyword tags for niche discovery`);
     }
-    
+
     // Description optimization
     if (contentAnalysis.descriptionLength < 125) {
       improvements.push(`Very short description (${contentAnalysis.descriptionLength} chars) missing SEO value`);
@@ -628,7 +627,7 @@ const VideoAnalyzer: React.FC = () => {
       improvements.push(`Description could be longer (currently ${contentAnalysis.descriptionLength} chars)`);
       recommendations.push(`Add timestamps for better retention and user experience (increases average view duration by 15%)`);
     }
-    
+
     // Link optimization
     if (!contentAnalysis.descriptionHasLinks) {
       improvements.push('No external links in description - missing traffic opportunities');
@@ -637,7 +636,7 @@ const VideoAnalyzer: React.FC = () => {
       improvements.push(`Too many links (${contentAnalysis.descriptionLinkCount}) may appear spammy`);
       recommendations.push('Limit to 3-5 most important links to maintain credibility');
     }
-    
+
     // Hashtag optimization
     if (contentAnalysis.hashtags.length === 0) {
       improvements.push('No hashtags in description - missing trending potential');
@@ -646,7 +645,7 @@ const VideoAnalyzer: React.FC = () => {
       improvements.push(`Too many hashtags (${contentAnalysis.hashtags.length}) - YouTube only uses first 15`);
       recommendations.push('Limit to 10-15 most relevant hashtags for optimal performance');
     }
-    
+
     // Video length optimization
     if (duration < 120) {
       const durationFormatted = `${Math.floor(duration / 60)}:${(duration % 60).toString().padStart(2, '0')}`;
@@ -659,7 +658,7 @@ const VideoAnalyzer: React.FC = () => {
       improvements.push(`Long video (${durationFormatted}) with low engagement suggests retention issues`);
       recommendations.push('Analyze audience retention graph - if drop-off is high, consider shorter, more focused content');
     }
-    
+
     // Channel performance insights
     if (channelMetrics.viewsComparison === 'below') {
       const percentBelow = Math.round((1 - views / channelMetrics.avgViewsPerVideo) * 100);
@@ -667,20 +666,20 @@ const VideoAnalyzer: React.FC = () => {
       recommendations.push('Analyze your top 5 videos for common elements: thumbnail style, title format, topics');
       recommendations.push('Consider refreshing thumbnail after 48 hours if CTR is below 4%');
     }
-    
+
     // Advanced recommendations based on multiple factors
     if (scores.seoScore < 50 && scores.engagementScore < 50) {
       recommendations.push('Priority: Focus on title and thumbnail optimization first - these drive 90% of clicks');
     }
-    
+
     if (views > 1000 && likes / views < 0.02) {
       recommendations.push('Like ratio suggests content-expectation mismatch. Ensure title/thumbnail accurately represent content');
     }
-    
+
     if (contentAnalysis.tagCount > 10 && scores.seoScore < 60) {
       recommendations.push('Tags alone won\'t help - prioritize compelling title and first 125 chars of description');
     }
-    
+
     return { strengths, improvements, recommendations };
   };
 
@@ -710,14 +709,14 @@ const VideoAnalyzer: React.FC = () => {
     setCalculatingQuestion(question.id);
     setChatQuery('');
     setShowDropdown(false);
-    
+
     try {
       // Add a small delay for better UX
       await new Promise(resolve => setTimeout(resolve, 800));
-      
+
       const calculator = new AnalyticsCalculator(videoData, channelData, channelVideos);
       const result = calculator.calculateAnswer(question);
-      
+
       setAnalyticsResults(prev => ({
         ...prev,
         [question.id]: result
@@ -731,7 +730,7 @@ const VideoAnalyzer: React.FC = () => {
         timestamp: new Date()
       };
       setConversationHistory(prev => [...prev, assistantMessage]);
-      
+
     } catch (error) {
       console.error('Error calculating analytics:', error);
       const errorMessage = {
@@ -747,7 +746,7 @@ const VideoAnalyzer: React.FC = () => {
 
   const handleChatSubmit = () => {
     if (!chatQuery.trim()) return;
-    
+
     if (searchQuestions.length > 0) {
       handleQuestionSelect(searchQuestions[0]);
     } else {
@@ -772,79 +771,79 @@ const VideoAnalyzer: React.FC = () => {
     const postDate = moment(videoData.snippet.publishedAt);
     const contentAnalysis = analyzeContent(videoData);
     const scores = calculateScores(videoData, contentAnalysis);
-    
+
     // Calculate channel metrics first
     const totalVideos = parseInt(channelData.statistics.videoCount);
-    const avgViewsPerVideo = channelVideos.length > 0 
-      ? channelVideos.reduce((sum, v) => sum + v.viewCount, 0) / channelVideos.length 
+    const avgViewsPerVideo = channelVideos.length > 0
+      ? channelVideos.reduce((sum, v) => sum + v.viewCount, 0) / channelVideos.length
       : 0;
     const channelAge = moment().diff(moment(channelData.snippet.publishedAt), 'days');
     const uploadFrequency = totalVideos > 0 && channelAge > 0
       ? `${(totalVideos / Math.max(channelAge / 7, 1)).toFixed(1)} videos/week`
       : 'N/A';
-    
+
     const currentViews = parseInt(videoData.statistics.viewCount);
-    const viewsComparison = currentViews > avgViewsPerVideo * 1.2 ? 'above' : 
-                           currentViews < avgViewsPerVideo * 0.8 ? 'below' : 'average';
-    
+    const viewsComparison = currentViews > avgViewsPerVideo * 1.2 ? 'above' :
+      currentViews < avgViewsPerVideo * 0.8 ? 'below' : 'average';
+
     // Calculate additional channel metrics
     const totalChannelViews = parseInt(channelData.statistics.viewCount || '0');
-    const avgLikesPerVideo = channelVideos.length > 0 
-      ? channelVideos.reduce((sum, v) => sum + v.likeCount, 0) / channelVideos.length 
+    const avgLikesPerVideo = channelVideos.length > 0
+      ? channelVideos.reduce((sum, v) => sum + v.likeCount, 0) / channelVideos.length
       : 0;
-    const avgCommentsPerVideo = channelVideos.length > 0 
-      ? channelVideos.reduce((sum, v) => sum + v.commentCount, 0) / channelVideos.length 
+    const avgCommentsPerVideo = channelVideos.length > 0
+      ? channelVideos.reduce((sum, v) => sum + v.commentCount, 0) / channelVideos.length
       : 0;
-    
+
     // Analyze engagement trend
     const recentVideos = channelVideos.slice(0, 5);
     const olderVideos = channelVideos.slice(5, 10);
-    const recentEngagement = recentVideos.length > 0 
+    const recentEngagement = recentVideos.length > 0
       ? recentVideos.reduce((sum, v) => sum + (v.likeCount + v.commentCount) / Math.max(v.viewCount, 1), 0) / recentVideos.length
       : 0;
     const olderEngagement = olderVideos.length > 0
       ? olderVideos.reduce((sum, v) => sum + (v.likeCount + v.commentCount) / Math.max(v.viewCount, 1), 0) / olderVideos.length
       : 0;
-    
+
     let engagementTrend: 'improving' | 'declining' | 'stable' = 'stable';
     if (recentEngagement > olderEngagement * 1.1) engagementTrend = 'improving';
     else if (recentEngagement < olderEngagement * 0.9) engagementTrend = 'declining';
-    
+
     // Find best performing video from recent uploads (last 6 months from today)
     const sixMonthsAgo = moment().subtract(6, 'months');
-    const recentBestVideos = channelVideos.filter(video => 
+    const recentBestVideos = channelVideos.filter(video =>
       moment(video.publishedAt).isAfter(sixMonthsAgo)
     );
 
     // If no videos in last 6 months, expand to 12 months
-    const videosToConsider = recentBestVideos.length > 0 
-      ? recentBestVideos 
+    const videosToConsider = recentBestVideos.length > 0
+      ? recentBestVideos
       : channelVideos.filter(video => moment(video.publishedAt).isAfter(moment().subtract(12, 'months')));
 
     // If still no videos, use the 10 most recent videos
-    const finalVideosToConsider = videosToConsider.length > 0 
-      ? videosToConsider 
+    const finalVideosToConsider = videosToConsider.length > 0
+      ? videosToConsider
       : channelVideos.slice(0, 10);
 
-    const bestVideo = finalVideosToConsider.length > 0 
+    const bestVideo = finalVideosToConsider.length > 0
       ? finalVideosToConsider.reduce((best, video) => {
-          // Consider both view count and engagement rate for "best" video
-          const currentEngagement = (video.likeCount + video.commentCount) / Math.max(video.viewCount, 1);
-          const bestEngagement = (best.likeCount + best.commentCount) / Math.max(best.viewCount, 1);
-          
-          // Prioritize videos with high views and good engagement
-          const currentScore = video.viewCount * (1 + currentEngagement * 100);
-          const bestScore = best.viewCount * (1 + bestEngagement * 100);
-          
-          return currentScore > bestScore ? video : best;
-        }, finalVideosToConsider[0])
+        // Consider both view count and engagement rate for "best" video
+        const currentEngagement = (video.likeCount + video.commentCount) / Math.max(video.viewCount, 1);
+        const bestEngagement = (best.likeCount + best.commentCount) / Math.max(best.viewCount, 1);
+
+        // Prioritize videos with high views and good engagement
+        const currentScore = video.viewCount * (1 + currentEngagement * 100);
+        const bestScore = best.viewCount * (1 + bestEngagement * 100);
+
+        return currentScore > bestScore ? video : best;
+      }, finalVideosToConsider[0])
       : null;
-    
+
     // Calculate recent upload rate (last 30 days)
     const thirtyDaysAgo = moment().subtract(30, 'days');
     const recentUploads = channelVideos.filter(v => moment(v.publishedAt).isAfter(thirtyDaysAgo)).length;
     const recentUploadRate = `${recentUploads} videos in last 30 days`;
-    
+
     const channelMetrics = {
       channelAge,
       totalVideos,
@@ -864,15 +863,15 @@ const VideoAnalyzer: React.FC = () => {
       } : null,
       recentUploadRate,
       subscriberToViewRatio: totalChannelViews / Math.max(parseInt(channelData.statistics.subscriberCount || '1'), 1),
-      bestVideoTimeframe: recentBestVideos.length > 0 ? 'last 6 months' : 
-                         videosToConsider.length > 0 ? 'last 12 months' : 
-                         'recent uploads'
+      bestVideoTimeframe: recentBestVideos.length > 0 ? 'last 6 months' :
+        videosToConsider.length > 0 ? 'last 12 months' :
+          'recent uploads'
     };
-    
+
     const insights = generateInsights(videoData, contentAnalysis, scores, channelMetrics);
-    
+
     const categoryName = await fetchCategoryName(videoData.snippet.categoryId);
-    
+
     return {
       basicMetrics: {
         views: parseInt(videoData.statistics.viewCount) || 0,
@@ -887,7 +886,7 @@ const VideoAnalyzer: React.FC = () => {
         commentToViewRatio: (parseInt(videoData.statistics.commentCount) || 0) / Math.max(parseInt(videoData.statistics.viewCount) || 1, 1),
         subscribers: parseInt(channelData.statistics.subscriberCount) || 0
       },
-      
+
       technicalDetails: {
         videoId: videoData.id,
         duration: parseDuration(videoData.contentDetails.duration),
@@ -898,10 +897,10 @@ const VideoAnalyzer: React.FC = () => {
         categoryName: categoryName,
         defaultLanguage: videoData.snippet.defaultLanguage
       },
-      
+
       contentAnalysis,
       channelMetrics,
-      
+
       performanceScores: scores,
       insights
     };
@@ -926,7 +925,7 @@ const VideoAnalyzer: React.FC = () => {
     setIsLoading(true);
     setShowResults(false);
     setLoadingStage('Fetching video data...');
-    
+
     // Clear conversation history when analyzing new video
     setConversationHistory([]);
 
@@ -936,16 +935,16 @@ const VideoAnalyzer: React.FC = () => {
       const channel = await fetchChannelData(video.snippet.channelId);
       setLoadingStage('Analyzing channel videos...');
       const videos = await fetchChannelVideos(video.snippet.channelId);
-      
+
       setVideoData(video);
       setChannelData(channel);
       setChannelVideos(videos);
-      
+
       setLoadingStage('Performing analysis...');
       const analysis = await performAnalysis(video, channel, videos);
       setAnalysisResults(analysis);
       setShowResults(true);
-      
+
       // Add welcome message to conversation
       const welcomeMessage = {
         type: 'assistant' as const,
@@ -953,7 +952,7 @@ const VideoAnalyzer: React.FC = () => {
         timestamp: new Date()
       };
       setConversationHistory([welcomeMessage]);
-      
+
     } catch (error) {
       console.error('Error:', error);
       alert(`An error occurred while analyzing the video: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -965,7 +964,7 @@ const VideoAnalyzer: React.FC = () => {
 
   const renderOverviewTab = () => {
     if (!analysisResults) return null;
-    
+
     return (
       <S.TabContent>
         <S.MetricsGrid>
@@ -1078,7 +1077,7 @@ const VideoAnalyzer: React.FC = () => {
 
   const renderDetailsTab = () => {
     if (!analysisResults) return null;
-    
+
     return (
       <S.TabContent>
         <S.DetailSection>
@@ -1181,7 +1180,7 @@ const VideoAnalyzer: React.FC = () => {
 
   const renderChannelTab = () => {
     if (!analysisResults || !channelData) return null;
-    
+
     return (
       <S.TabContent>
         <S.DetailSection>
@@ -1205,7 +1204,7 @@ const VideoAnalyzer: React.FC = () => {
             <S.DetailItem>
               <S.DetailLabel>Channel Age</S.DetailLabel>
               <S.DetailValue>
-                {Math.floor(analysisResults.channelMetrics.channelAge / 365) > 0 
+                {Math.floor(analysisResults.channelMetrics.channelAge / 365) > 0
                   ? `${Math.floor(analysisResults.channelMetrics.channelAge / 365)} years, ${Math.floor((analysisResults.channelMetrics.channelAge % 365) / 30)} months`
                   : `${Math.floor(analysisResults.channelMetrics.channelAge / 30)} months`}
               </S.DetailValue>
@@ -1279,21 +1278,21 @@ const VideoAnalyzer: React.FC = () => {
               <S.BestVideoStats>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <span>
-                    <i className="bx bx-show"></i> 
+                    <i className="bx bx-show"></i>
                     {analysisResults.channelMetrics.bestPerformingVideo.views.toLocaleString()} views
                   </span>
-                  <span style={{ 
-                    fontSize: '0.85rem', 
+                  <span style={{
+                    fontSize: '0.85rem',
                     color: 'rgba(255,255,255,0.7)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem'
                   }}>
-                    <i className="bx bx-calendar"></i> 
+                    <i className="bx bx-calendar"></i>
                     {analysisResults.channelMetrics.bestPerformingVideo.daysAgo} days ago
                   </span>
                 </div>
-                <S.WatchButton 
+                <S.WatchButton
                   onClick={() => window.open(analysisResults.channelMetrics.bestPerformingVideo?.url, '_blank')}
                 >
                   <i className="bx bx-play"></i>
@@ -1354,7 +1353,7 @@ const VideoAnalyzer: React.FC = () => {
 
   const renderInsightsTab = () => {
     if (!analysisResults) return null;
-    
+
     return (
       <S.TabContent>
         {analysisResults.insights.strengths.length > 0 && (
@@ -1449,7 +1448,7 @@ const VideoAnalyzer: React.FC = () => {
                       <>
                         <S.WelcomeTitle>Ready to analyze!</S.WelcomeTitle>
                         <S.WelcomeDescription>
-                          I have all the data for "{videoData.snippet?.title}". Ask me anything about its performance, 
+                          I have all the data for "{videoData.snippet?.title}". Ask me anything about its performance,
                           engagement, SEO, or optimization opportunities.
                         </S.WelcomeDescription>
                       </>
@@ -1457,7 +1456,7 @@ const VideoAnalyzer: React.FC = () => {
                       <>
                         <S.WelcomeTitle>Welcome to Analytics Assistant!</S.WelcomeTitle>
                         <S.WelcomeDescription>
-                          First, analyze a video using the search bar above. Then come back here to ask detailed 
+                          First, analyze a video using the search bar above. Then come back here to ask detailed
                           questions about performance, engagement metrics, and optimization strategies.
                         </S.WelcomeDescription>
                       </>
@@ -1560,7 +1559,7 @@ const VideoAnalyzer: React.FC = () => {
                   placeholder="Ask about video performance, engagement, optimization..."
                   disabled={calculatingQuestion !== null}
                 />
-                <S.ChatSendButton 
+                <S.ChatSendButton
                   onClick={handleChatSubmit}
                   disabled={!chatQuery.trim() || calculatingQuestion !== null}
                 >
@@ -1673,7 +1672,7 @@ const VideoAnalyzer: React.FC = () => {
                           <S.ChartItem key={index}>
                             <S.ChartLabel>{label}</S.ChartLabel>
                             <S.ChartBar>
-                              <S.ChartBarFill 
+                              <S.ChartBarFill
                                 width={selectedResult.charts ? (selectedResult.charts.data[index] / Math.max(...selectedResult.charts.data)) * 100 : 0}
                               />
                             </S.ChartBar>
@@ -1701,20 +1700,6 @@ const VideoAnalyzer: React.FC = () => {
 
   return (
     <S.PageWrapper>
-      <S.AdSidebar position="left">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
-      <S.AdSidebar position="right">
-        <AdSense 
-          slot={process.env.REACT_APP_ADSENSE_SLOT_SIDEBAR || ''}
-          format="vertical"
-        />
-      </S.AdSidebar>
-
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -1726,11 +1711,11 @@ const VideoAnalyzer: React.FC = () => {
             <S.ToolIconContainer>
               <i className={toolConfig.icon}></i>
             </S.ToolIconContainer>
-            
+
             <S.HeaderTextContent>
               <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
               <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
-              
+
               <S.FeaturesList>
                 {toolConfig.features.map((feature, index) => (
                   <S.FeatureItem key={index}>
@@ -1762,16 +1747,16 @@ const VideoAnalyzer: React.FC = () => {
           </S.HeaderContent>
         </S.EnhancedHeader>
 
-        {/* Educational Content Section - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL */}
+        {/* Educational Content Section */}
         {!showResults && (
           <S.EducationalSection>
-            
+
             <S.EducationalContent>
               <S.SectionSubTitle>How to Use the Video Analyzer</S.SectionSubTitle>
-              
+
               <S.EducationalText>
-                Our Video Analyzer provides comprehensive insights into YouTube video performance, 
-                helping content creators, marketers, and researchers understand what makes videos successful. 
+                Our Video Analyzer provides comprehensive insights into YouTube video performance,
+                helping content creators, marketers, and researchers understand what makes videos successful.
                 From engagement metrics to SEO optimization scores, get detailed analytics that drive results.
               </S.EducationalText>
 
@@ -1781,8 +1766,8 @@ const VideoAnalyzer: React.FC = () => {
                   <S.StepContent>
                     <S.StepTitle>Enter Video URL</S.StepTitle>
                     <S.EducationalText>
-                      Input any YouTube video URL into the search bar above. Our system accepts various formats 
-                      including youtube.com/watch?v=, youtu.be/, youtube.com/embed/, youtube.com/shorts/, 
+                      Input any YouTube video URL into the search bar above. Our system accepts various formats
+                      including youtube.com/watch?v=, youtu.be/, youtube.com/embed/, youtube.com/shorts/,
                       or direct video IDs. The analyzer works with any public YouTube video.
                     </S.EducationalText>
                   </S.StepContent>
@@ -1793,8 +1778,8 @@ const VideoAnalyzer: React.FC = () => {
                   <S.StepContent>
                     <S.StepTitle>Comprehensive Data Analysis</S.StepTitle>
                     <S.EducationalText>
-                      Our system fetches detailed video metadata, engagement statistics, channel information, 
-                      and technical specifications. We analyze performance patterns, content optimization, 
+                      Our system fetches detailed video metadata, engagement statistics, channel information,
+                      and technical specifications. We analyze performance patterns, content optimization,
                       upload timing, and audience engagement metrics for complete insights.
                     </S.EducationalText>
                   </S.StepContent>
@@ -1805,8 +1790,8 @@ const VideoAnalyzer: React.FC = () => {
                   <S.StepContent>
                     <S.StepTitle>Review Detailed Insights</S.StepTitle>
                     <S.EducationalText>
-                      Navigate through organized tabs to explore video overview, technical details, 
-                      channel analytics, and strategic recommendations. Use these insights to optimize 
+                      Navigate through organized tabs to explore video overview, technical details,
+                      channel analytics, and strategic recommendations. Use these insights to optimize
                       your content strategy and improve video performance.
                     </S.EducationalText>
                   </S.StepContent>
@@ -1816,7 +1801,7 @@ const VideoAnalyzer: React.FC = () => {
 
             <S.EducationalContent>
               <S.SectionSubTitle>What Analytics Are Provided?</S.SectionSubTitle>
-              
+
               <S.FeatureList>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
@@ -1871,33 +1856,33 @@ const VideoAnalyzer: React.FC = () => {
                       src={videoData.snippet.thumbnails.maxres?.url || videoData.snippet.thumbnails.high.url}
                       alt={videoData.snippet.title}
                     />
-<S.ThumbnailOverlay>
-  <S.DownloadThumbnailButton 
-    onClick={() => {
-      // Create a cleaner filename
-      const cleanTitle = videoData.snippet.title
-        .replace(/[^\w\s-]/g, '') // Remove special chars except word chars, spaces, and hyphens
-        .replace(/\s+/g, '_') // Replace spaces with single underscore
-        .replace(/_+/g, '_') // Replace multiple underscores with single
-        .replace(/^_|_$/g, '') // Remove leading/trailing underscores
-        .toLowerCase()
-        .substring(0, 50); // Limit to 50 characters
-      
-      downloadThumbnail(
-        videoData.snippet.thumbnails.maxres?.url || videoData.snippet.thumbnails.high.url,
-        `${cleanTitle || 'youtube_video'}_thumbnail.jpg`
-      );
-    }}
-  >
-    <i className="bx bx-download"></i>
-    Download Thumbnail
-  </S.DownloadThumbnailButton>
-</S.ThumbnailOverlay>
+                    <S.ThumbnailOverlay>
+                      <S.DownloadThumbnailButton
+                        onClick={() => {
+                          // Create a cleaner filename
+                          const cleanTitle = videoData.snippet.title
+                            .replace(/[^\w\s-]/g, '') // Remove special chars except word chars, spaces, and hyphens
+                            .replace(/\s+/g, '_') // Replace spaces with single underscore
+                            .replace(/_+/g, '_') // Replace multiple underscores with single
+                            .replace(/^_|_$/g, '') // Remove leading/trailing underscores
+                            .toLowerCase()
+                            .substring(0, 50); // Limit to 50 characters
+
+                          downloadThumbnail(
+                            videoData.snippet.thumbnails.maxres?.url || videoData.snippet.thumbnails.high.url,
+                            `${cleanTitle || 'youtube_video'}_thumbnail.jpg`
+                          );
+                        }}
+                      >
+                        <i className="bx bx-download"></i>
+                        Download Thumbnail
+                      </S.DownloadThumbnailButton>
+                    </S.ThumbnailOverlay>
                     <S.VideoDuration>
                       {analysisResults.technicalDetails.durationFormatted}
                     </S.VideoDuration>
                   </S.ThumbnailContainer>
-                  
+
                   <S.VideoDetails>
                     <S.VideoTitle>{videoData.snippet.title}</S.VideoTitle>
                     <S.ChannelInfo>
@@ -1912,7 +1897,7 @@ const VideoAnalyzer: React.FC = () => {
                         </S.SubscriberCount>
                       </S.ChannelText>
                     </S.ChannelInfo>
-                    <S.ViewVideoButton 
+                    <S.ViewVideoButton
                       onClick={() => window.open(`https://youtube.com/watch?v=${videoId || extractVideoId(videoUrl)}`, '_blank')}
                     >
                       <i className="bx bx-play"></i>
@@ -1973,14 +1958,6 @@ const VideoAnalyzer: React.FC = () => {
               {activeTab === 'insights' && renderInsightsTab()}
               {activeTab === 'ask' && renderAskTab()}
 
-              {(videoData && channelData && analysisResults) && (
-                <S.BottomAdContainer>
-                  <AdSense 
-                    slot={process.env.REACT_APP_ADSENSE_SLOT_BOTTOM || ''}
-                    format="horizontal"
-                  />
-                </S.BottomAdContainer>
-              )}
             </>
           ) : null}
         </S.ResultsContainer>

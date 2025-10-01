@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/Button/Button';
-import { AdSense } from '../../components/AdSense/AdSense';
 import * as S from './styles';
 
 interface Tool {

@@ -231,25 +231,25 @@ export const HelpCenter: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
 
-  const faqData = [
-    {
-      category: 'Getting Started',
-      icon: 'bx-rocket',
-      questions: [
-        {
-          question: 'How do I analyze my YouTube video?',
-          answer: 'Simply copy your YouTube video URL and paste it into our Video Analyzer tool. Our system will automatically fetch and analyze all available public data including views, engagement, tags, and performance metrics. You\'ll get detailed insights about your video\'s performance and recommendations for improvement.'
-        },
-        {
-          question: 'Do I need to create an account to use YouTool?',
-          answer: 'No account required! All our tools are completely free and can be used without any registration. Simply visit our tools page and start analyzing your YouTube content immediately. Your search history is saved locally in your browser for convenience.'
-        },
-        {
-          question: 'Is YouTool really free forever?',
-          answer: 'Yes! YouTool is 100% free and always will be. We believe in supporting the YouTube creator community by providing professional-grade analytics tools at no cost. Our platform is supported by ethical advertising that doesn\'t interfere with your experience.'
-        }
-      ]
-    },
+const faqData = [
+  {
+    category: 'Getting Started',
+    icon: 'bx-rocket',
+    questions: [
+      {
+        question: 'How do I analyze my YouTube video?',
+        answer: 'Simply copy your YouTube video URL and paste it into our Video Analyzer tool. Our system will automatically fetch and analyze all available public data including views, engagement, tags, and performance metrics. You\'ll get detailed insights about your video\'s performance and recommendations for improvement.'
+      },
+      {
+        question: 'Do I need to create an account to use YouTool?',
+        answer: 'You can try our tools without creating an account, with a limited number of analyses available. To unlock unlimited access to all our analytics tools and features, you\'ll need to create an account. Your search history and preferences are saved to your account for easy access across devices.'
+      },
+      {
+        question: 'How easy is it to use YouTool\'s analytics tools?',
+        answer: 'YouTool is designed for creators of all experience levels. Simply paste a YouTube URL into any of our tools and get instant insights. No technical knowledge required - our interface guides you through the analysis with clear, actionable recommendations you can implement right away.'
+      }
+    ]
+  },
     {
       category: 'Tools & Features',
       icon: 'bx-wrench',

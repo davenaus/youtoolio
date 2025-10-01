@@ -38,7 +38,7 @@ const slideInFromBottom = keyframes`
   }
 `;
 
-// Educational Content Styled Components - SUBSTANTIAL CONTENT FOR ADSENSE APPROVAL
+// Educational Content Styled Components
 export const EducationalSection = styled.div`
   margin-bottom: 3rem;
   animation: ${fadeIn} 0.8s ease-out;
@@ -149,17 +149,6 @@ export const PageWrapper = styled.div`
   position: relative;
 `;
 
-export const AdSidebar = styled.div<{ position: 'left' | 'right' }>`
-  position: absolute;
-  top: 100px;
-  ${({ position }) => position}: 20px;
-  width: 160px;
-  z-index: 10;
-  
-  @media (max-width: 1700px) {
-    display: none;
-  }
-`;
 
 export const MainContainer = styled.div`
   width: 100%;
@@ -1028,14 +1017,6 @@ export const TagAnalyzeOverlay = styled.div`
   }
 `;
 
-export const BottomAdContainer = styled.div`
-  margin: 2rem 0;
-  text-align: center;
-  
-  @media (min-width: 1401px) {
-    display: none;
-  }
-`;
 
 // Channel Tab Components
 export const PerformanceIndicator = styled.span<{ type: 'above' | 'below' | 'average' }>`

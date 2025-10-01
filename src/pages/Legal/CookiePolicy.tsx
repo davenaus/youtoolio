@@ -241,7 +241,6 @@ export const CookiePolicy: React.FC = () => {
             <li><strong>Essential Functionality:</strong> To provide core features and maintain your session</li>
             <li><strong>Analytics:</strong> To understand how users interact with our tools</li>
             <li><strong>Preferences:</strong> To remember your settings and search history</li>
-            <li><strong>Advertising:</strong> To display relevant advertisements through Google AdSense</li>
             <li><strong>Performance:</strong> To optimize loading times and user experience</li>
           </ul>
 
@@ -292,20 +291,6 @@ export const CookiePolicy: React.FC = () => {
             </CookieDetails>
           </CookieCard>
 
-          <CookieCard>
-            <CookieHeader>
-              <CookieTitle>Advertising Cookies</CookieTitle>
-              <CookieStatus status="optional">Optional</CookieStatus>
-            </CookieHeader>
-            <CookieDescription>
-              These cookies are used by Google AdSense to display relevant advertisements and measure ad performance.
-            </CookieDescription>
-            <CookieDetails>
-              <DetailRow><strong>Purpose:</strong> <span>Google AdSense, ad personalization, frequency capping</span></DetailRow>
-              <DetailRow><strong>Duration:</strong> <span>Varies (typically 30 days to 2 years)</span></DetailRow>
-              <DetailRow><strong>Can be disabled:</strong> <span>Yes - through Google Ad Settings or ad blockers</span></DetailRow>
-            </CookieDetails>
-          </CookieCard>
 
           <h2>Local Storage Usage</h2>
           <p>
@@ -324,7 +309,6 @@ export const CookiePolicy: React.FC = () => {
           </p>
           <ul>
             <li><strong>Google Analytics:</strong> For website analytics and usage tracking</li>
-            <li><strong>Google AdSense:</strong> For advertising and revenue measurement</li>
             <li><strong>Vercel Analytics:</strong> For performance monitoring</li>
             <li><strong>YouTube API:</strong> For accessing video and channel data</li>
           </ul>
@@ -342,16 +326,6 @@ export const CookiePolicy: React.FC = () => {
             <li><strong>Session Cookies:</strong> Only allow temporary cookies</li>
           </ul>
 
-          <h3>Google Ad Settings</h3>
-          <p>
-            For advertising cookies, you can:
-          </p>
-          <ul>
-            <li>Visit <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer">Google Ad Settings</a> to manage personalization</li>
-            <li>Opt out of personalized ads</li>
-            <li>Review and delete ad-related data</li>
-            <li>Use the <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer">Google Analytics Opt-out Browser Add-on</a></li>
-          </ul>
 
           <h3>Clear YouTool.io Data</h3>
           <ManageButton onClick={() => setShowManageOptions(!showManageOptions)}>
@@ -394,7 +368,6 @@ export const CookiePolicy: React.FC = () => {
             <li><strong>Essential Cookies:</strong> Site may not function properly</li>
             <li><strong>Analytics Cookies:</strong> We can't improve the service based on usage data</li>
             <li><strong>Preference Cookies:</strong> Settings won't be remembered between visits</li>
-            <li><strong>Advertising Cookies:</strong> Ads may be less relevant to your interests</li>
           </ul>
 
           <h2>Updates to This Policy</h2>
