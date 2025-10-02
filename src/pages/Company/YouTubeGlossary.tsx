@@ -369,18 +369,6 @@ export const YouTubeGlossary: React.FC = () => {
           </SearchBox>
         </Header>
 
-        <CategoryFilter>
-          {categories.map((category) => (
-            <CategoryButton
-              key={category}
-              active={selectedCategory === category}
-              onClick={() => setSelectedCategory(category)}
-            >
-              {category}
-            </CategoryButton>
-          ))}
-        </CategoryFilter>
-
         <AlphabetNav>
           {alphabet.map((letter) => (
             <AlphabetButton

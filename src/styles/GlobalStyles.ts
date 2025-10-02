@@ -18,14 +18,11 @@ export const GlobalStyles = createGlobalStyle`
     scroll-behavior: auto; /* Disable smooth scrolling for route changes */
   }
   
-    
-  /* Global 80% scaling - makes everything 20% smaller */
+  /* Global 90% scaling - makes everything 10% smaller */
   body {
     zoom: 0.9;
     transform-origin: top left;
   }
-  
-  
 
   /* Ensure consistent scroll behavior */
   html {
@@ -61,6 +58,11 @@ export const GlobalStyles = createGlobalStyle`
   button {
     font-family: inherit;
     cursor: pointer;
+    min-height: 44px; /* Touch target size */
+    
+    @media (max-width: 480px) {
+      padding: 0.75rem 1rem;
+    }
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -69,9 +71,78 @@ export const GlobalStyles = createGlobalStyle`
     color: ${({ theme }) => theme.colors.text.primary};
   }
 
+  /* Mobile font scaling for native HTML elements */
+  h1 {
+    @media (max-width: 768px) {
+      font-size: 1.75rem;
+    }
+    
+    @media (max-width: 480px) {
+      font-size: 1.5rem;
+    }
+  }
+
+  h2 {
+    @media (max-width: 768px) {
+      font-size: 1.5rem;
+    }
+    
+    @media (max-width: 480px) {
+      font-size: 1.3rem;
+    }
+  }
+
+  h3 {
+    @media (max-width: 768px) {
+      font-size: 1.3rem;
+    }
+    
+    @media (max-width: 480px) {
+      font-size: 1.15rem;
+    }
+  }
+
+  h4 {
+    @media (max-width: 768px) {
+      font-size: 1.15rem;
+    }
+    
+    @media (max-width: 480px) {
+      font-size: 1.05rem;
+    }
+  }
+
+  h5 {
+    @media (max-width: 768px) {
+      font-size: 1.05rem;
+    }
+    
+    @media (max-width: 480px) {
+      font-size: 0.95rem;
+    }
+  }
+
+  h6 {
+    @media (max-width: 768px) {
+      font-size: 1rem;
+    }
+    
+    @media (max-width: 480px) {
+      font-size: 0.9rem;
+    }
+  }
+
   p {
     margin-bottom: 1rem;
     color: ${({ theme }) => theme.colors.text.secondary};
+    
+    @media (max-width: 768px) {
+      font-size: 1rem;
+    }
+    
+    @media (max-width: 480px) {
+      font-size: 0.95rem;
+    }
   }
 
   /* Enhanced scrollbar for dark mode */

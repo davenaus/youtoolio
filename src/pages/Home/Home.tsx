@@ -1354,7 +1354,7 @@ export const Home: React.FC = () => {
           <HeroContent>
             <Logo>
               <LogoImage
-                src="https://64.media.tumblr.com/e000461398dfaa9247cc9db6eca187a2/0e01452f9f6dd974-6b/s2048x3072/0457337859cea0729cdfee1d7a9407e25f8f5cca.png"
+                src="/images/logo.png"
                 alt="YouTool Logo"
               />
             </Logo>

@@ -27,9 +27,14 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build && npm run postbuild",
-    "postbuild": "cp public/sitemap.xml build/",
+    "postbuild": "cp public/sitemap.xml build/ && cp public/.htaccess build/ 2>/dev/null || true",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "analyze": "source-map-explorer 'build/static/js/*.js'",
+    "lighthouse": "lighthouse http://localhost:3000 --view --only-categories=performance",
+    "serve": "npm run build && npx serve -s build",
+    "perf": "npm run build && concurrently --kill-others \"npx serve -s build -l 3000\" \"sleep 3 && npm run lighthouse\"",
+    "optimize-images": "chmod +x optimize-images.sh && ./optimize-images.sh"
   },
   "eslintConfig": {
     "extends": [
