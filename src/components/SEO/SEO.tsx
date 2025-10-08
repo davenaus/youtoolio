@@ -1,6 +1,5 @@
 // src/components/SEO/SEO.tsx
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
 
 interface SEOProps {
   title: string;
@@ -27,14 +26,12 @@ export const SEO: React.FC<SEOProps> = ({
   const url = canonical || `https://youtool.io${window.location.pathname}`;
 
   return (
-    <Helmet>
-      {/* Basic Meta */}
+    <>
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       {keywords && <meta name="keywords" content={keywords} />}
       <link rel="canonical" href={url} />
 
-      {/* Robots */}
       <meta
         name="robots"
         content={
@@ -44,7 +41,6 @@ export const SEO: React.FC<SEOProps> = ({
         }
       />
 
-      {/* Open Graph */}
       <meta property="og:type" content={ogType} />
       <meta property="og:url" content={url} />
       <meta property="og:title" content={fullTitle} />
@@ -52,23 +48,17 @@ export const SEO: React.FC<SEOProps> = ({
       <meta property="og:image" content={ogImage} />
       <meta property="og:site_name" content="YouTool.io" />
 
-      {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:url" content={url} />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImage} />
 
-      {/* Author / Publisher */}
-      <meta name="author" content="YouTool.io" />
-      <meta name="publisher" content="YouTool.io" />
-
-      {/* Structured Data */}
       {schemaData && (
         <script type="application/ld+json">
           {JSON.stringify(schemaData)}
         </script>
       )}
-    </Helmet>
+    </>
   );
 };

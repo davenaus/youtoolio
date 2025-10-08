@@ -2,7 +2,6 @@
 import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
-import { HelmetProvider } from 'react-helmet-async';
 
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
@@ -15,19 +14,17 @@ import { ScrollToTop } from './components/ScrollToTop';
 
 function App() {
   return (
-    <HelmetProvider>
-      <ThemeProvider theme={theme}>
-        <GlobalStyles />
-        <Router>
-          <ScrollToTop />
-          <AppRoutes />
-          <Footer />
-          <CookieConsentBanner />
-        </Router>
-        <Analytics />
-        <SpeedInsights />
-      </ThemeProvider>
-    </HelmetProvider>
+    <ThemeProvider theme={theme}>
+      <GlobalStyles />
+      <Router>
+        <ScrollToTop />
+        <AppRoutes />
+        <Footer />
+        <CookieConsentBanner />
+      </Router>
+      <Analytics />
+      <SpeedInsights />
+    </ThemeProvider>
   );
 }
 
