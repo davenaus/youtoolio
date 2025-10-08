@@ -1,6 +1,8 @@
 // src/pages/Tools/components/KeywordAnalyzer/KeywordAnalyzer.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { SEO } from '../../../../components/SEO';
+import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 interface YouTubeVideo {
@@ -165,7 +167,7 @@ export const KeywordAnalyzer: React.FC = () => {
 
   const fetchYouTubeData = async (searchTerm: string): Promise<YouTubeVideo[]> => {
     const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_2;
-    
+
     if (!API_KEY) {
       throw new Error('YouTube API key not configured.');
     }
@@ -195,10 +197,10 @@ export const KeywordAnalyzer: React.FC = () => {
           if (!searchResponse.ok) continue;
 
           const searchData = await searchResponse.json();
-          
+
           if (searchData.items && searchData.items.length > 0) {
             const videoIds = searchData.items.map((item: any) => item.id.videoId).join(',');
-            
+
             const statsResponse = await fetch(
               `https://www.googleapis.com/youtube/v3/videos?` +
               `part=statistics,contentDetails,snippet&id=${videoIds}&key=${API_KEY}`
@@ -210,7 +212,7 @@ export const KeywordAnalyzer: React.FC = () => {
 
             const videos: YouTubeVideo[] = searchData.items.map((searchItem: any) => {
               const statsItem = statsData.items.find((stat: any) => stat.id === searchItem.id.videoId);
-              
+
               const video: YouTubeVideo = {
                 id: searchItem.id.videoId,
                 title: searchItem.snippet.title,
@@ -227,15 +229,15 @@ export const KeywordAnalyzer: React.FC = () => {
 
               // Calculate relevance score
               video.relevanceScore = calculateRelevanceScore(video, searchTerm);
-              
+
               return video;
             }).filter((video: YouTubeVideo) => {
               // Enhanced filtering criteria
               return video.views >= 1000 && // Minimum 1K views
-                     video.relevanceScore! >= 20 && // Minimum relevance score
-                     video.title.length > 10 && // Avoid spam titles
-                     !video.title.toLowerCase().includes('live stream') && // Exclude live streams
-                     !video.title.toLowerCase().includes('compilation'); // Exclude compilations
+                video.relevanceScore! >= 20 && // Minimum relevance score
+                video.title.length > 10 && // Avoid spam titles
+                !video.title.toLowerCase().includes('live stream') && // Exclude live streams
+                !video.title.toLowerCase().includes('compilation'); // Exclude compilations
             });
 
             allVideos = [...allVideos, ...videos];
@@ -247,7 +249,7 @@ export const KeywordAnalyzer: React.FC = () => {
       }
 
       // Remove duplicates and sort by relevance score combined with performance
-      const uniqueVideos = allVideos.filter((video, index, self) => 
+      const uniqueVideos = allVideos.filter((video, index, self) =>
         index === self.findIndex(v => v.id === video.id)
       );
 
@@ -267,11 +269,11 @@ export const KeywordAnalyzer: React.FC = () => {
   const parseDuration = (duration: string): number => {
     const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
     if (!match) return 0;
-    
+
     const hours = parseInt(match[1] || '0');
     const minutes = parseInt(match[2] || '0');
     const seconds = parseInt(match[3] || '0');
-    
+
     return hours * 3600 + minutes * 60 + seconds;
   };
 
@@ -286,17 +288,17 @@ export const KeywordAnalyzer: React.FC = () => {
 
   const analyzeUploadTimes = (videos: YouTubeVideo[]): UploadTimeData[] => {
     const timeData: { [key: string]: { count: number; totalViews: number } } = {};
-    
+
     videos.forEach(video => {
       const date = new Date(video.publishedAt);
       const day = date.toLocaleDateString('en-US', { weekday: 'long' });
       const hour = date.getHours();
       const key = `${day}-${hour}`;
-      
+
       if (!timeData[key]) {
         timeData[key] = { count: 0, totalViews: 0 };
       }
-      
+
       timeData[key].count++;
       timeData[key].totalViews += video.views;
     });
@@ -344,26 +346,26 @@ export const KeywordAnalyzer: React.FC = () => {
     const totalViews = videos.reduce((sum, video) => sum + video.views, 0);
     const averageViews = totalViews / videos.length;
     const averageRelevance = videos.reduce((sum, video) => sum + (video.relevanceScore || 0), 0) / videos.length;
-    
+
     // Enhanced scoring with relevance consideration
     const videoCountScore = Math.min(30, (videos.length / 80) * 30);
     const viewsScore = Math.min(35, (Math.log10(Math.max(1, averageViews)) - 3) * 8);
     const relevanceScore = Math.min(20, (averageRelevance / 100) * 20);
-    
-    const recentVideos = videos.filter(video => 
+
+    const recentVideos = videos.filter(video =>
       new Date(video.publishedAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     );
     const recentActivityScore = Math.min(15, (recentVideos.length / videos.length) * 15);
-    
+
     const rawScore = videoCountScore + viewsScore + relevanceScore + recentActivityScore;
     const volumeScore = Math.max(1, Math.min(100, rawScore));
-    
+
     let label: 'Low' | 'Moderate' | 'High' | 'Very High';
     if (volumeScore >= 75) label = 'Very High';
     else if (volumeScore >= 55) label = 'High';
     else if (volumeScore >= 35) label = 'Moderate';
     else label = 'Low';
-    
+
     return { label, score: Math.round(volumeScore) };
   };
 
@@ -373,28 +375,28 @@ export const KeywordAnalyzer: React.FC = () => {
       acc[video.channelId] = (acc[video.channelId] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    
+
     const dominantChannels = Object.values(channelCount).filter(count => count > 2).length;
     const dominanceScore = (dominantChannels / videos.length) * 30;
-    
+
     // Keyword optimization (enhanced)
     const highRelevanceVideos = videos.filter(video => (video.relevanceScore || 0) > 50).length;
     const optimizationScore = (highRelevanceVideos / videos.length) * 40;
-    
+
     // Recent competition
-    const recentUploads = videos.filter(video => 
+    const recentUploads = videos.filter(video =>
       new Date(video.publishedAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     ).length;
     const recencyScore = Math.min(30, (recentUploads / videos.length) * 100);
-    
+
     const totalScore = Math.round(dominanceScore + optimizationScore + recencyScore);
-    
+
     let label: 'Low' | 'Moderate' | 'High' | 'Very High';
     if (totalScore >= 75) label = 'Very High';
     else if (totalScore >= 55) label = 'High';
     else if (totalScore >= 35) label = 'Moderate';
     else label = 'Low';
-    
+
     return { label, score: totalScore };
   };
 
@@ -421,47 +423,47 @@ export const KeywordAnalyzer: React.FC = () => {
     const tagScore = calculateTagScore(videos, keyword);
     const searchVolume = calculateSearchVolume(videos);
     const competitiveness = calculateCompetitiveness(videos, keyword);
-    
+
     // Basic metrics
     const totalViews = videos.reduce((sum, video) => sum + video.views, 0);
     const totalLikes = videos.reduce((sum, video) => sum + video.likes, 0);
     const averageViews = Math.round(totalViews / videos.length);
     const averageLikes = Math.round(totalLikes / videos.length);
-    
+
     const durations = videos.map(video => parseDuration(video.duration));
     const averageLength = Math.round(durations.reduce((sum, duration) => sum + duration, 0) / durations.length);
-    
+
     // Engagement rate calculation
     const engagementRate = Number(((averageLikes / Math.max(1, averageViews)) * 100).toFixed(2));
-    
+
     // Views per day calculation - FIXED to whole number
     const avgDaysOld = videos.reduce((sum, video) => {
       const daysSinceUpload = (Date.now() - new Date(video.publishedAt).getTime()) / (1000 * 60 * 60 * 24);
       return sum + daysSinceUpload;
     }, 0) / videos.length;
-    
+
     const viewsPerDay = Math.round(averageViews / Math.max(1, avgDaysOld)); // FIXED: Round to whole number
-    
+
     // Upload time analysis
     const uploadTimeDistribution = analyzeUploadTimes(videos);
-    
+
     // Best upload times
     const bestTimes = uploadTimeDistribution
       .sort((a, b) => b.avgViews - a.avgViews)
       .slice(0, 3);
-    
+
     const bestUploadDays = Array.from(new Set(bestTimes.map(t => t.day))).slice(0, 3);
     const bestUploadTimes = bestTimes.map(t => ({ day: t.day, hour: t.hour }));
-    
+
     // Optimal upload time recommendation
-    const optimalTime = bestTimes.length > 0 ? 
+    const optimalTime = bestTimes.length > 0 ?
       `${bestTimes[0].day} at ${bestTimes[0].hour}:00` : 'Data insufficient';
 
     // Analyze upload patterns for trend
-    const recentVideos = videos.filter(video => 
+    const recentVideos = videos.filter(video =>
       new Date(video.publishedAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     );
-    
+
     let trend: 'Rising' | 'Stable' | 'Declining' = 'Stable';
     const recentRatio = recentVideos.length / videos.length;
     if (recentRatio > 0.3) trend = 'Rising';
@@ -470,16 +472,16 @@ export const KeywordAnalyzer: React.FC = () => {
     // Generate related keywords
     const allTags = videos.flatMap(video => video.tags);
     const allTitles = videos.map(video => video.title).join(' ');
-    
+
     const relatedKeywords = Array.from(new Set([
-      ...allTags.filter(tag => 
-        tag.toLowerCase() !== keyword.toLowerCase() && 
-        tag.length > 2 && 
+      ...allTags.filter(tag =>
+        tag.toLowerCase() !== keyword.toLowerCase() &&
+        tag.length > 2 &&
         tag.length < 20
       ),
-      ...allTitles.split(/\s+/).filter(word => 
-        word.toLowerCase() !== keyword.toLowerCase() && 
-        word.length > 3 && 
+      ...allTitles.split(/\s+/).filter(word =>
+        word.toLowerCase() !== keyword.toLowerCase() &&
+        word.length > 3 &&
         !['the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can'].includes(word.toLowerCase())
       )
     ])).slice(0, 12);
@@ -489,17 +491,17 @@ export const KeywordAnalyzer: React.FC = () => {
       acc[video.channelId] = (acc[video.channelId] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    
+
     const topChannels = Object.entries(channelCount)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
-      .map(([channelId, count]) => ({ 
-        name: videos.find(v => v.channelId === channelId)?.channelTitle || channelId, 
-        count 
+      .map(([channelId, count]) => ({
+        name: videos.find(v => v.channelId === channelId)?.channelTitle || channelId,
+        count
       }));
 
     // Calculate keyword in title percentage
-    const keywordInTitle = videos.filter(video => 
+    const keywordInTitle = videos.filter(video =>
       video.title.toLowerCase().includes(keyword.toLowerCase())
     ).length;
     const keywordInTitlePercentage = Math.round((keywordInTitle / videos.length) * 100);
@@ -553,13 +555,13 @@ export const KeywordAnalyzer: React.FC = () => {
 
     try {
       const videos = await fetchYouTubeData(searchTerm);
-      
+
       if (videos.length === 0) {
         throw new Error('No videos found for this keyword');
       }
-      
+
       const analysis = analyzeKeywordData(videos, searchTerm);
-      
+
       saveToHistory(searchTerm);
       setResults(analysis);
       setShowResults(true);
@@ -649,29 +651,29 @@ export const KeywordAnalyzer: React.FC = () => {
   const UploadTimeChart: React.FC<{ data: UploadTimeData[] }> = ({ data }) => {
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 1700);
     const [isIntegrated, setIsIntegrated] = useState(false);
-    
+
     useEffect(() => {
       const handleResize = () => setIsMobile(window.innerWidth <= 1700);
       window.addEventListener('resize', handleResize);
       return () => window.removeEventListener('resize', handleResize);
     }, []);
-    
+
     useEffect(() => {
       // Check if this chart is inside an integrated container
       const chartElement = document.querySelector('.integrated');
       setIsIntegrated(!!chartElement);
     }, []);
-    
+
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const hours = Array.from({ length: 24 }, (_, i) => i);
-    
+
     const getHeatmapValue = (day: string, hour: number) => {
       const item = data.find(d => d.day === day && d.hour === hour);
       return item ? item.count : 0;
     };
-    
+
     const maxCount = Math.max(...data.map(d => d.count), 1);
-    
+
     const getHeatColor = (count: number) => {
       if (count === 0) return '#1a1a1a';
       if (count === 1) return '#28a745'; // 1 video = green
@@ -680,7 +682,7 @@ export const KeywordAnalyzer: React.FC = () => {
       return '#28a745'; // fallback
     };
 
-    
+
     // Mobile-friendly summary view
     const getMobileSummary = () => {
       const timeSlots = [
@@ -689,16 +691,16 @@ export const KeywordAnalyzer: React.FC = () => {
         { label: 'Afternoon', range: '12-17', hours: [12, 13, 14, 15, 16, 17] },
         { label: 'Evening', range: '18-23', hours: [18, 19, 20, 21, 22, 23] }
       ];
-      
+
       return timeSlots.map(slot => {
         const totalUploads = data.filter(item => slot.hours.includes(item.hour)).reduce((sum, item) => sum + item.count, 0);
         const avgViews = data.filter(item => slot.hours.includes(item.hour)).reduce((sum, item) => sum + item.avgViews, 0) / slot.hours.length;
-        
+
         return {
           ...slot,
           totalUploads,
           avgViews: isNaN(avgViews) ? 0 : avgViews,
-          intensity: totalUploads / Math.max(1, Math.max(...timeSlots.map(s => 
+          intensity: totalUploads / Math.max(1, Math.max(...timeSlots.map(s =>
             data.filter(item => s.hours.includes(item.hour)).reduce((sum, item) => sum + item.count, 0)
           )))
         };
@@ -715,13 +717,13 @@ export const KeywordAnalyzer: React.FC = () => {
             </S.ChartSubtitle>
           </>
         )}
-        
+
         {isIntegrated && (
           <S.ChartSubtitle style={{ fontSize: '0.8rem', marginBottom: '1rem', opacity: 0.8 }}>
             Visual representation of upload timing patterns
           </S.ChartSubtitle>
         )}
-        
+
         {isMobile ? (
           <S.MobileSummaryContainer>
             {getMobileSummary().map(slot => (
@@ -731,7 +733,7 @@ export const KeywordAnalyzer: React.FC = () => {
                   <span>{slot.range}:00</span>
                 </S.MobileSummaryLabel>
                 <S.MobileSummaryProgress>
-                  <S.MobileSummaryFill 
+                  <S.MobileSummaryFill
                     intensity={slot.intensity}
                     color={getHeatColor(slot.totalUploads)}
                   />
@@ -744,17 +746,17 @@ export const KeywordAnalyzer: React.FC = () => {
             ))}
           </S.MobileSummaryContainer>
         ) : (
-          <S.HeatmapContainer style={isIntegrated ? { transform: 'scale(1)'} : {}}>
+          <S.HeatmapContainer style={isIntegrated ? { transform: 'scale(1)' } : {}}>
             <S.HourLabels>
               {hours.filter((_, index) => index % 4 === 0).map(hour => {
                 // Calculate the position: 60px offset + (hour * cellWidth + gap)
                 const cellWidth = 15; // matches HeatmapCell width
                 const gap = 2; // matches grid gap
                 const leftPosition = 60 + (hour * (cellWidth + gap)) + (cellWidth / 2);
-                
+
                 return (
-                  <S.HourLabel 
-                    key={hour} 
+                  <S.HourLabel
+                    key={hour}
                     style={{ left: `${leftPosition}px` }}
                   >
                     {hour.toString().padStart(2, '0')}:00
@@ -762,14 +764,14 @@ export const KeywordAnalyzer: React.FC = () => {
                 );
               })}
             </S.HourLabels>
-            
+
             <S.HeatmapGrid>
               <S.DayLabels>
                 {days.map(day => (
                   <S.DayLabel key={day}>{day.slice(0, 3)}</S.DayLabel>
                 ))}
               </S.DayLabels>
-              
+
               <S.HeatmapRows>
                 {days.map(day => (
                   <S.HeatmapRow key={day}>
@@ -777,9 +779,9 @@ export const KeywordAnalyzer: React.FC = () => {
                       const count = getHeatmapValue(day, hour);
                       return (
                         <S.HeatmapCell
-                        key={`${day}-${hour}`}
-                        color={getHeatColor(count)}
-                        title={`${day} ${hour.toString().padStart(2, '0')}:00 - ${count} uploads`}
+                          key={`${day}-${hour}`}
+                          color={getHeatColor(count)}
+                          title={`${day} ${hour.toString().padStart(2, '0')}:00 - ${count} uploads`}
                         />
                       );
                     })}
@@ -789,7 +791,7 @@ export const KeywordAnalyzer: React.FC = () => {
             </S.HeatmapGrid>
           </S.HeatmapContainer>
         )}
-        
+
         <S.HeatmapLegend style={isIntegrated ? { marginTop: '0.5rem', fontSize: '0.8rem' } : {}}>
           <span>1 Video</span>
           <S.LegendGradient />
@@ -800,8 +802,21 @@ export const KeywordAnalyzer: React.FC = () => {
     );
   };
 
+  const seoConfig = toolsSEO['keyword-analyzer'];
+  const schemaData = generateToolSchema('keyword-analyzer', seoConfig);
+
+
   return (
-    <S.PageWrapper>
+    <>
+      <SEO
+        title={seoConfig.title}
+        description={seoConfig.description}
+        keywords={seoConfig.keywords}
+        canonical="https://youtool.io/tools/keyword-analyzer"
+        schemaData={schemaData}
+      />
+
+      <S.PageWrapper>
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -814,11 +829,11 @@ export const KeywordAnalyzer: React.FC = () => {
             <S.ToolIconContainer>
               <i className={toolConfig.icon}></i>
             </S.ToolIconContainer>
-            
+
             <S.HeaderTextContent>
               <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
               <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
-              
+
               <S.FeaturesList>
                 {toolConfig.features.map((feature, index) => (
                   <S.FeatureItem key={index}>
@@ -860,13 +875,13 @@ export const KeywordAnalyzer: React.FC = () => {
         {/* Educational Content Section */}
         {!showResults && !isAnalyzing && (
           <S.EducationalSection>
-            
+
             <S.EducationalContent>
               <S.SectionSubTitle>How to Use the Keyword Analyzer</S.SectionSubTitle>
-              
+
               <S.EducationalText>
-                Our Keyword Analyzer provides comprehensive YouTube keyword research with advanced metrics 
-                including search volume, competition analysis, and upload timing insights. Discover high-performing 
+                Our Keyword Analyzer provides comprehensive YouTube keyword research with advanced metrics
+                including search volume, competition analysis, and upload timing insights. Discover high-performing
                 keywords and optimize your content strategy for maximum visibility and engagement.
               </S.EducationalText>
 
@@ -876,8 +891,8 @@ export const KeywordAnalyzer: React.FC = () => {
                   <S.StepContent>
                     <S.StepTitle>Enter Target Keyword</S.StepTitle>
                     <S.EducationalText>
-                      Input your main keyword or phrase in the search bar above. Our system analyzes 
-                      thousands of YouTube videos to provide comprehensive insights including search volume, 
+                      Input your main keyword or phrase in the search bar above. Our system analyzes
+                      thousands of YouTube videos to provide comprehensive insights including search volume,
                       competition levels, and performance opportunities.
                     </S.EducationalText>
                   </S.StepContent>
@@ -888,8 +903,8 @@ export const KeywordAnalyzer: React.FC = () => {
                   <S.StepContent>
                     <S.StepTitle>Advanced Data Analysis</S.StepTitle>
                     <S.EducationalText>
-                      Our algorithm examines video performance, upload patterns, engagement metrics, 
-                      and competitive landscape. We calculate tag scores, trending patterns, and optimal 
+                      Our algorithm examines video performance, upload patterns, engagement metrics,
+                      and competitive landscape. We calculate tag scores, trending patterns, and optimal
                       timing recommendations based on real YouTube data.
                     </S.EducationalText>
                   </S.StepContent>
@@ -900,8 +915,8 @@ export const KeywordAnalyzer: React.FC = () => {
                   <S.StepContent>
                     <S.StepTitle>Optimize Your Strategy</S.StepTitle>
                     <S.EducationalText>
-                      Review detailed insights including tag scores, upload timing charts, competition analysis, 
-                      and related keyword suggestions. Use these recommendations to optimize your content 
+                      Review detailed insights including tag scores, upload timing charts, competition analysis,
+                      and related keyword suggestions. Use these recommendations to optimize your content
                       strategy and improve search rankings.
                     </S.EducationalText>
                   </S.StepContent>
@@ -911,7 +926,7 @@ export const KeywordAnalyzer: React.FC = () => {
 
             <S.EducationalContent>
               <S.SectionSubTitle>Keyword Research Features</S.SectionSubTitle>
-              
+
               <S.FeatureList>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
@@ -978,7 +993,7 @@ export const KeywordAnalyzer: React.FC = () => {
                   Keyword Analysis - {results.keyword}
                 </S.SectionTitle>
               </S.PremiumOverviewHeader>
-              
+
               <S.PremiumOverviewContent>
                 <S.PremiumOverviewGrid>
                   {/* Tag Score Hero Card */}
@@ -990,22 +1005,22 @@ export const KeywordAnalyzer: React.FC = () => {
                         <S.TagScoreOutOf>/100</S.TagScoreOutOf>
                       </S.TagScoreHeroNumber>
                       <S.TagScoreQuality score={results.tagScore}>
-                        {results.tagScore >= 70 ? 'High Quality' : 
-                         results.tagScore >= 50 ? 'Good Quality' : 
-                         results.tagScore >= 30 ? 'Fair Quality' : 'Needs Work'}
+                        {results.tagScore >= 70 ? 'High Quality' :
+                          results.tagScore >= 50 ? 'Good Quality' :
+                            results.tagScore >= 30 ? 'Fair Quality' : 'Needs Work'}
                       </S.TagScoreQuality>
                       <S.TagScoreDescription>
-                      {results.performanceDescription}
+                        {results.performanceDescription}
                       </S.TagScoreDescription>
-                  
-                  {/* Integrated Upload Time Chart */}
-                  <S.IntegratedChartContainer className="integrated">
-                    <S.IntegratedChartTitle>
-                      <i className="bx bx-time"></i>
-                      Upload Time Distribution
-                    </S.IntegratedChartTitle>
-                    <UploadTimeChart data={results.uploadTimeDistribution} />
-                  </S.IntegratedChartContainer>
+
+                      {/* Integrated Upload Time Chart */}
+                      <S.IntegratedChartContainer className="integrated">
+                        <S.IntegratedChartTitle>
+                          <i className="bx bx-time"></i>
+                          Upload Time Distribution
+                        </S.IntegratedChartTitle>
+                        <UploadTimeChart data={results.uploadTimeDistribution} />
+                      </S.IntegratedChartContainer>
                     </S.TagScoreContent>
                     <S.TagScoreIcon>
                       <i className="bx bx-trophy"></i>
@@ -1021,8 +1036,8 @@ export const KeywordAnalyzer: React.FC = () => {
                       </S.MetricCardHeader>
                       <S.MetricProgressContainer>
                         <S.MetricProgressBar>
-                          <S.MetricProgressFill 
-                            width={results.searchVolumeScore} 
+                          <S.MetricProgressFill
+                            width={results.searchVolumeScore}
                             color={getVolumeColor(results.searchVolume)}
                             delay="0.2s"
                           />
@@ -1041,8 +1056,8 @@ export const KeywordAnalyzer: React.FC = () => {
                       </S.MetricCardHeader>
                       <S.MetricProgressContainer>
                         <S.MetricProgressBar>
-                          <S.MetricProgressFill 
-                            width={results.competitivenessScore} 
+                          <S.MetricProgressFill
+                            width={results.competitivenessScore}
                             color={getCompetitionColor(results.competitiveness)}
                             delay="0.4s"
                           />
@@ -1056,7 +1071,7 @@ export const KeywordAnalyzer: React.FC = () => {
 
                     <S.PremiumMetricCard>
                       <S.MetricCardHeader>
-                        <S.MetricCardIcon 
+                        <S.MetricCardIcon
                           className={getTrendIcon(results.trend)}
                           style={{ color: getTrendColor(results.trend) }}
                         />
@@ -1068,8 +1083,8 @@ export const KeywordAnalyzer: React.FC = () => {
                         </S.TrendValue>
                         <S.TrendSubtext>
                           {results.trend === 'Rising' ? 'Growing interest' :
-                           results.trend === 'Stable' ? 'Consistent demand' :
-                           'Declining interest'}
+                            results.trend === 'Stable' ? 'Consistent demand' :
+                              'Declining interest'}
                         </S.TrendSubtext>
                       </S.TrendContainer>
                     </S.PremiumMetricCard>
@@ -1096,7 +1111,7 @@ export const KeywordAnalyzer: React.FC = () => {
               </S.MetricCard>
 
               <S.MetricCard>
-                <S.MetricIcon 
+                <S.MetricIcon
                   className={getTrendIcon(results.trend)}
                   style={{ color: getTrendColor(results.trend) }}
                 ></S.MetricIcon>
@@ -1113,7 +1128,7 @@ export const KeywordAnalyzer: React.FC = () => {
                 <i className="bx bx-time"></i>
                 Upload Timing Insights
               </S.SectionTitle>
-              
+
               <S.UploadInsightsList>
                 <S.InsightCard>
                   <S.InsightTitle>Best Upload Days</S.InsightTitle>
@@ -1150,7 +1165,7 @@ export const KeywordAnalyzer: React.FC = () => {
                   <i className="bx bx-brain"></i>
                   SEO Insights
                 </S.CardTitle>
-                
+
                 <S.InsightItem>
                   <S.InsightLabel>Tag Score:</S.InsightLabel>
                   <S.TagScoreBadge color={getScoreColor(results.tagScore)}>
@@ -1185,10 +1200,10 @@ export const KeywordAnalyzer: React.FC = () => {
                   <i className="bx bx-tag"></i>
                   Related Keywords
                 </S.CardTitle>
-                
+
                 <S.KeywordsList>
                   {results.relatedKeywords.map((relatedKeyword, index) => (
-                    <S.KeywordTag 
+                    <S.KeywordTag
                       key={index}
                       onClick={() => handleRelatedKeywordClick(relatedKeyword)}
                     >
@@ -1209,7 +1224,7 @@ export const KeywordAnalyzer: React.FC = () => {
                 <i className="bx bx-lightbulb"></i>
                 Optimization Recommendations
               </S.SectionTitle>
-              
+
               <S.RecommendationsList>
                 {results.recommendations.map((recommendation, index) => (
                   <S.Recommendation key={index} type="info">
@@ -1223,19 +1238,19 @@ export const KeywordAnalyzer: React.FC = () => {
             </S.RecommendationsSection>
 
 
-                        {/* Top Videos */}
+            {/* Top Videos */}
             <S.TopVideosSection>
               <S.SectionTitle>
                 <i className="bx bx-play-circle"></i>
-                Top Performing Videos 
+                Top Performing Videos
               </S.SectionTitle>
-              
+
               <S.VideosList>
                 {results.topVideos.map((video, index) => (
                   <S.VideoCard key={video.id}>
                     <S.VideoRank>#{index + 1}</S.VideoRank>
-                    <S.VideoThumbnail 
-                      src={video.thumbnail} 
+                    <S.VideoThumbnail
+                      src={video.thumbnail}
                       alt={video.title}
                     />
                     <S.VideoInfo>
@@ -1276,6 +1291,7 @@ export const KeywordAnalyzer: React.FC = () => {
         )}
       </S.MainContainer>
     </S.PageWrapper>
+    </>
   );
 };
 

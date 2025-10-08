@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ToolPageWrapper } from '../../../../components/ToolPageWrapper';
+import { SEO } from '../../../../components/SEO';
+import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 interface ThumbnailData {
@@ -366,13 +368,24 @@ export const ThumbnailDownloader: React.FC = () => {
     </S.StepIndicator>
   );
 
+  const seoConfig = toolsSEO['thumbnail-downloader'];
+  const schemaData = generateToolSchema('thumbnail-downloader', seoConfig);
+
   return (
-    <ToolPageWrapper
-      toolKey="thumbnail-downloader"
-      videoId={videoId}
-      customTitle={thumbnailData ? `Download ${thumbnailData.title} Thumbnail - YouTool.io` : undefined}
-    >
-      <S.PageWrapper>
+    <>
+      <SEO
+        title={seoConfig.title}
+        description={seoConfig.description}
+        keywords={seoConfig.keywords}
+        canonical="https://youtool.io/tools/thumbnail-downloader"
+        schemaData={schemaData}
+      />
+      <ToolPageWrapper
+        toolKey="thumbnail-downloader"
+        videoId={videoId}
+        customTitle={thumbnailData ? `Download ${thumbnailData.title} Thumbnail - YouTool.io` : undefined}
+      >
+        <S.PageWrapper>
         <S.MainContainer>
           <S.BackButton onClick={() => navigate('/tools')}>
             <i className="bx bx-arrow-back"></i>
@@ -712,7 +725,8 @@ export const ThumbnailDownloader: React.FC = () => {
           )}
         </S.MainContainer>
       </S.PageWrapper>
-    </ToolPageWrapper>
+      </ToolPageWrapper>
+    </>
   );
 };
 

@@ -1,6 +1,8 @@
 // src/pages/Tools/components/ModerationChecker/ModerationChecker.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SEO } from '../../../../components/SEO';
+import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 const toolConfig = {
@@ -95,7 +97,7 @@ export const ModerationChecker: React.FC = () => {
     try {
       // Generate flagged words based on actual content analysis
       const mockFlaggedWords: { word: string; category: string; severity: string }[] = [];
-      
+
       // More reasonable word lists for client-side moderation
       const profanityWords = [
         // Only actual profanity, not mild words
@@ -103,44 +105,44 @@ export const ModerationChecker: React.FC = () => {
         // Strong profanity
         'fuck', 'fucking', 'fucked', 'fucker', 'motherfucker', 'cocksucker', 'dickhead', 'whore', 'slut', 'cunt'
       ];
-      
+
       const spamIndicators = [
         'click here now', 'subscribe now', 'like and subscribe', 'smash that like button', 'hit the bell', 'notification squad',
         'first comment', 'early squad', 'free money', 'make money fast', 'get rich quick',
         'work from home', 'visit my profile', 'check my channel', 'follow for follow', 'sub for sub',
         'subscribe to me', 'click the link', 'link in bio'
       ];
-      
+
       const violenceWords = [
         // Only serious violence, not casual words
         'kill him', 'kill her', 'kill you', 'murder', 'suicide', 'hang yourself', 'shoot you', 'stab you',
         'bomb', 'explosive', 'massacre', 'slaughter', 'torture', 'assassinate'
       ];
-      
+
       const hateWords = [
         // Only actual hate speech, not descriptive words
         'racist', 'racism', 'nazi', 'hitler', 'terrorist', 'fag', 'faggot',
         'retard', 'retarded', 'worthless', 'pathetic', 'disgusting'
       ];
-      
+
       const sexualWords = [
         // Only explicit sexual content
         'porn', 'pornography', 'nude', 'naked', 'masturbate', 'orgasm', 'climax', 'erotic',
         'xxx', 'nsfw', 'boobs', 'tits', 'penis', 'vagina', 'anal sex', 'oral sex', 'blowjob', 'handjob', 'onlyfans'
       ];
-      
+
       const drugWords = [
         // Only actual drug references
         'cocaine', 'heroin', 'meth', 'methamphetamine', 'crack cocaine', 'ecstasy', 'lsd', 'ketamine'
       ];
-      
+
       // Check for profanity using whole word matching
       profanityWords.forEach(word => {
         if (containsWholeWord(content, word)) {
           let severity = 'medium';
           if (['fuck', 'fucking', 'fucked', 'motherfucker', 'cunt'].includes(word.toLowerCase())) severity = 'high';
           else if (['shit', 'bullshit', 'asshole', 'bitch'].includes(word.toLowerCase())) severity = 'medium';
-          
+
           // Find the actual matches to preserve original case
           const matches = findWholeWordMatches(content, word);
           matches.forEach(match => {
@@ -148,70 +150,70 @@ export const ModerationChecker: React.FC = () => {
           });
         }
       });
-      
+
       // Check for spam indicators
       spamIndicators.forEach(phrase => {
         if (containsWholeWord(content, phrase)) {
           let severity = 'medium';
           if (['free money', 'make money fast', 'get rich quick'].includes(phrase.toLowerCase())) severity = 'high';
           else if (['click here now', 'link in bio', 'check my channel'].includes(phrase.toLowerCase())) severity = 'low';
-          
+
           const matches = findWholeWordMatches(content, phrase);
           matches.forEach(match => {
             mockFlaggedWords.push({ word: match, category: 'spam', severity });
           });
         }
       });
-      
+
       // Check for violence
       violenceWords.forEach(word => {
         if (containsWholeWord(content, word)) {
           let severity = 'high'; // Most violence words should be high severity
           if (['bomb', 'explosive', 'massacre', 'torture', 'assassinate'].includes(word.toLowerCase())) severity = 'high';
           else if (['kill him', 'kill her', 'murder', 'suicide'].includes(word.toLowerCase())) severity = 'high';
-          
+
           const matches = findWholeWordMatches(content, word);
           matches.forEach(match => {
             mockFlaggedWords.push({ word: match, category: 'violence', severity });
           });
         }
       });
-      
+
       // Check for hate speech
       hateWords.forEach(word => {
         if (containsWholeWord(content, word)) {
           let severity = 'high'; // Hate speech should be high severity
           if (['racist', 'nazi', 'fag', 'faggot', 'terrorist'].includes(word.toLowerCase())) severity = 'high';
           else if (['retarded', 'worthless', 'pathetic'].includes(word.toLowerCase())) severity = 'medium';
-          
+
           const matches = findWholeWordMatches(content, word);
           matches.forEach(match => {
             mockFlaggedWords.push({ word: match, category: 'hate', severity });
           });
         }
       });
-      
+
       // Check for sexual content
       sexualWords.forEach(word => {
         if (containsWholeWord(content, word)) {
           let severity = 'high'; // Most sexual content should be high severity
           if (['porn', 'pornography', 'xxx', 'masturbate', 'orgasm'].includes(word.toLowerCase())) severity = 'high';
           else if (['nude', 'naked', 'erotic'].includes(word.toLowerCase())) severity = 'medium';
-          
+
           const matches = findWholeWordMatches(content, word);
           matches.forEach(match => {
             mockFlaggedWords.push({ word: match, category: 'sexual', severity });
           });
         }
       });
-      
+
       // Check for drug references
       drugWords.forEach(word => {
         if (containsWholeWord(content, word)) {
           let severity = 'high'; // Hard drugs should be high severity
           if (['cocaine', 'heroin', 'meth', 'methamphetamine', 'crack cocaine'].includes(word.toLowerCase())) severity = 'high';
           else severity = 'medium';
-          
+
           const matches = findWholeWordMatches(content, word);
           matches.forEach(match => {
             mockFlaggedWords.push({ word: match, category: 'drugs', severity });
@@ -221,16 +223,16 @@ export const ModerationChecker: React.FC = () => {
 
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Create results based on actual flagged content with more reasonable scoring
       const mockResults: ModerationResult = {
         overallScore: Math.max(0, Math.min(100, 100 - (mockFlaggedWords.length * 8) - (mockFlaggedWords.filter(w => w.severity === 'high').length * 12))),
         riskLevel: (() => {
           const totalFlags = mockFlaggedWords.length;
           const highSeverityFlags = mockFlaggedWords.filter(w => w.severity === 'high').length;
-          
+
           if (highSeverityFlags > 2 || totalFlags > 8) return 'High Risk';
-          if (highSeverityFlags > 0 || totalFlags > 4) return 'Medium Risk'; 
+          if (highSeverityFlags > 0 || totalFlags > 4) return 'Medium Risk';
           if (totalFlags > 1) return 'Low Risk';
           return 'Safe';
         })() as any,
@@ -238,8 +240,8 @@ export const ModerationChecker: React.FC = () => {
           profanity: {
             score: Math.min(mockFlaggedWords.filter(w => w.category === 'profanity').length * 15, 100),
             detected: mockFlaggedWords.filter(w => w.category === 'profanity').map(w => w.word),
-            severity: mockFlaggedWords.filter(w => w.category === 'profanity').some(w => w.severity === 'high') ? 'High' : 
-                     mockFlaggedWords.filter(w => w.category === 'profanity').some(w => w.severity === 'medium') ? 'Medium' : 'Low'
+            severity: mockFlaggedWords.filter(w => w.category === 'profanity').some(w => w.severity === 'high') ? 'High' :
+              mockFlaggedWords.filter(w => w.category === 'profanity').some(w => w.severity === 'medium') ? 'Medium' : 'Low'
           },
           toxicity: {
             score: Math.min(mockFlaggedWords.length * 10, 100),
@@ -249,26 +251,26 @@ export const ModerationChecker: React.FC = () => {
           spam: {
             score: Math.min(mockFlaggedWords.filter(w => w.category === 'spam').length * 20, 100),
             indicators: mockFlaggedWords.filter(w => w.category === 'spam').map(w => w.word),
-            severity: mockFlaggedWords.filter(w => w.category === 'spam').some(w => w.severity === 'high') ? 'High' : 
-                     mockFlaggedWords.filter(w => w.category === 'spam').some(w => w.severity === 'medium') ? 'Medium' : 'Low'
+            severity: mockFlaggedWords.filter(w => w.category === 'spam').some(w => w.severity === 'high') ? 'High' :
+              mockFlaggedWords.filter(w => w.category === 'spam').some(w => w.severity === 'medium') ? 'Medium' : 'Low'
           },
           violence: {
             score: Math.min(mockFlaggedWords.filter(w => w.category === 'violence').length * 25, 100),
             detected: mockFlaggedWords.filter(w => w.category === 'violence').map(w => w.word),
-            severity: mockFlaggedWords.filter(w => w.category === 'violence').some(w => w.severity === 'high') ? 'High' : 
-                     mockFlaggedWords.filter(w => w.category === 'violence').some(w => w.severity === 'medium') ? 'Medium' : 'Low'
+            severity: mockFlaggedWords.filter(w => w.category === 'violence').some(w => w.severity === 'high') ? 'High' :
+              mockFlaggedWords.filter(w => w.category === 'violence').some(w => w.severity === 'medium') ? 'Medium' : 'Low'
           },
           hate: {
             score: Math.min(mockFlaggedWords.filter(w => w.category === 'hate').length * 30, 100),
             detected: mockFlaggedWords.filter(w => w.category === 'hate').map(w => w.word),
-            severity: mockFlaggedWords.filter(w => w.category === 'hate').some(w => w.severity === 'high') ? 'High' : 
-                     mockFlaggedWords.filter(w => w.category === 'hate').some(w => w.severity === 'medium') ? 'Medium' : 'Low'
+            severity: mockFlaggedWords.filter(w => w.category === 'hate').some(w => w.severity === 'high') ? 'High' :
+              mockFlaggedWords.filter(w => w.category === 'hate').some(w => w.severity === 'medium') ? 'Medium' : 'Low'
           },
           sexual: {
             score: Math.min(mockFlaggedWords.filter(w => w.category === 'sexual').length * 20, 100),
             detected: mockFlaggedWords.filter(w => w.category === 'sexual').map(w => w.word),
-            severity: mockFlaggedWords.filter(w => w.category === 'sexual').some(w => w.severity === 'high') ? 'High' : 
-                     mockFlaggedWords.filter(w => w.category === 'sexual').some(w => w.severity === 'medium') ? 'Medium' : 'Low'
+            severity: mockFlaggedWords.filter(w => w.category === 'sexual').some(w => w.severity === 'high') ? 'High' :
+              mockFlaggedWords.filter(w => w.category === 'sexual').some(w => w.severity === 'medium') ? 'Medium' : 'Low'
           }
         },
         suggestions: [
@@ -283,26 +285,26 @@ export const ModerationChecker: React.FC = () => {
         sentiment: (() => {
           // Simple sentiment analysis based on content
           const text = content.toLowerCase();
-          
+
           // Positive indicators
           const positiveWords = ['good', 'great', 'love', 'happy', 'excited', 'proud', 'beautiful', 'wonderful', 'amazing', 'awesome', 'congratulations', 'celebrate', 'ready'];
           const positiveCount = positiveWords.filter(word => containsWholeWord(text, word)).length;
-          
+
           // Negative indicators  
           const negativeWords = ['bad', 'hate', 'angry', 'sad', 'terrible', 'awful', 'horrible', 'disgusting', 'annoying', 'frustrated'];
           const negativeCount = negativeWords.filter(word => containsWholeWord(text, word)).length;
-          
+
           // Neutral/casual indicators
           const neutralWords = ['okay', 'fine', 'normal', 'regular', 'standard', 'typical'];
           const neutralCount = neutralWords.filter(word => containsWholeWord(text, word)).length;
-          
+
           // If no flagged words, assume neutral-positive content
           const hasProfanity = mockFlaggedWords.some(w => w.category === 'profanity');
           const hasViolence = mockFlaggedWords.some(w => w.category === 'violence');
           const hasHate = mockFlaggedWords.some(w => w.category === 'hate');
-          
+
           let positive, negative, neutral;
-          
+
           if (hasProfanity || hasViolence || hasHate) {
             // Content with flags tends to be more negative
             positive = Math.max(10, 40 + positiveCount * 8 - mockFlaggedWords.length * 5);
@@ -314,12 +316,12 @@ export const ModerationChecker: React.FC = () => {
             negative = Math.max(5, 15 + negativeCount * 8);
             neutral = 100 - positive - negative;
           }
-          
+
           // Ensure values are reasonable
           positive = Math.max(0, Math.min(85, positive));
           negative = Math.max(0, Math.min(70, negative));
           neutral = Math.max(0, 100 - positive - negative);
-          
+
           // Determine overall sentiment based on highest percentage
           let overall: 'positive' | 'negative' | 'neutral';
           if (positive >= negative && positive >= neutral) {
@@ -329,7 +331,7 @@ export const ModerationChecker: React.FC = () => {
           } else {
             overall = 'neutral';
           }
-          
+
           return {
             positive,
             negative,
@@ -404,38 +406,51 @@ export const ModerationChecker: React.FC = () => {
     return 'Needs Attention';
   };
 
+  const seoConfig = toolsSEO['moderation-checker'];
+  const schemaData = generateToolSchema('moderation-checker', seoConfig);
+
+
   return (
-    <S.PageWrapper>
+    <>
+      <SEO
+        title={seoConfig.title}
+        description={seoConfig.description}
+        keywords={seoConfig.keywords}
+        canonical="https://youtool.io/tools/moderation-checker"
+        schemaData={schemaData}
+      />
+
+      <S.PageWrapper>
       <S.MainContainer>
         <S.Header>
           <S.BackButton onClick={() => navigate('/tools')}>
             <i className="bx bx-arrow-back"></i>
             Back to Tools
           </S.BackButton>
-{/* Enhanced Header Section with Integrated Search */}
-<S.EnhancedHeader backgroundImage={toolConfig.image}>
-  <S.HeaderOverlay />
-  <S.HeaderContent>
-    <S.ToolIconContainer>
-      <i className={toolConfig.icon}></i>
-    </S.ToolIconContainer>
-    
-    <S.HeaderTextContent>
-      <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
-      <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
-      
-      <S.FeaturesList>
-        {toolConfig.features.map((feature, index) => (
-          <S.FeatureItem key={index}>
-            <i className="bx bx-check-circle"></i>
-            <span>{feature}</span>
-          </S.FeatureItem>
-        ))}
-      </S.FeaturesList>
+          {/* Enhanced Header Section with Integrated Search */}
+          <S.EnhancedHeader backgroundImage={toolConfig.image}>
+            <S.HeaderOverlay />
+            <S.HeaderContent>
+              <S.ToolIconContainer>
+                <i className={toolConfig.icon}></i>
+              </S.ToolIconContainer>
 
-    </S.HeaderTextContent>
-  </S.HeaderContent>
-</S.EnhancedHeader>
+              <S.HeaderTextContent>
+                <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
+                <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
+
+                <S.FeaturesList>
+                  {toolConfig.features.map((feature, index) => (
+                    <S.FeatureItem key={index}>
+                      <i className="bx bx-check-circle"></i>
+                      <span>{feature}</span>
+                    </S.FeatureItem>
+                  ))}
+                </S.FeaturesList>
+
+              </S.HeaderTextContent>
+            </S.HeaderContent>
+          </S.EnhancedHeader>
         </S.Header>
 
         <S.AnalysisContainer>
@@ -444,7 +459,7 @@ export const ModerationChecker: React.FC = () => {
               <i className="bx bx-shield-check"></i>
               Analyze Your Content
             </S.SectionTitle>
-            
+
             <S.ContentTypeSelector>
               <S.TypeLabel>Content Type:</S.TypeLabel>
               <S.TypeOptions>
@@ -485,7 +500,7 @@ export const ModerationChecker: React.FC = () => {
               placeholder={`Enter your ${contentType === 'general' ? 'text' : contentType} content here...`}
               rows={contentType === 'description' ? 8 : contentType === 'title' ? 3 : 5}
             />
-            
+
             <S.CharacterCount>
               <span>{content.length} characters</span>
               {contentType === 'title' && content.length > 100 && (
@@ -568,8 +583,8 @@ export const ModerationChecker: React.FC = () => {
                   Risk Level: {results.riskLevel}
                 </S.RiskLevel>
                 <S.ScoreDescription>
-                  {results.overallScore > 50 
-                    ? "Your content appears safe for most audiences" 
+                  {results.overallScore > 50
+                    ? "Your content appears safe for most audiences"
                     : "Consider reviewing your content for potential issues"}
                 </S.ScoreDescription>
               </S.ScoreDetails>
@@ -709,7 +724,7 @@ export const ModerationChecker: React.FC = () => {
                 <i className="bx bx-happy"></i>
                 Sentiment Analysis
               </S.SectionTitle>
-              
+
               <S.SentimentGrid>
                 <S.SentimentCard sentiment="positive">
                   <S.SentimentValue>{results.sentiment.positive}%</S.SentimentValue>
@@ -724,7 +739,7 @@ export const ModerationChecker: React.FC = () => {
                   <S.SentimentLabel>Negative</S.SentimentLabel>
                 </S.SentimentCard>
               </S.SentimentGrid>
-              
+
               <S.OverallSentiment color={getSentimentColor(results.sentiment.overall)}>
                 Overall Sentiment: {results.sentiment.overall}
               </S.OverallSentiment>
@@ -736,7 +751,7 @@ export const ModerationChecker: React.FC = () => {
                 <i className="bx bx-lightbulb"></i>
                 Improvement Suggestions
               </S.SectionTitle>
-              
+
               <S.SuggestionsList>
                 {results.suggestions.map((suggestion, index) => (
                   <S.Suggestion key={index}>
@@ -754,7 +769,7 @@ export const ModerationChecker: React.FC = () => {
                   <i className="bx bx-flag"></i>
                   Flagged Content ({results.flaggedWords.length})
                 </S.SectionTitle>
-                
+
                 <S.FlaggedWordsList>
                   {results.flaggedWords.map((item, index) => (
                     <S.FlaggedWord key={index} severity={item.severity}>
@@ -774,6 +789,7 @@ export const ModerationChecker: React.FC = () => {
         )}
       </S.MainContainer>
     </S.PageWrapper>
+    </>
   );
 };
 

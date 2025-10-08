@@ -1,6 +1,8 @@
 // src/pages/Tools/components/SubscribeLinkGenerator/SubscribeLinkGenerator.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { SEO } from '../../../../components/SEO';
+import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 interface ChannelInfo {
@@ -316,8 +318,19 @@ export const SubscribeLinkGenerator: React.FC = () => {
     return `${years} year${years !== 1 ? 's' : ''} old`;
   };
 
+  const seoConfig = toolsSEO['subscribe-link-generator'];
+  const schemaData = generateToolSchema('subscribe-link-generator', seoConfig);
+
   return (
-    <S.PageWrapper>
+    <>
+      <SEO
+        title={seoConfig.title}
+        description={seoConfig.description}
+        keywords={seoConfig.keywords}
+        canonical="https://youtool.io/tools/subscribe-link-generator"
+        schemaData={schemaData}
+      />
+      <S.PageWrapper>
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -609,6 +622,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
         )}
       </S.MainContainer>
     </S.PageWrapper>
+    </>
   );
 };
 

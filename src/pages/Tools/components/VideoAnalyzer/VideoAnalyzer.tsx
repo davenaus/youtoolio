@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ToolPageWrapper } from '../../../../components/ToolPageWrapper';
+import { SEO } from '../../../../components/SEO';
+import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 import moment from 'moment';
 import { ANALYTICS_QUESTIONS, AnalyticsQuestion } from './analyticsQuestions';
@@ -1698,8 +1700,19 @@ const VideoAnalyzer: React.FC = () => {
     );
   };
 
+  const seoConfig = toolsSEO['video-analyzer'];
+  const schemaData = generateToolSchema('video-analyzer', seoConfig);
+
   return (
-    <S.PageWrapper>
+    <>
+      <SEO
+        title={seoConfig.title}
+        description={seoConfig.description}
+        keywords={seoConfig.keywords}
+        canonical="https://youtool.io/tools/video-analyzer"
+        schemaData={schemaData}
+      />
+      <S.PageWrapper>
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -1962,7 +1975,8 @@ const VideoAnalyzer: React.FC = () => {
           ) : null}
         </S.ResultsContainer>
       </S.MainContainer>
-    </S.PageWrapper>
+      </S.PageWrapper>
+    </>
   );
 };
 

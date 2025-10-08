@@ -1,7 +1,7 @@
 // src/components/ToolPageWrapper/ToolPageWrapper.tsx
 import React from 'react';
-import { SEOHead } from '../SEO';
-import { toolsSEOConfig } from '../../config/toolsSEO';
+import { SEO } from '../SEO';
+import { toolsSEO, generateToolSchema } from '../../config/toolsSEO';
 
 interface ToolPageWrapperProps {
   toolKey: string;
@@ -18,35 +18,43 @@ export const ToolPageWrapper: React.FC<ToolPageWrapperProps> = ({
   customTitle,
   customDescription
 }) => {
-  const seoConfig = toolsSEOConfig[toolKey];
-  
+  const seoConfig = toolsSEO[toolKey];
+
   if (!seoConfig) {
     console.warn(`SEO config not found for tool: ${toolKey}`);
     return <>{children}</>;
   }
 
-  // Dynamic title and description based on context
+  // Build structured data (JSON-LD)
+  const schemaData = generateToolSchema(toolKey, seoConfig);
+
+  // Dynamic title and description
   let finalTitle = customTitle || seoConfig.title;
   let finalDescription = customDescription || seoConfig.description;
-  
+
   if (videoId && !customTitle) {
     finalTitle = `${seoConfig.title.split(' - ')[0]} - Video ${videoId}`;
   }
-  
+
   if (videoId && !customDescription) {
     finalDescription = `${seoConfig.description} Get insights for video: ${videoId}`;
   }
 
+  // Canonical URL
+  const canonicalUrl = `https://youtool.io/tools/${toolKey}${videoId ? `/${videoId}` : ''}`;
+
   return (
     <>
-      <SEOHead 
+      <SEO
         title={finalTitle}
         description={finalDescription}
         keywords={seoConfig.keywords}
-        url={`/tools/${toolKey}${videoId ? `/${videoId}` : ''}`}
-        structuredData={seoConfig.structuredData}
+        canonical={canonicalUrl}
+        schemaData={schemaData}
       />
       {children}
     </>
   );
 };
+
+export default ToolPageWrapper;

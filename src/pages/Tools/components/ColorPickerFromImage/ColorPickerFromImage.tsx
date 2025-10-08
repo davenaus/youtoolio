@@ -1,7 +1,10 @@
 // src/pages/Tools/components/ColorPickerFromImage/ColorPickerFromImage.tsx
 import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SEO } from '../../../../components/SEO';
+import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
+
 
 const ColorPickerFromImage: React.FC = () => {
   const navigate = useNavigate();
@@ -229,8 +232,21 @@ const ColorPickerFromImage: React.FC = () => {
     }
   };
 
+  const seoConfig = toolsSEO['color-picker-from-image'];
+  const schemaData = generateToolSchema('color-picker-from-image', seoConfig);
+
+
   return (
-    <S.PageWrapper>
+    <>
+      <SEO
+        title={seoConfig.title}
+        description={seoConfig.description}
+        keywords={seoConfig.keywords}
+        canonical="https://youtool.io/tools/color-picker-from-image"
+        schemaData={schemaData}
+      />
+
+      <S.PageWrapper>
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -511,6 +527,7 @@ const ColorPickerFromImage: React.FC = () => {
         <canvas ref={canvasRef} style={{ display: 'none' }} />
       </S.MainContainer>
     </S.PageWrapper>
+    </>
   );
 };
 

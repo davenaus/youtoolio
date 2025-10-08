@@ -1,5 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SEO } from '../../../../components/SEO';
+import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 interface Color {
@@ -452,8 +454,19 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     document.body.removeChild(link);
   };
 
+  const seoConfig = toolsSEO['color-palette'];
+  const schemaData = generateToolSchema('color-palette', seoConfig);
+
   return (
-    <S.PageWrapper>
+    <>
+      <SEO
+        title={seoConfig.title}
+        description={seoConfig.description}
+        keywords={seoConfig.keywords}
+        canonical="https://youtool.io/tools/color-palette"
+        schemaData={schemaData}
+      />
+      <S.PageWrapper>
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -763,6 +776,7 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         )}
       </S.MainContainer>
     </S.PageWrapper>
+    </>
   );
 };
 

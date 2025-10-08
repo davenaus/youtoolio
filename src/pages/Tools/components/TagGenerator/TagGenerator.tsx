@@ -1,6 +1,8 @@
 // src/pages/Tools/components/TagGenerator/TagGenerator.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { SEO } from '../../../../components/SEO';
+import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 interface VideoDetails {
@@ -445,8 +447,19 @@ export const TagGenerator: React.FC = () => {
     navigate('/tools/tag-generator');
   };
 
+  const seoConfig = toolsSEO['tag-generator'];
+  const schemaData = generateToolSchema('tag-generator', seoConfig);
+
   return (
-    <S.PageWrapper>
+    <>
+      <SEO
+        title={seoConfig.title}
+        description={seoConfig.description}
+        keywords={seoConfig.keywords}
+        canonical="https://youtool.io/tools/tag-generator"
+        schemaData={schemaData}
+      />
+      <S.PageWrapper>
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -907,6 +920,7 @@ export const TagGenerator: React.FC = () => {
         </S.ResultsContainer>
       </S.MainContainer>
     </S.PageWrapper>
+    </>
   );
 };
 

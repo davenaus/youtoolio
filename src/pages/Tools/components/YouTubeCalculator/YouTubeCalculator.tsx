@@ -1,6 +1,8 @@
 // src/pages/Tools/components/YouTubeCalculator/YouTubeCalculator.tsx
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SEO } from '../../../../components/SEO';
+import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 interface CategoryRates {
@@ -279,8 +281,19 @@ export const YouTubeCalculator: React.FC = () => {
     </S.StepIndicator>
   );
 
+  const seoConfig = toolsSEO['youtube-calculator'];
+  const schemaData = generateToolSchema('youtube-calculator', seoConfig);
+
   return (
-    <S.PageWrapper>
+    <>
+      <SEO
+        title={seoConfig.title}
+        description={seoConfig.description}
+        keywords={seoConfig.keywords}
+        canonical="https://youtool.io/tools/youtube-calculator"
+        schemaData={schemaData}
+      />
+      <S.PageWrapper>
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -914,6 +927,7 @@ export const YouTubeCalculator: React.FC = () => {
         )}
       </S.MainContainer>
     </S.PageWrapper>
+    </>
   );
 };
 

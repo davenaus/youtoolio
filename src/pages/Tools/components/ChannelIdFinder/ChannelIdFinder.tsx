@@ -1,6 +1,7 @@
-// src/pages/Tools/components/ChannelIdFinder/ChannelIdFinder.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SEO } from '../../../../components/SEO';
+import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 interface ChannelInfo {
@@ -29,6 +30,10 @@ export const ChannelIdFinder: React.FC = () => {
   const [showResults, setShowResults] = useState(false);
   const [searchType, setSearchType] = useState<'url' | 'name' | 'id'>('url');
   const [error, setError] = useState<string | null>(null);
+
+  // ✅ SEO setup
+  const seoConfig = toolsSEO['channel-id-finder'];
+  const schemaData = generateToolSchema('channel-id-finder', seoConfig);
 
   // Tool configuration
   const toolConfig = {
@@ -306,12 +311,21 @@ export const ChannelIdFinder: React.FC = () => {
   };
 
   return (
-    <S.PageWrapper>
-      <S.MainContainer>
-        <S.BackButton onClick={() => navigate('/tools')}>
-          <i className="bx bx-arrow-back"></i>
-          Back to Tools
-        </S.BackButton>
+    <>
+      <SEO
+        title={seoConfig.title}
+        description={seoConfig.description}
+        keywords={seoConfig.keywords}
+        canonical="https://youtool.io/tools/channel-id-finder"
+        schemaData={schemaData}
+      />
+
+      <S.PageWrapper>
+        <S.MainContainer>
+          <S.BackButton onClick={() => navigate('/tools')}>
+            <i className="bx bx-arrow-back"></i>
+            Back to Tools
+          </S.BackButton>
 
         {/* Enhanced Header Section with Integrated Search */}
         <S.EnhancedHeader backgroundImage={toolConfig.image}>
@@ -765,8 +779,9 @@ export const ChannelIdFinder: React.FC = () => {
             </S.QuickActions>
           </S.ResultsContainer>
         )}
-      </S.MainContainer>
-    </S.PageWrapper>
+        </S.MainContainer>
+      </S.PageWrapper>
+    </>
   );
 };
 

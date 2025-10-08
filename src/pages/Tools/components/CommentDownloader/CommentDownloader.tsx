@@ -1,6 +1,8 @@
 // src/pages/Tools/components/CommentDownloader/CommentDownloader.tsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { SEO } from '../../../../components/SEO';
+import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 interface Comment {
@@ -414,8 +416,19 @@ export const CommentDownloader: React.FC = () => {
     }
   };
 
+  const seoConfig = toolsSEO['comment-downloader'];
+  const schemaData = generateToolSchema('comment-downloader', seoConfig);
+
   return (
-    <S.PageWrapper>
+    <>
+      <SEO
+        title={seoConfig.title}
+        description={seoConfig.description}
+        keywords={seoConfig.keywords}
+        canonical="https://youtool.io/tools/comment-downloader"
+        schemaData={schemaData}
+      />
+      <S.PageWrapper>
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -816,6 +829,7 @@ export const CommentDownloader: React.FC = () => {
         </S.ResultsContainer>
       </S.MainContainer>
     </S.PageWrapper>
+    </>
   );
 };
 

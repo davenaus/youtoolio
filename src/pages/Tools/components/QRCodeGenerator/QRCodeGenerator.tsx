@@ -1,6 +1,8 @@
 // src/pages/Tools/components/QRCodeGenerator/QRCodeGenerator.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SEO } from '../../../../components/SEO';
+import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 interface QRConfig {
@@ -328,8 +330,19 @@ export const QRCodeGenerator: React.FC = () => {
     </S.StepIndicator>
   );
 
+  const seoConfig = toolsSEO['qr-code-generator'];
+  const schemaData = generateToolSchema('qr-code-generator', seoConfig);
+
   return (
-    <S.PageWrapper>
+    <>
+      <SEO
+        title={seoConfig.title}
+        description={seoConfig.description}
+        keywords={seoConfig.keywords}
+        canonical="https://youtool.io/tools/qr-code-generator"
+        schemaData={schemaData}
+      />
+      <S.PageWrapper>
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -682,6 +695,7 @@ export const QRCodeGenerator: React.FC = () => {
         <canvas ref={canvasRef} style={{ display: 'none' }} />
       </S.MainContainer>
     </S.PageWrapper>
+    </>
   );
 };
 

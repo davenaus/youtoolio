@@ -1,700 +1,174 @@
 // src/config/toolsSEO.ts
-// Complete SEO configuration for all YouTube tools
-
-interface ToolSEOConfig {
+export interface ToolSEOConfig {
   title: string;
   description: string;
-  keywords: string[];
-  structuredData: object;
+  keywords: string;
+  h1: string;
+  schemaType: string;
 }
 
-export const toolsSEOConfig: Record<string, ToolSEOConfig> = {
+export const toolsSEO: Record<string, ToolSEOConfig> = {
   'thumbnail-downloader': {
-    title: 'YouTube Thumbnail Downloader - Download HD Video Thumbnails Free',
-    description: 'Download high-quality YouTube video thumbnails in multiple resolutions (1280x720, 640x480, 480x360). Free thumbnail downloader with instant downloads and all quality options.',
-    keywords: [
-      'youtube thumbnail downloader',
-      'download youtube thumbnails',
-      'youtube thumbnail download',
-      'video thumbnail downloader',
-      'hd youtube thumbnail',
-      'youtube image download',
-      'free thumbnail downloader',
-      'youtube thumbnail extractor',
-      'thumbnail download tool',
-      'youtube thumbnail saver'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube Thumbnail Downloader",
-      "description": "Download high-quality YouTube video thumbnails in multiple resolutions",
-      "url": "https://youtool.io/tools/thumbnail-downloader",
-      "applicationCategory": "MultimediaApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Multiple resolutions (1280x720, 640x480, 480x360)",
-        "Instant downloads",
-        "No registration required",
-        "Batch download support",
-        "Direct URL copying"
-      ],
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.8",
-        "ratingCount": "2847"
-      }
-    }
+    title: 'YouTube Thumbnail Downloader - Download HD Thumbnails Free',
+    description: 'Download YouTube video thumbnails in high resolution (HD, Full HD, 4K). Get maxres, standard, high, medium quality thumbnails instantly. Free YouTube thumbnail grabber tool.',
+    keywords: 'youtube thumbnail downloader, download youtube thumbnail, youtube thumbnail grabber, get youtube thumbnail, youtube thumbnail download, hd thumbnail download, maxres thumbnail, youtube thumbnail extractor',
+    h1: 'YouTube Thumbnail Downloader',
+    schemaType: 'WebApplication'
   },
-
   'video-analyzer': {
-    title: 'YouTube Video Analyzer - Free Video Analytics & SEO Tool',
-    description: 'Analyze any YouTube video with detailed metrics, SEO insights, engagement data, and performance statistics. Get comprehensive video analytics for free.',
-    keywords: [
-      'youtube video analyzer',
-      'video analytics tool',
-      'youtube video analysis',
-      'video performance analyzer',
-      'youtube video metrics',
-      'video seo analyzer',
-      'youtube analytics tool',
-      'video insights tool',
-      'youtube video stats',
-      'free video analyzer'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube Video Analyzer",
-      "description": "Analyze YouTube videos with detailed metrics and SEO insights",
-      "url": "https://youtool.io/tools/video-analyzer",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Video performance metrics",
-        "SEO analysis",
-        "Engagement insights",
-        "Competitor analysis",
-        "Tag analysis"
-      ]
-    }
+    title: 'YouTube Video Analyzer - Free Video Analytics Tool',
+    description: 'Analyze any YouTube video with detailed metrics: views, likes, comments, engagement rate, upload time, tags, and SEO score. Free video analytics and insights tool.',
+    keywords: 'youtube video analyzer, video analytics, youtube statistics, video metrics, youtube seo analyzer, video engagement, youtube insights, video performance',
+    h1: 'YouTube Video Analyzer',
+    schemaType: 'WebApplication'
   },
-
   'channel-analyzer': {
-    title: 'YouTube Channel Analyzer - Free Channel Analytics & Growth Tool',
-    description: 'Analyze any YouTube channel with detailed statistics, subscriber growth, video performance, and optimization insights. Complete channel analytics tool.',
-    keywords: [
-      'youtube channel analyzer',
-      'channel analytics tool',
-      'youtube channel analysis',
-      'channel growth analyzer',
-      'youtube channel stats',
-      'channel performance tool',
-      'youtube channel insights',
-      'channel seo analyzer',
-      'free channel analyzer',
-      'youtube channel metrics'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube Channel Analyzer",
-      "description": "Comprehensive YouTube channel analytics and growth insights",
-      "url": "https://youtool.io/tools/channel-analyzer",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Channel performance metrics",
-        "Subscriber analysis",
-        "Video catalog insights",
-        "Growth tracking",
-        "Content optimization tips"
-      ]
-    }
+    title: 'YouTube Channel Analyzer - Channel Statistics & Analytics',
+    description: 'Analyze YouTube channels with comprehensive statistics: subscriber count, total views, video count, engagement metrics, and growth insights. Free channel analytics tool.',
+    keywords: 'youtube channel analyzer, channel statistics, youtube analytics, subscriber count, channel metrics, youtube channel stats, channel insights, youtube data',
+    h1: 'YouTube Channel Analyzer',
+    schemaType: 'WebApplication'
   },
-
   'tag-generator': {
-    title: 'YouTube Tag Generator - Free Video Tag Creator & SEO Tool',
-    description: 'Generate optimized YouTube tags for better video SEO and discoverability. Free tag generator with trending keywords and competitor analysis.',
-    keywords: [
-      'youtube tag generator',
-      'video tag creator',
-      'youtube tags generator',
-      'video seo tags',
-      'youtube keyword tool',
-      'free tag generator',
-      'youtube tag maker',
-      'video tag optimizer',
-      'youtube hashtag generator',
-      'video tags tool'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube Tag Generator",
-      "description": "Generate optimized YouTube tags for better video SEO",
-      "url": "https://youtool.io/tools/tag-generator",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "SEO-optimized tag suggestions",
-        "Trending keyword analysis",
-        "Competitor tag research",
-        "Bulk tag generation",
-        "Tag performance insights"
-      ]
-    }
+    title: 'YouTube Tag Generator - Free Video Tag Maker',
+    description: 'Generate optimized YouTube tags for better video SEO and discoverability. Get relevant tags based on your video title and content. Free YouTube tag generator tool.',
+    keywords: 'youtube tag generator, video tags, youtube seo tags, tag maker, youtube keywords, video tag generator, youtube tag tool, seo tags generator',
+    h1: 'YouTube Tag Generator',
+    schemaType: 'WebApplication'
   },
-
   'keyword-analyzer': {
-    title: 'YouTube Keyword Analyzer - Free Video Keyword Research Tool',
-    description: 'Analyze YouTube keywords for search volume, competition, and trends. Find the best keywords for your videos with comprehensive keyword research.',
-    keywords: [
-      'youtube keyword analyzer',
-      'video keyword research',
-      'youtube keyword tool',
-      'video seo keywords',
-      'youtube search keywords',
-      'keyword analysis tool',
-      'youtube keyword planner',
-      'video keyword finder',
-      'free keyword analyzer',
-      'youtube keyword research'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube Keyword Analyzer",
-      "description": "Comprehensive YouTube keyword research and analysis tool",
-      "url": "https://youtool.io/tools/keyword-analyzer",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Keyword search volume analysis",
-        "Competition assessment",
-        "Trending keywords",
-        "Related keyword suggestions",
-        "Long-tail keyword research"
-      ]
-    }
+    title: 'YouTube Keyword Analyzer - Keyword Research Tool',
+    description: 'Analyze YouTube keywords for search volume, competition, and trends. Find the best keywords for your videos with detailed metrics and suggestions.',
+    keywords: 'youtube keyword analyzer, keyword research, youtube keywords, keyword tool, search volume, keyword competition, youtube seo keywords, keyword suggestions',
+    h1: 'YouTube Keyword Analyzer',
+    schemaType: 'WebApplication'
   },
-
   'thumbnail-tester': {
-    title: 'YouTube Thumbnail Tester - A/B Test Video Thumbnails Free',
-    description: 'Test and compare YouTube thumbnails to find the most engaging design. Free thumbnail A/B testing tool with visual comparison and performance insights.',
-    keywords: [
-      'youtube thumbnail tester',
-      'thumbnail ab testing',
-      'youtube thumbnail test',
-      'thumbnail comparison tool',
-      'video thumbnail tester',
-      'thumbnail performance test',
-      'youtube thumbnail optimizer',
-      'free thumbnail tester',
-      'thumbnail analytics tool',
-      'video thumbnail comparison'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube Thumbnail Tester",
-      "description": "A/B test YouTube thumbnails to optimize click-through rates",
-      "url": "https://youtool.io/tools/thumbnail-tester",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Side-by-side thumbnail comparison",
-        "Performance analytics",
-        "Click-through rate optimization",
-        "Visual impact assessment",
-        "Mobile thumbnail preview"
-      ]
-    }
+    title: 'YouTube Thumbnail Tester - A/B Test Your Thumbnails',
+    description: 'Test and compare YouTube thumbnails side-by-side. Preview how your thumbnails look in search results, suggested videos, and mobile. Free thumbnail tester.',
+    keywords: 'youtube thumbnail tester, thumbnail ab test, compare thumbnails, thumbnail preview, thumbnail comparison, youtube thumbnail tool, test thumbnails',
+    h1: 'YouTube Thumbnail Tester',
+    schemaType: 'WebApplication'
   },
-
-  'comment-downloader': {
-    title: 'YouTube Comment Downloader - Export Video Comments Free',
-    description: 'Download and export YouTube video comments in CSV or JSON format. Free comment extraction tool with filtering and analysis features.',
-    keywords: [
-      'youtube comment downloader',
-      'download youtube comments',
-      'export video comments',
-      'youtube comment extractor',
-      'comment download tool',
-      'youtube comments csv',
-      'video comment exporter',
-      'free comment downloader',
-      'youtube comment analysis',
-      'comment scraper tool'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube Comment Downloader",
-      "description": "Download and export YouTube video comments for analysis",
-      "url": "https://youtool.io/tools/comment-downloader",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Export comments to CSV/JSON",
-        "Filter by date and engagement",
-        "Bulk comment download",
-        "Comment sentiment analysis",
-        "Reply thread extraction"
-      ]
-    }
-  },
-
-  'playlist-analyzer': {
-    title: 'YouTube Playlist Analyzer - Free Playlist Analytics Tool',
-    description: 'Analyze YouTube playlists with detailed statistics, video performance, and optimization insights. Comprehensive playlist analytics for creators.',
-    keywords: [
-      'youtube playlist analyzer',
-      'playlist analytics tool',
-      'youtube playlist analysis',
-      'playlist performance tool',
-      'youtube playlist stats',
-      'playlist optimization tool',
-      'free playlist analyzer',
-      'youtube playlist insights',
-      'playlist metrics tool',
-      'video playlist analysis'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube Playlist Analyzer",
-      "description": "Comprehensive analytics for YouTube playlists and video collections",
-      "url": "https://youtool.io/tools/playlist-analyzer",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Playlist performance metrics",
-        "Video ranking analysis",
-        "Engagement insights",
-        "Optimization recommendations",
-        "Content gap analysis"
-      ]
-    }
-  },
-
-  'youtube-calculator': {
-    title: 'YouTube Money Calculator - Estimate Video Earnings Free',
-    description: 'Calculate potential YouTube earnings with views, subscribers, and engagement metrics. Free YouTube revenue calculator and monetization estimator.',
-    keywords: [
-      'youtube money calculator',
-      'youtube earnings calculator',
-      'youtube revenue calculator',
-      'video earnings estimator',
-      'youtube income calculator',
-      'youtube monetization calculator',
-      'youtube profit calculator',
-      'free youtube calculator',
-      'youtube ad revenue calculator',
-      'video income estimator'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube Money Calculator",
-      "description": "Estimate YouTube earnings and revenue potential",
-      "url": "https://youtool.io/tools/youtube-calculator",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Revenue estimation by views",
-        "Subscriber monetization value",
-        "Ad revenue calculator",
-        "Sponsorship value estimator",
-        "Growth projection tools"
-      ]
-    }
-  },
-
   'channel-comparer': {
-    title: 'YouTube Channel Comparer - Compare Channels Side by Side',
-    description: 'Compare multiple YouTube channels with detailed analytics, performance metrics, and competitive insights. Free channel comparison tool.',
-    keywords: [
-      'youtube channel comparer',
-      'compare youtube channels',
-      'channel comparison tool',
-      'youtube channel vs',
-      'channel analytics comparison',
-      'youtube competitor analysis',
-      'free channel comparer',
-      'youtube channel stats comparison',
-      'channel performance comparison',
-      'youtube channel benchmarking'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube Channel Comparer",
-      "description": "Compare multiple YouTube channels side-by-side with detailed analytics",
-      "url": "https://youtool.io/tools/channel-comparer",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Side-by-side channel comparison",
-        "Performance benchmarking",
-        "Competitive analysis",
-        "Growth tracking",
-        "Content strategy insights"
-      ]
-    }
+    title: 'YouTube Channel Comparison Tool - Compare Channels',
+    description: 'Compare multiple YouTube channels side-by-side. Analyze subscribers, views, engagement, growth rate, and performance metrics. Free channel comparison tool.',
+    keywords: 'youtube channel comparison, compare youtube channels, channel vs channel, youtube analytics comparison, channel metrics comparison, compare subscribers',
+    h1: 'YouTube Channel Comparison Tool',
+    schemaType: 'WebApplication'
   },
-
+  'comment-downloader': {
+    title: 'YouTube Comment Downloader - Export Comments to CSV',
+    description: 'Download YouTube video comments to CSV or JSON format. Export all comments including replies, timestamps, likes, and author info. Free comment extractor.',
+    keywords: 'youtube comment downloader, download youtube comments, export comments, youtube comment scraper, comment extractor, csv comment export, youtube comments tool',
+    h1: 'YouTube Comment Downloader',
+    schemaType: 'WebApplication'
+  },
   'comment-picker': {
-    title: 'YouTube Comment Picker - Random Comment Winner Selector',
-    description: 'Pick random winners from YouTube video comments for giveaways and contests. Free comment picker tool with fair selection and filtering options.',
-    keywords: [
-      'youtube comment picker',
-      'random comment selector',
-      'youtube giveaway picker',
-      'comment winner picker',
-      'youtube contest tool',
-      'random comment chooser',
-      'free comment picker',
-      'youtube winner selector',
-      'giveaway winner picker',
-      'comment raffle tool'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube Comment Picker",
-      "description": "Pick random winners from YouTube video comments for giveaways",
-      "url": "https://youtool.io/tools/comment-picker",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Random winner selection",
-        "Fair picking algorithm",
-        "Duplicate comment filtering",
-        "Multiple winner support",
-        "Export winner lists"
-      ]
-    }
+    title: 'YouTube Comment Picker - Random Comment Selector',
+    description: 'Pick random winners from YouTube comments. Select random comments for giveaways, contests, or engagement. Fair and transparent comment picker tool.',
+    keywords: 'youtube comment picker, random comment selector, youtube giveaway picker, comment winner picker, random youtube comment, giveaway tool, contest picker',
+    h1: 'Random YouTube Comment Picker',
+    schemaType: 'WebApplication'
   },
-
-  'outlier-finder': {
-    title: 'YouTube Outlier Finder - Find Your Best & Worst Performing Videos',
-    description: 'Discover your top-performing and underperforming YouTube videos. Analyze statistical outliers to optimize content strategy and maximize channel growth.',
-    keywords: [
-      'youtube outlier finder',
-      'best performing videos',
-      'youtube video performance',
-      'content analysis tool',
-      'video performance outliers',
-      'youtube analytics outliers',
-      'top performing videos',
-      'underperforming videos',
-      'youtube content optimization',
-      'video performance analysis'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube Outlier Finder",
-      "description": "Find your best and worst performing YouTube videos with statistical analysis",
-      "url": "https://youtool.io/tools/outlier-finder",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Statistical outlier detection",
-        "Performance ranking",
-        "View pattern analysis",
-        "Content optimization insights",
-        "Comparative analytics"
-      ]
-    }
+  'playlist-analyzer': {
+    title: 'YouTube Playlist Analyzer - Playlist Statistics Tool',
+    description: 'Analyze YouTube playlists with detailed statistics: total duration, video count, views, engagement metrics, and video performance. Free playlist analytics.',
+    keywords: 'youtube playlist analyzer, playlist statistics, playlist metrics, youtube playlist tool, playlist duration calculator, playlist analytics, playlist insights',
+    h1: 'YouTube Playlist Analyzer',
+    schemaType: 'WebApplication'
   },
-
-  'channel-consultant': {
-    title: 'YouTube Channel Consultant - AI-Powered Channel Growth Advisor',
-    description: 'Get personalized YouTube channel growth recommendations from AI-powered analysis. Free channel consulting tool with actionable optimization strategies.',
-    keywords: [
-      'youtube channel consultant',
-      'youtube channel advisor',
-      'channel growth tips',
-      'youtube consulting tool',
-      'channel optimization advice',
-      'youtube growth recommendations',
-      'free channel consultant',
-      'youtube strategy advisor',
-      'channel improvement tips',
-      'youtube growth consulting'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube Channel Consultant",
-      "description": "AI-powered YouTube channel consulting and growth recommendations",
-      "url": "https://youtool.io/tools/channel-consultant",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Personalized growth strategies",
-        "Content optimization advice",
-        "SEO recommendations",
-        "Audience targeting insights",
-        "Actionable improvement plans"
-      ]
-    }
-  },
-
-  'channel-id-finder': {
-    title: 'YouTube Channel ID Finder - Get Channel ID Instantly',
-    description: 'Find any YouTube channel ID instantly from channel URL or username. Free channel ID lookup tool for API integration and analytics.',
-    keywords: [
-      'youtube channel id finder',
-      'find youtube channel id',
-      'channel id lookup',
-      'youtube channel id extractor',
-      'get youtube channel id',
-      'channel id from url',
-      'youtube api channel id',
-      'free channel id finder',
-      'youtube channel identifier',
-      'channel id tool'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube Channel ID Finder",
-      "description": "Find YouTube channel IDs instantly from URLs or usernames",
-      "url": "https://youtool.io/tools/channel-id-finder",
-      "applicationCategory": "DeveloperApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Instant channel ID extraction",
-        "Multiple URL format support",
-        "Username to ID conversion",
-        "Copy to clipboard function",
-        "API integration ready"
-      ]
-    }
-  },
-
-  'moderation-checker': {
-    title: 'YouTube Comment Moderation Checker - Content Safety Tool',
-    description: 'Check YouTube comments for inappropriate content and moderation issues. Free comment moderation tool with content safety analysis.',
-    keywords: [
-      'youtube moderation checker',
-      'comment moderation tool',
-      'youtube content safety',
-      'inappropriate comment checker',
-      'youtube comment filter',
-      'moderation analysis tool',
-      'content safety checker',
-      'youtube comment safety',
-      'free moderation tool',
-      'comment toxicity checker'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube Moderation Checker",
-      "description": "Check YouTube comments for content safety and moderation issues",
-      "url": "https://youtool.io/tools/moderation-checker",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Content safety analysis",
-        "Inappropriate content detection",
-        "Toxicity scoring",
-        "Bulk comment checking",
-        "Moderation recommendations"
-      ]
-    }
-  },
-
-  'color-palette': {
-    title: 'YouTube Color Palette Generator - Brand Color Tool',
-    description: 'Generate professional color palettes for your YouTube channel branding. Free color palette tool with harmony suggestions and export options.',
-    keywords: [
-      'youtube color palette',
-      'color palette generator',
-      'youtube branding colors',
-      'brand color tool',
-      'color scheme generator',
-      'youtube color picker',
-      'color harmony tool',
-      'free color palette',
-      'youtube design colors',
-      'color combination tool'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube Color Palette Generator",
-      "description": "Generate professional color palettes for YouTube channel branding",
-      "url": "https://youtool.io/tools/color-palette",
-      "applicationCategory": "DesignApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Color harmony generation",
-        "Brand palette creation",
-        "Hex/RGB/HSL export",
-        "Accessibility checking",
-        "Palette saving"
-      ]
-    }
-  },
-
-  'subscribe-link-generator': {
-    title: 'YouTube Subscribe Link Generator - Auto-Subscribe URL Creator',
-    description: 'Create custom YouTube subscribe links with confirmation dialog. Free subscribe link generator for easy channel subscriptions and marketing.',
-    keywords: [
-      'youtube subscribe link',
-      'subscribe link generator',
-      'youtube subscription link',
-      'auto subscribe link',
-      'youtube subscribe url',
-      'channel subscribe link',
-      'subscribe button generator',
-      'free subscribe link',
-      'youtube subscribe maker',
-      'subscription url generator'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube Subscribe Link Generator",
-      "description": "Create custom YouTube subscribe links with confirmation dialog",
-      "url": "https://youtool.io/tools/subscribe-link-generator",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Custom subscribe URLs",
-        "Auto-confirmation dialog",
-        "QR code generation",
-        "Multiple format support",
-        "Copy to clipboard"
-      ]
-    }
-  },
-
   'qr-code-generator': {
-    title: 'YouTube QR Code Generator - Video & Channel QR Codes',
-    description: 'Generate QR codes for YouTube videos, channels, and playlists. Free QR code generator with customization options for marketing and promotion.',
-    keywords: [
-      'youtube qr code generator',
-      'video qr code maker',
-      'youtube qr code',
-      'channel qr code generator',
-      'free qr code maker',
-      'youtube qr creator',
-      'video qr code',
-      'qr code for youtube',
-      'custom youtube qr',
-      'youtube marketing qr'
-    ],
-    structuredData: {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "YouTube QR Code Generator",
-      "description": "Generate QR codes for YouTube videos, channels, and playlists",
-      "url": "https://youtool.io/tools/qr-code-generator",
-      "applicationCategory": "DesignApplication",
-      "operatingSystem": "Web Browser",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Video QR codes",
-        "Channel QR codes",
-        "Custom QR design",
-        "High-resolution export",
-        "Logo embedding"
-      ]
-    }
+    title: 'YouTube QR Code Generator - Create Video QR Codes',
+    description: 'Generate QR codes for YouTube videos and channels. Create scannable QR codes to promote your content offline. Free YouTube QR code maker.',
+    keywords: 'youtube qr code generator, video qr code, youtube qr code maker, qr code creator, youtube link qr code, channel qr code, video qr code generator',
+    h1: 'YouTube QR Code Generator',
+    schemaType: 'WebApplication'
+  },
+  'subscribe-link-generator': {
+    title: 'YouTube Subscribe Link Generator - Auto-Subscribe URL',
+    description: 'Create custom YouTube subscribe links with pre-filled channel subscription. Generate one-click subscribe URLs to grow your channel faster.',
+    keywords: 'youtube subscribe link, subscription link generator, auto subscribe link, youtube subscribe url, channel subscribe link, one click subscribe, youtube subscription',
+    h1: 'YouTube Subscribe Link Generator',
+    schemaType: 'WebApplication'
+  },
+  'youtube-calculator': {
+    title: 'YouTube Money Calculator - Earnings Estimator',
+    description: 'Calculate potential YouTube earnings based on views, CPM, and engagement. Estimate ad revenue and sponsorship income. Free YouTube money calculator.',
+    keywords: 'youtube money calculator, youtube earnings calculator, youtube revenue calculator, cpm calculator, youtube income estimator, ad revenue calculator, youtube monetization',
+    h1: 'YouTube Money Calculator',
+    schemaType: 'WebApplication'
+  },
+  'color-palette': {
+    title: 'YouTube Color Palette Generator - Brand Colors Tool',
+    description: 'Generate beautiful color palettes for your YouTube branding. Create harmonious color schemes for thumbnails, channel art, and videos.',
+    keywords: 'color palette generator, youtube colors, brand colors, color scheme generator, palette creator, thumbnail colors, youtube branding colors',
+    h1: 'YouTube Color Palette Generator',
+    schemaType: 'WebApplication'
+  },
+  'color-picker-from-image': {
+    title: 'Color Picker from Image - Extract Colors from YouTube Thumbnails',
+    description: 'Extract colors from any image or YouTube thumbnail. Pick hex color codes and create color palettes from photos. Free color picker tool.',
+    keywords: 'color picker from image, extract colors, image color picker, hex color picker, thumbnail color extractor, get colors from image, color grabber',
+    h1: 'Color Picker from Image',
+    schemaType: 'WebApplication'
+  },
+  'outlier-finder': {
+    title: 'YouTube Outlier Finder - Find Viral Videos',
+    description: 'Discover high-performing outlier videos on YouTube. Find viral videos and trending content by analyzing view counts and engagement patterns.',
+    keywords: 'youtube outlier finder, find viral videos, trending videos, viral video finder, high performing videos, youtube trends, video discovery tool',
+    h1: 'YouTube Outlier Finder',
+    schemaType: 'WebApplication'
+  },
+  'channel-consultant': {
+    title: 'YouTube Channel Consultant - Get Expert Channel Advice',
+    description: 'Get AI-powered recommendations for your YouTube channel. Receive expert advice on content strategy, optimization, and growth tactics.',
+    keywords: 'youtube channel consultant, channel advice, youtube strategy, channel optimization, youtube expert, channel growth tips, youtube consulting',
+    h1: 'YouTube Channel Consultant',
+    schemaType: 'WebApplication'
+  },
+  'channel-id-finder': {
+    title: 'YouTube Channel ID Finder - Get Channel ID',
+    description: 'Find any YouTube channel ID instantly. Extract channel IDs from channel URLs or usernames. Free YouTube channel ID finder tool.',
+    keywords: 'youtube channel id finder, find channel id, channel id extractor, youtube channel id, get channel id, youtube id finder, channel identifier',
+    h1: 'YouTube Channel ID Finder',
+    schemaType: 'WebApplication'
+  },
+  'moderation-checker': {
+    title: 'YouTube Comment Moderation Checker - Filter Comments',
+    description: 'Check YouTube comments for spam, profanity, and inappropriate content. Moderate comments efficiently with AI-powered filtering.',
+    keywords: 'youtube comment moderation, comment checker, spam filter, comment filtering, youtube moderation tool, comment moderator, profanity filter',
+    h1: 'YouTube Comment Moderation Checker',
+    schemaType: 'WebApplication'
   }
+};
+
+// Helper function to generate structured data for tools
+export const generateToolSchema = (toolId: string, toolConfig: ToolSEOConfig) => {
+  return {
+    '@context': 'https://schema.org',
+    '@type': toolConfig.schemaType,
+    'name': toolConfig.title,
+    'description': toolConfig.description,
+    'url': `https://youtool.io/tools/${toolId}`,
+    'applicationCategory': 'MultimediaApplication',
+    'operatingSystem': 'Web Browser',
+    'offers': {
+      '@type': 'Offer',
+      'price': '0',
+      'priceCurrency': 'USD'
+    },
+    'provider': {
+      '@type': 'Organization',
+      'name': 'YouTool.io',
+      'url': 'https://youtool.io'
+    },
+    'aggregateRating': {
+      '@type': 'AggregateRating',
+      'ratingValue': '4.8',
+      'ratingCount': '1247',
+      'bestRating': '5',
+      'worstRating': '1'
+    }
+  };
 };

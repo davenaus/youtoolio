@@ -1,6 +1,8 @@
 // src/pages/Tools/components/ChannelConsultant/ChannelConsultant.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SEO } from '../../../../components/SEO';
+import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 interface ChannelData {
@@ -66,7 +68,7 @@ export const ChannelConsultant: React.FC = () => {
       const match = url.match(pattern);
       if (match) {
         if (type === 'channelId') return match[1];
-        
+
         const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_3;
         if (!API_KEY) {
           throw new Error('YouTube API key not configured');
@@ -75,7 +77,7 @@ export const ChannelConsultant: React.FC = () => {
         const response = await fetch(
           `https://www.googleapis.com/youtube/v3/channels?part=id&${type === 'user' ? 'forUsername' : 'forHandle'}=${match[1]}&key=${API_KEY}`
         );
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch channel data');
         }
@@ -170,7 +172,7 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
       const channelId = await getChannelId(channelUrl);
       const data = await getChannelData(channelId);
       const generatedInstructions = generateInstructions(data);
-      
+
       setChannelData(data);
       setInstructions(generatedInstructions);
       setShowResults(true);
@@ -203,8 +205,21 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
     return num.toLocaleString();
   };
 
+  const seoConfig = toolsSEO['channel-consultant'];
+  const schemaData = generateToolSchema('channel-consultant', seoConfig);
+
+
   return (
-    <S.PageWrapper>
+    <>
+      <SEO
+        title={seoConfig.title}
+        description={seoConfig.description}
+        keywords={seoConfig.keywords}
+        canonical="https://youtool.io/tools/channel-consultant"
+        schemaData={schemaData}
+      />
+
+      <S.PageWrapper>
       <S.MainContainer>
         <S.BackButton onClick={() => navigate('/tools')}>
           <i className="bx bx-arrow-back"></i>
@@ -218,11 +233,11 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
             <S.ToolIconContainer>
               <i className={toolConfig.icon}></i>
             </S.ToolIconContainer>
-            
+
             <S.HeaderTextContent>
               <S.ToolTitle>{toolConfig.name}</S.ToolTitle>
               <S.ToolDescription>{toolConfig.description}</S.ToolDescription>
-              
+
               <S.FeaturesList>
                 {toolConfig.features.map((feature, index) => (
                   <S.FeatureItem key={index}>
@@ -260,10 +275,10 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
           <S.EducationalSection>
             <S.EducationalContent>
               <S.SectionSubTitle>How to Use the Channel Consultant</S.SectionSubTitle>
-              
+
               <S.EducationalText>
-                Our Channel Consultant creates a custom AI assistant trained specifically on your YouTube channel. 
-                The AI understands your niche, audience, and branding to provide personalized content strategy, 
+                Our Channel Consultant creates a custom AI assistant trained specifically on your YouTube channel.
+                The AI understands your niche, audience, and branding to provide personalized content strategy,
                 SEO optimization, and creative assistance tailored to your unique channel goals.
               </S.EducationalText>
 
@@ -273,8 +288,8 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
                   <S.StepContent>
                     <S.StepTitle>Enter Channel URL</S.StepTitle>
                     <S.EducationalText>
-                      Paste your YouTube channel URL in the search field above. Our system analyzes your 
-                      channel details, category, description, and subscriber metrics to understand your 
+                      Paste your YouTube channel URL in the search field above. Our system analyzes your
+                      channel details, category, description, and subscriber metrics to understand your
                       content focus and audience demographics.
                     </S.EducationalText>
                   </S.StepContent>
@@ -285,8 +300,8 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
                   <S.StepContent>
                     <S.StepTitle>AI Bot Creation</S.StepTitle>
                     <S.EducationalText>
-                      The system generates comprehensive instructions that train an AI chatbot to become 
-                      your personal YouTube consultant. The bot understands your niche and can operate 
+                      The system generates comprehensive instructions that train an AI chatbot to become
+                      your personal YouTube consultant. The bot understands your niche and can operate
                       in four specialized modes: SEO, Ideation, Script, and Trendjack.
                     </S.EducationalText>
                   </S.StepContent>
@@ -297,8 +312,8 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
                   <S.StepContent>
                     <S.StepTitle>Deploy Your Consultant</S.StepTitle>
                     <S.EducationalText>
-                      Copy the generated instructions and paste them into any AI platform like ChatGPT, 
-                      Claude, or Gemini. Your custom consultant will immediately understand your channel 
+                      Copy the generated instructions and paste them into any AI platform like ChatGPT,
+                      Claude, or Gemini. Your custom consultant will immediately understand your channel
                       and provide expert advice tailored to your specific content strategy needs.
                     </S.EducationalText>
                   </S.StepContent>
@@ -308,7 +323,7 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
 
             <S.EducationalContent>
               <S.SectionSubTitle>AI Consultant Modes</S.SectionSubTitle>
-              
+
               <S.FeatureList>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
@@ -337,9 +352,9 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
               </S.FeatureList>
 
               <S.EducationalText>
-                Transform any AI chatbot into your personal YouTube strategist. The consultant understands 
-                your unique channel identity and provides advice that aligns with your brand voice, target 
-                audience, and growth objectives. Get professional-level content strategy without the cost 
+                Transform any AI chatbot into your personal YouTube strategist. The consultant understands
+                your unique channel identity and provides advice that aligns with your brand voice, target
+                audience, and growth objectives. Get professional-level content strategy without the cost
                 of hiring a dedicated YouTube consultant.
               </S.EducationalText>
             </S.EducationalContent>
@@ -358,13 +373,13 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
                 <i className="bx bx-check-circle"></i>
                 <S.SuccessTitle>Custom Bot Created Successfully!</S.SuccessTitle>
               </S.SuccessHeader>
-              
+
               <S.ChannelInfo>
                 <S.ChannelLogoContainer>
-                  <S.ChannelLogo 
-                    src={channelData.snippet.thumbnails.high?.url || 
-                         channelData.snippet.thumbnails.medium?.url || 
-                         channelData.snippet.thumbnails.default.url} 
+                  <S.ChannelLogo
+                    src={channelData.snippet.thumbnails.high?.url ||
+                      channelData.snippet.thumbnails.medium?.url ||
+                      channelData.snippet.thumbnails.default.url}
                     alt="Channel Profile"
                   />
                 </S.ChannelLogoContainer>
@@ -382,26 +397,26 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
                   <i className="bx bx-cog"></i>
                   Available Bot Modes
                 </S.SectionTitle>
-                
+
                 <S.ModesGrid>
                   <S.ModeCard>
                     <S.ModeIcon className="bx bx-search-alt-2"></S.ModeIcon>
                     <S.ModeTitle>SEO MODE</S.ModeTitle>
                     <S.ModeDescription>Generates optimized titles, descriptions, tags, and thumbnails</S.ModeDescription>
                   </S.ModeCard>
-                  
+
                   <S.ModeCard>
                     <S.ModeIcon className="bx bx-bulb"></S.ModeIcon>
                     <S.ModeTitle>IDEATION MODE</S.ModeTitle>
                     <S.ModeDescription>Creates video ideas based on channel niche and trending topics</S.ModeDescription>
                   </S.ModeCard>
-                  
+
                   <S.ModeCard>
                     <S.ModeIcon className="bx bx-edit-alt"></S.ModeIcon>
                     <S.ModeTitle>SCRIPT MODE</S.ModeTitle>
                     <S.ModeDescription>Writes detailed 5,000-word scripts for specific topics</S.ModeDescription>
                   </S.ModeCard>
-                  
+
                   <S.ModeCard>
                     <S.ModeIcon className="bx bx-trending-up"></S.ModeIcon>
                     <S.ModeTitle>TRENDJACK MODE</S.ModeTitle>
@@ -432,27 +447,27 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
                 <S.AILinksSection>
                   <S.AILinksTitle>Popular AI Platforms:</S.AILinksTitle>
                   <S.AILinks>
-                    <S.AIButton 
-                      href="https://chat.openai.com/" 
-                      target="_blank" 
+                    <S.AIButton
+                      href="https://chat.openai.com/"
+                      target="_blank"
                       rel="noopener noreferrer"
                       color="#10a37f"
                     >
                       <i className="bx bx-bot"></i>
                       ChatGPT
                     </S.AIButton>
-                    <S.AIButton 
-                      href="https://gemini.google.com/chat" 
-                      target="_blank" 
+                    <S.AIButton
+                      href="https://gemini.google.com/chat"
+                      target="_blank"
                       rel="noopener noreferrer"
                       color="#4285f4"
                     >
                       <i className="bx bx-diamond"></i>
                       Gemini
                     </S.AIButton>
-                    <S.AIButton 
-                      href="https://claude.ai/new" 
-                      target="_blank" 
+                    <S.AIButton
+                      href="https://claude.ai/new"
+                      target="_blank"
                       rel="noopener noreferrer"
                       color="#ff6b35"
                     >
@@ -468,6 +483,7 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
         </S.ResultsContainer>
       </S.MainContainer>
     </S.PageWrapper>
+    </>
   );
 };
 
