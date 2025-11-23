@@ -14,6 +14,8 @@ interface ChannelInfo {
   videoCount: number;
   totalViews: number;
   customUrl: string;
+  channelId: string;  // Always the channel ID
+  isChannelId: boolean;  // True if we're using channel ID format, false for handle
   description: string;
   publishedAt: string;
   country?: string;
@@ -63,7 +65,9 @@ export const SubscribeLinkGenerator: React.FC = () => {
   useEffect(() => {
     if (channelId) {
       setUrl(channelId);
-      handleSubmit(undefined, channelId);
+      // Check if it's a channel ID format
+      const isChannelId = channelId.startsWith('UC') && channelId.length === 24;
+      handleSubmit(undefined, channelId, isChannelId);
     }
 
     // Load search history
@@ -80,64 +84,85 @@ export const SubscribeLinkGenerator: React.FC = () => {
     localStorage.setItem('subscribe_history', JSON.stringify(newHistory));
   };
 
-  const extractChannelHandle = (url: string): string | null => {
+  const extractChannelHandle = (url: string): { handle: string; isChannelId: boolean } | null => {
+    // Direct handle or channel ID
     if (url.match(/^@?[A-Za-z0-9_-]+$/)) {
-      return url.startsWith('@') ? url.substring(1) : url;
+      const handle = url.startsWith('@') ? url.substring(1) : url;
+      // Check if it's a channel ID (starts with UC and is 24 characters)
+      const isChannelId = handle.startsWith('UC') && handle.length === 24;
+      return { handle, isChannelId };
     }
 
+    // URL patterns
     const patterns = [
-      /youtube\.com\/@([^/?]+)/,
-      /youtube\.com\/channel\/([^/?]+)/,
-      /youtube\.com\/c\/([^/?]+)/,
-      /youtube\.com\/user\/([^/?]+)/,
+      { regex: /youtube\.com\/@([^/?]+)/, isChannelId: false },
+      { regex: /youtube\.com\/channel\/([^/?]+)/, isChannelId: true },
+      { regex: /youtube\.com\/c\/([^/?]+)/, isChannelId: false },
+      { regex: /youtube\.com\/user\/([^/?]+)/, isChannelId: false },
     ];
 
     for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match) return match[1];
+      const match = url.match(pattern.regex);
+      if (match) {
+        return { handle: match[1], isChannelId: pattern.isChannelId };
+      }
     }
 
     return null;
   };
 
-  const fetchChannelInfo = async (handle: string): Promise<ChannelInfo> => {
+  const fetchChannelInfo = async (handle: string, isChannelId: boolean): Promise<ChannelInfo> => {
     try {
       // Try multiple methods to find the channel
       let channelData = null;
 
-      // Method 1: Try by handle
-      let response = await fetch(
-        `https://www.googleapis.com/youtube/v3/channels?` +
-        `part=snippet,statistics,brandingSettings&` +
-        `forHandle=${handle}&` +
-        `key=${API_KEY}`
-      );
-      let data = await response.json();
-
-      if (data.items && data.items.length > 0) {
-        channelData = data.items[0];
-      } else {
-        // Method 2: Search for channel
-        response = await fetch(
-          `https://www.googleapis.com/youtube/v3/search?` +
-          `part=snippet&` +
-          `q=${encodeURIComponent(handle)}&` +
-          `type=channel&` +
+      if (isChannelId) {
+        // If it's a channel ID, fetch directly by ID
+        let response = await fetch(
+          `https://www.googleapis.com/youtube/v3/channels?` +
+          `part=snippet,statistics,brandingSettings&` +
+          `id=${handle}&` +
           `key=${API_KEY}`
         );
-        data = await response.json();
+        let data = await response.json();
+        if (data.items && data.items.length > 0) {
+          channelData = data.items[0];
+        }
+      } else {
+        // Method 1: Try by handle
+        let response = await fetch(
+          `https://www.googleapis.com/youtube/v3/channels?` +
+          `part=snippet,statistics,brandingSettings&` +
+          `forHandle=${handle}&` +
+          `key=${API_KEY}`
+        );
+        let data = await response.json();
 
         if (data.items && data.items.length > 0) {
-          // Get full channel info
-          const channelId = data.items[0].id.channelId;
+          channelData = data.items[0];
+        } else {
+          // Method 2: Search for channel
           response = await fetch(
-            `https://www.googleapis.com/youtube/v3/channels?` +
-            `part=snippet,statistics,brandingSettings&` +
-            `id=${channelId}&` +
+            `https://www.googleapis.com/youtube/v3/search?` +
+            `part=snippet&` +
+            `q=${encodeURIComponent(handle)}&` +
+            `type=channel&` +
             `key=${API_KEY}`
           );
           data = await response.json();
-          channelData = data.items[0];
+
+          if (data.items && data.items.length > 0) {
+            // Get full channel info
+            const channelId = data.items[0].id.channelId;
+            response = await fetch(
+              `https://www.googleapis.com/youtube/v3/channels?` +
+              `part=snippet,statistics,brandingSettings&` +
+              `id=${channelId}&` +
+              `key=${API_KEY}`
+            );
+            data = await response.json();
+            channelData = data.items[0];
+          }
         }
       }
 
@@ -165,6 +190,9 @@ export const SubscribeLinkGenerator: React.FC = () => {
         views: 0 // Would need additional API call for views
       })) || [];
 
+      // Extract the custom URL if available, otherwise use the handle
+      const customUrl = channelData.snippet.customUrl || handle;
+
       return {
         id: channelData.id,
         title: channelData.snippet.title,
@@ -173,7 +201,9 @@ export const SubscribeLinkGenerator: React.FC = () => {
         subscriberCount: parseInt(channelData.statistics.subscriberCount) || 0,
         videoCount: parseInt(channelData.statistics.videoCount) || 0,
         totalViews: parseInt(channelData.statistics.viewCount) || 0,
-        customUrl: handle,
+        customUrl: customUrl,
+        channelId: channelData.id,
+        isChannelId: isChannelId || !channelData.snippet.customUrl,
         description: channelData.snippet.description || '',
         publishedAt: channelData.snippet.publishedAt,
         country: channelData.snippet.country,
@@ -186,56 +216,71 @@ export const SubscribeLinkGenerator: React.FC = () => {
     }
   };
 
-  const getLinkVariations = (handle: string): LinkVariation[] => [
-    {
-      name: 'Standard Subscribe',
-      url: `https://www.youtube.com/@${handle}?sub_confirmation=1`,
-      description: 'Basic subscribe link with confirmation dialog',
-      icon: 'bx bx-user-plus'
-    },
-    {
-      name: 'Subscribe + Bell',
-      url: `https://www.youtube.com/@${handle}?sub_confirmation=1&feature=subscribe`,
-      description: 'Subscribe link with notification bell prompt',
-      icon: 'bx bx-bell-plus'
-    },
-    {
-      name: 'Channel Homepage',
-      url: `https://www.youtube.com/@${handle}`,
-      description: 'Direct link to channel homepage',
-      icon: 'bx bx-home'
-    },
-    {
-      name: 'Mobile Optimized',
-      url: `https://m.youtube.com/@${handle}?sub_confirmation=1`,
-      description: 'Mobile-optimized subscribe link',
-      icon: 'bx bx-mobile'
-    },
-    {
-      name: 'Embedded Widget',
-      url: `https://www.youtube.com/subscribe_widget?p=${handle}`,
-      description: 'For embedding subscribe buttons',
-      icon: 'bx bx-code-alt'
-    }
-  ];
+  const getLinkVariations = (channelInfo: ChannelInfo): LinkVariation[] => {
+    // Use channel ID format if we don't have a custom URL or if we're dealing with a channel ID
+    const baseUrl = channelInfo.isChannelId
+      ? `https://www.youtube.com/channel/${channelInfo.channelId}`
+      : `https://www.youtube.com/@${channelInfo.customUrl}`;
+    
+    const mobileBaseUrl = channelInfo.isChannelId
+      ? `https://m.youtube.com/channel/${channelInfo.channelId}`
+      : `https://m.youtube.com/@${channelInfo.customUrl}`;
+
+    return [
+      {
+        name: 'Standard Subscribe',
+        url: `${baseUrl}?sub_confirmation=1`,
+        description: 'Basic subscribe link with confirmation dialog',
+        icon: 'bx bx-user-plus'
+      },
+      {
+        name: 'Subscribe + Bell',
+        url: `${baseUrl}?sub_confirmation=1&feature=subscribe`,
+        description: 'Subscribe link with notification bell prompt',
+        icon: 'bx bx-bell-plus'
+      },
+      {
+        name: 'Channel Homepage',
+        url: baseUrl,
+        description: 'Direct link to channel homepage',
+        icon: 'bx bx-home'
+      },
+      {
+        name: 'Mobile Optimized',
+        url: `${mobileBaseUrl}?sub_confirmation=1`,
+        description: 'Mobile-optimized subscribe link',
+        icon: 'bx bx-mobile'
+      }
+    ];
+  };
 
   const handleSearch = () => {
-    const handle = extractChannelHandle(url);
-    if (handle) {
+    const channelData = extractChannelHandle(url);
+    if (channelData) {
       // Instead of navigating, directly process the channel
-      handleSubmit(undefined, handle);
+      handleSubmit(undefined, channelData.handle, channelData.isChannelId);
     } else {
       alert('Please enter a valid YouTube channel URL or handle');
     }
   };
 
-  const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>, directHandle?: string) => {
+  const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>, directHandle?: string, directIsChannelId?: boolean) => {
     if (e) e.preventDefault();
 
-    const handle = directHandle || extractChannelHandle(url);
-    if (!handle) {
-      alert('Please enter a valid YouTube channel URL or handle');
-      return;
+    let handle: string;
+    let isChannelId: boolean;
+    
+    if (directHandle !== undefined && directIsChannelId !== undefined) {
+      handle = directHandle;
+      isChannelId = directIsChannelId;
+    } else {
+      const channelData = extractChannelHandle(url);
+      if (!channelData) {
+        alert('Please enter a valid YouTube channel URL or handle');
+        return;
+      }
+      handle = channelData.handle;
+      isChannelId = channelData.isChannelId;
     }
 
     setIsLoading(true);
@@ -243,7 +288,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
     setCopiedLink('');
 
     try {
-      const info = await fetchChannelInfo(handle);
+      const info = await fetchChannelInfo(handle, isChannelId);
       setChannelInfo(info);
       saveToHistory(handle);
 
@@ -290,7 +335,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
     const shareData = {
       title: `Subscribe to ${channelInfo.title}`,
       text: `Check out this YouTube channel: ${channelInfo.title}`,
-      url: getLinkVariations(channelInfo.customUrl)[0].url
+      url: getLinkVariations(channelInfo)[0].url
     };
 
     if (navigator.share) {
@@ -511,7 +556,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
                   <S.ChannelAvatar src={channelInfo.thumbnail} alt={channelInfo.title} />
                   <S.ChannelInfo>
                     <S.ChannelTitle>{channelInfo.title}</S.ChannelTitle>
-                    <S.ChannelHandle>@{channelInfo.customUrl}</S.ChannelHandle>
+                    <S.ChannelHandle>{channelInfo.isChannelId ? `Channel ID: ${channelInfo.channelId}` : `@${channelInfo.customUrl}`}</S.ChannelHandle>
                     <S.ChannelMeta>
                       <S.MetaItem>
                         <i className="bx bx-user"></i>
@@ -579,7 +624,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
               </S.SectionTitle>
 
               <S.LinkVariations>
-                {getLinkVariations(channelInfo.customUrl).map((variation, index) => (
+                {getLinkVariations(channelInfo).map((variation, index) => (
                   <S.LinkCard key={index}>
                     <S.LinkHeader>
                       <S.LinkIcon className={variation.icon}></S.LinkIcon>

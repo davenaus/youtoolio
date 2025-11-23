@@ -22,6 +22,7 @@ interface VideoAnalysis {
     likeToViewRatio: number;
     commentToViewRatio: number;
     subscribers: number;
+    isShort: boolean;  // Add flag to identify Shorts
   };
 
   technicalDetails: {
@@ -73,6 +74,20 @@ interface VideoAnalysis {
     seoScore: number;
     engagementScore: number;
     optimizationScore: number;
+    scoreBreakdown?: {  // Detailed breakdown of scoring
+      seo: {
+        title: { score: number; max: number; reason: string; };
+        description: { score: number; max: number; reason: string; };
+        tags: { score: number; max: number; reason: string; };
+        hashtags: { score: number; max: number; reason: string; };
+        links: { score: number; max: number; reason: string; };
+      };
+      engagement: {
+        rate: { score: number; max: number; reason: string; };
+        likeRatio: { score: number; max: number; reason: string; };
+        commentRatio: { score: number; max: number; reason: string; };
+      };
+    };
   };
 
   insights: {
@@ -438,7 +453,7 @@ const VideoAnalyzer: React.FC = () => {
     };
   };
 
-  const calculateScores = (videoData: any, contentAnalysis: VideoAnalysis['contentAnalysis']) => {
+  const calculateScores = (videoData: any, contentAnalysis: VideoAnalysis['contentAnalysis'], isShort: boolean) => {
     // SEO Score calculation (0-100)
     let seoScore = 0;
 
@@ -770,9 +785,14 @@ const VideoAnalyzer: React.FC = () => {
   };
 
   const performAnalysis = async (videoData: any, channelData: any, channelVideos: ChannelVideo[]): Promise<VideoAnalysis> => {
-    const postDate = moment(videoData.snippet.publishedAt);
-    const contentAnalysis = analyzeContent(videoData);
-    const scores = calculateScores(videoData, contentAnalysis);
+const postDate = moment(videoData.snippet.publishedAt);
+const contentAnalysis = analyzeContent(videoData);
+
+const durationSeconds = parseDuration(videoData.contentDetails.duration);
+const isShort = durationSeconds < 60; // YouTube Shorts threshold
+
+const scores = calculateScores(videoData, contentAnalysis, isShort);
+
 
     // Calculate channel metrics first
     const totalVideos = parseInt(channelData.statistics.videoCount);
@@ -886,7 +906,8 @@ const VideoAnalyzer: React.FC = () => {
         engagementRate: ((parseInt(videoData.statistics.likeCount) || 0) + (parseInt(videoData.statistics.commentCount) || 0)) / Math.max(parseInt(videoData.statistics.viewCount) || 1, 1),
         likeToViewRatio: (parseInt(videoData.statistics.likeCount) || 0) / Math.max(parseInt(videoData.statistics.viewCount) || 1, 1),
         commentToViewRatio: (parseInt(videoData.statistics.commentCount) || 0) / Math.max(parseInt(videoData.statistics.viewCount) || 1, 1),
-        subscribers: parseInt(channelData.statistics.subscriberCount) || 0
+        subscribers: parseInt(channelData.statistics.subscriberCount) || 0,
+          isShort: isShort // <-- added
       },
 
       technicalDetails: {
