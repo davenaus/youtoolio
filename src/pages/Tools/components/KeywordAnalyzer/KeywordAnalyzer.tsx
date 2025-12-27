@@ -166,7 +166,7 @@ export const KeywordAnalyzer: React.FC = () => {
   };
 
   const fetchYouTubeData = async (searchTerm: string): Promise<YouTubeVideo[]> => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_2;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_6;
 
     if (!API_KEY) {
       throw new Error('YouTube API key not configured.');
@@ -317,29 +317,54 @@ export const KeywordAnalyzer: React.FC = () => {
   const calculateTagScore = (videos: YouTubeVideo[], keyword: string): number => {
     if (videos.length === 0) return 0;
 
-    // Factors that rapidtags.io likely considers for tag score
     const totalViews = videos.reduce((sum, video) => sum + video.views, 0);
     const totalLikes = videos.reduce((sum, video) => sum + video.likes, 0);
     const averageViews = totalViews / videos.length;
     const averageLikes = totalLikes / videos.length;
     const averageRelevance = videos.reduce((sum, video) => sum + (video.relevanceScore || 0), 0) / videos.length;
 
-    // 1. Content Volume Factor (0-25 points)
-    const volumeFactor = Math.min(25, (videos.length / 6) * 25);
+    // 1. Relevance Quality Factor (0-40 points) - MOST IMPORTANT
+    // Only keywords with high relevance should score well
+    let relevanceFactor = 0;
+    if (averageRelevance >= 70) relevanceFactor = 40;
+    else if (averageRelevance >= 60) relevanceFactor = 32;
+    else if (averageRelevance >= 50) relevanceFactor = 24;
+    else if (averageRelevance >= 40) relevanceFactor = 16;
+    else if (averageRelevance >= 30) relevanceFactor = 8;
+    else relevanceFactor = 0;
 
-    // 2. Performance Factor (0-30 points)
-    const performanceLog = Math.log10(Math.max(1, averageViews));
-    const performanceFactor = Math.min(30, (performanceLog / 7) * 30);
+    // 2. Performance Factor (0-30 points) - Based on view count
+    // Realistic YouTube view thresholds
+    let performanceFactor = 0;
+    if (averageViews >= 1000000) performanceFactor = 30;      // 1M+ views = excellent
+    else if (averageViews >= 500000) performanceFactor = 26;   // 500K+ views = very good
+    else if (averageViews >= 100000) performanceFactor = 22;   // 100K+ views = good
+    else if (averageViews >= 50000) performanceFactor = 18;    // 50K+ views = decent
+    else if (averageViews >= 10000) performanceFactor = 12;    // 10K+ views = moderate
+    else if (averageViews >= 5000) performanceFactor = 6;      // 5K+ views = low
+    else performanceFactor = 2;                                 // <5K views = very low
 
-    // 3. Relevance Factor (0-25 points) - NEW
-    const relevanceFactor = Math.min(25, (averageRelevance / 100) * 25);
-
-    // 4. Engagement Quality Factor (0-20 points)
+    // 3. Engagement Quality Factor (0-20 points)
     const engagementRate = averageLikes / Math.max(1, averageViews);
-    const engagementFactor = Math.min(20, engagementRate * 2000);
+    let engagementFactor = 0;
+    if (engagementRate >= 0.05) engagementFactor = 20;        // 5%+ = exceptional
+    else if (engagementRate >= 0.03) engagementFactor = 16;   // 3%+ = very good
+    else if (engagementRate >= 0.02) engagementFactor = 12;   // 2%+ = good
+    else if (engagementRate >= 0.01) engagementFactor = 8;    // 1%+ = average
+    else if (engagementRate >= 0.005) engagementFactor = 4;   // 0.5%+ = below average
+    else engagementFactor = 1;                                 // <0.5% = poor
 
-    const tagScore = Math.round(volumeFactor + performanceFactor + relevanceFactor + engagementFactor);
-    return Math.min(100, Math.max(1, tagScore));
+    // 4. Competition/Opportunity Factor (0-10 points)
+    // Fewer high-quality results = better opportunity
+    const highRelevanceCount = videos.filter(v => (v.relevanceScore || 0) >= 60).length;
+    let opportunityFactor = 0;
+    if (highRelevanceCount <= 10) opportunityFactor = 10;     // Low competition
+    else if (highRelevanceCount <= 25) opportunityFactor = 6;  // Moderate competition
+    else if (highRelevanceCount <= 40) opportunityFactor = 3;  // High competition
+    else opportunityFactor = 0;                                // Very high competition
+
+    const tagScore = Math.round(relevanceFactor + performanceFactor + engagementFactor + opportunityFactor);
+    return Math.min(100, Math.max(0, tagScore));
   };
 
   const calculateSearchVolume = (videos: YouTubeVideo[]): { label: 'Low' | 'Moderate' | 'High' | 'Very High'; score: number } => {

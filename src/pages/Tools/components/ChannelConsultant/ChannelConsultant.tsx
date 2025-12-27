@@ -61,6 +61,7 @@ export const ChannelConsultant: React.FC = () => {
       channelId: /(?:https?:\/\/)?(?:www\.)?youtube\.com\/channel\/([^\/\s]+)/,
       user: /(?:https?:\/\/)?(?:www\.)?youtube\.com\/user\/([^\/\s]+)/,
       handle: /(?:https?:\/\/)?(?:www\.)?youtube\.com\/@([^\/\s]+)/,
+      handleWithoutAt: /(?:https?:\/\/)?(?:www\.)?youtube\.com\/([^\/\s?]+)$/,  // Matches youtube.com/moneyguyshow
       customUrl: /(?:https?:\/\/)?(?:www\.)?youtube\.com\/(?:c\/|)([^\/\s]+)/
     };
 
@@ -74,17 +75,40 @@ export const ChannelConsultant: React.FC = () => {
           throw new Error('YouTube API key not configured');
         }
 
-        const response = await fetch(
-          `https://www.googleapis.com/youtube/v3/channels?part=id&${type === 'user' ? 'forUsername' : 'forHandle'}=${match[1]}&key=${API_KEY}`
-        );
+        if (type === 'handleWithoutAt') {
+          // Try to fetch by handle (without @)
+          const handle = match[1];
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch channel data');
-        }
+          // First try forHandle
+          let response = await fetch(
+            `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${handle}&key=${API_KEY}`
+          );
+          let data = await response.json();
+          if (data.items?.[0]) {
+            return data.items[0].id;
+          }
 
-        const data = await response.json();
-        if (data.items?.[0]) {
-          return data.items[0].id;
+          // If not found, try search
+          response = await fetch(
+            `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(handle)}&type=channel&maxResults=1&key=${API_KEY}`
+          );
+          data = await response.json();
+          if (data.items?.[0]) {
+            return data.items[0].id.channelId;
+          }
+        } else {
+          const response = await fetch(
+            `https://www.googleapis.com/youtube/v3/channels?part=id&${type === 'user' ? 'forUsername' : 'forHandle'}=${match[1]}&key=${API_KEY}`
+          );
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch channel data');
+          }
+
+          const data = await response.json();
+          if (data.items?.[0]) {
+            return data.items[0].id;
+          }
         }
       }
     }

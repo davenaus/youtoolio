@@ -2322,11 +2322,254 @@ export const ResultsInsightItem = styled.div`
   gap: 0.75rem;
   color: ${({ theme }) => theme.colors.text.secondary};
   line-height: 1.5;
-  
+
   i {
     color: ${({ theme }) => theme.colors.warning};
     font-size: 1rem;
     margin-top: 0.1rem;
     flex-shrink: 0;
   }
+`;
+
+// Scorecard Breakdown Components
+export const ScoreBreakdownList = styled.div`
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+export const ScoreBreakdownItem = styled.div<{ percentage: number }>`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: ${({ theme }) => theme.colors.dark4};
+  border-left: 3px solid ${({ percentage }) =>
+    percentage >= 80 ? '#10b981' :
+    percentage >= 50 ? '#f59e0b' :
+    '#ef4444'
+  };
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.dark5};
+    transform: translateX(3px);
+  }
+`;
+
+export const ScoreBreakdownLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+`;
+
+export const ScoreBreakdownLabel = styled.div`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+export const ScoreBreakdownReason = styled.div`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.8rem;
+  line-height: 1.4;
+`;
+
+export const ScoreBreakdownRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+export const ScoreBreakdownValue = styled.div<{ percentage: number }>`
+  font-size: 1rem;
+  font-weight: 700;
+  color: ${({ percentage }) =>
+    percentage >= 80 ? '#10b981' :
+    percentage >= 50 ? '#f59e0b' :
+    '#ef4444'
+  };
+  min-width: 60px;
+  text-align: right;
+`;
+
+export const ScoreBreakdownBar = styled.div`
+  width: 80px;
+  height: 6px;
+  background: ${({ theme }) => theme.colors.dark2};
+  border-radius: 3px;
+  overflow: hidden;
+
+  @media (max-width: 768px) {
+    width: 60px;
+  }
+`;
+
+export const ScoreBreakdownBarFill = styled.div<{ width: number; percentage: number }>`
+  height: 100%;
+  width: ${({ width }) => width}%;
+  background: ${({ percentage }) =>
+    percentage >= 80 ? 'linear-gradient(90deg, #10b981, #059669)' :
+    percentage >= 50 ? 'linear-gradient(90deg, #f59e0b, #d97706)' :
+    'linear-gradient(90deg, #ef4444, #dc2626)'
+  };
+  transition: width 0.5s ease;
+  border-radius: 3px;
+`;
+// Channel Analyzer CTA Card
+export const ChannelAnalyzerCTA = styled.div`
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.dark3}, ${({ theme }) => theme.colors.dark4});
+  border: 2px solid ${({ theme }) => theme.colors.red4};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(229, 72, 72, 0.3);
+    border-color: ${({ theme }) => theme.colors.red3};
+  }
+
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+  }
+`;
+
+export const CTAIcon = styled.div`
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(229, 72, 72, 0.4);
+
+  i {
+    font-size: 2rem;
+    color: white;
+  }
+`;
+
+export const CTATitle = styled.h3`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+`;
+
+export const CTADescription = styled.p`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 600px;
+`;
+
+export const CTAButton = styled.button`
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
+  color: white;
+  border: none;
+  padding: 0.875rem 2rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(229, 72, 72, 0.3);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(229, 72, 72, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  i {
+    font-size: 1.2rem;
+  }
+`;
+
+// Insight Cards for Overview
+export const InsightsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const InsightCard = styled.div<{ type: "success" | "warning" | "info" }>`
+  background: ${({ theme }) => theme.colors.dark3};
+  border-left: 4px solid ${({ type }) =>
+    type === "success" ? "#10b981" :
+    type === "warning" ? "#f59e0b" :
+    "#3b82f6"
+  };
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  padding: 1.25rem;
+  display: flex;
+  gap: 1rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+`;
+
+export const InsightCardIcon = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.1);
+
+  i {
+    font-size: 1.5rem;
+  }
+`;
+
+export const InsightCardContent = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+export const InsightCardTitle = styled.div`
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: ${({ theme }) => theme.colors.text.secondary};
+`;
+
+export const InsightCardText = styled.div`
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: ${({ theme }) => theme.colors.text.primary};
 `;

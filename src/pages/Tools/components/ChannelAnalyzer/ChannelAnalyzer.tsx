@@ -7,10 +7,38 @@ import { SEO } from '../../../../components/SEO';
 import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
+interface VideoData {
+  id: string;
+  title: string;
+  thumbnail: string;
+  views: number;
+  likes: number;
+  comments: number;
+  publishedAt: string;
+  duration: string;
+  tags: string[];
+  description: string;
+}
+
+interface ScoreBreakdown {
+  label: string;
+  score: number;
+  max: number;
+  status: 'good' | 'warning' | 'poor';
+}
+
 interface ChannelAnalysis {
   achievements: string[];
   drawbacks: string[];
   flaggedWords: string[];
+  seoScore: number;
+  engagementScore: number;
+  consistencyScore: number;
+  brandingScore: number;
+  seoBreakdown: ScoreBreakdown[];
+  engagementBreakdown: ScoreBreakdown[];
+  consistencyBreakdown: ScoreBreakdown[];
+  brandingBreakdown: ScoreBreakdown[];
 }
 
 interface ChannelMetrics {
@@ -40,6 +68,7 @@ export const ChannelAnalyzer: React.FC = () => {
   const [channelData, setChannelData] = useState<any>(null);
   const [playlistData, setPlaylistData] = useState<any>(null);
   const [latestVideoData, setLatestVideoData] = useState<any>(null);
+  const [topVideos, setTopVideos] = useState<VideoData[]>([]);
   const [analysisResults, setAnalysisResults] = useState<ChannelAnalysis | null>(null);
   const [showResults, setShowResults] = useState(false);
 
@@ -51,13 +80,20 @@ export const ChannelAnalyzer: React.FC = () => {
     icon: 'bx bx-line-chart',
     features: [
       'Growth tracking',
-      'Competitor analysis', 
+      'Competitor analysis',
       'Optimization recommendations'
     ]
   };
 
   useEffect(() => {
-    if (channelId) {
+    // Check for URL search params first
+    const urlParams = new URLSearchParams(window.location.search);
+    const channelParam = urlParams.get('channel');
+
+    if (channelParam) {
+      // Just prefill the input field, don't auto-analyze
+      setChannelUrl(channelParam);
+    } else if (channelId) {
       setChannelUrl(`https://youtube.com/channel/${channelId}`);
       handleAnalyze(channelId);
     }
@@ -69,10 +105,37 @@ export const ChannelAnalyzer: React.FC = () => {
       return input;
     }
 
+    // Check if it's just a handle (with or without @)
+    if (/^@?[\w-]+$/.test(input) && !input.includes('youtube.com')) {
+      const handle = input.startsWith('@') ? input.substring(1) : input;
+      const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_10;
+
+      // First try forHandle
+      let response = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${handle}&key=${API_KEY}`
+      );
+      let data = await response.json();
+      if (data.items?.[0]) {
+        return data.items[0].id;
+      }
+
+      // If not found, try search
+      response = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(handle)}&type=channel&maxResults=1&key=${API_KEY}`
+      );
+      data = await response.json();
+      if (data.items?.[0]) {
+        return data.items[0].id.channelId;
+      }
+
+      throw new Error(`Channel not found for handle: ${input}`);
+    }
+
     const urlPatterns = {
       channel: /youtube\.com\/channel\/(UC[\w-]{22})/,
       user: /youtube\.com\/user\/(\w+)/,
       handle: /youtube\.com\/@([\w-]+)/,
+      handleWithoutAt: /youtube\.com\/([^/?]+)$/,  // Matches youtube.com/moneyguyshow
       customUrl: /youtube\.com\/(c\/)?(\w+)/
     };
 
@@ -81,8 +144,30 @@ export const ChannelAnalyzer: React.FC = () => {
       if (match) {
         if (type === 'channel') {
           return match[1];
+        } else if (type === 'handleWithoutAt') {
+          // Try to fetch by handle (without @)
+          const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_10;
+          const handle = match[1];
+
+          // First try forHandle
+          let response = await fetch(
+            `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${handle}&key=${API_KEY}`
+          );
+          let data = await response.json();
+          if (data.items?.[0]) {
+            return data.items[0].id;
+          }
+
+          // If not found, try search
+          response = await fetch(
+            `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(handle)}&type=channel&maxResults=1&key=${API_KEY}`
+          );
+          data = await response.json();
+          if (data.items?.[0]) {
+            return data.items[0].id.channelId;
+          }
         } else {
-          const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+          const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_10;
           const response = await fetch(
             `https://www.googleapis.com/youtube/v3/channels?part=id&${type === 'user' ? 'forUsername' : 'forHandle'}=${match[1]}&key=${API_KEY}`
           );
@@ -125,12 +210,14 @@ export const ChannelAnalyzer: React.FC = () => {
       const channel = await fetchChannelData(channelId);
       const playlists = await fetchPlaylistData(channelId);
       const latestVideo = await fetchLatestVideoData(channelId);
+      const videos = await fetchTopVideos(channelId);
 
       setChannelData(channel);
       setPlaylistData(playlists);
       setLatestVideoData(latestVideo);
+      setTopVideos(videos);
 
-      const analysis = analyzeChannelData(latestVideo, channel, playlists);
+      const analysis = analyzeChannelData(latestVideo, channel, playlists, videos);
       setAnalysisResults(analysis);
       setShowResults(true);
     } catch (error) {
@@ -155,7 +242,7 @@ export const ChannelAnalyzer: React.FC = () => {
   };
 
   const fetchChannelData = async (channelId: string) => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_10;
     if (!API_KEY) {
       throw new Error('YouTube API key not configured');
     }
@@ -182,7 +269,7 @@ export const ChannelAnalyzer: React.FC = () => {
   };
 
   const fetchPlaylistData = async (channelId: string) => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_10;
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/playlists?` +
       `part=id&channelId=${channelId}&maxResults=2&key=${API_KEY}`
@@ -192,7 +279,7 @@ export const ChannelAnalyzer: React.FC = () => {
   };
 
   const fetchLatestVideoData = async (channelId: string) => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_10;
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/search?` +
       `part=snippet&channelId=${channelId}&order=date&type=video&` +
@@ -203,14 +290,62 @@ export const ChannelAnalyzer: React.FC = () => {
     return data.items[0];
   };
 
+  const fetchTopVideos = async (channelId: string): Promise<VideoData[]> => {
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_10;
+
+    // Get top 6 videos by view count
+    const searchResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?` +
+      `part=snippet&channelId=${channelId}&order=viewCount&type=video&` +
+      `maxResults=6&key=${API_KEY}`
+    );
+    const searchData = await searchResponse.json();
+
+    if (!searchData.items || searchData.items.length === 0) {
+      return [];
+    }
+
+    const videoIds = searchData.items.map((item: any) => item.id.videoId).join(',');
+
+    // Get detailed stats for videos
+    const statsResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?` +
+      `part=statistics,contentDetails,snippet&id=${videoIds}&key=${API_KEY}`
+    );
+    const statsData = await statsResponse.json();
+
+    return searchData.items.map((searchItem: any, index: number) => {
+      const statsItem = statsData.items.find((stat: any) => stat.id === searchItem.id.videoId);
+      return {
+        id: searchItem.id.videoId,
+        title: searchItem.snippet.title,
+        thumbnail: searchItem.snippet.thumbnails.medium?.url || searchItem.snippet.thumbnails.default.url,
+        views: parseInt(statsItem?.statistics?.viewCount || '0'),
+        likes: parseInt(statsItem?.statistics?.likeCount || '0'),
+        comments: parseInt(statsItem?.statistics?.commentCount || '0'),
+        publishedAt: searchItem.snippet.publishedAt,
+        duration: statsItem?.contentDetails?.duration || 'PT0S',
+        tags: statsItem?.snippet?.tags || [],
+        description: statsItem?.snippet?.description || ''
+      };
+    });
+  };
+
   const analyzeChannelData = (
-    latestVideoData: any, 
-    channelData: any, 
-    playlistData: any
+    latestVideoData: any,
+    channelData: any,
+    playlistData: any,
+    topVideos: VideoData[]
   ): ChannelAnalysis => {
     const achievements: string[] = [];
     const drawbacks: string[] = [];
     const flaggedWords: string[] = [];
+
+    // Calculate scores
+    let seoScore = 0;
+    let engagementScore = 0;
+    let consistencyScore = 0;
+    let brandingScore = 0;
 
     const channelKeywords = channelData.brandingSettings?.channel?.keywords || '';
     const channelDescription = channelData.snippet.description;
@@ -218,11 +353,14 @@ export const ChannelAnalyzer: React.FC = () => {
     const today = new Date();
     const differenceInWeeks = Math.floor((today.getTime() - lastVideoPostedDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
 
-    // Check for flaggable words
+    // Check for flaggable words (whole word matches only)
     const checkContentForFlags = (content: string) => {
-      return flaggableWords.filter(word => 
-        content.toLowerCase().includes(word.toLowerCase())
-      );
+      if (!content) return [];
+      return flaggableWords.filter(word => {
+        // Use word boundaries to match whole words only, not substrings
+        const regex = new RegExp(`\\b${word.toLowerCase()}\\b`, 'i');
+        return regex.test(content);
+      });
     };
 
     flaggedWords.push(
@@ -298,10 +436,227 @@ export const ChannelAnalyzer: React.FC = () => {
       achievements.push("High average views per video shows quality content");
     }
 
-    return { 
-      achievements, 
-      drawbacks, 
-      flaggedWords: flaggedWords.filter((word, index) => flaggedWords.indexOf(word) === index)
+    // Calculate SEO Score (0-100) with breakdown
+    const seoBreakdown: ScoreBreakdown[] = [];
+
+    let descScore = 0;
+    if (channelDescription && channelDescription.length > 100) {
+      descScore = 25;
+      seoBreakdown.push({ label: 'Description Length', score: 25, max: 25, status: 'good' });
+    } else if (channelDescription && channelDescription.length > 50) {
+      descScore = 15;
+      seoBreakdown.push({ label: 'Description Length', score: 15, max: 25, status: 'warning' });
+    } else if (channelDescription) {
+      descScore = 5;
+      seoBreakdown.push({ label: 'Description Length', score: 5, max: 25, status: 'poor' });
+    } else {
+      seoBreakdown.push({ label: 'Description Length', score: 0, max: 25, status: 'poor' });
+    }
+    seoScore += descScore;
+
+    let keywordsScore = 0;
+    if (channelKeywords) {
+      const keywordCount = channelKeywords.split(',').length;
+      if (keywordCount >= 10) {
+        keywordsScore = 25;
+        seoBreakdown.push({ label: `Keywords (${keywordCount})`, score: 25, max: 25, status: 'good' });
+      } else if (keywordCount >= 5) {
+        keywordsScore = 15;
+        seoBreakdown.push({ label: `Keywords (${keywordCount})`, score: 15, max: 25, status: 'warning' });
+      } else {
+        keywordsScore = 5;
+        seoBreakdown.push({ label: `Keywords (${keywordCount})`, score: 5, max: 25, status: 'poor' });
+      }
+    } else {
+      seoBreakdown.push({ label: 'Keywords', score: 0, max: 25, status: 'poor' });
+    }
+    seoScore += keywordsScore;
+
+    let tagsScore = 0;
+    if (topVideos.length > 0) {
+      const avgTags = topVideos.reduce((sum, v) => sum + v.tags.length, 0) / topVideos.length;
+      if (avgTags >= 10) {
+        tagsScore = 25;
+        seoBreakdown.push({ label: `Avg Video Tags (${Math.round(avgTags)})`, score: 25, max: 25, status: 'good' });
+      } else if (avgTags >= 5) {
+        tagsScore = 15;
+        seoBreakdown.push({ label: `Avg Video Tags (${Math.round(avgTags)})`, score: 15, max: 25, status: 'warning' });
+      } else {
+        tagsScore = 5;
+        seoBreakdown.push({ label: `Avg Video Tags (${Math.round(avgTags)})`, score: 5, max: 25, status: 'poor' });
+      }
+    } else {
+      seoBreakdown.push({ label: 'Video Tags', score: 0, max: 25, status: 'poor' });
+    }
+    seoScore += tagsScore;
+
+    let playlistScore = 0;
+    if (playlistData.length > 5) {
+      playlistScore = 25;
+      seoBreakdown.push({ label: `Playlists (${playlistData.length})`, score: 25, max: 25, status: 'good' });
+    } else if (playlistData.length > 0) {
+      playlistScore = 15;
+      seoBreakdown.push({ label: `Playlists (${playlistData.length})`, score: 15, max: 25, status: 'warning' });
+    } else {
+      seoBreakdown.push({ label: 'Playlists', score: 0, max: 25, status: 'poor' });
+    }
+    seoScore += playlistScore;
+
+    // Calculate Engagement Score (0-100) with breakdown
+    const engagementBreakdown: ScoreBreakdown[] = [];
+
+    const viewsPerSub = viewCount / Math.max(1, subCount);
+    if (viewsPerSub < 50) {
+      engagementScore += 40;
+      engagementBreakdown.push({ label: `Views/Subscriber (${Math.round(viewsPerSub)})`, score: 40, max: 40, status: 'good' });
+    } else if (viewsPerSub < 100) {
+      engagementScore += 30;
+      engagementBreakdown.push({ label: `Views/Subscriber (${Math.round(viewsPerSub)})`, score: 30, max: 40, status: 'good' });
+    } else if (viewsPerSub < 200) {
+      engagementScore += 20;
+      engagementBreakdown.push({ label: `Views/Subscriber (${Math.round(viewsPerSub)})`, score: 20, max: 40, status: 'warning' });
+    } else {
+      engagementScore += 10;
+      engagementBreakdown.push({ label: `Views/Subscriber (${Math.round(viewsPerSub)})`, score: 10, max: 40, status: 'poor' });
+    }
+
+    if (topVideos.length > 0) {
+      const avgEngagement = topVideos.reduce((sum, v) => sum + ((v.likes + v.comments) / Math.max(1, v.views)), 0) / topVideos.length;
+      const engRate = (avgEngagement * 100).toFixed(1);
+      if (avgEngagement > 0.05) {
+        engagementScore += 30;
+        engagementBreakdown.push({ label: `Engagement Rate (${engRate}%)`, score: 30, max: 30, status: 'good' });
+      } else if (avgEngagement > 0.03) {
+        engagementScore += 20;
+        engagementBreakdown.push({ label: `Engagement Rate (${engRate}%)`, score: 20, max: 30, status: 'warning' });
+      } else if (avgEngagement > 0.01) {
+        engagementScore += 10;
+        engagementBreakdown.push({ label: `Engagement Rate (${engRate}%)`, score: 10, max: 30, status: 'warning' });
+      } else {
+        engagementScore += 5;
+        engagementBreakdown.push({ label: `Engagement Rate (${engRate}%)`, score: 5, max: 30, status: 'poor' });
+      }
+    } else {
+      engagementBreakdown.push({ label: 'Engagement Rate', score: 0, max: 30, status: 'poor' });
+    }
+
+    const avgViewsPerVideo = viewCount / Math.max(1, videoCount);
+    const avgViewsFormatted = avgViewsPerVideo >= 1000 ? `${(avgViewsPerVideo / 1000).toFixed(1)}K` : Math.round(avgViewsPerVideo).toString();
+    if (avgViewsPerVideo > 100000) {
+      engagementScore += 30;
+      engagementBreakdown.push({ label: `Avg Views/Video (${avgViewsFormatted})`, score: 30, max: 30, status: 'good' });
+    } else if (avgViewsPerVideo > 10000) {
+      engagementScore += 20;
+      engagementBreakdown.push({ label: `Avg Views/Video (${avgViewsFormatted})`, score: 20, max: 30, status: 'good' });
+    } else if (avgViewsPerVideo > 1000) {
+      engagementScore += 10;
+      engagementBreakdown.push({ label: `Avg Views/Video (${avgViewsFormatted})`, score: 10, max: 30, status: 'warning' });
+    } else {
+      engagementScore += 5;
+      engagementBreakdown.push({ label: `Avg Views/Video (${avgViewsFormatted})`, score: 5, max: 30, status: 'poor' });
+    }
+
+    // Calculate Consistency Score (0-100) with breakdown
+    const consistencyBreakdown: ScoreBreakdown[] = [];
+
+    const daysSinceCreation = Math.floor((Date.now() - new Date(channelData.snippet.publishedAt).getTime()) / (1000 * 60 * 60 * 24));
+    const videosPerWeek = (videoCount / daysSinceCreation) * 7;
+
+    if (videosPerWeek >= 3) {
+      consistencyScore += 40;
+      consistencyBreakdown.push({ label: `Upload Freq (${videosPerWeek.toFixed(1)}/week)`, score: 40, max: 40, status: 'good' });
+    } else if (videosPerWeek >= 1) {
+      consistencyScore += 30;
+      consistencyBreakdown.push({ label: `Upload Freq (${videosPerWeek.toFixed(1)}/week)`, score: 30, max: 40, status: 'good' });
+    } else if (videosPerWeek >= 0.5) {
+      consistencyScore += 20;
+      consistencyBreakdown.push({ label: `Upload Freq (${videosPerWeek.toFixed(1)}/week)`, score: 20, max: 40, status: 'warning' });
+    } else {
+      consistencyScore += 10;
+      consistencyBreakdown.push({ label: `Upload Freq (${videosPerWeek.toFixed(1)}/week)`, score: 10, max: 40, status: 'poor' });
+    }
+
+    if (differenceInWeeks <= 1) {
+      consistencyScore += 30;
+      consistencyBreakdown.push({ label: 'Last Upload (This week)', score: 30, max: 30, status: 'good' });
+    } else if (differenceInWeeks <= 2) {
+      consistencyScore += 20;
+      consistencyBreakdown.push({ label: `Last Upload (${differenceInWeeks} weeks ago)`, score: 20, max: 30, status: 'warning' });
+    } else if (differenceInWeeks <= 4) {
+      consistencyScore += 10;
+      consistencyBreakdown.push({ label: `Last Upload (${differenceInWeeks} weeks ago)`, score: 10, max: 30, status: 'warning' });
+    } else {
+      consistencyScore += 5;
+      consistencyBreakdown.push({ label: `Last Upload (${differenceInWeeks} weeks ago)`, score: 5, max: 30, status: 'poor' });
+    }
+
+    if (videoCount > 100) {
+      consistencyScore += 30;
+      consistencyBreakdown.push({ label: `Total Videos (${videoCount})`, score: 30, max: 30, status: 'good' });
+    } else if (videoCount > 50) {
+      consistencyScore += 20;
+      consistencyBreakdown.push({ label: `Total Videos (${videoCount})`, score: 20, max: 30, status: 'good' });
+    } else if (videoCount > 20) {
+      consistencyScore += 10;
+      consistencyBreakdown.push({ label: `Total Videos (${videoCount})`, score: 10, max: 30, status: 'warning' });
+    } else {
+      consistencyScore += 5;
+      consistencyBreakdown.push({ label: `Total Videos (${videoCount})`, score: 5, max: 30, status: 'poor' });
+    }
+
+    // Calculate Branding Score (0-100) with breakdown
+    const brandingBreakdown: ScoreBreakdown[] = [];
+
+    if (channelData.brandingSettings?.image?.bannerExternalUrl) {
+      brandingScore += 30;
+      brandingBreakdown.push({ label: 'Channel Banner', score: 30, max: 30, status: 'good' });
+    } else {
+      brandingBreakdown.push({ label: 'Channel Banner', score: 0, max: 30, status: 'poor' });
+    }
+
+    if (channelData.brandingSettings?.channel?.unsubscribedTrailer) {
+      brandingScore += 25;
+      brandingBreakdown.push({ label: 'Channel Trailer', score: 25, max: 25, status: 'good' });
+    } else {
+      brandingBreakdown.push({ label: 'Channel Trailer', score: 0, max: 25, status: 'poor' });
+    }
+
+    if (channelData.snippet.thumbnails.high) {
+      brandingScore += 15;
+      brandingBreakdown.push({ label: 'Profile Picture', score: 15, max: 15, status: 'good' });
+    } else {
+      brandingBreakdown.push({ label: 'Profile Picture', score: 0, max: 15, status: 'poor' });
+    }
+
+    if (playlistData.length > 0) {
+      brandingScore += 15;
+      brandingBreakdown.push({ label: `Content Organization (${playlistData.length} playlists)`, score: 15, max: 15, status: 'good' });
+    } else {
+      brandingBreakdown.push({ label: 'Content Organization', score: 0, max: 15, status: 'poor' });
+    }
+
+    if (channelDescription && channelDescription.length > 100) {
+      brandingScore += 15;
+      brandingBreakdown.push({ label: 'About Section', score: 15, max: 15, status: 'good' });
+    } else if (channelDescription) {
+      brandingScore += 8;
+      brandingBreakdown.push({ label: 'About Section', score: 8, max: 15, status: 'warning' });
+    } else {
+      brandingBreakdown.push({ label: 'About Section', score: 0, max: 15, status: 'poor' });
+    }
+
+    return {
+      achievements,
+      drawbacks,
+      flaggedWords: flaggedWords.filter((word, index) => flaggedWords.indexOf(word) === index),
+      seoScore: Math.min(100, seoScore),
+      engagementScore: Math.min(100, engagementScore),
+      consistencyScore: Math.min(100, consistencyScore),
+      brandingScore: Math.min(100, brandingScore),
+      seoBreakdown,
+      engagementBreakdown,
+      consistencyBreakdown,
+      brandingBreakdown
     };
   };
 
@@ -318,7 +673,7 @@ export const ChannelAnalyzer: React.FC = () => {
     return Math.round((analysis.achievements.length / totalPoints) * 5);
   };
 
-  const formatDate = (dateString: string): string => {
+  const formatFullDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -343,6 +698,102 @@ export const ChannelAnalyzer: React.FC = () => {
   const formatChannelKeywords = (keywords: string): string[] => {
     if (!keywords) return [];
     return keywords.split(',').map(keyword => keyword.trim()).filter(keyword => keyword.length > 0);
+  };
+
+  const getScoreColor = (score: number): string => {
+    if (score >= 80) return '#10b981'; // Green
+    if (score >= 60) return '#f59e0b'; // Yellow
+    return '#ef4444'; // Red
+  };
+
+  const getScoreLabel = (score: number): string => {
+    if (score >= 80) return 'Excellent';
+    if (score >= 60) return 'Good';
+    if (score >= 40) return 'Fair';
+    return 'Needs Work';
+  };
+
+  const analyzeVideoPerformance = (video: VideoData): { score: number; label: string; color: string; insights: string[] } => {
+    const insights: string[] = [];
+    let score = 0;
+
+    // Engagement rate
+    const engagementRate = ((video.likes + video.comments) / Math.max(1, video.views)) * 100;
+    if (engagementRate > 5) {
+      score += 35;
+      insights.push('Exceptional engagement rate');
+    } else if (engagementRate > 3) {
+      score += 25;
+      insights.push('Strong engagement');
+    } else if (engagementRate > 1) {
+      score += 15;
+      insights.push('Moderate engagement');
+    } else {
+      score += 5;
+      insights.push('Low engagement - needs improvement');
+    }
+
+    // View count
+    if (video.views > 1000000) {
+      score += 35;
+      insights.push('Viral success');
+    } else if (video.views > 100000) {
+      score += 25;
+      insights.push('High views');
+    } else if (video.views > 10000) {
+      score += 15;
+      insights.push('Good reach');
+    } else {
+      score += 5;
+      insights.push('Limited reach');
+    }
+
+    // Tags SEO
+    if (video.tags.length >= 10) {
+      score += 15;
+      insights.push('Well optimized tags');
+    } else if (video.tags.length >= 5) {
+      score += 10;
+      insights.push('Decent SEO');
+    } else {
+      score += 5;
+      insights.push('Needs more tags');
+    }
+
+    // Description length
+    if (video.description.length > 500) {
+      score += 15;
+      insights.push('Detailed description');
+    } else if (video.description.length > 200) {
+      score += 10;
+      insights.push('Good description');
+    } else {
+      score += 5;
+      insights.push('Short description');
+    }
+
+    const color = getScoreColor(score);
+    const label = getScoreLabel(score);
+
+    return { score, label, color, insights };
+  };
+
+  const parseDuration = (duration: string): string => {
+    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!match) return '0:00';
+
+    const hours = parseInt(match[1] || '0');
+    const minutes = parseInt(match[2] || '0');
+    const seconds = parseInt(match[3] || '0');
+
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const formatDate = (dateString: string): string => {
+    return moment(dateString).fromNow();
   };
 
   const getTopicCategory = (topicDetails: any, channelData: any): string => {
@@ -636,7 +1087,7 @@ export const ChannelAnalyzer: React.FC = () => {
                     </S.MetaItem>
                     <S.MetaItem>
                       <i className="bx bx-calendar"></i>
-                      Created: {formatDate(channelData.snippet.publishedAt)}
+                      Created: {formatFullDate(channelData.snippet.publishedAt)}
                     </S.MetaItem>
                     <S.MetaItem>
                       <i className="bx bx-award"></i>
@@ -683,6 +1134,115 @@ export const ChannelAnalyzer: React.FC = () => {
                   <S.MetricLabel>Overall Score</S.MetricLabel>
                 </S.MetricCard>
               </S.MetricsGrid>
+
+              {/* Performance Score Cards */}
+              <S.ScoreCardsSection>
+                <S.SectionTitle>
+                  <i className="bx bx-award"></i>
+                  Channel Performance Scores
+                </S.SectionTitle>
+                <S.ScoreCardsGrid>
+                  <S.ScoreCard>
+                    <S.ScoreCardHeader>
+                      <S.ScoreCardIcon className="bx bx-search-alt" />
+                      <S.ScoreCardTitle>SEO Score</S.ScoreCardTitle>
+                    </S.ScoreCardHeader>
+                    <S.ScoreValue color={getScoreColor(analysisResults.seoScore)}>
+                      {analysisResults.seoScore}
+                    </S.ScoreValue>
+                    <S.ScoreLabel>{getScoreLabel(analysisResults.seoScore)}</S.ScoreLabel>
+                    <S.ScoreProgressBar>
+                      <S.ScoreProgressFill
+                        width={analysisResults.seoScore}
+                        color={getScoreColor(analysisResults.seoScore)}
+                      />
+                    </S.ScoreProgressBar>
+                    <S.ScoreBreakdownList>
+                      {analysisResults.seoBreakdown.map((item, index) => (
+                        <S.ScoreBreakdownItem key={index} status={item.status}>
+                          <S.BreakdownLabel>{item.label}</S.BreakdownLabel>
+                          <S.BreakdownScore>{item.score}/{item.max}</S.BreakdownScore>
+                        </S.ScoreBreakdownItem>
+                      ))}
+                    </S.ScoreBreakdownList>
+                  </S.ScoreCard>
+
+                  <S.ScoreCard>
+                    <S.ScoreCardHeader>
+                      <S.ScoreCardIcon className="bx bx-heart" />
+                      <S.ScoreCardTitle>Engagement</S.ScoreCardTitle>
+                    </S.ScoreCardHeader>
+                    <S.ScoreValue color={getScoreColor(analysisResults.engagementScore)}>
+                      {analysisResults.engagementScore}
+                    </S.ScoreValue>
+                    <S.ScoreLabel>{getScoreLabel(analysisResults.engagementScore)}</S.ScoreLabel>
+                    <S.ScoreProgressBar>
+                      <S.ScoreProgressFill
+                        width={analysisResults.engagementScore}
+                        color={getScoreColor(analysisResults.engagementScore)}
+                      />
+                    </S.ScoreProgressBar>
+                    <S.ScoreBreakdownList>
+                      {analysisResults.engagementBreakdown.map((item, index) => (
+                        <S.ScoreBreakdownItem key={index} status={item.status}>
+                          <S.BreakdownLabel>{item.label}</S.BreakdownLabel>
+                          <S.BreakdownScore>{item.score}/{item.max}</S.BreakdownScore>
+                        </S.ScoreBreakdownItem>
+                      ))}
+                    </S.ScoreBreakdownList>
+                  </S.ScoreCard>
+
+                  <S.ScoreCard>
+                    <S.ScoreCardHeader>
+                      <S.ScoreCardIcon className="bx bx-calendar-check" />
+                      <S.ScoreCardTitle>Consistency</S.ScoreCardTitle>
+                    </S.ScoreCardHeader>
+                    <S.ScoreValue color={getScoreColor(analysisResults.consistencyScore)}>
+                      {analysisResults.consistencyScore}
+                    </S.ScoreValue>
+                    <S.ScoreLabel>{getScoreLabel(analysisResults.consistencyScore)}</S.ScoreLabel>
+                    <S.ScoreProgressBar>
+                      <S.ScoreProgressFill
+                        width={analysisResults.consistencyScore}
+                        color={getScoreColor(analysisResults.consistencyScore)}
+                      />
+                    </S.ScoreProgressBar>
+                    <S.ScoreBreakdownList>
+                      {analysisResults.consistencyBreakdown.map((item, index) => (
+                        <S.ScoreBreakdownItem key={index} status={item.status}>
+                          <S.BreakdownLabel>{item.label}</S.BreakdownLabel>
+                          <S.BreakdownScore>{item.score}/{item.max}</S.BreakdownScore>
+                        </S.ScoreBreakdownItem>
+                      ))}
+                    </S.ScoreBreakdownList>
+                  </S.ScoreCard>
+
+                  <S.ScoreCard>
+                    <S.ScoreCardHeader>
+                      <S.ScoreCardIcon className="bx bx-palette" />
+                      <S.ScoreCardTitle>Branding</S.ScoreCardTitle>
+                    </S.ScoreCardHeader>
+                    <S.ScoreValue color={getScoreColor(analysisResults.brandingScore)}>
+                      {analysisResults.brandingScore}
+                    </S.ScoreValue>
+                    <S.ScoreLabel>{getScoreLabel(analysisResults.brandingScore)}</S.ScoreLabel>
+                    <S.ScoreProgressBar>
+                      <S.ScoreProgressFill
+                        width={analysisResults.brandingScore}
+                        color={getScoreColor(analysisResults.brandingScore)}
+                      />
+                    </S.ScoreProgressBar>
+                    <S.ScoreBreakdownList>
+                      {analysisResults.brandingBreakdown.map((item, index) => (
+                        <S.ScoreBreakdownItem key={index} status={item.status}>
+                          <S.BreakdownLabel>{item.label}</S.BreakdownLabel>
+                          <S.BreakdownScore>{item.score}/{item.max}</S.BreakdownScore>
+                        </S.ScoreBreakdownItem>
+                      ))}
+                    </S.ScoreBreakdownList>
+                  </S.ScoreCard>
+                </S.ScoreCardsGrid>
+              </S.ScoreCardsSection>
 
               {channelData.brandingSettings?.image?.bannerExternalUrl && (
                 <S.BrandingSection>
@@ -861,6 +1421,68 @@ export const ChannelAnalyzer: React.FC = () => {
                     )}
                   </S.CategoryContainer>
                 </S.DetailedSection>
+
+                {/* Top Videos Section */}
+                {topVideos.length > 0 && (
+                  <S.DetailedSection style={{ gridColumn: '1 / -1' }}>
+                    <S.SectionTitle>
+                      <i className="bx bx-trending-up"></i>
+                      Top Performing Videos
+                    </S.SectionTitle>
+                    <S.TopVideosGrid>
+                      {topVideos.map((video, index) => {
+                        const analysis = analyzeVideoPerformance(video);
+                        return (
+                          <S.VideoCard key={video.id}>
+                            <S.VideoRank>#{index + 1}</S.VideoRank>
+                            <S.VideoThumbnailContainer
+                              href={`https://youtube.com/watch?v=${video.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <S.VideoThumbnail src={video.thumbnail} alt={video.title} />
+                              <S.VideoDuration>{parseDuration(video.duration)}</S.VideoDuration>
+                            </S.VideoThumbnailContainer>
+                            <S.VideoContent>
+                              <S.VideoTitle>{video.title}</S.VideoTitle>
+                              <S.VideoStats>
+                                <S.VideoStatItem>
+                                  <i className="bx bx-show"></i>
+                                  {video.views.toLocaleString()}
+                                </S.VideoStatItem>
+                                <S.VideoStatItem>
+                                  <i className="bx bx-like"></i>
+                                  {video.likes.toLocaleString()}
+                                </S.VideoStatItem>
+                                <S.VideoStatItem>
+                                  <i className="bx bx-comment"></i>
+                                  {video.comments.toLocaleString()}
+                                </S.VideoStatItem>
+                                <S.VideoStatItem>
+                                  <i className="bx bx-time"></i>
+                                  {formatDate(video.publishedAt)}
+                                </S.VideoStatItem>
+                              </S.VideoStats>
+                              <S.VideoAnalysis>
+                                <S.VideoScoreBadge color={analysis.color}>
+                                  {analysis.score}/100 - {analysis.label}
+                                </S.VideoScoreBadge>
+                                <S.VideoInsights>
+                                  {analysis.insights.slice(0, 2).map((insight, i) => (
+                                    <S.VideoInsight key={i}>
+                                      <i className="bx bx-info-circle"></i>
+                                      {insight}
+                                    </S.VideoInsight>
+                                  ))}
+                                </S.VideoInsights>
+                              </S.VideoAnalysis>
+                            </S.VideoContent>
+                          </S.VideoCard>
+                        );
+                      })}
+                    </S.TopVideosGrid>
+                  </S.DetailedSection>
+                )}
 
                 {/* Channel Performance Metrics */}
                 <S.DetailedSection>

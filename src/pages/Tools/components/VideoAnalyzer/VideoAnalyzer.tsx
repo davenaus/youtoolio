@@ -68,6 +68,8 @@ interface VideoAnalysis {
     recentUploadRate: string;
     subscriberToViewRatio: number;
     bestVideoTimeframe: string;
+    currentViewsPerDay: number;
+    avgViewsPerDayComparison: number;
   };
 
   performanceScores: {
@@ -456,101 +458,206 @@ const VideoAnalyzer: React.FC = () => {
   const calculateScores = (videoData: any, contentAnalysis: VideoAnalysis['contentAnalysis'], isShort: boolean) => {
     // SEO Score calculation (0-100)
     let seoScore = 0;
+    let titleScore = 0;
+    let titleReason = '';
+    let descriptionScore = 0;
+    let descriptionReason = '';
+    let tagsScore = 0;
+    let tagsReason = '';
+    let hashtagsScore = 0;
+    let hashtagsReason = '';
+    let linksScore = 0;
+    let linksReason = '';
 
     // Title optimization (35 points max)
     if (contentAnalysis.titleLength >= 50 && contentAnalysis.titleLength <= 60) {
-      seoScore += 35; // Perfect length
+      titleScore = 35;
+      titleReason = `Perfect length (${contentAnalysis.titleLength} chars) - maximizes visibility`;
     } else if (contentAnalysis.titleLength >= 40 && contentAnalysis.titleLength <= 70) {
-      seoScore += 25; // Good length
+      titleScore = 25;
+      titleReason = `Good length (${contentAnalysis.titleLength} chars) - could be optimized`;
     } else if (contentAnalysis.titleLength >= 30 && contentAnalysis.titleLength <= 80) {
-      seoScore += 15; // Acceptable length
+      titleScore = 15;
+      titleReason = `Acceptable length (${contentAnalysis.titleLength} chars) - room for improvement`;
     } else {
-      seoScore += 5; // Poor length
+      titleScore = 5;
+      titleReason = `Poor length (${contentAnalysis.titleLength} chars) - ${contentAnalysis.titleLength < 30 ? 'too short' : 'too long'}`;
     }
+    seoScore += titleScore;
 
     // Description optimization (30 points max)
     if (contentAnalysis.descriptionLength >= 250) {
-      seoScore += 30; // Comprehensive description
+      descriptionScore = 30;
+      descriptionReason = `Comprehensive (${contentAnalysis.descriptionLength} chars) - excellent SEO`;
     } else if (contentAnalysis.descriptionLength >= 150) {
-      seoScore += 20; // Good description
+      descriptionScore = 20;
+      descriptionReason = `Good length (${contentAnalysis.descriptionLength} chars) - add more detail`;
     } else if (contentAnalysis.descriptionLength >= 100) {
-      seoScore += 10; // Minimal description
+      descriptionScore = 10;
+      descriptionReason = `Minimal (${contentAnalysis.descriptionLength} chars) - needs expansion`;
     } else {
-      seoScore += 2; // Very poor description
+      descriptionScore = 2;
+      descriptionReason = `Very poor (${contentAnalysis.descriptionLength} chars) - critical issue`;
     }
+    seoScore += descriptionScore;
 
     // Tag optimization (20 points max)
     if (contentAnalysis.tagCount >= 15) {
-      seoScore += 20; // Excellent tag usage
+      tagsScore = 20;
+      tagsReason = `Excellent (${contentAnalysis.tagCount} tags) - full coverage`;
     } else if (contentAnalysis.tagCount >= 10) {
-      seoScore += 15; // Good tag usage
+      tagsScore = 15;
+      tagsReason = `Good (${contentAnalysis.tagCount} tags) - add a few more`;
     } else if (contentAnalysis.tagCount >= 5) {
-      seoScore += 10; // Adequate tag usage
+      tagsScore = 10;
+      tagsReason = `Adequate (${contentAnalysis.tagCount} tags) - needs more variety`;
     } else if (contentAnalysis.tagCount >= 1) {
-      seoScore += 5; // Minimal tag usage
+      tagsScore = 5;
+      tagsReason = `Minimal (${contentAnalysis.tagCount} tags) - severely limited`;
+    } else {
+      tagsScore = 0;
+      tagsReason = 'No tags - missing discoverability';
     }
-    // 0 points for no tags
+    seoScore += tagsScore;
 
     // Hashtag usage (8 points max)
     if (contentAnalysis.hashtags.length >= 3 && contentAnalysis.hashtags.length <= 15) {
-      seoScore += 8; // Optimal hashtag usage
+      hashtagsScore = 8;
+      hashtagsReason = `Optimal (${contentAnalysis.hashtags.length} hashtags) - good balance`;
     } else if (contentAnalysis.hashtags.length >= 1) {
-      seoScore += 4; // Some hashtag usage
+      hashtagsScore = 4;
+      hashtagsReason = `Some usage (${contentAnalysis.hashtags.length} hashtags) - add more`;
+    } else {
+      hashtagsScore = 0;
+      hashtagsReason = 'No hashtags - missing trending potential';
     }
+    seoScore += hashtagsScore;
 
     // External links (7 points max)
     if (contentAnalysis.descriptionLinkCount >= 1 && contentAnalysis.descriptionLinkCount <= 5) {
-      seoScore += 7; // Good link usage
+      linksScore = 7;
+      linksReason = `Good usage (${contentAnalysis.descriptionLinkCount} links) - well balanced`;
     } else if (contentAnalysis.descriptionLinkCount > 5) {
-      seoScore += 3; // Too many links (potential spam)
+      linksScore = 3;
+      linksReason = `Too many (${contentAnalysis.descriptionLinkCount} links) - may appear spammy`;
+    } else {
+      linksScore = 0;
+      linksReason = 'No links - missing traffic opportunities';
     }
+    seoScore += linksScore;
 
     // Engagement Score calculation (0-100) - Based on realistic YouTube benchmarks
     const views = parseInt(videoData.statistics.viewCount || '0');
     const likes = parseInt(videoData.statistics.likeCount || '0');
     const comments = parseInt(videoData.statistics.commentCount || '0');
     const engagementRate = views > 0 ? ((likes + comments) / views) * 100 : 0;
-
-    let engagementScore = 0;
-
-    // Realistic engagement rate benchmarks for YouTube
-    if (engagementRate >= 8) {
-      engagementScore = 100; // Viral/exceptional content
-    } else if (engagementRate >= 6) {
-      engagementScore = 90; // Excellent engagement
-    } else if (engagementRate >= 4) {
-      engagementScore = 80; // Very good engagement
-    } else if (engagementRate >= 3) {
-      engagementScore = 70; // Good engagement
-    } else if (engagementRate >= 2) {
-      engagementScore = 60; // Above average engagement
-    } else if (engagementRate >= 1.5) {
-      engagementScore = 50; // Average engagement
-    } else if (engagementRate >= 1) {
-      engagementScore = 40; // Below average engagement
-    } else if (engagementRate >= 0.5) {
-      engagementScore = 25; // Poor engagement
-    } else {
-      engagementScore = 10; // Very poor engagement
-    }
-
-    // Bonus points for consistent engagement patterns
     const likeRatio = views > 0 ? (likes / views) * 100 : 0;
     const commentRatio = views > 0 ? (comments / views) * 100 : 0;
 
-    // Bonus for balanced engagement (not just likes or just comments)
-    if (likeRatio > 0.5 && commentRatio > 0.1) {
-      engagementScore = Math.min(100, engagementScore + 5);
+    let engagementScore = 0;
+    let rateScore = 0;
+    let rateReason = '';
+    let likeRatioScore = 0;
+    let likeRatioReason = '';
+    let commentRatioScore = 0;
+    let commentRatioReason = '';
+
+    // Overall engagement rate (40 points max)
+    if (engagementRate >= 8) {
+      rateScore = 40;
+      rateReason = `Viral (${engagementRate.toFixed(2)}%) - exceptional performance`;
+    } else if (engagementRate >= 6) {
+      rateScore = 36;
+      rateReason = `Excellent (${engagementRate.toFixed(2)}%) - well above average`;
+    } else if (engagementRate >= 4) {
+      rateScore = 32;
+      rateReason = `Very good (${engagementRate.toFixed(2)}%) - strong engagement`;
+    } else if (engagementRate >= 3) {
+      rateScore = 28;
+      rateReason = `Good (${engagementRate.toFixed(2)}%) - above average`;
+    } else if (engagementRate >= 2) {
+      rateScore = 24;
+      rateReason = `Average (${engagementRate.toFixed(2)}%) - typical performance`;
+    } else if (engagementRate >= 1.5) {
+      rateScore = 20;
+      rateReason = `Below average (${engagementRate.toFixed(2)}%) - needs improvement`;
+    } else if (engagementRate >= 1) {
+      rateScore = 16;
+      rateReason = `Low (${engagementRate.toFixed(2)}%) - action needed`;
+    } else if (engagementRate >= 0.5) {
+      rateScore = 10;
+      rateReason = `Poor (${engagementRate.toFixed(2)}%) - critical issue`;
+    } else {
+      rateScore = 4;
+      rateReason = `Very poor (${engagementRate.toFixed(2)}%) - urgent attention required`;
     }
+    engagementScore += rateScore;
+
+    // Like ratio (30 points max)
+    if (likeRatio >= 4) {
+      likeRatioScore = 30;
+      likeRatioReason = `Exceptional (${likeRatio.toFixed(2)}%) - highly valued content`;
+    } else if (likeRatio >= 2) {
+      likeRatioScore = 25;
+      likeRatioReason = `Excellent (${likeRatio.toFixed(2)}%) - strong approval`;
+    } else if (likeRatio >= 1) {
+      likeRatioScore = 20;
+      likeRatioReason = `Good (${likeRatio.toFixed(2)}%) - positive reception`;
+    } else if (likeRatio >= 0.5) {
+      likeRatioScore = 15;
+      likeRatioReason = `Average (${likeRatio.toFixed(2)}%) - moderate approval`;
+    } else if (likeRatio >= 0.2) {
+      likeRatioScore = 10;
+      likeRatioReason = `Low (${likeRatio.toFixed(2)}%) - needs improvement`;
+    } else {
+      likeRatioScore = 5;
+      likeRatioReason = `Poor (${likeRatio.toFixed(2)}%) - content mismatch likely`;
+    }
+    engagementScore += likeRatioScore;
+
+    // Comment ratio (30 points max)
+    if (commentRatio >= 0.5) {
+      commentRatioScore = 30;
+      commentRatioReason = `Exceptional (${commentRatio.toFixed(3)}%) - very interactive`;
+    } else if (commentRatio >= 0.3) {
+      commentRatioScore = 25;
+      commentRatioReason = `Excellent (${commentRatio.toFixed(3)}%) - strong discussion`;
+    } else if (commentRatio >= 0.15) {
+      commentRatioScore = 20;
+      commentRatioReason = `Good (${commentRatio.toFixed(3)}%) - healthy interaction`;
+    } else if (commentRatio >= 0.08) {
+      commentRatioScore = 15;
+      commentRatioReason = `Average (${commentRatio.toFixed(3)}%) - moderate discussion`;
+    } else if (commentRatio >= 0.03) {
+      commentRatioScore = 10;
+      commentRatioReason = `Low (${commentRatio.toFixed(3)}%) - encourage more comments`;
+    } else {
+      commentRatioScore = 5;
+      commentRatioReason = `Poor (${commentRatio.toFixed(3)}%) - add CTAs for comments`;
+    }
+    engagementScore += commentRatioScore;
 
     // Optimization Score calculation (weighted average)
-    // SEO is slightly more important for discoverability, but engagement drives the algorithm
     const optimizationScore = Math.round((seoScore * 0.4) + (engagementScore * 0.6));
 
     return {
       seoScore: Math.min(100, Math.round(seoScore)),
       engagementScore: Math.min(100, Math.round(engagementScore)),
-      optimizationScore: Math.min(100, optimizationScore)
+      optimizationScore: Math.min(100, optimizationScore),
+      scoreBreakdown: {
+        seo: {
+          title: { score: titleScore, max: 35, reason: titleReason },
+          description: { score: descriptionScore, max: 30, reason: descriptionReason },
+          tags: { score: tagsScore, max: 20, reason: tagsReason },
+          hashtags: { score: hashtagsScore, max: 8, reason: hashtagsReason },
+          links: { score: linksScore, max: 7, reason: linksReason }
+        },
+        engagement: {
+          rate: { score: rateScore, max: 40, reason: rateReason },
+          likeRatio: { score: likeRatioScore, max: 30, reason: likeRatioReason },
+          commentRatio: { score: commentRatioScore, max: 30, reason: commentRatioReason }
+        }
+      }
     };
   };
 
@@ -601,7 +708,8 @@ const VideoAnalyzer: React.FC = () => {
     }
 
     if (channelMetrics.viewsComparison === 'above') {
-      strengths.push(`Performing ${Math.round(views / channelMetrics.avgViewsPerVideo * 100 - 100)}% better than channel average`);
+      const percentBetter = Math.round((channelMetrics.currentViewsPerDay / channelMetrics.avgViewsPerDayComparison) * 100 - 100);
+      strengths.push(`Video velocity: ${percentBetter}% faster views/day than similar videos - strong momentum`);
     }
 
     // Identify specific improvements needed
@@ -678,8 +786,8 @@ const VideoAnalyzer: React.FC = () => {
 
     // Channel performance insights
     if (channelMetrics.viewsComparison === 'below') {
-      const percentBelow = Math.round((1 - views / channelMetrics.avgViewsPerVideo) * 100);
-      improvements.push(`Underperforming by ${percentBelow}% compared to channel average`);
+      const percentBelow = Math.round((1 - channelMetrics.currentViewsPerDay / channelMetrics.avgViewsPerDayComparison) * 100);
+      improvements.push(`Lower view velocity: ${percentBelow}% slower views/day than similar videos`);
       recommendations.push('Analyze your top 5 videos for common elements: thumbnail style, title format, topics');
       recommendations.push('Consider refreshing thumbnail after 48 hours if CTR is below 4%');
     }
@@ -804,9 +912,38 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
       ? `${(totalVideos / Math.max(channelAge / 7, 1)).toFixed(1)} videos/week`
       : 'N/A';
 
+    // Fair performance comparison based on video age
     const currentViews = parseInt(videoData.statistics.viewCount);
-    const viewsComparison = currentViews > avgViewsPerVideo * 1.2 ? 'above' :
-      currentViews < avgViewsPerVideo * 0.8 ? 'below' : 'average';
+    const currentVideoAge = moment().diff(moment(videoData.snippet.publishedAt), 'days');
+    const currentVideoAgeDays = Math.max(currentVideoAge, 1); // Minimum 1 day to avoid division by zero
+    const currentViewsPerDay = currentViews / currentVideoAgeDays;
+
+    // Calculate average views per day for recent videos (similar age range)
+    // Filter videos to those published within similar timeframe (±30 days of current video's age)
+    const similarAgeVideos = channelVideos.filter(v => {
+      const videoAge = moment().diff(moment(v.publishedAt), 'days');
+      return Math.abs(videoAge - currentVideoAgeDays) <= 30 && v.id !== videoData.id;
+    });
+
+    // If we have similar age videos, use those for comparison; otherwise use all recent videos
+    const comparisonVideos = similarAgeVideos.length >= 3 ? similarAgeVideos : channelVideos.slice(0, 10);
+
+    const avgViewsPerDayComparison = comparisonVideos.length > 0
+      ? comparisonVideos.reduce((sum, v) => {
+          const videoAge = Math.max(moment().diff(moment(v.publishedAt), 'days'), 1);
+          return sum + (v.viewCount / videoAge);
+        }, 0) / comparisonVideos.length
+      : currentViewsPerDay;
+
+    // Compare based on views per day (velocity), not total views
+    let viewsComparison: 'above' | 'below' | 'average';
+    if (currentViewsPerDay > avgViewsPerDayComparison * 1.2) {
+      viewsComparison = 'above';
+    } else if (currentViewsPerDay < avgViewsPerDayComparison * 0.8) {
+      viewsComparison = 'below';
+    } else {
+      viewsComparison = 'average';
+    }
 
     // Calculate additional channel metrics
     const totalChannelViews = parseInt(channelData.statistics.viewCount || '0');
@@ -887,7 +1024,9 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
       subscriberToViewRatio: totalChannelViews / Math.max(parseInt(channelData.statistics.subscriberCount || '1'), 1),
       bestVideoTimeframe: recentBestVideos.length > 0 ? 'last 6 months' :
         videosToConsider.length > 0 ? 'last 12 months' :
-          'recent uploads'
+          'recent uploads',
+      currentViewsPerDay,
+      avgViewsPerDayComparison
     };
 
     const insights = generateInsights(videoData, contentAnalysis, scores, channelMetrics);
@@ -1039,6 +1178,100 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
             <S.ScoreBar>
               <S.ScoreBarFill width={analysisResults.performanceScores.seoScore} />
             </S.ScoreBar>
+
+            {analysisResults.performanceScores.scoreBreakdown && (
+              <S.ScoreBreakdownList>
+                <S.ScoreBreakdownItem percentage={(analysisResults.performanceScores.scoreBreakdown.seo.title.score / analysisResults.performanceScores.scoreBreakdown.seo.title.max) * 100}>
+                  <S.ScoreBreakdownLeft>
+                    <S.ScoreBreakdownLabel>Title</S.ScoreBreakdownLabel>
+                    <S.ScoreBreakdownReason>{analysisResults.performanceScores.scoreBreakdown.seo.title.reason}</S.ScoreBreakdownReason>
+                  </S.ScoreBreakdownLeft>
+                  <S.ScoreBreakdownRight>
+                    <S.ScoreBreakdownValue percentage={(analysisResults.performanceScores.scoreBreakdown.seo.title.score / analysisResults.performanceScores.scoreBreakdown.seo.title.max) * 100}>
+                      {analysisResults.performanceScores.scoreBreakdown.seo.title.score}/{analysisResults.performanceScores.scoreBreakdown.seo.title.max}
+                    </S.ScoreBreakdownValue>
+                    <S.ScoreBreakdownBar>
+                      <S.ScoreBreakdownBarFill
+                        width={(analysisResults.performanceScores.scoreBreakdown.seo.title.score / analysisResults.performanceScores.scoreBreakdown.seo.title.max) * 100}
+                        percentage={(analysisResults.performanceScores.scoreBreakdown.seo.title.score / analysisResults.performanceScores.scoreBreakdown.seo.title.max) * 100}
+                      />
+                    </S.ScoreBreakdownBar>
+                  </S.ScoreBreakdownRight>
+                </S.ScoreBreakdownItem>
+
+                <S.ScoreBreakdownItem percentage={(analysisResults.performanceScores.scoreBreakdown.seo.description.score / analysisResults.performanceScores.scoreBreakdown.seo.description.max) * 100}>
+                  <S.ScoreBreakdownLeft>
+                    <S.ScoreBreakdownLabel>Description</S.ScoreBreakdownLabel>
+                    <S.ScoreBreakdownReason>{analysisResults.performanceScores.scoreBreakdown.seo.description.reason}</S.ScoreBreakdownReason>
+                  </S.ScoreBreakdownLeft>
+                  <S.ScoreBreakdownRight>
+                    <S.ScoreBreakdownValue percentage={(analysisResults.performanceScores.scoreBreakdown.seo.description.score / analysisResults.performanceScores.scoreBreakdown.seo.description.max) * 100}>
+                      {analysisResults.performanceScores.scoreBreakdown.seo.description.score}/{analysisResults.performanceScores.scoreBreakdown.seo.description.max}
+                    </S.ScoreBreakdownValue>
+                    <S.ScoreBreakdownBar>
+                      <S.ScoreBreakdownBarFill
+                        width={(analysisResults.performanceScores.scoreBreakdown.seo.description.score / analysisResults.performanceScores.scoreBreakdown.seo.description.max) * 100}
+                        percentage={(analysisResults.performanceScores.scoreBreakdown.seo.description.score / analysisResults.performanceScores.scoreBreakdown.seo.description.max) * 100}
+                      />
+                    </S.ScoreBreakdownBar>
+                  </S.ScoreBreakdownRight>
+                </S.ScoreBreakdownItem>
+
+                <S.ScoreBreakdownItem percentage={(analysisResults.performanceScores.scoreBreakdown.seo.tags.score / analysisResults.performanceScores.scoreBreakdown.seo.tags.max) * 100}>
+                  <S.ScoreBreakdownLeft>
+                    <S.ScoreBreakdownLabel>Tags</S.ScoreBreakdownLabel>
+                    <S.ScoreBreakdownReason>{analysisResults.performanceScores.scoreBreakdown.seo.tags.reason}</S.ScoreBreakdownReason>
+                  </S.ScoreBreakdownLeft>
+                  <S.ScoreBreakdownRight>
+                    <S.ScoreBreakdownValue percentage={(analysisResults.performanceScores.scoreBreakdown.seo.tags.score / analysisResults.performanceScores.scoreBreakdown.seo.tags.max) * 100}>
+                      {analysisResults.performanceScores.scoreBreakdown.seo.tags.score}/{analysisResults.performanceScores.scoreBreakdown.seo.tags.max}
+                    </S.ScoreBreakdownValue>
+                    <S.ScoreBreakdownBar>
+                      <S.ScoreBreakdownBarFill
+                        width={(analysisResults.performanceScores.scoreBreakdown.seo.tags.score / analysisResults.performanceScores.scoreBreakdown.seo.tags.max) * 100}
+                        percentage={(analysisResults.performanceScores.scoreBreakdown.seo.tags.score / analysisResults.performanceScores.scoreBreakdown.seo.tags.max) * 100}
+                      />
+                    </S.ScoreBreakdownBar>
+                  </S.ScoreBreakdownRight>
+                </S.ScoreBreakdownItem>
+
+                <S.ScoreBreakdownItem percentage={(analysisResults.performanceScores.scoreBreakdown.seo.hashtags.score / analysisResults.performanceScores.scoreBreakdown.seo.hashtags.max) * 100}>
+                  <S.ScoreBreakdownLeft>
+                    <S.ScoreBreakdownLabel>Hashtags</S.ScoreBreakdownLabel>
+                    <S.ScoreBreakdownReason>{analysisResults.performanceScores.scoreBreakdown.seo.hashtags.reason}</S.ScoreBreakdownReason>
+                  </S.ScoreBreakdownLeft>
+                  <S.ScoreBreakdownRight>
+                    <S.ScoreBreakdownValue percentage={(analysisResults.performanceScores.scoreBreakdown.seo.hashtags.score / analysisResults.performanceScores.scoreBreakdown.seo.hashtags.max) * 100}>
+                      {analysisResults.performanceScores.scoreBreakdown.seo.hashtags.score}/{analysisResults.performanceScores.scoreBreakdown.seo.hashtags.max}
+                    </S.ScoreBreakdownValue>
+                    <S.ScoreBreakdownBar>
+                      <S.ScoreBreakdownBarFill
+                        width={(analysisResults.performanceScores.scoreBreakdown.seo.hashtags.score / analysisResults.performanceScores.scoreBreakdown.seo.hashtags.max) * 100}
+                        percentage={(analysisResults.performanceScores.scoreBreakdown.seo.hashtags.score / analysisResults.performanceScores.scoreBreakdown.seo.hashtags.max) * 100}
+                      />
+                    </S.ScoreBreakdownBar>
+                  </S.ScoreBreakdownRight>
+                </S.ScoreBreakdownItem>
+
+                <S.ScoreBreakdownItem percentage={(analysisResults.performanceScores.scoreBreakdown.seo.links.score / analysisResults.performanceScores.scoreBreakdown.seo.links.max) * 100}>
+                  <S.ScoreBreakdownLeft>
+                    <S.ScoreBreakdownLabel>Links</S.ScoreBreakdownLabel>
+                    <S.ScoreBreakdownReason>{analysisResults.performanceScores.scoreBreakdown.seo.links.reason}</S.ScoreBreakdownReason>
+                  </S.ScoreBreakdownLeft>
+                  <S.ScoreBreakdownRight>
+                    <S.ScoreBreakdownValue percentage={(analysisResults.performanceScores.scoreBreakdown.seo.links.score / analysisResults.performanceScores.scoreBreakdown.seo.links.max) * 100}>
+                      {analysisResults.performanceScores.scoreBreakdown.seo.links.score}/{analysisResults.performanceScores.scoreBreakdown.seo.links.max}
+                    </S.ScoreBreakdownValue>
+                    <S.ScoreBreakdownBar>
+                      <S.ScoreBreakdownBarFill
+                        width={(analysisResults.performanceScores.scoreBreakdown.seo.links.score / analysisResults.performanceScores.scoreBreakdown.seo.links.max) * 100}
+                        percentage={(analysisResults.performanceScores.scoreBreakdown.seo.links.score / analysisResults.performanceScores.scoreBreakdown.seo.links.max) * 100}
+                      />
+                    </S.ScoreBreakdownBar>
+                  </S.ScoreBreakdownRight>
+                </S.ScoreBreakdownItem>
+              </S.ScoreBreakdownList>
+            )}
           </S.ScoreCard>
 
           <S.ScoreCard>
@@ -1051,6 +1284,64 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
             <S.ScoreBar>
               <S.ScoreBarFill width={analysisResults.performanceScores.engagementScore} />
             </S.ScoreBar>
+
+            {analysisResults.performanceScores.scoreBreakdown && (
+              <S.ScoreBreakdownList>
+                <S.ScoreBreakdownItem percentage={(analysisResults.performanceScores.scoreBreakdown.engagement.rate.score / analysisResults.performanceScores.scoreBreakdown.engagement.rate.max) * 100}>
+                  <S.ScoreBreakdownLeft>
+                    <S.ScoreBreakdownLabel>Engagement Rate</S.ScoreBreakdownLabel>
+                    <S.ScoreBreakdownReason>{analysisResults.performanceScores.scoreBreakdown.engagement.rate.reason}</S.ScoreBreakdownReason>
+                  </S.ScoreBreakdownLeft>
+                  <S.ScoreBreakdownRight>
+                    <S.ScoreBreakdownValue percentage={(analysisResults.performanceScores.scoreBreakdown.engagement.rate.score / analysisResults.performanceScores.scoreBreakdown.engagement.rate.max) * 100}>
+                      {analysisResults.performanceScores.scoreBreakdown.engagement.rate.score}/{analysisResults.performanceScores.scoreBreakdown.engagement.rate.max}
+                    </S.ScoreBreakdownValue>
+                    <S.ScoreBreakdownBar>
+                      <S.ScoreBreakdownBarFill
+                        width={(analysisResults.performanceScores.scoreBreakdown.engagement.rate.score / analysisResults.performanceScores.scoreBreakdown.engagement.rate.max) * 100}
+                        percentage={(analysisResults.performanceScores.scoreBreakdown.engagement.rate.score / analysisResults.performanceScores.scoreBreakdown.engagement.rate.max) * 100}
+                      />
+                    </S.ScoreBreakdownBar>
+                  </S.ScoreBreakdownRight>
+                </S.ScoreBreakdownItem>
+
+                <S.ScoreBreakdownItem percentage={(analysisResults.performanceScores.scoreBreakdown.engagement.likeRatio.score / analysisResults.performanceScores.scoreBreakdown.engagement.likeRatio.max) * 100}>
+                  <S.ScoreBreakdownLeft>
+                    <S.ScoreBreakdownLabel>Like Ratio</S.ScoreBreakdownLabel>
+                    <S.ScoreBreakdownReason>{analysisResults.performanceScores.scoreBreakdown.engagement.likeRatio.reason}</S.ScoreBreakdownReason>
+                  </S.ScoreBreakdownLeft>
+                  <S.ScoreBreakdownRight>
+                    <S.ScoreBreakdownValue percentage={(analysisResults.performanceScores.scoreBreakdown.engagement.likeRatio.score / analysisResults.performanceScores.scoreBreakdown.engagement.likeRatio.max) * 100}>
+                      {analysisResults.performanceScores.scoreBreakdown.engagement.likeRatio.score}/{analysisResults.performanceScores.scoreBreakdown.engagement.likeRatio.max}
+                    </S.ScoreBreakdownValue>
+                    <S.ScoreBreakdownBar>
+                      <S.ScoreBreakdownBarFill
+                        width={(analysisResults.performanceScores.scoreBreakdown.engagement.likeRatio.score / analysisResults.performanceScores.scoreBreakdown.engagement.likeRatio.max) * 100}
+                        percentage={(analysisResults.performanceScores.scoreBreakdown.engagement.likeRatio.score / analysisResults.performanceScores.scoreBreakdown.engagement.likeRatio.max) * 100}
+                      />
+                    </S.ScoreBreakdownBar>
+                  </S.ScoreBreakdownRight>
+                </S.ScoreBreakdownItem>
+
+                <S.ScoreBreakdownItem percentage={(analysisResults.performanceScores.scoreBreakdown.engagement.commentRatio.score / analysisResults.performanceScores.scoreBreakdown.engagement.commentRatio.max) * 100}>
+                  <S.ScoreBreakdownLeft>
+                    <S.ScoreBreakdownLabel>Comment Ratio</S.ScoreBreakdownLabel>
+                    <S.ScoreBreakdownReason>{analysisResults.performanceScores.scoreBreakdown.engagement.commentRatio.reason}</S.ScoreBreakdownReason>
+                  </S.ScoreBreakdownLeft>
+                  <S.ScoreBreakdownRight>
+                    <S.ScoreBreakdownValue percentage={(analysisResults.performanceScores.scoreBreakdown.engagement.commentRatio.score / analysisResults.performanceScores.scoreBreakdown.engagement.commentRatio.max) * 100}>
+                      {analysisResults.performanceScores.scoreBreakdown.engagement.commentRatio.score}/{analysisResults.performanceScores.scoreBreakdown.engagement.commentRatio.max}
+                    </S.ScoreBreakdownValue>
+                    <S.ScoreBreakdownBar>
+                      <S.ScoreBreakdownBarFill
+                        width={(analysisResults.performanceScores.scoreBreakdown.engagement.commentRatio.score / analysisResults.performanceScores.scoreBreakdown.engagement.commentRatio.max) * 100}
+                        percentage={(analysisResults.performanceScores.scoreBreakdown.engagement.commentRatio.score / analysisResults.performanceScores.scoreBreakdown.engagement.commentRatio.max) * 100}
+                      />
+                    </S.ScoreBreakdownBar>
+                  </S.ScoreBreakdownRight>
+                </S.ScoreBreakdownItem>
+              </S.ScoreBreakdownList>
+            )}
           </S.ScoreCard>
 
           <S.ScoreCard>
@@ -1063,6 +1354,43 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
             <S.ScoreBar>
               <S.ScoreBarFill width={analysisResults.performanceScores.optimizationScore} />
             </S.ScoreBar>
+            <S.ScoreBreakdownList>
+              <S.ScoreBreakdownItem percentage={analysisResults.performanceScores.seoScore}>
+                <S.ScoreBreakdownLeft>
+                  <S.ScoreBreakdownLabel>SEO Impact</S.ScoreBreakdownLabel>
+                  <S.ScoreBreakdownReason>Weighted 40% of overall score - drives discoverability</S.ScoreBreakdownReason>
+                </S.ScoreBreakdownLeft>
+                <S.ScoreBreakdownRight>
+                  <S.ScoreBreakdownValue percentage={analysisResults.performanceScores.seoScore}>
+                    {analysisResults.performanceScores.seoScore}/100
+                  </S.ScoreBreakdownValue>
+                  <S.ScoreBreakdownBar>
+                    <S.ScoreBreakdownBarFill
+                      width={analysisResults.performanceScores.seoScore}
+                      percentage={analysisResults.performanceScores.seoScore}
+                    />
+                  </S.ScoreBreakdownBar>
+                </S.ScoreBreakdownRight>
+              </S.ScoreBreakdownItem>
+
+              <S.ScoreBreakdownItem percentage={analysisResults.performanceScores.engagementScore}>
+                <S.ScoreBreakdownLeft>
+                  <S.ScoreBreakdownLabel>Engagement Impact</S.ScoreBreakdownLabel>
+                  <S.ScoreBreakdownReason>Weighted 60% of overall score - drives algorithm promotion</S.ScoreBreakdownReason>
+                </S.ScoreBreakdownLeft>
+                <S.ScoreBreakdownRight>
+                  <S.ScoreBreakdownValue percentage={analysisResults.performanceScores.engagementScore}>
+                    {analysisResults.performanceScores.engagementScore}/100
+                  </S.ScoreBreakdownValue>
+                  <S.ScoreBreakdownBar>
+                    <S.ScoreBreakdownBarFill
+                      width={analysisResults.performanceScores.engagementScore}
+                      percentage={analysisResults.performanceScores.engagementScore}
+                    />
+                  </S.ScoreBreakdownBar>
+                </S.ScoreBreakdownRight>
+              </S.ScoreBreakdownItem>
+            </S.ScoreBreakdownList>
           </S.ScoreCard>
         </S.ScoreGrid>
 
@@ -1094,6 +1422,48 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
             </S.TagContainer>
           </S.TagsContainer>
         )}
+
+        {/* Key Insights Section - Dynamic based on performance */}
+        <S.InsightsGrid>
+          {/* Top strengths - show max 2 */}
+          {analysisResults.insights.strengths.slice(0, 2).map((strength, index) => (
+            <S.InsightCard key={`strength-${index}`} type="success">
+              <S.InsightCardIcon>
+                <i className="bx bx-check-circle"></i>
+              </S.InsightCardIcon>
+              <S.InsightCardContent>
+                <S.InsightCardTitle>Strength</S.InsightCardTitle>
+                <S.InsightCardText>{strength}</S.InsightCardText>
+              </S.InsightCardContent>
+            </S.InsightCard>
+          ))}
+
+          {/* Critical improvements - show max 2 */}
+          {analysisResults.insights.improvements.slice(0, 2).map((improvement, index) => (
+            <S.InsightCard key={`improvement-${index}`} type="warning">
+              <S.InsightCardIcon>
+                <i className="bx bx-error-circle"></i>
+              </S.InsightCardIcon>
+              <S.InsightCardContent>
+                <S.InsightCardTitle>Needs Attention</S.InsightCardTitle>
+                <S.InsightCardText>{improvement}</S.InsightCardText>
+              </S.InsightCardContent>
+            </S.InsightCard>
+          ))}
+
+          {/* Top recommendations - show max 2 */}
+          {analysisResults.insights.recommendations.slice(0, 2).map((rec, index) => (
+            <S.InsightCard key={`rec-${index}`} type="info">
+              <S.InsightCardIcon>
+                <i className="bx bx-bulb"></i>
+              </S.InsightCardIcon>
+              <S.InsightCardContent>
+                <S.InsightCardTitle>Quick Win</S.InsightCardTitle>
+                <S.InsightCardText>{rec}</S.InsightCardText>
+              </S.InsightCardContent>
+            </S.InsightCard>
+          ))}
+        </S.InsightsGrid>
       </S.TabContent>
     );
   };
@@ -1327,48 +1697,24 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
         )}
 
         <S.DetailSection>
-          <S.DetailTitle>
-            <i className="bx bx-info-circle"></i>
-            Channel Insights
-          </S.DetailTitle>
-          <S.InsightsList>
-            {analysisResults.channelMetrics.subscriberToViewRatio > 50 && (
-              <S.ChannelInsight type="success">
-                <i className="bx bx-check-circle"></i>
-                Excellent viewer loyalty - averaging {analysisResults.channelMetrics.subscriberToViewRatio.toFixed(0)}x views per subscriber
-              </S.ChannelInsight>
-            )}
-            {analysisResults.channelMetrics.subscriberToViewRatio < 10 && (
-              <S.ChannelInsight type="warning">
-                <i className="bx bx-error-circle"></i>
-                Low view-to-subscriber ratio ({analysisResults.channelMetrics.subscriberToViewRatio.toFixed(1)}x) suggests inactive subscribers
-              </S.ChannelInsight>
-            )}
-            {analysisResults.channelMetrics.engagementTrend === 'improving' && (
-              <S.ChannelInsight type="success">
-                <i className="bx bx-trending-up"></i>
-                Engagement is trending upward - recent videos performing better than older content
-              </S.ChannelInsight>
-            )}
-            {analysisResults.channelMetrics.engagementTrend === 'declining' && (
-              <S.ChannelInsight type="warning">
-                <i className="bx bx-trending-down"></i>
-                Engagement declining - consider refreshing content strategy or format
-              </S.ChannelInsight>
-            )}
-            {analysisResults.channelMetrics.totalVideos > 100 && (
-              <S.ChannelInsight type="info">
-                <i className="bx bx-library"></i>
-                Established channel with {analysisResults.channelMetrics.totalVideos} videos - focus on optimizing top performers
-              </S.ChannelInsight>
-            )}
-            {parseInt(analysisResults.channelMetrics.uploadFrequency) > 3 && (
-              <S.ChannelInsight type="success">
-                <i className="bx bx-calendar-check"></i>
-                Consistent upload schedule ({analysisResults.channelMetrics.uploadFrequency}) helps algorithm promotion
-              </S.ChannelInsight>
-            )}
-          </S.InsightsList>
+          <S.ChannelAnalyzerCTA onClick={() => {
+            const channelHandle = channelData.snippet.customUrl || `@${channelData.snippet.title.replace(/\s+/g, '')}`;
+            window.open(`/tools/channel-analyzer?channel=${encodeURIComponent(channelHandle)}`, '_blank');
+          }}>
+            <S.CTAIcon>
+              <i className="bx bx-line-chart"></i>
+            </S.CTAIcon>
+            <S.CTATitle>Want Deeper Channel Insights?</S.CTATitle>
+            <S.CTADescription>
+              Get a comprehensive analysis of {channelData.snippet.title} including growth metrics,
+              content strategy analysis, audience engagement patterns, and actionable recommendations
+              for channel optimization.
+            </S.CTADescription>
+            <S.CTAButton>
+              <i className="bx bx-line-chart"></i>
+              Analyze This Channel
+            </S.CTAButton>
+          </S.ChannelAnalyzerCTA>
         </S.DetailSection>
       </S.TabContent>
     );
@@ -1966,14 +2312,6 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
                   <i className="bx bx-user"></i>
                   <span>Channel</span>
                 </S.TabButton>
-                <S.TabButton
-                  isActive={activeTab === 'insights'}
-                  onClick={() => setActiveTab('insights')}
-                  disabled={!videoData || !channelData || !analysisResults}
-                >
-                  <i className="bx bx-bulb"></i>
-                  <span>Insights</span>
-                </S.TabButton>
                 {/* Only show Ask tab after video analysis */}
                 {(videoData && channelData && analysisResults) && (
                   <S.TabButton
@@ -1989,7 +2327,6 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
               {activeTab === 'overview' && renderOverviewTab()}
               {activeTab === 'details' && renderDetailsTab()}
               {activeTab === 'channel' && renderChannelTab()}
-              {activeTab === 'insights' && renderInsightsTab()}
               {activeTab === 'ask' && renderAskTab()}
 
             </>
