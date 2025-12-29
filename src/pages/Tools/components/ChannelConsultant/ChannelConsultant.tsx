@@ -20,12 +20,34 @@ interface ChannelData {
         url: string;
       };
     };
+    customUrl?: string;
+    publishedAt: string;
+    country?: string;
   };
   statistics: {
     subscriberCount: string;
+    viewCount: string;
+    videoCount: string;
   };
   topicDetails?: {
     topicCategories?: string[];
+  };
+  brandingSettings?: {
+    channel?: {
+      keywords?: string;
+    };
+  };
+}
+
+interface VideoData {
+  snippet: {
+    title: string;
+    publishedAt: string;
+  };
+  statistics: {
+    viewCount: string;
+    likeCount: string;
+    commentCount: string;
   };
 }
 
@@ -35,8 +57,11 @@ export const ChannelConsultant: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [channelData, setChannelData] = useState<ChannelData | null>(null);
+  const [recentVideos, setRecentVideos] = useState<VideoData[]>([]);
+  const [popularVideos, setPopularVideos] = useState<VideoData[]>([]);
   const [instructions, setInstructions] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
+  const [showLoadingModal, setShowLoadingModal] = useState(false);
 
   // Tool configuration
   const toolConfig = {
@@ -51,61 +76,164 @@ export const ChannelConsultant: React.FC = () => {
     ]
   };
 
-  const getChannelId = async (url: string): Promise<string> => {
-    // Check if it's a direct channel ID
-    if (/^UC[\w-]{22}$/.test(url)) {
-      return url;
+  const getChannelId = async (input: string): Promise<string> => {
+    // First check if it's a direct channel ID
+    if (/^UC[\w-]{22}$/.test(input)) {
+      return input;
     }
 
-    const patterns = {
-      channelId: /(?:https?:\/\/)?(?:www\.)?youtube\.com\/channel\/([^\/\s]+)/,
-      user: /(?:https?:\/\/)?(?:www\.)?youtube\.com\/user\/([^\/\s]+)/,
-      handle: /(?:https?:\/\/)?(?:www\.)?youtube\.com\/@([^\/\s]+)/,
-      customUrl: /(?:https?:\/\/)?(?:www\.)?youtube\.com\/(?:c\/|)([^\/\s]+)/
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_3;
+    if (!API_KEY) {
+      throw new Error('YouTube API key not configured');
+    }
+
+    // Check if it's just a handle (with or without @) - no youtube.com
+    if (/^@?[\w-]+$/.test(input) && !input.includes('youtube.com')) {
+      const handle = input.startsWith('@') ? input.substring(1) : input;
+
+      // First try forHandle
+      let response = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${handle}&key=${API_KEY}`
+      );
+      let data = await response.json();
+      if (data.items?.[0]) {
+        return data.items[0].id;
+      }
+
+      // If not found, try search
+      response = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(handle)}&type=channel&maxResults=1&key=${API_KEY}`
+      );
+      data = await response.json();
+      if (data.items?.[0]) {
+        return data.items[0].id.channelId;
+      }
+
+      throw new Error(`Channel not found for handle: ${input}`);
+    }
+
+    // URL patterns
+    const urlPatterns = {
+      channel: /youtube\.com\/channel\/(UC[\w-]{22})/,
+      user: /youtube\.com\/user\/(\w+)/,
+      handle: /youtube\.com\/@([\w-]+)/,
+      handleWithoutAt: /youtube\.com\/([^/?]+)$/,  // Matches youtube.com/moneyguyshow
+      customUrl: /youtube\.com\/(c\/)?(\w+)/
     };
 
-    for (const [type, pattern] of Object.entries(patterns)) {
-      const match = url.match(pattern);
+    for (const [type, pattern] of Object.entries(urlPatterns)) {
+      const match = input.match(pattern);
       if (match) {
-        if (type === 'channelId') return match[1];
+        if (type === 'channel') {
+          return match[1];
+        } else if (type === 'handleWithoutAt') {
+          // Try to fetch by handle (without @)
+          const handle = match[1];
 
-        const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_3;
-        if (!API_KEY) {
-          throw new Error('YouTube API key not configured');
-        }
+          // First try forHandle
+          let response = await fetch(
+            `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${handle}&key=${API_KEY}`
+          );
+          let data = await response.json();
+          if (data.items?.[0]) {
+            return data.items[0].id;
+          }
 
-        const response = await fetch(
-          `https://www.googleapis.com/youtube/v3/channels?part=id&${type === 'user' ? 'forUsername' : 'forHandle'}=${match[1]}&key=${API_KEY}`
-        );
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch channel data');
-        }
-
-        const data = await response.json();
-        if (data.items?.[0]) {
-          return data.items[0].id;
+          // If not found, try search
+          response = await fetch(
+            `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(handle)}&type=channel&maxResults=1&key=${API_KEY}`
+          );
+          data = await response.json();
+          if (data.items?.[0]) {
+            return data.items[0].id.channelId;
+          }
+        } else {
+          const response = await fetch(
+            `https://www.googleapis.com/youtube/v3/channels?part=id&${type === 'user' ? 'forUsername' : 'forHandle'}=${match[1]}&key=${API_KEY}`
+          );
+          const data = await response.json();
+          if (data.items?.[0]) {
+            return data.items[0].id;
+          }
         }
       }
     }
-    throw new Error('Invalid YouTube URL format');
+
+    throw new Error('Invalid channel URL or ID');
   };
 
   const getChannelData = async (channelId: string): Promise<ChannelData> => {
     const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_3;
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/channels?` +
-      `part=snippet,statistics,topicDetails&id=${channelId}&key=${API_KEY}`
+      `part=snippet,statistics,topicDetails,brandingSettings&id=${channelId}&key=${API_KEY}`
     );
     const data = await response.json();
     if (!data.items?.[0]) throw new Error('Channel not found');
     return data.items[0];
   };
 
-  const generateInstructions = (channelData: ChannelData): string => {
+  const getRecentVideos = async (channelId: string): Promise<VideoData[]> => {
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_3;
+    const response = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?` +
+      `part=snippet&channelId=${channelId}&order=date&type=video&maxResults=5&key=${API_KEY}`
+    );
+    const data = await response.json();
+    if (!data.items) return [];
+
+    // Fetch statistics for these videos
+    const videoIds = data.items.map((item: any) => item.id.videoId).join(',');
+    const statsResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?` +
+      `part=statistics,snippet&id=${videoIds}&key=${API_KEY}`
+    );
+    const statsData = await statsResponse.json();
+    return statsData.items || [];
+  };
+
+  const getPopularVideos = async (channelId: string): Promise<VideoData[]> => {
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_3;
+    const response = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?` +
+      `part=snippet&channelId=${channelId}&order=viewCount&type=video&maxResults=5&key=${API_KEY}`
+    );
+    const data = await response.json();
+    if (!data.items) return [];
+
+    const videoIds = data.items.map((item: any) => item.id.videoId).join(',');
+    const statsResponse = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?` +
+      `part=statistics,snippet&id=${videoIds}&key=${API_KEY}`
+    );
+    const statsData = await statsResponse.json();
+    return statsData.items || [];
+  };
+
+  const generateInstructions = (channelData: ChannelData, recentVids: VideoData[], popularVids: VideoData[]): string => {
     const channelName = channelData.snippet.title;
     const channelDescription = channelData.snippet.description;
     const channelCategory = channelData.topicDetails?.topicCategories?.[0]?.split('/').pop() || 'Unknown';
+    const subscriberCount = parseInt(channelData.statistics.subscriberCount);
+    const videoCount = parseInt(channelData.statistics.videoCount);
+    const totalViews = parseInt(channelData.statistics.viewCount);
+    const avgViewsPerVideo = Math.round(totalViews / videoCount);
+    const channelAge = Math.floor((Date.now() - new Date(channelData.snippet.publishedAt).getTime()) / (1000 * 60 * 60 * 24 * 365));
+    const keywords = channelData.brandingSettings?.channel?.keywords || '';
+
+    const recentTitles = recentVids.slice(0, 3).map(v => v.snippet.title).join(', ');
+    const popularTitles = popularVids.slice(0, 3).map(v => v.snippet.title).join(', ');
+
+    // Get top performing videos with view counts
+    const topVideosWithViews = popularVids.slice(0, 5).map(v => ({
+      title: v.snippet.title,
+      views: parseInt(v.statistics.viewCount || '0').toLocaleString()
+    }));
+    const topVideosText = topVideosWithViews.map(v => `"${v.title}" (${v.views} views)`).join(', ');
+
+    const avgEngagement = popularVids.length > 0
+      ? Math.round(popularVids.reduce((acc, v) => acc + (parseInt(v.statistics.likeCount || '0') + parseInt(v.statistics.commentCount || '0')) / parseInt(v.statistics.viewCount || '1'), 0) / popularVids.length * 100)
+      : 0;
 
     return `These are instructions for how you are to act throughout our conversation. Your first message should be:
 
@@ -124,9 +252,22 @@ Which mode would you like to use?"
 
 You will name this conversation "YouTube Bot for ${channelName}"
 
-Channel Name: ${channelName}
-Channel Category: ${channelCategory}
+Channel Analytics & Context:
+- Channel Name: ${channelName}
+- Channel Category: ${channelCategory}
+- Subscriber Count: ${subscriberCount.toLocaleString()}
+- Total Videos: ${videoCount.toLocaleString()}
+- Total Views: ${totalViews.toLocaleString()}
+- Average Views Per Video: ${avgViewsPerVideo.toLocaleString()}
+- Channel Age: ${channelAge} years
+- Average Engagement Rate: ${avgEngagement}%
+- Channel Keywords: ${keywords}
+
 Channel Description: ${channelDescription}
+
+Recent Video Titles (for understanding current content direction): ${recentTitles}
+
+Top Performing Videos (titles and view counts): ${topVideosText}
 
 The bot is designed to assist with ideation, SEO, thumbnails, tags, titles, descriptions, and hashtags for the user's YouTube channel. It operates in four modes: SEO mode, Ideation mode, Script mode, and Trendjack mode.
 
@@ -158,6 +299,7 @@ This mode should ask for the channel's niche and then, if available, search the 
 SEO Guidelines Keywords: Use the main keyword at the beginning of the title and description, and incorporate secondary keywords throughout. Capitalization: Capitalize the first letter of each word in titles. Value Proposition: Clearly state the value proposition in descriptions. Use Numbers and Emotion in Titles: Boost CTR with numbers and emotionally charged words. Avoid Clickbait: Ensure titles accurately represent video content to avoid negative impacts on performance. Bot Interaction The bot should be straightforward and provide only the requested information. Button labels are "Ideation Mode", "Script Mode", "Trendjack Mode", and "SEO Mode". Initial responses should start with "(Chosen mode) ACTIVATED". Make the title of the chat the mode name, then a 3-word synopsis of the chat topic.`;
   };
 
+
   const handleAnalyze = async () => {
     if (!channelUrl.trim()) {
       alert('Please enter a YouTube channel URL');
@@ -167,18 +309,32 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
     setIsLoading(true);
     setShowResults(false);
     setCopySuccess(false);
+    setShowLoadingModal(false);
 
     try {
       const channelId = await getChannelId(channelUrl);
-      const data = await getChannelData(channelId);
-      const generatedInstructions = generateInstructions(data);
+      const [data, recent, popular] = await Promise.all([
+        getChannelData(channelId),
+        getRecentVideos(channelId),
+        getPopularVideos(channelId)
+      ]);
+
+      const generatedInstructions = generateInstructions(data, recent, popular);
 
       setChannelData(data);
+      setRecentVideos(recent);
+      setPopularVideos(popular);
       setInstructions(generatedInstructions);
+
+      // Show loading modal for 2.5 seconds before displaying results
+      setShowLoadingModal(true);
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      setShowLoadingModal(false);
       setShowResults(true);
     } catch (error) {
       console.error('Error:', error);
       alert(`Error analyzing channel: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setShowLoadingModal(false);
     } finally {
       setIsLoading(false);
     }
@@ -427,7 +583,7 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
 
               <S.ActionsSection>
                 <S.InstructionsText>
-                  Copy the bot instructions below and paste them into any AI chatbot to get started:
+                  Bot instructions generated successfully! Copy and paste into your AI platform:
                 </S.InstructionsText>
 
                 <S.CopyButton onClick={handleCopy} success={copySuccess}>
@@ -481,6 +637,19 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
             </S.ResultCard>
           ) : null}
         </S.ResultsContainer>
+
+        {/* Loading Modal */}
+        {showLoadingModal && (
+          <S.LoadingModal>
+            <S.LoadingModalContent>
+              <S.LoadingSpinner>
+                <i className='bx bx-loader-alt bx-spin'></i>
+              </S.LoadingSpinner>
+              <S.LoadingModalText>Generating custom bot instructions...</S.LoadingModalText>
+              <S.LoadingModalSubtext>Analyzing channel data and creating personalized AI consultant</S.LoadingModalSubtext>
+            </S.LoadingModalContent>
+          </S.LoadingModal>
+        )}
       </S.MainContainer>
     </S.PageWrapper>
     </>

@@ -1121,3 +1121,136 @@ export const EnhancedHeader = styled.div<{ backgroundImage: string }>`
     padding: 2rem 1.5rem;
   }
 `;
+
+// Input Mode Toggle
+export const InputModeToggle = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  background: ${({ theme }) => theme.colors.dark3};
+  padding: 0.5rem;
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const ToggleButton = styled.button<{ active: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: ${({ active, theme }) =>
+    active
+      ? `linear-gradient(135deg, ${theme.colors.red3}, ${theme.colors.red4})`
+      : theme.colors.dark4};
+  border: 2px solid ${({ active, theme }) =>
+    active ? theme.colors.red4 : 'transparent'};
+  color: ${({ theme }) => theme.colors.text.primary};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  i {
+    font-size: 1.2rem;
+  }
+
+  &:hover {
+    background: ${({ active, theme }) =>
+      active
+        ? `linear-gradient(135deg, ${theme.colors.red4}, ${theme.colors.red5})`
+        : theme.colors.dark5};
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+  }
+`;
+
+// URL Input Components
+export const UrlInputContainer = styled.div`
+  margin-bottom: 2rem;
+`;
+
+export const UrlInputCard = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 2rem;
+`;
+
+export const UrlInputWrapper = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+`;
+
+export const UrlInput = styled.input`
+  flex: 1;
+  background: ${({ theme }) => theme.colors.dark4};
+  border: 2px solid ${({ theme }) => theme.colors.dark5};
+  color: ${({ theme }) => theme.colors.text.primary};
+  padding: 1rem 1.5rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-size: 0.95rem;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  transition: all 0.2s ease;
+
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.text.muted};
+  }
+
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.red4};
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  }
+`;
+
+export const LoadButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  border: none;
+  color: ${({ theme }) => theme.colors.text.primary};
+  padding: 1rem 2rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  i {
+    font-size: 1.2rem;
+  }
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: center;
+  }
+`;

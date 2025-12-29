@@ -27,6 +27,13 @@ interface UploadTimeData {
   avgViews: number;
 }
 
+interface Recommendation {
+  metric: string;
+  value: string;
+  rating: 'excellent' | 'good' | 'fair' | 'poor' | 'info';
+  action: string;
+}
+
 interface KeywordData {
   keyword: string;
   tagScore: number; // Main score like rapidtags.io
@@ -53,7 +60,7 @@ interface KeywordData {
     engagementRate: number;
     optimalUploadTime: string;
   };
-  recommendations: string[];
+  recommendations: Recommendation[];
   performanceDescription: string;
 }
 
@@ -166,7 +173,7 @@ export const KeywordAnalyzer: React.FC = () => {
   };
 
   const fetchYouTubeData = async (searchTerm: string): Promise<YouTubeVideo[]> => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_2;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_6;
 
     if (!API_KEY) {
       throw new Error('YouTube API key not configured.');
@@ -233,9 +240,11 @@ export const KeywordAnalyzer: React.FC = () => {
               return video;
             }).filter((video: YouTubeVideo) => {
               // Enhanced filtering criteria
+              const duration = parseDuration(video.duration);
               return video.views >= 1000 && // Minimum 1K views
                 video.relevanceScore! >= 20 && // Minimum relevance score
                 video.title.length > 10 && // Avoid spam titles
+                duration >= 60 && // Exclude Shorts (must be 60+ seconds)
                 !video.title.toLowerCase().includes('live stream') && // Exclude live streams
                 !video.title.toLowerCase().includes('compilation'); // Exclude compilations
             });
@@ -317,29 +326,54 @@ export const KeywordAnalyzer: React.FC = () => {
   const calculateTagScore = (videos: YouTubeVideo[], keyword: string): number => {
     if (videos.length === 0) return 0;
 
-    // Factors that rapidtags.io likely considers for tag score
     const totalViews = videos.reduce((sum, video) => sum + video.views, 0);
     const totalLikes = videos.reduce((sum, video) => sum + video.likes, 0);
     const averageViews = totalViews / videos.length;
     const averageLikes = totalLikes / videos.length;
     const averageRelevance = videos.reduce((sum, video) => sum + (video.relevanceScore || 0), 0) / videos.length;
 
-    // 1. Content Volume Factor (0-25 points)
-    const volumeFactor = Math.min(25, (videos.length / 6) * 25);
+    // 1. Relevance Quality Factor (0-40 points) - MOST IMPORTANT
+    // Only keywords with high relevance should score well
+    let relevanceFactor = 0;
+    if (averageRelevance >= 70) relevanceFactor = 40;
+    else if (averageRelevance >= 60) relevanceFactor = 32;
+    else if (averageRelevance >= 50) relevanceFactor = 24;
+    else if (averageRelevance >= 40) relevanceFactor = 16;
+    else if (averageRelevance >= 30) relevanceFactor = 8;
+    else relevanceFactor = 0;
 
-    // 2. Performance Factor (0-30 points)
-    const performanceLog = Math.log10(Math.max(1, averageViews));
-    const performanceFactor = Math.min(30, (performanceLog / 7) * 30);
+    // 2. Performance Factor (0-30 points) - Based on view count
+    // Realistic YouTube view thresholds
+    let performanceFactor = 0;
+    if (averageViews >= 1000000) performanceFactor = 30;      // 1M+ views = excellent
+    else if (averageViews >= 500000) performanceFactor = 26;   // 500K+ views = very good
+    else if (averageViews >= 100000) performanceFactor = 22;   // 100K+ views = good
+    else if (averageViews >= 50000) performanceFactor = 18;    // 50K+ views = decent
+    else if (averageViews >= 10000) performanceFactor = 12;    // 10K+ views = moderate
+    else if (averageViews >= 5000) performanceFactor = 6;      // 5K+ views = low
+    else performanceFactor = 2;                                 // <5K views = very low
 
-    // 3. Relevance Factor (0-25 points) - NEW
-    const relevanceFactor = Math.min(25, (averageRelevance / 100) * 25);
-
-    // 4. Engagement Quality Factor (0-20 points)
+    // 3. Engagement Quality Factor (0-20 points)
     const engagementRate = averageLikes / Math.max(1, averageViews);
-    const engagementFactor = Math.min(20, engagementRate * 2000);
+    let engagementFactor = 0;
+    if (engagementRate >= 0.05) engagementFactor = 20;        // 5%+ = exceptional
+    else if (engagementRate >= 0.03) engagementFactor = 16;   // 3%+ = very good
+    else if (engagementRate >= 0.02) engagementFactor = 12;   // 2%+ = good
+    else if (engagementRate >= 0.01) engagementFactor = 8;    // 1%+ = average
+    else if (engagementRate >= 0.005) engagementFactor = 4;   // 0.5%+ = below average
+    else engagementFactor = 1;                                 // <0.5% = poor
 
-    const tagScore = Math.round(volumeFactor + performanceFactor + relevanceFactor + engagementFactor);
-    return Math.min(100, Math.max(1, tagScore));
+    // 4. Competition/Opportunity Factor (0-10 points)
+    // Fewer high-quality results = better opportunity
+    const highRelevanceCount = videos.filter(v => (v.relevanceScore || 0) >= 60).length;
+    let opportunityFactor = 0;
+    if (highRelevanceCount <= 10) opportunityFactor = 10;     // Low competition
+    else if (highRelevanceCount <= 25) opportunityFactor = 6;  // Moderate competition
+    else if (highRelevanceCount <= 40) opportunityFactor = 3;  // High competition
+    else opportunityFactor = 0;                                // Very high competition
+
+    const tagScore = Math.round(relevanceFactor + performanceFactor + engagementFactor + opportunityFactor);
+    return Math.min(100, Math.max(0, tagScore));
   };
 
   const calculateSearchVolume = (videos: YouTubeVideo[]): { label: 'Low' | 'Moderate' | 'High' | 'Very High'; score: number } => {
@@ -506,15 +540,50 @@ export const KeywordAnalyzer: React.FC = () => {
     ).length;
     const keywordInTitlePercentage = Math.round((keywordInTitle / videos.length) * 100);
 
-    // Enhanced recommendations
-    const recommendations = [
-      `Tag Score: ${tagScore}/100 - ${generatePerformanceDescription(tagScore)}`,
-      `Search Volume: ${searchVolume.label} (${searchVolume.score}/100) - ${searchVolume.score > 60 ? 'High demand market' : 'Niche opportunity'}`,
-      `Competition: ${competitiveness.label} (${competitiveness.score}/100) - ${competitiveness.score < 40 ? 'Good opportunity to rank' : 'Requires strong content strategy'}`,
-      `Engagement Rate: ${engagementRate}% - ${engagementRate > 3 ? 'Above average engagement' : 'Focus on improving engagement'}`,
-      `Optimal Upload Time: ${optimalTime} based on top performers`,
-      `Video Length: Target ${Math.floor(averageLength / 60)}:${(averageLength % 60).toString().padStart(2, '0')} for best results`,
-      `Title Optimization: ${keywordInTitlePercentage}% include exact keyword - ${keywordInTitlePercentage > 70 ? 'Essential for ranking' : 'Consider keyword variations'}`
+    // Enhanced recommendations with color-coded ratings
+    const recommendations: Recommendation[] = [
+      {
+        metric: 'Tag Quality Score',
+        value: `${tagScore}/100`,
+        rating: (tagScore >= 70 ? 'excellent' : tagScore >= 50 ? 'good' : tagScore >= 30 ? 'fair' : 'poor') as 'excellent' | 'good' | 'fair' | 'poor',
+        action: generatePerformanceDescription(tagScore)
+      },
+      {
+        metric: 'Search Volume',
+        value: `${searchVolume.label} (${searchVolume.score}/100)`,
+        rating: (searchVolume.score >= 70 ? 'excellent' : searchVolume.score >= 50 ? 'good' : searchVolume.score >= 30 ? 'fair' : 'poor') as 'excellent' | 'good' | 'fair' | 'poor',
+        action: searchVolume.score > 60 ? 'High demand market - capitalize on search traffic' : 'Niche opportunity - less competition'
+      },
+      {
+        metric: 'Competition Level',
+        value: `${competitiveness.label} (${competitiveness.score}/100)`,
+        rating: (competitiveness.score < 40 ? 'excellent' : competitiveness.score < 60 ? 'good' : competitiveness.score < 75 ? 'fair' : 'poor') as 'excellent' | 'good' | 'fair' | 'poor',
+        action: competitiveness.score < 40 ? 'Good opportunity to rank - lower competition' : 'Requires strong content strategy and optimization'
+      },
+      {
+        metric: 'Engagement Rate',
+        value: `${engagementRate}%`,
+        rating: (engagementRate > 3 ? 'excellent' : engagementRate > 2 ? 'good' : engagementRate > 1 ? 'fair' : 'poor') as 'excellent' | 'good' | 'fair' | 'poor',
+        action: engagementRate > 3 ? 'Above average engagement - create compelling content' : 'Focus on improving thumbnails and titles for better engagement'
+      },
+      {
+        metric: 'Title Optimization',
+        value: `${keywordInTitlePercentage}% use exact keyword`,
+        rating: (keywordInTitlePercentage > 70 ? 'excellent' : keywordInTitlePercentage > 50 ? 'good' : keywordInTitlePercentage > 30 ? 'fair' : 'poor') as 'excellent' | 'good' | 'fair' | 'poor',
+        action: keywordInTitlePercentage > 70 ? 'Essential to include keyword in title for ranking' : 'Consider keyword variations and long-tail phrases in title'
+      },
+      {
+        metric: 'Optimal Upload Time',
+        value: optimalTime,
+        rating: 'info' as const,
+        action: 'Schedule uploads during this time for maximum visibility'
+      },
+      {
+        metric: 'Target Video Length',
+        value: `${Math.floor(averageLength / 60)}:${(averageLength % 60).toString().padStart(2, '0')}`,
+        rating: 'info' as const,
+        action: 'Match this length for better performance in search results'
+      }
     ];
 
     return {
@@ -526,7 +595,7 @@ export const KeywordAnalyzer: React.FC = () => {
       competitivenessScore: competitiveness.score,
       trend,
       relatedKeywords,
-      topVideos: videos.slice(0, 12), // Show top 12 most relevant videos
+      topVideos: videos.slice(0, 10), // Show top 10 most relevant videos
       uploadTimeDistribution,
       insights: {
         averageViews,
@@ -1111,14 +1180,8 @@ export const KeywordAnalyzer: React.FC = () => {
               </S.MetricCard>
 
               <S.MetricCard>
-                <S.MetricIcon
-                  className={getTrendIcon(results.trend)}
-                  style={{ color: getTrendColor(results.trend) }}
-                ></S.MetricIcon>
-                <S.MetricLabel>Trend</S.MetricLabel>
-                <S.DetailedMetricValue style={{ color: getTrendColor(results.trend) }}>
-                  {results.trend}
-                </S.DetailedMetricValue>
+                <S.MetricLabel>Videos Analyzed</S.MetricLabel>
+                <S.DetailedMetricValue>{results.insights.totalResults}</S.DetailedMetricValue>
               </S.MetricCard>
             </S.DetailedMetricsGrid>
 
@@ -1227,12 +1290,19 @@ export const KeywordAnalyzer: React.FC = () => {
 
               <S.RecommendationsList>
                 {results.recommendations.map((recommendation, index) => (
-                  <S.Recommendation key={index} type="info">
-                    <i className="bx bx-check-circle"></i>
-                    <div>
-                      {recommendation}
-                    </div>
-                  </S.Recommendation>
+                  <S.RecommendationCard key={index} rating={recommendation.rating}>
+                    <S.RecommendationHeader>
+                      <S.RecommendationMetric>{recommendation.metric}</S.RecommendationMetric>
+                      <S.RecommendationRating rating={recommendation.rating}>
+                        {recommendation.rating === 'excellent' ? '🟢 Excellent' :
+                         recommendation.rating === 'good' ? '🟡 Good' :
+                         recommendation.rating === 'fair' ? '🟠 Fair' :
+                         recommendation.rating === 'poor' ? '🔴 Poor' : 'ℹ️ Info'}
+                      </S.RecommendationRating>
+                    </S.RecommendationHeader>
+                    <S.RecommendationValue>{recommendation.value}</S.RecommendationValue>
+                    <S.RecommendationAction>{recommendation.action}</S.RecommendationAction>
+                  </S.RecommendationCard>
                 ))}
               </S.RecommendationsList>
             </S.RecommendationsSection>

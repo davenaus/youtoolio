@@ -191,34 +191,71 @@ export const TagGenerator: React.FC = () => {
     const lowercaseTitle = video.snippet.title.toLowerCase();
     const lowercaseDescription = video.snippet.description.toLowerCase();
     const lowercaseSearchTerm = searchTerm.toLowerCase();
+    const searchWords = lowercaseSearchTerm.split(' ').filter(w => w.length > 2);
 
     let score = 0;
     let relevanceScore = 0;
 
-    // Title relevance (highest weight)
-    if (lowercaseTitle.includes(lowercaseTag)) {
-      score += 10;
-      relevanceScore += 5;
+    // Filter out very generic/irrelevant tags
+    const genericTags = ['video', 'youtube', 'new', 'best', 'top', 'like', 'subscribe', 'comment', 'share'];
+    if (genericTags.includes(lowercaseTag)) {
+      return { tag, score: 0, frequency: 1, category: 'general', relevanceScore: 0 };
     }
 
-    // Search term relevance
-    if (lowercaseTag.includes(lowercaseSearchTerm) || lowercaseSearchTerm.includes(lowercaseTag)) {
+    // Exact search term match (HIGHEST priority)
+    if (lowercaseTag === lowercaseSearchTerm) {
+      score += 20;
+      relevanceScore += 10;
+    }
+
+    // Search term contained in tag
+    if (lowercaseTag.includes(lowercaseSearchTerm)) {
+      score += 15;
+      relevanceScore += 8;
+    }
+
+    // Tag contains search term
+    if (lowercaseSearchTerm.includes(lowercaseTag) && lowercaseTag.length > 3) {
+      score += 12;
+      relevanceScore += 6;
+    }
+
+    // Partial word matching from search term
+    let wordMatches = 0;
+    searchWords.forEach(word => {
+      if (lowercaseTag.includes(word)) {
+        wordMatches++;
+        score += 3;
+        relevanceScore += 1;
+      }
+    });
+
+    // Bonus for multiple word matches
+    if (wordMatches >= 2) {
+      score += 5;
+      relevanceScore += 3;
+    }
+
+    // Title relevance
+    if (lowercaseTitle.includes(lowercaseTag)) {
       score += 8;
       relevanceScore += 4;
     }
 
-    // Description relevance
+    // Description relevance (lower weight)
     if (lowercaseDescription.includes(lowercaseTag)) {
-      score += 5;
-      relevanceScore += 2;
+      score += 3;
+      relevanceScore += 1;
     }
 
-    // Tag length optimization
+    // Tag length optimization (prefer 2-4 word phrases)
     const wordCount = tag.split(' ').length;
     if (wordCount >= 2 && wordCount <= 4) {
-      score += 3;
-    } else if (wordCount === 1) {
-      score += 1;
+      score += 4;
+    } else if (wordCount === 1 && tag.length >= 4) {
+      score += 2;
+    } else if (wordCount > 4) {
+      score -= 1; // Penalize overly long tags
     }
 
     // Performance metrics
@@ -231,14 +268,20 @@ export const TagGenerator: React.FC = () => {
     }
 
     const engagementRate = (likeCount + commentCount) / Math.max(viewCount, 1);
-    if (engagementRate > 0.02) {
+    if (engagementRate > 0.03) {
+      score += 3;
+    } else if (engagementRate > 0.02) {
       score += 2;
     }
 
-    // Recency bonus
+    // Recency bonus (higher bonus for very recent videos)
     const publishDate = new Date(video.snippet.publishedAt);
     const daysSincePublish = (Date.now() - publishDate.getTime()) / (1000 * 60 * 60 * 24);
-    if (daysSincePublish < 30) {
+    if (daysSincePublish < 7) {
+      score += 3;
+    } else if (daysSincePublish < 30) {
+      score += 2;
+    } else if (daysSincePublish < 90) {
       score += 1;
     }
 
@@ -751,39 +794,6 @@ export const TagGenerator: React.FC = () => {
               </S.SelectedTagsSection>
 
               <S.TagCategoriesGrid>
-                {generatedTags.suggested.length > 0 && (
-                  <S.TagCategory>
-                    <S.CategoryHeader>
-                      <S.CategoryTitle>
-                        <i className="bx bx-bot"></i>
-                        AI-Generated Tags
-                      </S.CategoryTitle>
-                      <S.CategoryActions>
-                        <S.SelectAllButton onClick={() => selectAllFromCategory(generatedTags.suggested)}>
-                          Select All
-                        </S.SelectAllButton>
-                        <S.CategoryBadge>{generatedTags.suggested.length}</S.CategoryBadge>
-                      </S.CategoryActions>
-                    </S.CategoryHeader>
-                    <S.CategoryDescription>
-                      AI-generated tags based on current trends and optimization
-                    </S.CategoryDescription>
-                    <S.TagGrid>
-                      {generatedTags.suggested.map((tag, index) => (
-                        <S.TagChip
-                          key={index}
-                          selected={selectedTags.includes(tag)}
-                          category="suggested"
-                          onClick={() => toggleTag(tag)}
-                        >
-                          <i className="bx bx-brain"></i>
-                          {tag}
-                        </S.TagChip>
-                      ))}
-                    </S.TagGrid>
-                  </S.TagCategory>
-                )}
-
                 <S.TagCategory>
                   <S.CategoryHeader>
                     <S.CategoryTitle>
@@ -907,6 +917,39 @@ export const TagGenerator: React.FC = () => {
                     ))}
                   </S.TagGrid>
                 </S.TagCategory>
+
+                {generatedTags.suggested.length > 0 && (
+                  <S.TagCategory>
+                    <S.CategoryHeader>
+                      <S.CategoryTitle>
+                        <i className="bx bx-bot"></i>
+                        AI-Generated Tags
+                      </S.CategoryTitle>
+                      <S.CategoryActions>
+                        <S.SelectAllButton onClick={() => selectAllFromCategory(generatedTags.suggested)}>
+                          Select All
+                        </S.SelectAllButton>
+                        <S.CategoryBadge>{generatedTags.suggested.length}</S.CategoryBadge>
+                      </S.CategoryActions>
+                    </S.CategoryHeader>
+                    <S.CategoryDescription>
+                      AI-generated tags based on current trends and optimization
+                    </S.CategoryDescription>
+                    <S.TagGrid>
+                      {generatedTags.suggested.map((tag, index) => (
+                        <S.TagChip
+                          key={index}
+                          selected={selectedTags.includes(tag)}
+                          category="suggested"
+                          onClick={() => toggleTag(tag)}
+                        >
+                          <i className="bx bx-brain"></i>
+                          {tag}
+                        </S.TagChip>
+                      ))}
+                    </S.TagGrid>
+                  </S.TagCategory>
+                )}
               </S.TagCategoriesGrid>
 
               <S.ActionBar>

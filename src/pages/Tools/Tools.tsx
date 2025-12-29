@@ -31,7 +31,9 @@ const tools: Tool[] = [
   { id: 'channel-consultant', name: 'Channel Consultant', description: 'Create a custom AI bot trained on your channel to help with content creation and strategy.', icon: 'bx bx-user-circle', category: 'SEO', tags: ['AI', 'Assistant', 'Strategy', 'Automation'], url: '/tools/channel-consultant', image: '/images/tools/channel-consultant.jpg' },
   { id: 'channel-comparer', name: 'Channel Comparer', description: 'Compare any two YouTube channels side by side with detailed metrics and analysis.', icon: 'bx bx-analyse', category: 'SEO', tags: ['Analytics', 'Insights', 'Comparison', 'Competition'], url: '/tools/channel-comparer', image: '/images/tools/channel-comparer.jpg' },
   { id: 'moderation-checker', name: 'Content Moderation Checker', description: 'Analyze your content for potential policy violations, toxicity, and audience safety before publishing.', icon: 'bx bx-shield', category: 'Utilities', tags: ['Safety', 'Moderation', 'Policy', 'Compliance'], url: '/tools/moderation-checker', isNew: true, image: '/images/tools/moderation-checker.jpg' },
+  { id: 'youtool-playbooks', name: 'YouTool Playbooks', description: 'Pre-built AI playbooks that generate expert-level prompts for viral content, growth strategy, and audience analysis.', icon: 'bx bx-book-content', category: 'Utilities', tags: ['AI', 'Prompts', 'Strategy', 'Content', 'Growth'], url: '/tools/youtool-playbooks', isNew: true, image: '/images/tools/youtool-playbooks.jpg' },
   { id: 'color-palette', name: 'Color Palette Generator', description: 'Extract color palettes from images and generate beautiful gradients.', icon: 'bx bx-palette', category: 'Utilities', tags: ['Colors', 'Design', 'Palette', 'Creative'], url: '/tools/color-palette', image: '/images/tools/color-palette.jpg' },
+  { id: 'color-picker-from-image', name: 'Color Picker From Image', description: 'Extract and identify exact colors from any image with precise hex, RGB, and HSL values.', icon: 'bx bx-droplet', category: 'Utilities', tags: ['Colors', 'Design', 'Picker', 'Image', 'Creative'], url: '/tools/color-picker-from-image', image: '/images/tools/color-picker-from-image.jpg' },
   { id: 'comment-picker', name: 'Comment Picker', description: 'Randomly select a winner from your YouTube video comments for giveaways and contests.', icon: 'bx bx-gift', category: 'Utilities', tags: ['Comments', 'Giveaway', 'Random', 'Contest'], url: '/tools/comment-picker', image: '/images/tools/comment-picker.jpg' },
   { id: 'subscribe-link-generator', name: 'Subscribe Link Generator', description: 'Create personalized subscription links for your YouTube channel.', icon: 'bx bx-link', category: 'Utilities', tags: ['Subscribe', 'Channel', 'Growth', 'Links'], url: '/tools/subscribe-link-generator', image: '/images/tools/subscribe-link-generator.jpg' },
   { id: 'youtube-calculator', name: 'YouTube Calculator', description: 'Estimate your potential YouTube earnings based on views, video length, and content category.', icon: 'bx bx-dollar-circle', category: 'Utilities', tags: ['Monetization', 'Calculator', 'Revenue', 'Earnings'], url: '/tools/youtube-calculator', image: '/images/tools/youtube-calculator.jpg' },
@@ -39,18 +41,8 @@ const tools: Tool[] = [
 
 const categories = Array.from(new Set(tools.map(tool => tool.category)));
 
-const isMobileDevice = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  const userAgent = navigator.userAgent || navigator.vendor;
-  const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
-  const isMobileWidth = window.innerWidth <= 768;
-  return mobileRegex.test(userAgent) || isMobileWidth;
-};
-
 export const Tools: React.FC = () => {
   const navigate = useNavigate();
-  const [showMobileModal, setShowMobileModal] = useState(false);
-  const [userForcedDesktop, setUserForcedDesktop] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -67,16 +59,6 @@ export const Tools: React.FC = () => {
   }, [searchQuery]);
 
   useEffect(() => {
-    const checkDevice = () => {
-      if (isMobileDevice() && !userForcedDesktop) setShowMobileModal(true);
-      else setShowMobileModal(false);
-    };
-    checkDevice();
-    window.addEventListener('resize', checkDevice);
-    return () => window.removeEventListener('resize', checkDevice);
-  }, [userForcedDesktop]);
-
-  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowDropdown(false);
@@ -85,11 +67,6 @@ export const Tools: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const handleForceDesktop = () => {
-    setUserForcedDesktop(true);
-    setShowMobileModal(false);
-  };
 
   const handleGoBack = () => navigate('/');
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,7 +82,7 @@ export const Tools: React.FC = () => {
 
   return (
     <>
-      <S.Container className={showMobileModal ? 'blurred' : ''}>
+      <S.Container>
         <S.Header>
           <S.BackButton onClick={handleGoBack}>
             <i className="bx bx-arrow-back"></i> Back to Home
@@ -227,29 +204,6 @@ export const Tools: React.FC = () => {
           </S.CategorySection>
         ))}
       </S.Container>
-
-      {showMobileModal && (
-        <S.MobileModal>
-          <S.ModalBackdrop />
-          <S.ModalContent>
-            <S.ModalIcon><i className="bx bx-desktop"></i></S.ModalIcon>
-            <S.ModalTitle>Desktop Required</S.ModalTitle>
-            <S.ModalText>
-              These YouTube tools are designed for desktop use. Please access this page from a computer
-              for the best experience.
-            </S.ModalText>
-            <S.ModalButtons>
-              <S.ModalButton onClick={handleGoBack} variant="primary">
-                <i className="bx bx-arrow-back"></i> Go Back Home
-              </S.ModalButton>
-              <S.ModalButton onClick={handleForceDesktop} variant="secondary">
-                <i className="bx bx-error-alt"></i> Continue Anyway
-              </S.ModalButton>
-            </S.ModalButtons>
-            <S.ModalNote>Tools may not function properly on mobile devices.</S.ModalNote>
-          </S.ModalContent>
-        </S.MobileModal>
-      )}
     </>
   );
 };

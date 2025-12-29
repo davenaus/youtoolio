@@ -123,75 +123,98 @@ export const SearchButton = styled.button`
 
 export const ControlsContainer = styled.div`
   display: flex;
-  gap: 1rem;
-  justify-content: center;
+  gap: 0.5rem;
   align-items: center;
-  flex-wrap: wrap;
-    margin-bottom: 1rem;
-  
+  flex-shrink: 0;
+  margin-top: 1rem;
+
   @media (max-width: 768px) {
-    flex-direction: column;
-    gap: 0.75rem;
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 1rem;
   }
 `;
 
 export const ToggleContainer = styled.div`
   display: flex;
-  background: ${({ theme }) => theme.colors.dark3};
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   overflow: hidden;
+  backdrop-filter: blur(10px);
+
+  @media (max-width: 768px) {
+    flex: 1;
+  }
 `;
 
 export const ToggleButton = styled.button`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
+  padding: 1rem 1.25rem;
   background: transparent;
   border: none;
-  color: ${({ theme }) => theme.colors.text.secondary};
+  color: rgba(255, 255, 255, 0.7);
   font-family: ${({ theme }) => theme.fonts.primary};
   font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  
+  transition: all 0.3s ease;
+  white-space: nowrap;
+
   &:hover {
-    background: ${({ theme }) => theme.colors.dark4};
-    color: ${({ theme }) => theme.colors.text.primary};
-  }
-  
-  &.active {
-    background: ${({ theme }) => theme.colors.red3};
+    background: rgba(255, 255, 255, 0.1);
     color: ${({ theme }) => theme.colors.white};
   }
-  
+
+  &.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: ${({ theme }) => theme.colors.white};
+  }
+
   i {
     font-size: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    flex: 1;
+    padding: 0.875rem 1rem;
+    font-size: 0.85rem;
   }
 `;
 
 export const FilterToggle = styled.button`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  background: ${({ theme }) => theme.colors.dark3};
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
-  color: ${({ theme }) => theme.colors.text.secondary};
+  padding: 1rem 1.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   font-family: ${({ theme }) => theme.fonts.primary};
   font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  white-space: nowrap;
+
   &:hover {
-    background: ${({ theme }) => theme.colors.dark4};
-    color: ${({ theme }) => theme.colors.text.primary};
+    background: rgba(255, 255, 255, 0.15);
+    color: ${({ theme }) => theme.colors.white};
   }
-  
+
   i {
     font-size: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.875rem 1rem;
+    font-size: 0.85rem;
   }
 `;
 
@@ -369,31 +392,57 @@ export const ExportButton = styled.button`
 `;
 
 export const ResultsList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
 `;
 
 export const ResultCard = styled.div`
   background: ${({ theme }) => theme.colors.dark3};
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border: 2px solid ${({ theme }) => theme.colors.dark5};
   border-radius: ${({ theme }) => theme.borderRadius.xl};
   padding: 1.5rem;
   display: flex;
-  gap: 1.5rem;
+  flex-direction: column;
+  gap: 1rem;
   transition: all 0.3s ease;
   position: relative;
+  overflow: hidden;
+
+  /* Add subtle gradient background */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg,
+      ${({ theme }) => theme.colors.red3},
+      ${({ theme }) => theme.colors.red4},
+      ${({ theme }) => theme.colors.red5}
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
 
   @media (max-width: 768px) {
-    flex-direction: column;
     padding: 1rem;
-    gap: 1rem;
   }
 
   &:hover {
     transform: translateY(-4px);
     border-color: ${({ theme }) => theme.colors.red3};
-    box-shadow: ${({ theme }) => theme.shadows.lg};
+    box-shadow: 0 12px 40px rgba(229, 72, 72, 0.3);
+
+    &::before {
+      opacity: 1;
+    }
   }
 `;
 
@@ -406,52 +455,66 @@ export const CardHeader = styled.div`
 
 export const RatioBadge = styled.div<{ ratio: number }>`
   background: ${({ ratio }) => {
-    if (ratio >= 50) return 'linear-gradient(135deg, #d32f2f, #b71c1c)';      // Deep Red
-    if (ratio >= 20) return 'linear-gradient(135deg, #f57c00, #e65100)';      // Deep Orange  
-    if (ratio >= 10) return 'linear-gradient(135deg, #ff9800, #f57700)';      // Orange
-    if (ratio >= 5) return 'linear-gradient(135deg, #ffb300, #ff8f00)';       // Amber
-    return 'linear-gradient(135deg, #546e7a, #37474f)';                       // Blue Gray
+    if (ratio >= 50) return 'linear-gradient(135deg, #d32f2f, #b71c1c)';      // Deep Red - Epic!
+    if (ratio >= 20) return 'linear-gradient(135deg, #f57c00, #e65100)';      // Deep Orange - Amazing!
+    if (ratio >= 10) return 'linear-gradient(135deg, #ff9800, #f57700)';      // Orange - Great!
+    if (ratio >= 5) return 'linear-gradient(135deg, #ffb300, #ff8f00)';       // Amber - Good
+    return 'linear-gradient(135deg, #546e7a, #37474f)';                       // Blue Gray - Decent
   }};
   color: ${({ theme }) => theme.colors.white};
-  width: 50px;
-  height: 50px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  
+  font-size: 1rem;
+  font-weight: 800;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+  position: relative;
+
+  /* Add pulsing animation for high ratios */
+  ${({ ratio }) => ratio >= 20 && `
+    animation: pulse 2s ease-in-out infinite;
+
+    @keyframes pulse {
+      0%, 100% {
+        box-shadow: 0 6px 20px rgba(229, 72, 72, 0.4);
+      }
+      50% {
+        box-shadow: 0 6px 30px rgba(229, 72, 72, 0.8);
+      }
+    }
+  `}
+
   @media (max-width: 768px) {
-    width: 45px;
-    height: 45px;
-    font-size: 0.7rem;
+    width: 60px;
+    height: 60px;
+    font-size: 0.9rem;
   }
 `;
 
 export const ThumbnailContainer = styled.div`
-  flex: 0 0 240px;
+  width: 100%;
   position: relative;
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   overflow: hidden;
-
-  @media (max-width: 768px) {
-    flex: 0 0 100%;
-  }
+  margin-bottom: 0.5rem;
 `;
 
 export const Thumbnail = styled.img`
   width: 100%;
-  height: 135px;
+  height: auto;
+  aspect-ratio: 16/9;
   object-fit: cover;
   border-radius: ${({ theme }) => theme.borderRadius.lg};
-  
-  @media (max-width: 768px) {
-    height: auto;
-    aspect-ratio: 16/9;
+  transition: transform 0.3s ease;
+
+  ${ResultCard}:hover & {
+    transform: scale(1.05);
   }
 `;
 
@@ -468,14 +531,13 @@ export const VideoDuration = styled.div`
 `;
 
 export const VideoInfo = styled.div`
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding-right: 60px;
-  
+  flex: 1;
+
   @media (max-width: 768px) {
-    padding-right: 0;
+    gap: 0.75rem;
   }
 `;
 
@@ -485,10 +547,11 @@ export const VideoTitle = styled.h3`
   font-weight: 600;
   margin: 0;
   line-height: 1.3;
-  
+
   @media (max-width: 768px) {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     padding-right: 0;
+    line-height: 1.25;
   }
 `;
 
@@ -508,21 +571,29 @@ export const ChannelName = styled.span`
   color: ${({ theme }) => theme.colors.text.secondary};
   font-size: 0.95rem;
   font-weight: 500;
+
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+  }
 `;
 
 export const VideoDate = styled.span`
   color: ${({ theme }) => theme.colors.text.muted};
   font-size: 0.85rem;
+
+  @media (max-width: 768px) {
+    font-size: 0.75rem;
+  }
 `;
 
 export const StatsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
-  
+
   @media (max-width: 768px) {
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
 `;
 
@@ -535,12 +606,21 @@ export const StatItem = styled.div`
   background: ${({ theme }) => theme.colors.dark4};
   border-radius: ${({ theme }) => theme.borderRadius.md};
   border: 1px solid ${({ theme }) => theme.colors.dark5};
+
+  @media (max-width: 768px) {
+    padding: 0.5rem;
+  }
 `;
 
 export const StatIcon = styled.i`
   font-size: 1.25rem;
   color: ${({ theme }) => theme.colors.red3};
   margin-bottom: 0.25rem;
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    margin-bottom: 0.15rem;
+  }
 `;
 
 export const StatValue = styled.span`
@@ -548,6 +628,10 @@ export const StatValue = styled.span`
   font-weight: 600;
   font-size: 0.9rem;
   margin-bottom: 0.1rem;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+  }
 `;
 
 export const StatLabel = styled.span`
@@ -555,6 +639,11 @@ export const StatLabel = styled.span`
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+
+  @media (max-width: 768px) {
+    font-size: 0.65rem;
+    letter-spacing: 0.3px;
+  }
 `;
 
 export const MetricsRow = styled.div`
@@ -588,10 +677,10 @@ export const ActionButtons = styled.div`
   display: flex;
   gap: 1rem;
   margin-top: auto;
-  
+
   @media (max-width: 768px) {
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
 `;
 
@@ -608,15 +697,24 @@ export const VideoLink = styled.a`
   font-family: ${({ theme }) => theme.fonts.primary};
   font-weight: 500;
   transition: all 0.2s ease;
-  
+
   &:hover {
     background: ${({ theme }) => theme.colors.red2};
     transform: translateY(-2px);
     box-shadow: ${({ theme }) => theme.shadows.lg};
   }
-  
+
   i {
     font-size: 1.1rem;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+
+    i {
+      font-size: 1rem;
+    }
   }
 `;
 
@@ -634,16 +732,25 @@ export const AnalyzeButton = styled.button`
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover {
     background: ${({ theme }) => theme.colors.red3};
     border-color: ${({ theme }) => theme.colors.red3};
     color: ${({ theme }) => theme.colors.white};
     transform: translateY(-2px);
   }
-  
+
   i {
     font-size: 1.1rem;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+
+    i {
+      font-size: 1rem;
+    }
   }
 `;
 
@@ -858,27 +965,37 @@ export const FeatureItem = styled.div`
 export const HeaderSearchContainer = styled.div`
   margin-top: 2rem;
   width: 100%;
-  max-width: 600px;
-  
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+
   @media (max-width: 768px) {
     margin-top: 1.5rem;
-    max-width: 100%;
+    flex-direction: column;
+    gap: 1rem;
   }
 `;
 
 export const HeaderSearchBar = styled.div`
   display: flex;
+  flex: 1;
+  max-width: 600px;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   overflow: hidden;
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
-  
+
   &:focus-within {
     border-color: rgba(255, 255, 255, 0.4);
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.15);
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    max-width: 100%;
   }
 `;
 

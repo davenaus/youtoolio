@@ -242,6 +242,48 @@ export const Changelog: React.FC = () => {
 
   const changelogEntries = [
     {
+      version: "v1.1.0",
+      title: "New Tools & Major UX Improvements",
+      date: "December 27, 2025",
+      description: "Major update featuring new AI-powered tools, enhanced UI consistency across all tools, and improved user experience with modern design patterns.",
+      changes: {
+        new: [
+          "YouTool Playbooks - Pre-built AI prompt generators for viral content, growth strategy, and audience analysis with CRT terminal effect",
+          "Color Picker From Image - Extract exact hex, RGB, and HSL values from any image with pixel-perfect precision",
+          "Channel ID Finder - Find any YouTube channel's ID from URLs, names, or handles",
+          "Content Moderation Checker - Analyze content for policy violations and safety before publishing"
+        ],
+        improved: [
+          "Channel Consultant - Now features loading modal with 2.5 second generation animation, enhanced with top 5 video view counts in generated prompts for better AI context",
+          "Channel Consultant - Streamlined UX with hidden prompt display, showing only copy button for cleaner interface",
+          "Channel Consultant - Enhanced data collection including recent videos, popular videos, and engagement metrics for comprehensive AI training",
+          "YouTube Calculator - Added dual input mode: paste video link for instant calculation OR manual input for custom scenarios",
+          "YouTube Calculator - Auto-detection of video category from YouTube API with automatic earnings calculation",
+          "YouTube Calculator - Simplified from 4 steps to 2 steps with 50% fewer inputs for faster results",
+          "YouTube Calculator - Widened revenue estimate range to ±50% for more realistic projections",
+          "YouTube Calculator - Removed yearly projection display, focusing on per-video earnings",
+          "Enhanced header design with background images and glowing icons across all major tools",
+          "Full-width upload zones in Color Picker tool for better visual consistency",
+          "Faster typing animation in YouTool Playbooks (8ms interval for snappier experience)",
+          "Improved mobile responsiveness with centered layouts on small screens",
+          "Updated tool icons and descriptions for better discoverability",
+          "Consistent styling patterns across Video Analyzer, Channel Analyzer, and new tools",
+          "Professional gradient overlays and red theme accents throughout the platform"
+        ],
+        fixed: [
+          "Channel Consultant - Fixed typing animation by replacing with smooth loading modal",
+          "Channel Consultant - API key now properly uses environment variable instead of hardcoded value",
+          "Channel Consultant - Now supports all channel URL formats (handles, IDs, custom URLs)",
+          "YouTube Calculator - Fixed API connection issue for video link feature",
+          "YouTube Calculator - Verified all YouTube category IDs (1-29, 43) for accurate CPM calculations",
+          "Color Picker From Image now properly listed in tools directory",
+          "Tool card styling inconsistencies resolved",
+          "Mobile layout improvements for step indicators",
+          "CRT terminal keyframe animation issues in styled-components v4+"
+        ]
+      }
+    },
+    {
       version: "v1.0.0",
       title: "Initial Launch - YouTool Goes Live!",
       date: "July 1, 2025",
@@ -250,7 +292,7 @@ export const Changelog: React.FC = () => {
         new: [
           "Video Analyzer - Comprehensive video performance analysis",
           "Channel Analyzer - Complete channel insights and metrics",
-          "Keyword Analyzer - YouTube SEO keyword research tool", 
+          "Keyword Analyzer - YouTube SEO keyword research tool",
           "Tag Generator - Smart tag suggestions for better discoverability",
           "Thumbnail Tester - A/B test your thumbnail designs",
           "Comment Downloader - Export and analyze video comments",

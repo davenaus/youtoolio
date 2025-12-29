@@ -102,6 +102,7 @@ export const ChannelComparer: React.FC = () => {
       channel: /youtube\.com\/channel\/(UC[\w-]{22})/,
       user: /youtube\.com\/user\/(\w+)/,
       handle: /youtube\.com\/@([\w-]+)/,
+      handleWithoutAt: /youtube\.com\/([^/?]+)$/,  // Matches youtube.com/moneyguyshow
       customUrl: /youtube\.com\/(c\/)?(\w+)/
     };
 
@@ -110,6 +111,28 @@ export const ChannelComparer: React.FC = () => {
       if (match) {
         if (type === 'channel') {
           return match[1];
+        } else if (type === 'handleWithoutAt') {
+          // Try to fetch by handle (without @)
+          const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_2;
+          const handle = match[1];
+
+          // First try forHandle
+          let response = await fetch(
+            `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${handle}&key=${API_KEY}`
+          );
+          let data = await response.json();
+          if (data.items?.[0]) {
+            return data.items[0].id;
+          }
+
+          // If not found, try search
+          response = await fetch(
+            `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(handle)}&type=channel&maxResults=1&key=${API_KEY}`
+          );
+          data = await response.json();
+          if (data.items?.[0]) {
+            return data.items[0].id.channelId;
+          }
         } else {
           const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_2;
           const response = await fetch(

@@ -145,7 +145,8 @@ export const OutlierFinder: React.FC = () => {
       if (age > filters.maxAge) return false;
       if (filters.showOnlyRecent && age > 30) return false;
 
-      return isShorts ? duration <= 60 : duration > 60;
+      // Shorts can now be up to 3 minutes (180 seconds)
+      return isShorts ? duration <= 180 : duration > 180;
     });
   };
 
@@ -194,14 +195,30 @@ export const OutlierFinder: React.FC = () => {
       }
 
       const ratio = views / subscribers;
+
+      // Filter out videos with ratio less than 2x (only show true outliers)
+      // This ensures we only show videos that got at least 2x their subscriber count in views
+      if (ratio < 2) {
+        return null;
+      }
+
       const engagementRate = (likes + comments) / Math.max(views, 1);
       const viralScore = calculateViralScore(video, channel);
 
       return { video, channel, ratio, engagementRate, viralScore };
     }).filter((item): item is OutlierResult => item !== null);
 
-    // Always sort by ratio (best to worst) regardless of sortBy filter
-    outliers.sort((a, b) => b.ratio - a.ratio);
+    // Sort by ratio (best to worst) to prioritize true viral outliers
+    outliers.sort((a, b) => {
+      // For similar ratios, prefer channels with fewer subscribers (more impressive outliers)
+      const ratioDiff = b.ratio - a.ratio;
+      if (Math.abs(ratioDiff) < 1) {
+        const subA = parseInt(a.channel.statistics.subscriberCount);
+        const subB = parseInt(b.channel.statistics.subscriberCount);
+        return subA - subB; // Lower subscriber count = higher priority
+      }
+      return ratioDiff;
+    });
 
     return outliers.slice(0, resultCount);
   };
@@ -350,7 +367,7 @@ export const OutlierFinder: React.FC = () => {
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Enter channel URL to find outlier videos"
+                    placeholder="Enter search keywords to find viral outlier videos"
                     onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                   />
                   <S.HeaderSearchButton onClick={handleSearch} disabled={isLoading}>
@@ -362,33 +379,34 @@ export const OutlierFinder: React.FC = () => {
                   </S.HeaderSearchButton>
                 </S.HeaderSearchBar>
               </S.HeaderSearchContainer>
+
+              {/* Toggle Buttons in Header */}
+              <S.ControlsContainer>
+                <S.ToggleContainer>
+                  <S.ToggleButton
+                    onClick={() => handleToggle(false)}
+                    className={!isShorts ? 'active' : ''}
+                  >
+                    <i className="bx bx-play"></i>
+                    Videos
+                  </S.ToggleButton>
+                  <S.ToggleButton
+                    onClick={() => handleToggle(true)}
+                    className={isShorts ? 'active' : ''}
+                  >
+                    <i className="bx bx-mobile"></i>
+                    Shorts
+                  </S.ToggleButton>
+                </S.ToggleContainer>
+
+                <S.FilterToggle onClick={() => setShowFilters(!showFilters)}>
+                  <i className="bx bx-filter"></i>
+                  Filters
+                </S.FilterToggle>
+              </S.ControlsContainer>
             </S.HeaderTextContent>
           </S.HeaderContent>
         </S.EnhancedHeader>
-
-        <S.ControlsContainer>
-          <S.ToggleContainer>
-            <S.ToggleButton
-              onClick={() => handleToggle(false)}
-              className={!isShorts ? 'active' : ''}
-            >
-              <i className="bx bx-play"></i>
-              Videos
-            </S.ToggleButton>
-            <S.ToggleButton
-              onClick={() => handleToggle(true)}
-              className={isShorts ? 'active' : ''}
-            >
-              <i className="bx bx-mobile"></i>
-              Shorts
-            </S.ToggleButton>
-          </S.ToggleContainer>
-
-          <S.FilterToggle onClick={() => setShowFilters(!showFilters)}>
-            <i className="bx bx-filter"></i>
-            Filters
-          </S.FilterToggle>
-        </S.ControlsContainer>
 
 
 

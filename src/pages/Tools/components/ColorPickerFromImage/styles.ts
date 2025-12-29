@@ -221,7 +221,11 @@ export const StepIndicator = styled.div`
   align-items: center;
   gap: 1rem;
   margin-bottom: 1.5rem;
-  justify-content: center;
+  justify-content: flex-start;
+
+  @media (max-width: 768px) {
+    justify-content: center;
+  }
 `;
 
 export const StepNumber = styled.div`
@@ -250,21 +254,20 @@ export const ColorPickerStepTitleLarge = styled.h2`
 
 export const UploadContainer = styled.div<{ $isDragging: boolean }>`
   background: ${({ theme }) => theme.colors.dark3};
-  border: 2px dashed ${({ theme, $isDragging }) => 
+  border: 2px dashed ${({ theme, $isDragging }) =>
     $isDragging ? theme.colors.red3 : theme.colors.dark5};
   border-radius: ${({ theme }) => theme.borderRadius.xl};
   padding: 3rem 2rem;
   text-align: center;
   transition: all 0.3s ease;
-  margin: 0 auto;
-  max-width: 600px;
-  
+  width: 100%;
+
   ${({ $isDragging, theme }) => $isDragging && `
     background: ${theme.colors.dark4};
-    transform: scale(1.02);
+    transform: scale(1.01);
     box-shadow: ${theme.shadows.lg};
   `}
-  
+
   @media (max-width: 768px) {
     padding: 2rem 1rem;
   }

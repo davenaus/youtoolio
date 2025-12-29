@@ -1336,14 +1336,14 @@ export const Home: React.FC = () => {
     <Container>
       {/* React 19 Native Metadata Support */}
       <DocumentMeta
-        title="YouTool.io - Free YouTube Tools for Creators"
+        title="YouTool.io - YouTube Tools for Creators"
         description="Professional-grade YouTube tools to help you analyze, optimize, and grow your channel. Video analytics, SEO tools, thumbnail testing, and more."
-        keywords="YouTube tools, YouTube analytics, video SEO, thumbnail tester, channel analyzer, YouTube growth, free YouTube tools, video optimization"
+        keywords="YouTube tools, YouTube analytics, video SEO, thumbnail tester, channel analyzer, YouTube growth, video optimization, creator tools"
         canonical="https://youtool.io/"
-        ogTitle="YouTool.io - Free YouTube Tools for Creators"
+        ogTitle="YouTool.io - YouTube Tools for Creators"
         ogDescription="Professional-grade YouTube tools to help you analyze, optimize, and grow your channel."
         ogImage="https://youtool.io/og-image.jpg"
-        twitterTitle="YouTool.io - Free YouTube Tools for Creators"
+        twitterTitle="YouTool.io - YouTube Tools for Creators"
         twitterDescription="Professional-grade YouTube tools to help you analyze, optimize, and grow your channel."
         twitterImage="https://youtool.io/twitter-image.jpg"
       />

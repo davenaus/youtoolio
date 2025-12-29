@@ -99,6 +99,7 @@ export const SubscribeLinkGenerator: React.FC = () => {
       { regex: /youtube\.com\/channel\/([^/?]+)/, isChannelId: true },
       { regex: /youtube\.com\/c\/([^/?]+)/, isChannelId: false },
       { regex: /youtube\.com\/user\/([^/?]+)/, isChannelId: false },
+      { regex: /youtube\.com\/([^/?]+)$/, isChannelId: false },  // Matches youtube.com/moneyguyshow
     ];
 
     for (const pattern of patterns) {

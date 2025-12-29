@@ -896,3 +896,110 @@ export const HeaderSearchButton = styled.button`
     }
   }
 `;
+// Instructions box - normal text display
+export const InstructionsBox = styled.pre`
+  background: ${({ theme }) => theme.colors.dark4};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1.5rem;
+  max-height: 500px;
+  overflow-y: auto;
+  margin: 1.5rem 0;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: ${({ theme }) => theme.colors.dark3};
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: ${({ theme }) => theme.colors.dark5};
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: ${({ theme }) => theme.colors.red3};
+  }
+`;
+
+// Loading Modal
+const modalFadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const modalSlideIn = keyframes`
+  from { transform: translate(-50%, -60%); opacity: 0; }
+  to { transform: translate(-50%, -50%); opacity: 1; }
+`;
+
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
+
+export const LoadingModal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: ${modalFadeIn} 0.3s ease-out;
+`;
+
+export const LoadingModalContent = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: 3rem 4rem;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: ${modalSlideIn} 0.4s ease-out;
+  max-width: 90%;
+
+  @media (max-width: 768px) {
+    padding: 2.5rem 2rem;
+  }
+`;
+
+export const LoadingSpinner = styled.div`
+  i {
+    font-size: 4rem;
+    color: ${({ theme }) => theme.colors.red3};
+    display: block;
+    margin-bottom: 1.5rem;
+  }
+`;
+
+export const LoadingModalText = styled.p`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+`;
+
+export const LoadingModalSubtext = styled.p`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 1rem;
+  margin: 0;
+  line-height: 1.5;
+`;

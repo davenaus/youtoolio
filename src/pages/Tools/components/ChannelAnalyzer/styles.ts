@@ -25,6 +25,14 @@ export const EducationalContent = styled.div`
   margin-bottom: 2rem;
   margin-top: 2rem;
   line-height: 1.7;
+
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    padding: 1.25rem;
+  }
 `;
 
 export const EducationalTitle = styled.h1`
@@ -47,6 +55,14 @@ export const SectionSubTitle = styled.h2`
   font-size: 1.8rem;
   margin-bottom: 1rem;
   font-weight: 600;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.3rem;
+  }
 `;
 
 export const ContentText = styled.p`
@@ -86,6 +102,16 @@ export const StepByStep = styled.div`
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   padding: 2rem;
   margin: 2rem 0;
+
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+
+  @media (max-width: 480px) {
+    padding: 1.25rem;
+    margin: 1.25rem 0;
+  }
 `;
 
 export const StepItem = styled.div`
@@ -228,16 +254,40 @@ export const BackButton = styled.button`
   cursor: pointer;
   transition: all 0.2s ease;
   margin-bottom: 2rem;
-  
+  min-height: 44px;
+
   &:hover {
     background: ${({ theme }) => theme.colors.dark4};
     border-color: ${({ theme }) => theme.colors.dark5};
     color: ${({ theme }) => theme.colors.text.primary};
     transform: translateX(-2px);
   }
-  
+
   i {
     font-size: 1.1rem;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.625rem 1.125rem;
+    margin-bottom: 1.5rem;
+
+    &:hover {
+      transform: translateX(-1px);
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
+    margin-bottom: 1.25rem;
+
+    &:hover {
+      transform: none;
+    }
+
+    i {
+      font-size: 1rem;
+    }
   }
 `;
 
@@ -1069,6 +1119,375 @@ export const HeaderSearchButton = styled.button`
     
     i {
       font-size: 1.1rem;
+    }
+  }
+`;
+
+// Score Cards Section
+export const ScoreCardsSection = styled.div`
+  margin: 2rem 0;
+`;
+
+export const ScoreCardsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+`;
+
+export const ScoreCard = styled.div`
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  @media (max-width: 768px) {
+    padding: 1.25rem;
+  }
+`;
+
+export const ScoreCardHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+`;
+
+export const ScoreCardIcon = styled.i`
+  font-size: 1.5rem;
+  color: ${({ theme }) => theme.colors.red4};
+`;
+
+export const ScoreCardTitle = styled.h3`
+  font-size: 1rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.white};
+  margin: 0;
+`;
+
+export const ScoreValue = styled.div<{ color: string }>`
+  font-size: 3rem;
+  font-weight: 700;
+  color: ${({ color }) => color};
+  margin: 0.5rem 0;
+
+  @media (max-width: 768px) {
+    font-size: 2.5rem;
+  }
+`;
+
+export const ScoreLabel = styled.div`
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  margin-bottom: 1rem;
+
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+  }
+`;
+
+export const ScoreProgressBar = styled.div`
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+`;
+
+export const ScoreProgressFill = styled.div<{ width: number; color: string }>`
+  width: ${({ width }) => width}%;
+  height: 100%;
+  background: ${({ color }) => color};
+  transition: width 1s ease;
+`;
+
+export const ScoreBreakdownList = styled.div`
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  @media (max-width: 768px) {
+    margin-top: 1rem;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+  }
+`;
+
+export const ScoreBreakdownItem = styled.div<{ status: 'good' | 'warning' | 'poor' }>`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  border-left: 3px solid ${({ status }) =>
+    status === 'good' ? '#10b981' :
+    status === 'warning' ? '#f59e0b' :
+    '#ef4444'
+  };
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.5rem;
+  }
+`;
+
+export const BreakdownLabel = styled.span`
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  flex: 1;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+  }
+`;
+
+export const BreakdownScore = styled.span`
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.white};
+  font-variant-numeric: tabular-nums;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+  }
+`;
+
+// Top Videos Section
+export const TopVideosSection = styled.div`
+  margin: 2rem 0;
+`;
+
+export const TopVideosGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+`;
+
+export const VideoCard = styled.div`
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  @media (max-width: 768px) {
+    &:hover {
+      transform: none;
+    }
+  }
+`;
+
+export const VideoRank = styled.div`
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  background: rgba(0, 0, 0, 0.8);
+  color: ${({ theme }) => theme.colors.white};
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  z-index: 2;
+
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+    padding: 0.2rem 0.6rem;
+    top: 0.5rem;
+    left: 0.5rem;
+  }
+`;
+
+export const VideoThumbnailContainer = styled.a`
+  display: block;
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 aspect ratio */
+  overflow: hidden;
+  cursor: pointer;
+
+  &:hover img {
+    transform: scale(1.05);
+  }
+`;
+
+export const VideoThumbnail = styled.img`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+`;
+
+export const VideoDuration = styled.div`
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  background: rgba(0, 0, 0, 0.9);
+  color: ${({ theme }) => theme.colors.white};
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.4rem;
+  }
+`;
+
+export const VideoContent = styled.div`
+  padding: 1rem;
+
+  @media (max-width: 768px) {
+    padding: 0.875rem;
+  }
+`;
+
+export const VideoTitle = styled.h4`
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.white};
+  margin: 0 0 0.75rem 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+    margin: 0 0 0.625rem 0;
+  }
+`;
+
+export const VideoStats = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  @media (max-width: 768px) {
+    gap: 0.75rem;
+    margin-bottom: 0.875rem;
+  }
+`;
+
+export const VideoStatItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+
+  i {
+    font-size: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    gap: 0.3rem;
+
+    i {
+      font-size: 0.95rem;
+    }
+  }
+`;
+
+export const VideoAnalysis = styled.div`
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1rem;
+  margin-top: 1rem;
+
+  @media (max-width: 768px) {
+    padding-top: 0.875rem;
+    margin-top: 0.875rem;
+  }
+`;
+
+export const VideoScoreBadge = styled.div<{ color: string }>`
+  display: inline-block;
+  background: ${({ color }) => color}20;
+  border: 1px solid ${({ color }) => color};
+  color: ${({ color }) => color};
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.65rem;
+    margin-bottom: 0.625rem;
+  }
+`;
+
+export const VideoInsights = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    gap: 0.4rem;
+  }
+`;
+
+export const VideoInsight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+
+  i {
+    color: ${({ theme }) => theme.colors.red4};
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    gap: 0.4rem;
+
+    i {
+      font-size: 0.85rem;
     }
   }
 `;

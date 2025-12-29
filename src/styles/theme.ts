@@ -68,6 +68,15 @@ export const theme = {
     lg: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
     xl: '0 20px 25px -5px rgba(0, 0, 0, 0.6)',
     glow: '0 0 20px rgba(125, 0, 0, 0.3)' // Red glow effect
+  },
+  // Centralized breakpoints for consistent responsive design
+  breakpoints: {
+    xs: '480px',
+    sm: '640px',
+    md: '768px',
+    lg: '1024px',
+    xl: '1280px',
+    xxl: '1536px'
   }
 };
 

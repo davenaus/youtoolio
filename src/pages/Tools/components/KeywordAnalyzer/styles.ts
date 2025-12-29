@@ -1535,9 +1535,13 @@ export const RecommendationsSection = styled.div`
 `;
 
 export const RecommendationsList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 export const Recommendation = styled.div<{ type: 'success' | 'info' | 'warning' }>`
@@ -1580,11 +1584,87 @@ export const Recommendation = styled.div<{ type: 'success' | 'info' | 'warning' 
   div {
     color: ${({ theme }) => theme.colors.text.secondary};
     line-height: 1.5;
-    
+
     strong {
       color: ${({ theme }) => theme.colors.text.primary};
     }
   }
+`;
+
+export const RecommendationCard = styled.div<{ rating: string }>`
+  background: ${({ theme }) => theme.colors.dark4};
+  border: 2px solid ${({ theme, rating }) => {
+    switch (rating) {
+      case 'excellent': return '#4caf50';
+      case 'good': return '#ffc107';
+      case 'fair': return '#ff9800';
+      case 'poor': return '#f44336';
+      default: return theme.colors.dark5;
+    }
+  }};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+`;
+
+export const RecommendationHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+  gap: 1rem;
+`;
+
+export const RecommendationMetric = styled.h4`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+`;
+
+export const RecommendationRating = styled.span<{ rating: string }>`
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: ${({ rating }) => {
+    switch (rating) {
+      case 'excellent': return '#4caf5020';
+      case 'good': return '#ffc10720';
+      case 'fair': return '#ff980020';
+      case 'poor': return '#f4433620';
+      default: return '#2196f320';
+    }
+  }};
+  color: ${({ rating }) => {
+    switch (rating) {
+      case 'excellent': return '#4caf50';
+      case 'good': return '#ffc107';
+      case 'fair': return '#ff9800';
+      case 'poor': return '#f44336';
+      default: return '#2196f3';
+    }
+  }};
+`;
+
+export const RecommendationValue = styled.div`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+`;
+
+export const RecommendationAction = styled.p`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
 `;
 
 export const BottomAdContainer = styled.div`

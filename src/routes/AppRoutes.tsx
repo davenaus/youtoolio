@@ -59,6 +59,7 @@ const ColorPickerFromImage = lazy(() => import('../pages/Tools/components/ColorP
 const KeywordAnalyzer = lazy(() => import('../pages/Tools/components/KeywordAnalyzer/KeywordAnalyzer').then(m => ({ default: m.KeywordAnalyzer })));
 const ChannelIdFinder = lazy(() => import('../pages/Tools/components/ChannelIdFinder/ChannelIdFinder').then(m => ({ default: m.ChannelIdFinder })));
 const ModerationChecker = lazy(() => import('../pages/Tools/components/ModerationChecker/ModerationChecker').then(m => ({ default: m.ModerationChecker })));
+const YouToolPlaybooks = lazy(() => import('../pages/Tools/components/YouToolPlaybooks/YouToolPlaybooks'));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -145,6 +146,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/tools/keyword-analyzer/:keyword" element={<KeywordAnalyzer />} />
         <Route path="/tools/channel-id-finder" element={<ChannelIdFinder />} />
         <Route path="/tools/moderation-checker" element={<ModerationChecker />} />
+        <Route path="/tools/youtool-playbooks" element={<YouToolPlaybooks />} />
         
         <Route path="*" element={<NotFound />} />
       </Routes>

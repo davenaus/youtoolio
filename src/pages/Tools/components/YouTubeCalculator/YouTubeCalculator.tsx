@@ -62,7 +62,7 @@ const countryMultipliers: { [key: string]: number } = {
 
 export const YouTubeCalculator: React.FC = () => {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState<'input' | 'channel' | 'advanced' | 'results'>('input');
+  const [currentStep, setCurrentStep] = useState<'input' | 'results'>('input');
   const [isCalculating, setIsCalculating] = useState(false);
 
   // Tool configuration
@@ -72,32 +72,22 @@ export const YouTubeCalculator: React.FC = () => {
     image: 'https://64.media.tumblr.com/95def04a5eda69c7703fca45158d5256/0e01452f9f6dd974-57/s2048x3072/ec37f2775fabde8ea0dc7ba6e16a91cfe8d8870d.jpg',
     icon: 'bx bx-dollar-circle',
     features: [
-      'Revenue estimation',
+      'Quick revenue estimates',
       'Category-based CPM',
-      'Advanced analytics'
+      'Country-specific rates'
     ]
   };
 
-  // Basic video data
+  // Input mode toggle
+  const [inputMode, setInputMode] = useState<'link' | 'manual'>('link');
+  const [videoUrl, setVideoUrl] = useState<string>('');
+  const [isLoadingVideo, setIsLoadingVideo] = useState<boolean>(false);
+
+  // Simplified inputs - only the essentials
   const [videoLength, setVideoLength] = useState<number>(10);
   const [views, setViews] = useState<number>(10000);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-
-  // Channel data
-  const [channelData, setChannelData] = useState<ChannelData>({
-    subscribers: 1000,
-    avgViews: 5000,
-    engagementRate: 3.5,
-    category: '',
-    country: 'US',
-    isMonetized: true
-  });
-
-  // Advanced settings
-  const [premiumTraffic, setPremiumTraffic] = useState<number>(15);
-  const [seasonalMultiplier, setSeasonalMultiplier] = useState<number>(1.0);
-  const [adBlockRate, setAdBlockRate] = useState<number>(25);
-  const [ctr, setCtr] = useState<number>(2.1);
+  const [country, setCountry] = useState<string>('US');
 
   // Results and history
   const [earningsBreakdown, setEarningsBreakdown] = useState<EarningsBreakdown | null>(null);
@@ -127,77 +117,203 @@ export const YouTubeCalculator: React.FC = () => {
     localStorage.setItem('youtube_calc_history', JSON.stringify(newHistory));
   }, [calculationHistory]);
 
+  const extractVideoId = (url: string): string | null => {
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/,
+      /youtube\.com\/embed\/([^&\s]+)/,
+      /youtube\.com\/v\/([^&\s]+)/
+    ];
+
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
+    }
+    return null;
+  };
+
+  const parseDuration = (duration: string): number => {
+    const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+    if (!match) return 0;
+
+    const hours = parseInt(match[1] || '0');
+    const minutes = parseInt(match[2] || '0');
+    const seconds = parseInt(match[3] || '0');
+
+    return hours * 60 + minutes + Math.ceil(seconds / 60);
+  };
+
+  const handleLoadFromUrl = async () => {
+    const videoId = extractVideoId(videoUrl);
+    if (!videoId) {
+      alert('Invalid YouTube URL. Please enter a valid video link.');
+      return;
+    }
+
+    setIsLoadingVideo(true);
+
+    try {
+      const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_4;
+      if (!API_KEY) {
+        alert('YouTube API key not configured. Please contact support.');
+        setIsLoadingVideo(false);
+        return;
+      }
+
+      const response = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoId}&key=${API_KEY}`
+      );
+
+      if (!response.ok) throw new Error('Failed to fetch video data');
+
+      const data = await response.json();
+
+      if (!data.items || data.items.length === 0) {
+        alert('Video not found. Please check the URL and try again.');
+        setIsLoadingVideo(false);
+        return;
+      }
+
+      const video = data.items[0];
+
+      // Auto-fill form with video data
+      const videoViews = parseInt(video.statistics.viewCount || '10000');
+      const videoDuration = parseDuration(video.contentDetails.duration);
+
+      setViews(videoViews);
+      setVideoLength(videoDuration);
+
+      // Try to auto-detect category from video category ID
+      const categoryId = video.snippet.categoryId;
+      const categoryMap: { [key: string]: string } = {
+        '1': 'entertainment',     // Film & Animation
+        '2': 'entertainment',     // Autos & Vehicles
+        '10': 'music',            // Music
+        '15': 'lifestyle',        // Pets & Animals
+        '17': 'lifestyle',        // Sports
+        '18': 'entertainment',    // Short Movies
+        '19': 'travel',           // Travel & Events
+        '20': 'gaming',           // Gaming
+        '21': 'lifestyle',        // Videoblogging
+        '22': 'lifestyle',        // People & Blogs
+        '23': 'entertainment',    // Comedy
+        '24': 'entertainment',    // Entertainment
+        '25': 'news',             // News & Politics
+        '26': 'lifestyle',        // Howto & Style
+        '27': 'education',        // Education
+        '28': 'tech',             // Science & Technology
+        '29': 'entertainment',    // Nonprofits & Activism
+        '43': 'entertainment',    // Shows
+        // Categories we have but YouTube doesn't have specific IDs for:
+        // 'business', 'health', 'food', 'beauty' - will need manual selection
+      };
+
+      const detectedCategory = categoryMap[categoryId];
+
+      if (detectedCategory) {
+        setSelectedCategory(detectedCategory);
+
+        // Auto-calculate if we have all required data
+        setIsLoadingVideo(false);
+        setIsCalculating(true);
+
+        // Simulate calculation time for premium feel
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        // Calculate earnings with the loaded data
+        const category = categoryRates[detectedCategory];
+        const countryMultiplier = countryMultipliers[country] || 0.5;
+        let baseCpm = category.cpm * countryMultiplier;
+
+        let lengthMultiplier = 1;
+        if (videoDuration >= 8) {
+          lengthMultiplier = 1.2;
+        } else if (videoDuration < 4) {
+          lengthMultiplier = 0.7;
+        }
+
+        const monetizedViews = videoViews * 0.75 * 0.5;
+        const finalCpm = baseCpm * lengthMultiplier;
+        const grossAdRevenue = (monetizedViews / 1000) * finalCpm;
+        const adRevenue = grossAdRevenue * 0.55;
+        const totalRevenue = adRevenue;
+        const yearlyProjection = totalRevenue * 4 * 12;
+
+        const earnings: EarningsBreakdown = {
+          adRevenue: Math.max(0, adRevenue),
+          membershipRevenue: 0,
+          sponsorshipRevenue: 0,
+          merchandiseRevenue: 0,
+          totalRevenue: Math.max(0, totalRevenue),
+          yearlyProjection: Math.max(0, yearlyProjection)
+        };
+
+        setEarningsBreakdown(earnings);
+
+        // Save to history
+        saveToHistory({
+          views: videoViews,
+          category: detectedCategory,
+          earnings,
+          videoLength: videoDuration
+        });
+
+        setCurrentStep('results');
+        setIsCalculating(false);
+      } else {
+        // Category couldn't be auto-detected, switch to manual mode for user to select
+        setIsLoadingVideo(false);
+        setInputMode('manual');
+        alert('Video loaded! Please select a content category to calculate earnings.');
+      }
+    } catch (error) {
+      console.error('Error fetching video:', error);
+      alert('Failed to load video data. Please try again or enter details manually.');
+      setIsLoadingVideo(false);
+    }
+  };
+
   const calculateEarnings = useCallback((): EarningsBreakdown => {
     if (!selectedCategory) return { adRevenue: 0, membershipRevenue: 0, sponsorshipRevenue: 0, merchandiseRevenue: 0, totalRevenue: 0, yearlyProjection: 0 };
 
     const category = categoryRates[selectedCategory];
-    const countryMultiplier = countryMultipliers[channelData.country] || 0.5;
+    const countryMultiplier = countryMultipliers[country] || 0.5;
 
-    // Base CPM calculation (much more conservative)
+    // Simplified, more realistic calculation
     let baseCpm = category.cpm * countryMultiplier;
 
-    // Video length factor (more realistic)
+    // Video length factor
     let lengthMultiplier = 1;
     if (videoLength >= 8) {
-      lengthMultiplier = 1 + ((videoLength - 8) * 0.02); // Small boost for longer videos
+      lengthMultiplier = 1.2; // 20% boost for mid-roll ads
     } else if (videoLength < 4) {
-      lengthMultiplier = 0.7; // Penalty for very short videos
+      lengthMultiplier = 0.7; // Penalty for shorts/very short videos
     }
 
-    // Premium traffic adjustment (reduced impact)
-    const premiumAdjustment = 1 + (premiumTraffic / 100 * 0.2);
+    // Typical ad block rate (25%) and monetized view rate (50%)
+    const monetizedViews = views * 0.75 * 0.5;
 
-    // Engagement adjustment (smaller impact)
-    const engagementAdjustment = 1 + ((channelData.engagementRate - 2) * 0.05);
-
-    // Ad block adjustment (realistic ad block rates)
-    const effectiveViews = views * (1 - adBlockRate / 100);
-
-    // Only 40-60% of views typically see ads (realistic monetized views)
-    const monetizedViews = effectiveViews * 0.5;
-
-    // Seasonal adjustment
-    baseCpm *= seasonalMultiplier;
-
-    // CTR adjustment (smaller impact)
-    const ctrAdjustment = ctr / 2.1; // 2.1% is average CTR
-
-    // Final CPM (more realistic)
-    const finalCpm = baseCpm * lengthMultiplier * premiumAdjustment * engagementAdjustment * ctrAdjustment;
+    // Final CPM
+    const finalCpm = baseCpm * lengthMultiplier;
 
     // Calculate ad revenue (YouTube takes 45%, creator gets 55%)
     const grossAdRevenue = (monetizedViews / 1000) * finalCpm;
-    const adRevenue = grossAdRevenue * 0.55; // YouTube's actual revenue split
+    const adRevenue = grossAdRevenue * 0.55;
 
-    // Much more conservative other revenue streams
+    // Simplified other revenue (just ad revenue for now, can add bonuses)
+    const totalRevenue = adRevenue;
 
-    // Membership revenue (very conservative)
-    const membershipRevenue = channelData.subscribers > 1000 ?
-      Math.min((channelData.subscribers / 10000) * (views / channelData.avgViews) * 0.5, adRevenue * 0.1) : 0;
-
-    // Sponsorship potential (very conservative, only for larger channels)
-    const sponsorshipRevenue = channelData.subscribers > 50000 ?
-      (views / 10000) * 0.2 * (channelData.engagementRate / 5) : 0;
-
-    // Merchandise potential (very conservative)
-    const merchandiseRevenue = channelData.subscribers > 10000 ?
-      views * 0.0001 * (channelData.engagementRate / 8) : 0;
-
-    const totalRevenue = adRevenue + membershipRevenue + sponsorshipRevenue + merchandiseRevenue;
-
-    // More realistic yearly projection (assumes consistent performance with some growth)
-    const monthlyRevenue = totalRevenue * 4; // 4 videos per month assumption
-    const yearlyProjection = monthlyRevenue * 12 * (1 + Math.min(channelData.engagementRate / 100, 0.05));
+    // Yearly projection (assumes 4 videos per month)
+    const yearlyProjection = totalRevenue * 4 * 12;
 
     return {
       adRevenue: Math.max(0, adRevenue),
-      membershipRevenue: Math.max(0, membershipRevenue),
-      sponsorshipRevenue: Math.max(0, sponsorshipRevenue),
-      merchandiseRevenue: Math.max(0, merchandiseRevenue),
+      membershipRevenue: 0,
+      sponsorshipRevenue: 0,
+      merchandiseRevenue: 0,
       totalRevenue: Math.max(0, totalRevenue),
       yearlyProjection: Math.max(0, yearlyProjection)
     };
-  }, [videoLength, views, selectedCategory, channelData, premiumTraffic, seasonalMultiplier, adBlockRate, ctr]);
+  }, [videoLength, views, selectedCategory, country]);
 
   const handleCalculate = async () => {
     setIsCalculating(true);
@@ -239,44 +355,37 @@ export const YouTubeCalculator: React.FC = () => {
     const tips = [];
 
     if (videoLength < 8) {
-      tips.push({ icon: 'bx-time', text: 'Consider videos 8+ minutes for mid-roll ads', type: 'warning' as const });
+      tips.push({ icon: 'bx-time', text: 'Consider videos 8+ minutes for mid-roll ads (20% revenue boost)', type: 'warning' as const });
     }
 
-    if (channelData.engagementRate < 3) {
-      tips.push({ icon: 'bx-heart', text: 'Improve engagement with CTAs and community posts', type: 'info' as const });
+    if (videoLength >= 8) {
+      tips.push({ icon: 'bx-check-circle', text: 'Great! Your video length qualifies for mid-roll ads', type: 'success' as const });
     }
 
-    if (premiumTraffic < 20) {
-      tips.push({ icon: 'bx-target-lock', text: 'Target higher-value demographics', type: 'success' as const });
+    const category = categoryRates[selectedCategory];
+    if (category && category.cpm < 10) {
+      tips.push({ icon: 'bx-target-lock', text: 'Consider diversifying into higher-CPM categories like Business or Education', type: 'info' as const });
     }
 
-    if (channelData.subscribers < 10000) {
-      tips.push({ icon: 'bx-user-plus', text: 'Focus on subscriber growth for sponsorship opportunities', type: 'info' as const });
+    if (country !== 'US' && country !== 'UK' && country !== 'CA') {
+      tips.push({ icon: 'bx-world', text: 'Create content that appeals to US/UK/CA audiences for higher CPM rates', type: 'info' as const });
     }
+
+    tips.push({ icon: 'bx-trending-up', text: 'Consistent upload schedule (4+ videos/month) maximizes yearly earnings', type: 'success' as const });
 
     return tips;
   };
 
   const renderStepIndicator = () => (
     <S.StepIndicator>
-      <S.Step active={currentStep === 'input'} completed={['channel', 'advanced', 'results'].includes(currentStep)}>
-        <S.StepNumber active={currentStep === 'input'} completed={['channel', 'advanced', 'results'].includes(currentStep)}>1</S.StepNumber>
-        <S.StepLabel active={currentStep === 'input'} completed={['channel', 'advanced', 'results'].includes(currentStep)}>Video Details</S.StepLabel>
-      </S.Step>
-      <S.StepConnector completed={['advanced', 'results'].includes(currentStep)} />
-      <S.Step active={currentStep === 'channel'} completed={['advanced', 'results'].includes(currentStep)}>
-        <S.StepNumber active={currentStep === 'channel'} completed={['advanced', 'results'].includes(currentStep)}>2</S.StepNumber>
-        <S.StepLabel active={currentStep === 'channel'} completed={['advanced', 'results'].includes(currentStep)}>Channel Info</S.StepLabel>
-      </S.Step>
-      <S.StepConnector completed={currentStep === 'results'} />
-      <S.Step active={currentStep === 'advanced'} completed={currentStep === 'results'}>
-        <S.StepNumber active={currentStep === 'advanced'} completed={currentStep === 'results'}>3</S.StepNumber>
-        <S.StepLabel active={currentStep === 'advanced'} completed={currentStep === 'results'}>Advanced</S.StepLabel>
+      <S.Step active={currentStep === 'input'} completed={currentStep === 'results'}>
+        <S.StepNumber active={currentStep === 'input'} completed={currentStep === 'results'}>1</S.StepNumber>
+        <S.StepLabel active={currentStep === 'input'} completed={currentStep === 'results'}>Enter Details</S.StepLabel>
       </S.Step>
       <S.StepConnector completed={currentStep === 'results'} />
       <S.Step active={currentStep === 'results'} completed={false}>
-        <S.StepNumber active={currentStep === 'results'} completed={false}>4</S.StepNumber>
-        <S.StepLabel active={currentStep === 'results'} completed={false}>Results</S.StepLabel>
+        <S.StepNumber active={currentStep === 'results'} completed={false}>2</S.StepNumber>
+        <S.StepLabel active={currentStep === 'results'} completed={false}>View Results</S.StepLabel>
       </S.Step>
     </S.StepIndicator>
   );
@@ -334,6 +443,67 @@ export const YouTubeCalculator: React.FC = () => {
               Video Details
             </S.SectionTitle>
 
+            {/* Input Mode Toggle */}
+            <S.InputModeToggle>
+              <S.ToggleButton
+                active={inputMode === 'link'}
+                onClick={() => setInputMode('link')}
+              >
+                <i className="bx bx-link"></i>
+                Quick Estimate (Paste Video Link)
+              </S.ToggleButton>
+              <S.ToggleButton
+                active={inputMode === 'manual'}
+                onClick={() => setInputMode('manual')}
+              >
+                <i className="bx bx-edit"></i>
+                Manual Input
+              </S.ToggleButton>
+            </S.InputModeToggle>
+
+            {/* Video URL Input (Link Mode) */}
+            {inputMode === 'link' && (
+              <S.UrlInputContainer>
+                <S.UrlInputCard>
+                  <S.CardTitle>
+                    <i className="bx bx-link-alt"></i>
+                    Enter YouTube Video URL
+                  </S.CardTitle>
+                  <S.UrlInputWrapper>
+                    <S.UrlInput
+                      type="text"
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && !isLoadingVideo && handleLoadFromUrl()}
+                    />
+                    <S.LoadButton
+                      onClick={handleLoadFromUrl}
+                      disabled={!videoUrl.trim() || isLoadingVideo}
+                    >
+                      {isLoadingVideo ? (
+                        <>
+                          <i className="bx bx-loader-alt bx-spin"></i>
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          <i className="bx bx-right-arrow-alt"></i>
+                          Load Video
+                        </>
+                      )}
+                    </S.LoadButton>
+                  </S.UrlInputWrapper>
+                  <S.InputHint>
+                    Paste a YouTube video link to automatically fetch views, length, and category
+                  </S.InputHint>
+                </S.UrlInputCard>
+              </S.UrlInputContainer>
+            )}
+
+            {/* Manual Input Mode */}
+            {inputMode === 'manual' && (
+              <>
             <S.StatsGrid>
               <S.StatCard>
                 <S.StatIcon>
@@ -443,297 +613,39 @@ export const YouTubeCalculator: React.FC = () => {
               </S.CategoryGrid>
             </S.CategorySection>
 
+            <S.InputCard>
+              <S.CardTitle>
+                <i className="bx bx-world"></i>
+                Primary Audience Country
+              </S.CardTitle>
+              <S.Select
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+              >
+                <option value="US">🇺🇸 United States</option>
+                <option value="UK">🇬🇧 United Kingdom</option>
+                <option value="CA">🇨🇦 Canada</option>
+                <option value="AU">🇦🇺 Australia</option>
+                <option value="DE">🇩🇪 Germany</option>
+                <option value="FR">🇫🇷 France</option>
+                <option value="JP">🇯🇵 Japan</option>
+                <option value="KR">🇰🇷 South Korea</option>
+                <option value="BR">🇧🇷 Brazil</option>
+                <option value="IN">🇮🇳 India</option>
+                <option value="MX">🇲🇽 Mexico</option>
+                <option value="RU">🇷🇺 Russia</option>
+                <option value="CN">🇨🇳 China</option>
+              </S.Select>
+              <S.InputHint>
+                Different countries have varying CPM rates - US/UK/CA typically pay the most
+              </S.InputHint>
+            </S.InputCard>
+
             <S.ActionButtons>
               <S.PrimaryButton
-                onClick={() => setCurrentStep('channel')}
-                disabled={!selectedCategory}
+                onClick={handleCalculate}
+                disabled={!selectedCategory || isCalculating}
               >
-                <i className="bx bx-right-arrow-alt"></i>
-                Next: Channel Information
-              </S.PrimaryButton>
-            </S.ActionButtons>
-          </S.InputSection>
-        )}
-
-        {/* Step 2: Channel Information */}
-        {currentStep === 'channel' && (
-          <S.ChannelSection>
-            <S.SectionTitle>
-              <i className="bx bx-user"></i>
-              Channel Information
-            </S.SectionTitle>
-
-            <S.ChannelGrid>
-              <S.ChannelCard>
-                <S.CardTitle>
-                  <i className="bx bx-user-plus"></i>
-                  Subscriber Count
-                </S.CardTitle>
-                <S.SliderContainer>
-                  <S.SliderLabel>
-                    <span>0</span>
-                    <span>{formatNumber(channelData.subscribers)}</span>
-                    <span>10M</span>
-                  </S.SliderLabel>
-                  <S.Slider
-                    type="range"
-                    min={0}
-                    max={10000000}
-                    value={channelData.subscribers}
-                    onChange={(e) => setChannelData(prev => ({ ...prev, subscribers: parseInt(e.target.value) }))}
-                    step={channelData.subscribers >= 100000 ? 50000 : channelData.subscribers >= 10000 ? 5000 : 100}
-                  />
-                </S.SliderContainer>
-              </S.ChannelCard>
-
-              <S.ChannelCard>
-                <S.CardTitle>
-                  <i className="bx bx-trending-up"></i>
-                  Average Views Per Video
-                </S.CardTitle>
-                <S.SliderContainer>
-                  <S.SliderLabel>
-                    <span>100</span>
-                    <span>{formatNumber(channelData.avgViews)}</span>
-                    <span>5M</span>
-                  </S.SliderLabel>
-                  <S.Slider
-                    type="range"
-                    min={100}
-                    max={5000000}
-                    value={channelData.avgViews}
-                    onChange={(e) => setChannelData(prev => ({ ...prev, avgViews: parseInt(e.target.value) }))}
-                    step={channelData.avgViews >= 50000 ? 25000 : channelData.avgViews >= 5000 ? 2500 : 100}
-                  />
-                </S.SliderContainer>
-              </S.ChannelCard>
-
-              <S.ChannelCard>
-                <S.CardTitle>
-                  <i className="bx bx-heart"></i>
-                  Engagement Rate
-                </S.CardTitle>
-                <S.SliderContainer>
-                  <S.SliderLabel>
-                    <span>0%</span>
-                    <span>{channelData.engagementRate.toFixed(1)}%</span>
-                    <span>15%</span>
-                  </S.SliderLabel>
-                  <S.Slider
-                    type="range"
-                    min={0}
-                    max={15}
-                    step={0.1}
-                    value={channelData.engagementRate}
-                    onChange={(e) => setChannelData(prev => ({ ...prev, engagementRate: parseFloat(e.target.value) }))}
-                  />
-                </S.SliderContainer>
-                <S.InputHint>
-                  Likes, comments, shares as % of views. Average is 2-4%
-                </S.InputHint>
-              </S.ChannelCard>
-
-              <S.ChannelCard>
-                <S.CardTitle>
-                  <i className="bx bx-world"></i>
-                  Primary Audience Country
-                </S.CardTitle>
-                <S.Select
-                  value={channelData.country}
-                  onChange={(e) => setChannelData(prev => ({ ...prev, country: e.target.value }))}
-                >
-                  <option value="US">🇺🇸 United States</option>
-                  <option value="UK">🇬🇧 United Kingdom</option>
-                  <option value="CA">🇨🇦 Canada</option>
-                  <option value="AU">🇦🇺 Australia</option>
-                  <option value="DE">🇩🇪 Germany</option>
-                  <option value="FR">🇫🇷 France</option>
-                  <option value="JP">🇯🇵 Japan</option>
-                  <option value="KR">🇰🇷 South Korea</option>
-                  <option value="BR">🇧🇷 Brazil</option>
-                  <option value="IN">🇮🇳 India</option>
-                  <option value="MX">🇲🇽 Mexico</option>
-                  <option value="RU">🇷🇺 Russia</option>
-                  <option value="CN">🇨🇳 China</option>
-                </S.Select>
-                <S.InputHint>
-                  Different countries have varying CPM rates
-                </S.InputHint>
-              </S.ChannelCard>
-            </S.ChannelGrid>
-
-            <S.MonetizationCard>
-              <S.CardTitle>
-                <i className="bx bx-dollar"></i>
-                Monetization Status
-              </S.CardTitle>
-              <S.MonetizationOptions>
-                <S.MonetizationOption
-                  active={channelData.isMonetized}
-                  onClick={() => setChannelData(prev => ({ ...prev, isMonetized: true }))}
-                >
-                  <i className="bx bx-check-circle"></i>
-                  <div>
-                    <div>Monetized Channel</div>
-                    <span>YouTube Partner Program enabled</span>
-                  </div>
-                </S.MonetizationOption>
-                <S.MonetizationOption
-                  active={!channelData.isMonetized}
-                  onClick={() => setChannelData(prev => ({ ...prev, isMonetized: false }))}
-                >
-                  <i className="bx bx-x-circle"></i>
-                  <div>
-                    <div>Not Monetized</div>
-                    <span>Working towards monetization requirements</span>
-                  </div>
-                </S.MonetizationOption>
-              </S.MonetizationOptions>
-            </S.MonetizationCard>
-
-            <S.ActionButtons>
-              <S.SecondaryButton onClick={() => setCurrentStep('input')}>
-                <i className="bx bx-left-arrow-alt"></i>
-                Back
-              </S.SecondaryButton>
-              <S.PrimaryButton onClick={() => setCurrentStep('advanced')}>
-                <i className="bx bx-right-arrow-alt"></i>
-                Next: Advanced Settings
-              </S.PrimaryButton>
-            </S.ActionButtons>
-          </S.ChannelSection>
-        )}
-
-        {/* Step 3: Advanced Settings */}
-        {currentStep === 'advanced' && (
-          <S.AdvancedSection>
-            <S.SectionTitle>
-              <i className="bx bx-cog"></i>
-              Advanced Revenue Factors
-            </S.SectionTitle>
-
-            <S.AdvancedGrid>
-              <S.AdvancedCard>
-                <S.CardTitle>
-                  <i className="bx bx-target-lock"></i>
-                  Premium Traffic %
-                </S.CardTitle>
-                <S.SliderContainer>
-                  <S.SliderLabel>
-                    <span>0%</span>
-                    <span>{premiumTraffic}%</span>
-                    <span>50%</span>
-                  </S.SliderLabel>
-                  <S.Slider
-                    type="range"
-                    min={0}
-                    max={50}
-                    value={premiumTraffic}
-                    onChange={(e) => setPremiumTraffic(parseInt(e.target.value))}
-                  />
-                </S.SliderContainer>
-                <S.InputHint>
-                  Percentage of viewers from high-value demographics
-                </S.InputHint>
-              </S.AdvancedCard>
-
-              <S.AdvancedCard>
-                <S.CardTitle>
-                  <i className="bx bx-calendar"></i>
-                  Seasonal Multiplier
-                </S.CardTitle>
-                <S.SeasonalOptions>
-                  <S.SeasonalOption
-                    active={seasonalMultiplier === 1.4}
-                    onClick={() => setSeasonalMultiplier(1.4)}
-                  >
-                    <i className="bx bx-gift"></i>
-                    <div>Holiday Season</div>
-                    <span>+40% CPM</span>
-                  </S.SeasonalOption>
-                  <S.SeasonalOption
-                    active={seasonalMultiplier === 1.2}
-                    onClick={() => setSeasonalMultiplier(1.2)}
-                  >
-                    <i className="bx bx-trending-up"></i>
-                    <div>High Season</div>
-                    <span>+20% CPM</span>
-                  </S.SeasonalOption>
-                  <S.SeasonalOption
-                    active={seasonalMultiplier === 1.0}
-                    onClick={() => setSeasonalMultiplier(1.0)}
-                  >
-                    <i className="bx bx-minus"></i>
-                    <div>Normal</div>
-                    <span>Base CPM</span>
-                  </S.SeasonalOption>
-                  <S.SeasonalOption
-                    active={seasonalMultiplier === 0.8}
-                    onClick={() => setSeasonalMultiplier(0.8)}
-                  >
-                    <i className="bx bx-trending-down"></i>
-                    <div>Low Season</div>
-                    <span>-20% CPM</span>
-                  </S.SeasonalOption>
-                </S.SeasonalOptions>
-              </S.AdvancedCard>
-
-              <S.AdvancedCard>
-                <S.CardTitle>
-                  <i className="bx bx-shield"></i>
-                  Ad Block Rate
-                </S.CardTitle>
-                <S.SliderContainer>
-                  <S.SliderLabel>
-                    <span>0%</span>
-                    <span>{adBlockRate}%</span>
-                    <span>60%</span>
-                  </S.SliderLabel>
-                  <S.Slider
-                    type="range"
-                    min={0}
-                    max={60}
-                    value={adBlockRate}
-                    onChange={(e) => setAdBlockRate(parseInt(e.target.value))}
-                  />
-                </S.SliderContainer>
-                <S.InputHint>
-                  Estimated percentage of viewers using ad blockers
-                </S.InputHint>
-              </S.AdvancedCard>
-
-              <S.AdvancedCard>
-                <S.CardTitle>
-                  <i className="bx bx-mouse"></i>
-                  Click-Through Rate
-                </S.CardTitle>
-                <S.SliderContainer>
-                  <S.SliderLabel>
-                    <span>0.5%</span>
-                    <span>{ctr.toFixed(1)}%</span>
-                    <span>5%</span>
-                  </S.SliderLabel>
-                  <S.Slider
-                    type="range"
-                    min={0.5}
-                    max={5}
-                    step={0.1}
-                    value={ctr}
-                    onChange={(e) => setCtr(parseFloat(e.target.value))}
-                  />
-                </S.SliderContainer>
-                <S.InputHint>
-                  Average CTR is 2.1%. Higher CTR = higher revenue
-                </S.InputHint>
-              </S.AdvancedCard>
-            </S.AdvancedGrid>
-
-            <S.ActionButtons>
-              <S.SecondaryButton onClick={() => setCurrentStep('channel')}>
-                <i className="bx bx-left-arrow-alt"></i>
-                Back
-              </S.SecondaryButton>
-              <S.PrimaryButton onClick={handleCalculate} disabled={isCalculating}>
                 {isCalculating ? (
                   <>
                     <i className="bx bx-loader-alt bx-spin"></i>
@@ -747,10 +659,12 @@ export const YouTubeCalculator: React.FC = () => {
                 )}
               </S.PrimaryButton>
             </S.ActionButtons>
-          </S.AdvancedSection>
+              </>
+            )}
+          </S.InputSection>
         )}
 
-        {/* Step 4: Results */}
+        {/* Step 2: Results */}
         {currentStep === 'results' && earningsBreakdown && (
           <S.ResultSection>
             <S.SectionTitle>
@@ -762,15 +676,11 @@ export const YouTubeCalculator: React.FC = () => {
               <S.MainResultCard>
                 <S.CardTitle>
                   <i className="bx bx-dollar-circle"></i>
-                  Total Estimated Revenue
+                  Estimated Revenue Per Video
                 </S.CardTitle>
                 <S.TotalRevenue>
-                  {formatCurrency(earningsBreakdown.totalRevenue * 0.7)} - {formatCurrency(earningsBreakdown.totalRevenue * 1.3)}
+                  {formatCurrency(earningsBreakdown.totalRevenue * 0.5)} - {formatCurrency(earningsBreakdown.totalRevenue * 1.5)}
                 </S.TotalRevenue>
-                <S.YearlyProjection>
-                  <i className="bx bx-calendar"></i>
-                  Yearly Range: {formatCurrency(earningsBreakdown.yearlyProjection * 0.1)} - {formatCurrency(earningsBreakdown.yearlyProjection * 0.2)}
-                </S.YearlyProjection>
               </S.MainResultCard>
 
               <S.BreakdownCard>
@@ -861,7 +771,14 @@ export const YouTubeCalculator: React.FC = () => {
                 </S.CardTitle>
                 <S.MetricsList>
                   <S.MetricItem>
-                    <S.MetricLabel>Revenue Per 1K Views</S.MetricLabel>
+                    <S.MetricLabel>Content Category</S.MetricLabel>
+                    <S.MetricValue>
+                      <i className={`bx ${categoryRates[selectedCategory]?.icon || 'bx-video'}`} style={{ marginRight: '8px' }}></i>
+                      {categoryRates[selectedCategory]?.name || 'Unknown'}
+                    </S.MetricValue>
+                  </S.MetricItem>
+                  <S.MetricItem>
+                    <S.MetricLabel>Revenue Per 1K Views (RPM)</S.MetricLabel>
                     <S.MetricValue>{formatCurrency((earningsBreakdown.totalRevenue / views) * 1000)}</S.MetricValue>
                   </S.MetricItem>
                   <S.MetricItem>
@@ -869,12 +786,12 @@ export const YouTubeCalculator: React.FC = () => {
                     <S.MetricValue>${((earningsBreakdown.adRevenue / views) * 1000).toFixed(2)}</S.MetricValue>
                   </S.MetricItem>
                   <S.MetricItem>
-                    <S.MetricLabel>Revenue Per Subscriber</S.MetricLabel>
-                    <S.MetricValue>{formatCurrency(earningsBreakdown.totalRevenue / Math.max(channelData.subscribers, 1))}</S.MetricValue>
-                  </S.MetricItem>
-                  <S.MetricItem>
                     <S.MetricLabel>Videos Needed for $1K/month</S.MetricLabel>
                     <S.MetricValue>{Math.ceil(1000 / earningsBreakdown.totalRevenue)}</S.MetricValue>
+                  </S.MetricItem>
+                  <S.MetricItem>
+                    <S.MetricLabel>Videos Needed for $5K/month</S.MetricLabel>
+                    <S.MetricValue>{Math.ceil(5000 / earningsBreakdown.totalRevenue)}</S.MetricValue>
                   </S.MetricItem>
                 </S.MetricsList>
               </S.ComparisonCard>
@@ -915,7 +832,7 @@ export const YouTubeCalculator: React.FC = () => {
                 New Calculation
               </S.SecondaryButton>
               <S.PrimaryButton onClick={() => {
-                const report = `YouTube Revenue Calculator Results\n\nVideo Details:\n- Views: ${formatNumber(views)}\n- Length: ${videoLength} minutes\n- Category: ${categoryRates[selectedCategory].name}\n\nRevenue Breakdown:\n- Ad Revenue: ${formatCurrency(earningsBreakdown.adRevenue)}\n- Total Revenue: ${formatCurrency(earningsBreakdown.totalRevenue)}\n- Yearly Projection: ${formatCurrency(earningsBreakdown.yearlyProjection)}\n\nGenerated by YouTube Revenue Calculator`;
+                const report = `YouTube Revenue Calculator Results\n\nVideo Details:\n- Views: ${formatNumber(views)}\n- Length: ${videoLength} minutes\n- Category: ${categoryRates[selectedCategory].name}\n\nRevenue Breakdown:\n- Ad Revenue: ${formatCurrency(earningsBreakdown.adRevenue)}\n- Total Revenue: ${formatCurrency(earningsBreakdown.totalRevenue)}\n\nGenerated by YouTube Revenue Calculator`;
                 navigator.clipboard.writeText(report);
                 alert('Report copied to clipboard!');
               }}>

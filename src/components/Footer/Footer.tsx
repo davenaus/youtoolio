@@ -57,9 +57,20 @@ const FooterLinks = styled.ul`
     text-decoration: none;
     transition: color 0.2s ease;
     cursor: pointer;
-    
+    display: inline-block;
+    padding: 0.375rem 0;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+
     &:hover {
       color: ${({ theme }) => theme.colors.red4};
+    }
+  }
+
+  @media (max-width: 768px) {
+    li {
+      margin-bottom: 0.75rem;
     }
   }
 `;
@@ -94,6 +105,13 @@ const LegalLinks = styled.div`
 
   @media (max-width: 768px) {
     justify-content: center;
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    gap: 1rem;
+    flex-direction: column;
+    align-items: center;
   }
 
   a {
@@ -102,7 +120,11 @@ const LegalLinks = styled.div`
     font-size: 0.9rem;
     transition: color 0.2s ease;
     cursor: pointer;
-    
+    padding: 0.5rem 0;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+
     &:hover {
       color: ${({ theme }) => theme.colors.red4};
     }

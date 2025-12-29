@@ -109,7 +109,7 @@ export const LinkInBioLanding: React.FC = () => {
               </S.GreenButton>
               
               <S.CTANote>
-                Opens in a new tab • Free to use • No account required
+                Opens in a new tab • No account required
               </S.CTANote>
             </S.CTASection>
           </S.HeroSection>

@@ -4,21 +4,15 @@ import styled from 'styled-components';
 export const Container = styled.div`
   padding: 0;
   padding-bottom: 8rem;
-  transition: filter 0.3s ease;
   min-height: 100vh;
   background: ${({ theme }) => theme.colors.dark2};
   max-width: 1400px;
   margin: 0 auto;
-  
-  &.blurred {
-    filter: blur(4px);
-    pointer-events: none;
-  }
-  
+
   @media (max-width: 1440px) {
     padding: 0 2rem 8rem 2rem;
   }
-  
+
   @media (max-width: 768px) {
     padding: 0 1rem 5rem 1rem;
   }
@@ -48,16 +42,40 @@ export const BackButton = styled.button`
   cursor: pointer;
   transition: all 0.2s ease;
   margin-bottom: 2rem;
-  
+  min-height: 44px;
+
   &:hover {
     background: ${({ theme }) => theme.colors.dark4};
     border-color: ${({ theme }) => theme.colors.dark5};
     color: ${({ theme }) => theme.colors.text.primary};
     transform: translateX(-2px);
   }
-  
+
   i {
     font-size: 1.1rem;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.625rem 1.125rem;
+    margin-bottom: 1.5rem;
+
+    &:hover {
+      transform: translateX(-1px);
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
+    margin-bottom: 1.25rem;
+
+    &:hover {
+      transform: none;
+    }
+
+    i {
+      font-size: 1rem;
+    }
   }
 `;
 
@@ -126,16 +144,37 @@ export const SearchBar = styled.div`
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   padding: 0.875rem 1.25rem;
   transition: all 0.2s ease;
-  
+  min-height: 56px;
+
   &:focus-within {
     border-color: ${({ theme }) => theme.colors.red3};
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
   }
-  
+
   i {
     color: ${({ theme }) => theme.colors.text.muted};
     margin-right: 1rem;
     font-size: 1.25rem;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 1rem;
+    min-height: 52px;
+
+    i {
+      font-size: 1.15rem;
+      margin-right: 0.75rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.625rem 0.875rem;
+    min-height: 48px;
+
+    i {
+      font-size: 1.1rem;
+      margin-right: 0.625rem;
+    }
   }
 `;
 
@@ -147,9 +186,18 @@ export const SearchInput = styled.input`
   font-family: ${({ theme }) => theme.fonts.primary};
   font-size: 1rem;
   outline: none;
-  
+  min-height: 32px;
+
   &::placeholder {
     color: ${({ theme }) => theme.colors.text.muted};
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
   }
 `;
 
@@ -158,19 +206,31 @@ export const ClearButton = styled.button`
   border: none;
   color: ${({ theme }) => theme.colors.text.muted};
   cursor: pointer;
-  padding: 0.25rem;
+  padding: 0.5rem;
   margin-left: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  
+  min-width: 44px;
+  min-height: 44px;
+
   &:hover {
     color: ${({ theme }) => theme.colors.text.secondary};
   }
-  
+
   i {
     font-size: 1.25rem;
+  }
+
+  @media (max-width: 768px) {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0.375rem;
+
+    i {
+      font-size: 1.15rem;
+    }
   }
 `;
 
@@ -190,6 +250,32 @@ export const SearchDropdown = styled.div<{ isOpen: boolean }>`
   transition: all 0.2s ease;
   z-index: 100;
   box-shadow: ${({ theme }) => theme.shadows.xl};
+
+  @media (max-width: 768px) {
+    max-height: 60vh;
+    border-radius: ${({ theme }) => theme.borderRadius.md};
+  }
+
+  @media (max-width: 480px) {
+    max-height: 50vh;
+    left: -0.5rem;
+    right: -0.5rem;
+  }
+
+  /* Smooth scrolling on mobile */
+  -webkit-overflow-scrolling: touch;
+
+  /* Hide scrollbar on mobile for cleaner look */
+  @media (max-width: 768px) {
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: ${({ theme }) => theme.colors.dark5};
+      border-radius: 2px;
+    }
+  }
 `;
 
 export const SearchResult = styled.div`
@@ -200,14 +286,32 @@ export const SearchResult = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
-  
+  min-height: 64px;
+
   &:last-child {
     border-bottom: none;
   }
-  
+
   &:hover {
     background: ${({ theme }) => theme.colors.dark4};
   }
+
+  /* Better touch target on mobile */
+  @media (max-width: 768px) {
+    padding: 0.875rem;
+    gap: 0.875rem;
+    min-height: 60px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.75rem;
+    gap: 0.75rem;
+    min-height: 56px;
+  }
+
+  /* Prevent accidental selections */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 `;
 
 export const SearchResultIcon = styled.div`
@@ -275,9 +379,17 @@ export const ToolsGrid = styled.div`
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
-  
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  @media (max-width: 480px) {
     gap: 1rem;
   }
 `;
@@ -469,181 +581,6 @@ export const ButtonGroup = styled.div`
   font-family: ${({ theme }) => theme.fonts.primary};
 `;
 
-// Mobile Modal Styles
-export const MobileModal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  font-family: ${({ theme }) => theme.fonts.primary};
-`;
-
-export const ModalBackdrop = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-`;
-
-export const ModalContent = styled.div`
-  position: relative;
-  background: ${({ theme }) => theme.colors.dark3};
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  padding: 2.5rem;
-  max-width: 500px;
-  width: 100%;
-  text-align: center;
-  box-shadow: ${({ theme }) => theme.shadows.xl};
-  z-index: 1001;
-  
-  @media (max-width: 640px) {
-    padding: 2rem;
-    margin: 1rem;
-  }
-`;
-
-export const ModalIcon = styled.div`
-  width: 80px;
-  height: 80px;
-  background: ${({ theme }) => theme.colors.dark4};
-  border-radius: ${({ theme }) => theme.borderRadius.full};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1.5rem;
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
-  
-  i {
-    font-size: 2.5rem;
-    color: ${({ theme }) => theme.colors.red3};
-  }
-`;
-
-export const ModalTitle = styled.h2`
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin-bottom: 1rem;
-  
-  @media (max-width: 640px) {
-    font-size: 1.5rem;
-  }
-`;
-
-export const ModalText = styled.p`
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 1rem;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
-  
-  @media (max-width: 640px) {
-    font-size: 0.9rem;
-  }
-`;
-
-export const ModalFeatures = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
-  text-align: left;
-`;
-
-export const FeatureItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  
-  i {
-    color: ${({ theme }) => theme.colors.red3};
-    font-size: 1.25rem;
-    flex-shrink: 0;
-  }
-  
-  span {
-    color: ${({ theme }) => theme.colors.text.secondary};
-    font-size: 0.9rem;
-  }
-`;
-
-export const ModalButtons = styled.div`
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  
-  @media (max-width: 480px) {
-    flex-direction: column;
-  }
-`;
-
-export const ModalButton = styled.button<{ variant: 'primary' | 'secondary' }>`
-  flex: 1;
-  padding: 0.875rem 1.5rem;
-  border-radius: ${({ theme }) => theme.borderRadius.lg};
-  border: 1px solid ${({ theme }) => theme.colors.gray3};
-  font-family: ${({ theme }) => theme.fonts.primary};
-  font-size: 0.95rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  transition: all 0.5s ease;
-  
-  ${({ variant, theme }) => variant === 'primary' 
-    ? `
-      background: linear-gradient(135deg, ${theme.colors.red3}, ${theme.colors.red4});
-      color: ${theme.colors.white};
-      border-color: ${theme.colors.red3};
-      
-      &:hover {
-        background: linear-gradient(135deg, ${theme.colors.red2}, ${theme.colors.red3});
-        border-color: ${theme.colors.red2};
-        transform: translateY(-2px);
-        box-shadow: ${theme.shadows.glow};
-      }
-    `
-    : `
-      background: ${theme.colors.dark4};
-      color: ${theme.colors.text.secondary};
-      border-color: ${theme.colors.dark5};
-      
-      &:hover {
-        background: ${theme.colors.dark5};
-        color: ${theme.colors.red3};
-        border-color: ${theme.colors.red3};
-        transform: translateY(-2px);
-      }
-    `
-  }
-  
-  i {
-    font-size: 1.1rem;
-  }
-  
-  @media (max-width: 480px) {
-    padding: 1rem;
-  }
-`;
-
-export const ModalNote = styled.p`
-  color: ${({ theme }) => theme.colors.text.muted};
-  font-size: 0.8rem;
-  font-style: italic;
-  margin: 0;
-`;
-
 // Educational Card Styles
 export const EducationalCard = styled.div`
   background: ${({ theme }) => theme.colors.dark3};
@@ -653,6 +590,15 @@ export const EducationalCard = styled.div`
   margin-bottom: 2rem;
   transition: all 0.3s ease;
 
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
 `;
 
 export const EducationalCardTitle = styled.h3`

@@ -97,7 +97,9 @@ export const ChannelIdFinder: React.FC = () => {
       // Video URL (extract channel from video)
       { regex: /youtube\.com\/watch\?v=([A-Za-z0-9_-]+)/, type: 'video' },
       // Shorts URL
-      { regex: /youtube\.com\/shorts\/([A-Za-z0-9_-]+)/, type: 'video' }
+      { regex: /youtube\.com\/shorts\/([A-Za-z0-9_-]+)/, type: 'video' },
+      // Handle without @ - Matches youtube.com/moneyguyshow
+      { regex: /youtube\.com\/([A-Za-z0-9_-]+)$/, type: 'handleWithoutAt' }
     ];
 
     for (const pattern of patterns) {
@@ -106,7 +108,7 @@ export const ChannelIdFinder: React.FC = () => {
         return { type: pattern.type, value: match[1] };
       }
     }
-    
+
     return null;
   };
 
@@ -239,6 +241,19 @@ export const ChannelIdFinder: React.FC = () => {
         } else if (extracted.type === 'video') {
           // Get channel ID from video
           channelId = await fetchChannelByVideoId(extracted.value);
+        } else if (extracted.type === 'handleWithoutAt') {
+          // For handles without @ symbol, try forHandle first then search
+          const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_4;
+          let response = await fetch(
+            `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${extracted.value}&key=${API_KEY}`
+          );
+          let data = await response.json();
+          if (data.items?.[0]) {
+            channelId = data.items[0].id;
+          } else {
+            // If not found, try search
+            channelId = await fetchChannelBySearch(extracted.value);
+          }
         } else {
           // For custom URLs, user URLs, handles - search by name
           channelId = await fetchChannelBySearch(extracted.value);
