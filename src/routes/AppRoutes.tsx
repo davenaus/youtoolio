@@ -60,6 +60,8 @@ const KeywordAnalyzer = lazy(() => import('../pages/Tools/components/KeywordAnal
 const ChannelIdFinder = lazy(() => import('../pages/Tools/components/ChannelIdFinder/ChannelIdFinder').then(m => ({ default: m.ChannelIdFinder })));
 const ModerationChecker = lazy(() => import('../pages/Tools/components/ModerationChecker/ModerationChecker').then(m => ({ default: m.ModerationChecker })));
 const YouToolPlaybooks = lazy(() => import('../pages/Tools/components/YouToolPlaybooks/YouToolPlaybooks'));
+const BannerDownloader = lazy(() => import('../pages/Tools/components/BannerDownloader/BannerDownloader').then(m => ({ default: m.BannerDownloader })));
+const ProfilePictureDownloader = lazy(() => import('../pages/Tools/components/ProfilePictureDownloader/ProfilePictureDownloader').then(m => ({ default: m.ProfilePictureDownloader })));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -147,7 +149,11 @@ export const AppRoutes: React.FC = () => {
         <Route path="/tools/channel-id-finder" element={<ChannelIdFinder />} />
         <Route path="/tools/moderation-checker" element={<ModerationChecker />} />
         <Route path="/tools/youtool-playbooks" element={<YouToolPlaybooks />} />
-        
+        <Route path="/tools/banner-downloader" element={<BannerDownloader />} />
+        <Route path="/tools/banner-downloader/:channelId" element={<BannerDownloader />} />
+        <Route path="/tools/profile-picture-downloader" element={<ProfilePictureDownloader />} />
+        <Route path="/tools/profile-picture-downloader/:channelId" element={<ProfilePictureDownloader />} />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>

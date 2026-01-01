@@ -140,6 +140,27 @@ export const toolsSEO: Record<string, ToolSEOConfig> = {
     keywords: 'youtube comment moderation, comment checker, spam filter, comment filtering, youtube moderation tool, comment moderator, profanity filter',
     h1: 'YouTube Comment Moderation Checker',
     schemaType: 'WebApplication'
+  },
+  'banner-downloader': {
+    title: 'YouTube Channel Banner Downloader - Download HD Channel Banners',
+    description: 'Download YouTube channel banners in full resolution (2120px width). Get high-quality channel art and banner images instantly. Free YouTube banner downloader.',
+    keywords: 'youtube banner downloader, download channel banner, youtube channel art downloader, banner download, channel banner grabber, youtube banner extractor, high resolution banner',
+    h1: 'YouTube Channel Banner Downloader',
+    schemaType: 'WebApplication'
+  },
+  'profile-picture-downloader': {
+    title: 'YouTube Profile Picture Downloader - Download Channel Avatars',
+    description: 'Download YouTube channel profile pictures in multiple resolutions (88px to 2048px). Get high-quality channel avatars instantly. Free YouTube profile picture downloader.',
+    keywords: 'youtube profile picture downloader, download channel avatar, youtube profile pic, channel picture download, avatar downloader, youtube dp download, profile image extractor',
+    h1: 'YouTube Profile Picture Downloader',
+    schemaType: 'WebApplication'
+  },
+  'youtool-playbooks': {
+    title: 'YouTool AI Playbooks - YouTube Strategy Templates',
+    description: 'Pre-built AI playbooks with expert-level prompts for viral content, growth strategy, and audience analysis. Accelerate your YouTube success with proven templates.',
+    keywords: 'youtube ai playbooks, content strategy templates, youtube growth strategy, ai prompts, content planning, youtube playbook, strategy templates, viral content guide',
+    h1: 'YouTool AI Playbooks',
+    schemaType: 'WebApplication'
   }
 };
 
