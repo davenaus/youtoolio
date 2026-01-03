@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import moment from 'moment';
 import { Button } from '../../../../components/Button/Button';
 import { SEO } from '../../../../components/SEO';
+import { GoogleAd } from '../../../../components/GoogleAd';
 import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
@@ -1031,6 +1032,9 @@ export const ChannelAnalyzer: React.FC = () => {
             </S.HeaderTextContent>
           </S.HeaderContent>
         </S.EnhancedHeader>
+
+        {/* Google Ad Spot */}
+        <GoogleAd adSlot="1234567890" />
 
         {/* Educational Content Section */}
         {!showResults && (

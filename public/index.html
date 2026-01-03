@@ -37,14 +37,14 @@
 
   <!-- CRITICAL: Preconnect for LCP image (300ms savings!) -->
   <link rel="preconnect" href="https://64.media.tumblr.com" crossorigin />
-  
+
   <!-- Preconnect for fonts - MUST come before font loading -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
   <!-- OPTIMIZED: Google Fonts with font-display swap (reduces 780ms blocking) -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet" media="print" onload="this.media='all'" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"
+    media="print" onload="this.media='all'" />
   <noscript>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
       rel="stylesheet" />
@@ -69,6 +69,20 @@
   <meta name="revisit-after" content="7 days" />
 
   <title>YouTool.io - YouTube Tools for Creators</title>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7ZWEZWXWPJ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-7ZWEZWXWPJ');
+  </script>
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3983371456556282"
+    crossorigin="anonymous"></script>
 
   <!-- Structured Data -->
   <script type="application/ld+json">
@@ -144,7 +158,7 @@
   <!-- Inline critical CSS loading script -->
   <script>
     // Polyfill for older browsers
-    !function(e){"use strict";var t=function(t,n,r){var o=e.document.createElement("link");o.rel="stylesheet",o.href=t;var i=n||e.document.getElementsByTagName("script")[0];return i.parentNode.insertBefore(o,i),o};"undefined"!=typeof module?module.exports=t:e.loadCSS=t}("undefined"!=typeof global?global:this);
+    !function (e) { "use strict"; var t = function (t, n, r) { var o = e.document.createElement("link"); o.rel = "stylesheet", o.href = t; var i = n || e.document.getElementsByTagName("script")[0]; return i.parentNode.insertBefore(o, i), o }; "undefined" != typeof module ? module.exports = t : e.loadCSS = t }("undefined" != typeof global ? global : this);
   </script>
 </head>
 

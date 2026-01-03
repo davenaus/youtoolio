@@ -838,7 +838,6 @@ export const ThumbnailPreview = styled.div`
 
 export const PreviewImage = styled.img`
   max-width: 100%;
-  width: auto;
   height: auto;
   max-height: 400px;
   border-radius: ${({ theme }) => theme.borderRadius.lg};
@@ -1186,6 +1185,7 @@ export const HeaderSearchInput = styled.input`
   @media (max-width: 768px) {
     padding: 0.875rem 1.25rem;
     font-size: 0.9rem;
+    min-width: 0;
   }
 `;
 

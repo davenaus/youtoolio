@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { GoogleAd } from '../../../../components/GoogleAd';
 import { playbooks, Playbook } from './playbooks';
 import PlaybookCard from './components/PlaybookCard';
 import PlaybookModal from './components/PlaybookModal';
@@ -14,10 +15,6 @@ import {
   ToolDescription,
   FeaturesList,
   Feature,
-  HeaderSearchContainer,
-  HeaderSearchBar,
-  SearchInput,
-  SearchButton,
   FiltersContainer,
   FilterButton,
   PlaybooksGrid,
@@ -31,7 +28,6 @@ import {
 const YouToolPlaybooks: React.FC = () => {
   const navigate = useNavigate();
   const [selectedPlaybook, setSelectedPlaybook] = useState<Playbook | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeCategory, setActiveCategory] = useState<string>('All');
 
   // Get unique categories with counts
@@ -54,27 +50,12 @@ const YouToolPlaybooks: React.FC = () => {
       const matchesCategory =
         activeCategory === 'All' || playbook.category === activeCategory;
 
-      // Search filter
-      const matchesSearch =
-        searchQuery === '' ||
-        playbook.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        playbook.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        playbook.category.toLowerCase().includes(searchQuery.toLowerCase());
-
-      return matchesCategory && matchesSearch;
+      return matchesCategory;
     });
-  }, [activeCategory, searchQuery]);
-
-  const handleSearch = () => {
-    // Search is already reactive, this just provides UX feedback
-    if (searchQuery.trim()) {
-      console.log('Searching for:', searchQuery);
-    }
-  };
+  }, [activeCategory]);
 
   const handleCategoryClick = (categoryName: string) => {
     setActiveCategory(categoryName);
-    setSearchQuery(''); // Clear search when changing category
   };
 
   return (
@@ -112,25 +93,12 @@ const YouToolPlaybooks: React.FC = () => {
                 <span>Copy or open in ChatGPT/Gemini</span>
               </Feature>
             </FeaturesList>
-
-            {/* Search Bar */}
-            <HeaderSearchContainer>
-              <HeaderSearchBar>
-                <SearchInput
-                  type="text"
-                  placeholder="Search playbooks..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                />
-                <SearchButton onClick={handleSearch}>
-                  <i className="bx bx-search"></i> Search
-                </SearchButton>
-              </HeaderSearchBar>
-            </HeaderSearchContainer>
           </HeaderTextContent>
         </HeaderContent>
       </EnhancedHeader>
+
+      {/* Google Ad Spot */}
+      <GoogleAd adSlot="1234567890" />
 
       {/* Category Filters */}
       <FiltersContainer>
@@ -159,17 +127,12 @@ const YouToolPlaybooks: React.FC = () => {
       ) : (
         <EmptyState>
           <EmptyIcon>
-            <i className="bx bx-search-alt"></i>
+            <i className="bx bx-book-content"></i>
           </EmptyIcon>
-          <EmptyTitle>No playbooks found for "{searchQuery}"</EmptyTitle>
-          <EmptyDescription>Try:</EmptyDescription>
-          <EmptyList>
-            <li>Different keywords</li>
-            <li>Browsing by category</li>
-            <li>Viewing all playbooks</li>
-          </EmptyList>
-          <FilterButton active={false} onClick={() => setSearchQuery('')}>
-            Clear Search
+          <EmptyTitle>No playbooks in this category</EmptyTitle>
+          <EmptyDescription>Try browsing a different category or view all playbooks.</EmptyDescription>
+          <FilterButton active={false} onClick={() => handleCategoryClick('All')}>
+            View All Playbooks
           </FilterButton>
         </EmptyState>
       )}

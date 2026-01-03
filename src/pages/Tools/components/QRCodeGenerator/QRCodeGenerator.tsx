@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SEO } from '../../../../components/SEO';
+import { GoogleAd } from '../../../../components/GoogleAd';
 import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
@@ -372,6 +373,9 @@ export const QRCodeGenerator: React.FC = () => {
             </S.HeaderTextContent>
           </S.HeaderContent>
         </S.EnhancedHeader>
+
+        {/* Google Ad Spot */}
+        <GoogleAd adSlot="1234567890" />
 
         {renderStepIndicator()}
 

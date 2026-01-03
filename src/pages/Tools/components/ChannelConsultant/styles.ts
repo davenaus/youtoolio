@@ -888,6 +888,7 @@ export const HeaderSearchInput = styled.input`
   @media (max-width: 768px) {
     padding: 0.875rem 1.25rem;
     font-size: 0.95rem;
+    min-width: 0;
   }
 `;
 

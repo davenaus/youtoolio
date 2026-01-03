@@ -241,10 +241,6 @@ const faqData = [
         answer: 'Simply copy your YouTube video URL and paste it into our Video Analyzer tool. Our system will automatically fetch and analyze all available public data including views, engagement, tags, and performance metrics. You\'ll get detailed insights about your video\'s performance and recommendations for improvement.'
       },
       {
-        question: 'Do I need to create an account to use YouTool?',
-        answer: 'You can try our tools without creating an account, with a limited number of analyses available. To unlock unlimited access to all our analytics tools and features, you\'ll need to create an account. Your search history and preferences are saved to your account for easy access across devices.'
-      },
-      {
         question: 'How easy is it to use YouTool\'s analytics tools?',
         answer: 'YouTool is designed for creators of all experience levels. Simply paste a YouTube URL into any of our tools and get instant insights. No technical knowledge required - our interface guides you through the analysis with clear, actionable recommendations you can implement right away.'
       }

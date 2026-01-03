@@ -451,9 +451,9 @@ export const VsIndicator = styled.div`
   align-items: center;
   justify-content: center;
   box-shadow: ${({ theme }) => theme.shadows.md};
-  
+
   @media (max-width: 768px) {
-    margin: 1rem auto;
+    display: none;
   }
 `;
 
@@ -479,7 +479,7 @@ export const CompareButton = styled.button`
     transform: translateY(-2px);
     box-shadow: ${({ theme }) => theme.shadows.lg};
   }
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -488,6 +488,17 @@ export const CompareButton = styled.button`
 
   i {
     font-size: 1.3rem;
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    width: 100%;
+    max-width: 300px;
+
+    i {
+      font-size: 1.1rem;
+    }
   }
 `;
 

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ToolPageWrapper } from '../../../../components/ToolPageWrapper';
 import { SEO } from '../../../../components/SEO';
+import { GoogleAd } from '../../../../components/GoogleAd';
 import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 import moment from 'moment';
@@ -2133,6 +2134,9 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
             </S.HeaderTextContent>
           </S.HeaderContent>
         </S.EnhancedHeader>
+
+        {/* Google Ad Spot */}
+        <GoogleAd adSlot="1234567890" />
 
         {/* Educational Content Section */}
         {!showResults && (

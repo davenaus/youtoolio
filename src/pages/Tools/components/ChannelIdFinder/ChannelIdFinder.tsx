@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SEO } from '../../../../components/SEO';
+import { GoogleAd } from '../../../../components/GoogleAd';
 import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
@@ -389,6 +390,9 @@ export const ChannelIdFinder: React.FC = () => {
             </S.HeaderTextContent>
           </S.HeaderContent>
         </S.EnhancedHeader>
+
+        {/* Google Ad Spot */}
+        <GoogleAd adSlot="1234567890" />
 
         {/* Error Message */}
         {error && (

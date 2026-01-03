@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { SEO } from '../../../../components/SEO';
+import { GoogleAd } from '../../../../components/GoogleAd';
 import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
@@ -933,6 +934,9 @@ export const KeywordAnalyzer: React.FC = () => {
             </S.HeaderTextContent>
           </S.HeaderContent>
         </S.EnhancedHeader>
+
+        {/* Google Ad Spot */}
+        <GoogleAd adSlot="1234567890" />
 
         {error && (
           <S.ErrorMessage>
