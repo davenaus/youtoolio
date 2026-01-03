@@ -30,7 +30,7 @@ const tools: Tool[] = [
   { id: 'comment-downloader', name: 'Comment Downloader', description: 'Download all comments from any YouTube video for analysis and insights.', icon: 'bx bx-download', category: 'Utilities', tags: ['Comments', 'Analysis', 'Data', 'Export', 'Download'], url: '/tools/comment-downloader', image: '/images/tools/comment-downloader.jpg' },
   { id: 'channel-consultant', name: 'Channel Consultant', description: 'Create a custom AI bot trained on your channel to help with content creation and strategy.', icon: 'bx bx-user-circle', category: 'SEO', tags: ['AI', 'Assistant', 'Strategy', 'Automation'], url: '/tools/channel-consultant', image: '/images/tools/channel-consultant.jpg' },
   { id: 'channel-comparer', name: 'Channel Comparer', description: 'Compare any two YouTube channels side by side with detailed metrics and analysis.', icon: 'bx bx-analyse', category: 'SEO', tags: ['Analytics', 'Insights', 'Comparison', 'Competition'], url: '/tools/channel-comparer', image: '/images/tools/channel-comparer.jpg' },
-  { id: 'moderation-checker', name: 'Content Moderation Checker', description: 'Analyze your content for potential policy violations, toxicity, and audience safety before publishing.', icon: 'bx bx-shield', category: 'Utilities', tags: ['Safety', 'Moderation', 'Policy', 'Compliance'], url: '/tools/moderation-checker', isNew: true, image: '/images/tools/moderation-checker.jpg' },
+  { id: 'moderation-checker', name: 'Content Moderation Checker', description: 'Analyze your content for potential policy violations, toxicity, and audience safety before publishing.', icon: 'bx bx-shield', category: 'Utilities', tags: ['Safety', 'Moderation', 'Policy', 'Compliance'], url: '/tools/moderation-checker', image: '/images/tools/moderation-checker.jpg' },
   { id: 'youtool-playbooks', name: 'YouTool Playbooks', description: 'Pre-built AI playbooks that generate expert-level prompts for viral content, growth strategy, and audience analysis.', icon: 'bx bx-book-content', category: 'Utilities', tags: ['AI', 'Prompts', 'Strategy', 'Content', 'Growth'], url: '/tools/youtool-playbooks', isNew: true, image: '/images/tools/youtool-playbooks.jpg' },
   { id: 'color-palette', name: 'Color Palette Generator', description: 'Extract color palettes from images and generate beautiful gradients.', icon: 'bx bx-palette', category: 'Utilities', tags: ['Colors', 'Design', 'Palette', 'Creative'], url: '/tools/color-palette', image: '/images/tools/color-palette.jpg' },
   { id: 'color-picker-from-image', name: 'Color Picker From Image', description: 'Extract and identify exact colors from any image with precise hex, RGB, and HSL values.', icon: 'bx bx-droplet', category: 'Utilities', tags: ['Colors', 'Design', 'Picker', 'Image', 'Creative'], url: '/tools/color-picker-from-image', image: '/images/tools/color-picker-from-image.jpg' },
@@ -48,6 +48,7 @@ export const Tools: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const [favorites, setFavorites] = useState<string[]>([]);
 
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
@@ -59,6 +60,18 @@ export const Tools: React.FC = () => {
       tool.category.toLowerCase().includes(query)
     );
   }, [searchQuery]);
+
+  // Load favorites from localStorage on mount
+  useEffect(() => {
+    const savedFavorites = localStorage.getItem('youtoolio-favorites');
+    if (savedFavorites) {
+      try {
+        setFavorites(JSON.parse(savedFavorites));
+      } catch (e) {
+        console.error('Failed to load favorites:', e);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -81,6 +94,19 @@ export const Tools: React.FC = () => {
     setSearchQuery('');
     setShowDropdown(false);
   };
+
+  const toggleFavorite = (toolId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newFavorites = favorites.includes(toolId)
+      ? favorites.filter(id => id !== toolId)
+      : [...favorites, toolId];
+    setFavorites(newFavorites);
+    localStorage.setItem('youtoolio-favorites', JSON.stringify(newFavorites));
+  };
+
+  const isFavorite = (toolId: string) => favorites.includes(toolId);
+
+  const favoriteTools = tools.filter(tool => favorites.includes(tool.id));
 
   return (
     <>
@@ -140,32 +166,76 @@ export const Tools: React.FC = () => {
           </S.HeaderContent>
         </S.Header>
 
+        {/* Favorites Section */}
+        {favoriteTools.length > 0 && (
+          <S.CategorySection>
+            <S.CategoryTitle>Favorites</S.CategoryTitle>
+
+            <S.ToolsGrid>
+              {/* Favorite Tools */}
+              {favoriteTools.map(tool => (
+                <S.ToolCard key={tool.id}>
+                  <S.FavoriteIconButton
+                    onClick={(e) => toggleFavorite(tool.id, e)}
+                    isFavorite={true}
+                  >
+                    <i className={isFavorite(tool.id) ? 'bx bxs-star' : 'bx bx-star'}></i>
+                  </S.FavoriteIconButton>
+
+                  <S.ToolImageContainer backgroundImage={tool.image}>
+                    <img
+                      src={tool.image}
+                      alt={tool.name}
+                      loading="lazy"
+                      style={{
+                        width: '1px',
+                        height: '1px',
+                        opacity: 0,
+                        position: 'absolute',
+                        pointerEvents: 'none',
+                      }}
+                    />
+                    <S.ToolImageOverlay />
+                  </S.ToolImageContainer>
+
+                  <S.ToolCardContent>
+                    <S.ToolIcon><i className={tool.icon}></i></S.ToolIcon>
+                    <S.ToolName>
+                      {tool.name}
+                      {tool.isNew && <Tag variant="new">New</Tag>}
+                      {tool.isBeta && <Tag variant="beta">Beta</Tag>}
+                    </S.ToolName>
+                    <S.ToolDescription>{tool.description}</S.ToolDescription>
+                    <S.ButtonGroup>
+                      <Button
+                        variant="primary"
+                        icon="bx bx-right-arrow-alt"
+                        onClick={() => navigate(tool.url)}
+                      >
+                        Launch Tool
+                      </Button>
+                    </S.ButtonGroup>
+                  </S.ToolCardContent>
+                </S.ToolCard>
+              ))}
+            </S.ToolsGrid>
+          </S.CategorySection>
+        )}
+
         {categories.map(category => (
           <S.CategorySection key={category}>
             <S.CategoryTitle>{category}</S.CategoryTitle>
 
-            {category === 'SEO' && (
-              <S.EducationalCard>
-                <S.EducationalCardTitle>SEO & Growth Tools</S.EducationalCardTitle>
-                <S.EducationalCardDescription>
-                  These tools help you research keywords, analyze competition, and optimize your content
-                  for discoverability to grow your organic reach.
-                </S.EducationalCardDescription>
-              </S.EducationalCard>
-            )}
-
-            {category === 'Utilities' && (
-              <S.EducationalCard>
-                <S.EducationalCardTitle>Creator Utility Tools</S.EducationalCardTitle>
-                <S.EducationalCardDescription>
-                  Save time and streamline your workflow with tools for downloading, moderation, and monetization.
-                </S.EducationalCardDescription>
-              </S.EducationalCard>
-            )}
-
             <S.ToolsGrid>
               {tools.filter(t => t.category === category).map(tool => (
                 <S.ToolCard key={tool.id}>
+                  <S.FavoriteIconButton
+                    onClick={(e) => toggleFavorite(tool.id, e)}
+                    isFavorite={isFavorite(tool.id)}
+                  >
+                    <i className={isFavorite(tool.id) ? 'bx bxs-star' : 'bx bx-star'}></i>
+                  </S.FavoriteIconButton>
+
                   <S.ToolImageContainer backgroundImage={tool.image}>
                     <img
                       src={tool.image}

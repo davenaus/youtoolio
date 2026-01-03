@@ -11,7 +11,7 @@ const Container = styled.div`
 `;
 
 const ContentWrapper = styled.div`
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
 `;
@@ -93,28 +93,87 @@ const SearchIcon = styled.i`
   font-size: 1.2rem;
 `;
 
-const AlphabetNav = styled.div`
+const FilterSection = styled.div`
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: center;
+  gap: 1rem;
   margin-bottom: 3rem;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 1rem;
+  }
 `;
 
-const AlphabetButton = styled.button<{ active: boolean }>`
-  background: ${({ active, theme }) => active ? theme.colors.red4 : theme.colors.dark3};
-  color: ${({ active, theme }) => active ? 'white' : theme.colors.text.secondary};
-  border: 1px solid ${({ active, theme }) => active ? theme.colors.red4 : theme.colors.dark5};
-  padding: 0.5rem 0.75rem;
+const FilterGroup = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+`;
+
+const FilterLabel = styled.span`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+`;
+
+const Select = styled.select`
+  background: ${({ theme }) => theme.colors.dark3};
+  color: ${({ theme }) => theme.colors.text.primary};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  padding: 0.5rem 1rem;
   border-radius: ${({ theme }) => theme.borderRadius.md};
   cursor: pointer;
   transition: all 0.2s ease;
-  font-weight: 500;
-  min-width: 40px;
+  font-size: 0.9rem;
+  min-width: 120px;
 
   &:hover {
-    background: ${({ active, theme }) => active ? theme.colors.red5 : theme.colors.dark4};
-    color: ${({ active, theme }) => active ? 'white' : theme.colors.text.primary};
+    background: ${({ theme }) => theme.colors.dark4};
+    border-color: ${({ theme }) => theme.colors.red4};
+  }
+
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.red4};
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+`;
+
+const ClearButton = styled.button`
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text.muted};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  padding: 0.5rem 1rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.dark3};
+    color: ${({ theme }) => theme.colors.text.primary};
+    border-color: ${({ theme }) => theme.colors.red4};
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: center;
   }
 `;
 
@@ -174,29 +233,6 @@ const GlossaryItem = styled.div`
   }
 `;
 
-const CategoryFilter = styled.div`
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  justify-content: center;
-  flex-wrap: wrap;
-`;
-
-const CategoryButton = styled.button<{ active: boolean }>`
-  background: ${({ active, theme }) => active ? theme.colors.red4 : theme.colors.dark4};
-  color: ${({ active, theme }) => active ? 'white' : theme.colors.text.secondary};
-  border: 1px solid ${({ active, theme }) => active ? theme.colors.red4 : theme.colors.dark5};
-  padding: 0.5rem 1rem;
-  border-radius: ${({ theme }) => theme.borderRadius.md};
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.9rem;
-
-  &:hover {
-    background: ${({ active, theme }) => active ? theme.colors.red5 : theme.colors.dark3};
-    color: ${({ active, theme }) => active ? 'white' : theme.colors.text.primary};
-  }
-`;
 
 export const YouTubeGlossary: React.FC = () => {
   const navigate = useNavigate();
@@ -330,6 +366,12 @@ export const YouTubeGlossary: React.FC = () => {
   const categories = ['ALL', ...Array.from(new Set(glossaryTerms.map(term => term.category)))];
   const alphabet = ['ALL', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
 
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setSelectedLetter('ALL');
+    setSelectedCategory('ALL');
+  };
+
   const filteredTerms = glossaryTerms.filter(term => {
     const matchesSearch = searchQuery === '' || 
       term.term.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -369,17 +411,42 @@ export const YouTubeGlossary: React.FC = () => {
           </SearchBox>
         </Header>
 
-        <AlphabetNav>
-          {alphabet.map((letter) => (
-            <AlphabetButton
-              key={letter}
-              active={selectedLetter === letter}
-              onClick={() => setSelectedLetter(letter)}
+        <FilterSection>
+          <FilterGroup>
+            <FilterLabel>Letter:</FilterLabel>
+            <Select
+              value={selectedLetter}
+              onChange={(e) => setSelectedLetter(e.target.value)}
             >
-              {letter}
-            </AlphabetButton>
-          ))}
-        </AlphabetNav>
+              {alphabet.map((letter) => (
+                <option key={letter} value={letter}>
+                  {letter === 'ALL' ? 'All Letters' : letter}
+                </option>
+              ))}
+            </Select>
+          </FilterGroup>
+
+          <FilterGroup>
+            <FilterLabel>Category:</FilterLabel>
+            <Select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+            >
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category === 'ALL' ? 'All Categories' : category}
+                </option>
+              ))}
+            </Select>
+          </FilterGroup>
+
+          {(selectedLetter !== 'ALL' || selectedCategory !== 'ALL' || searchQuery !== '') && (
+            <ClearButton onClick={handleClearFilters}>
+              <i className="bx bx-x"></i>
+              Clear Filters
+            </ClearButton>
+          )}
+        </FilterSection>
 
         <GlossaryGrid>
           {filteredTerms.map((item, index) => (

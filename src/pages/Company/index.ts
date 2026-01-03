@@ -10,4 +10,3 @@ export { Partnerships } from './Partnerships';
 export { Changelog } from './Changelog';
 export { YouTubeEducationCenter } from './YouTubeEducationCenter';
 export { YouTubeGlossary } from './YouTubeGlossary';
-export { CaseStudies } from './CaseStudies';

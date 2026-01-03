@@ -56,9 +56,16 @@ interface ChannelMetrics {
 }
 
 const flaggableWords = [
-  "ahole", "anus", "ass", "asshole", "bastard", "bitch", "fuck", "shit", 
+  "ahole", "anus", "ass", "asshole", "bastard", "bitch", "fuck", "shit",
   // ... add more as needed from your list
 ];
+
+// Helper function to decode HTML entities
+const decodeHTMLEntities = (text: string): string => {
+  const textArea = document.createElement('textarea');
+  textArea.innerHTML = text;
+  return textArea.value;
+};
 
 export const ChannelAnalyzer: React.FC = () => {
   const { channelId } = useParams<{ channelId: string }>();
@@ -340,7 +347,7 @@ export const ChannelAnalyzer: React.FC = () => {
       const statsItem = statsData.items.find((stat: any) => stat.id === searchItem.id.videoId);
       return {
         id: searchItem.id.videoId,
-        title: searchItem.snippet.title,
+        title: decodeHTMLEntities(searchItem.snippet.title),
         thumbnail: searchItem.snippet.thumbnails.medium?.url || searchItem.snippet.thumbnails.default.url,
         views: parseInt(statsItem?.statistics?.viewCount || '0'),
         likes: parseInt(statsItem?.statistics?.likeCount || '0'),
@@ -348,7 +355,7 @@ export const ChannelAnalyzer: React.FC = () => {
         publishedAt: searchItem.snippet.publishedAt,
         duration: statsItem?.contentDetails?.duration || 'PT0S',
         tags: statsItem?.snippet?.tags || [],
-        description: statsItem?.snippet?.description || ''
+        description: decodeHTMLEntities(statsItem?.snippet?.description || '')
       };
     });
   };
@@ -1148,7 +1155,7 @@ export const ChannelAnalyzer: React.FC = () => {
                 </S.ChannelLogoContainer>
                 
                 <S.ChannelDetails>
-                  <S.ChannelName>{channelData.snippet.title}</S.ChannelName>
+                  <S.ChannelName>{decodeHTMLEntities(channelData.snippet.title)}</S.ChannelName>
                   <S.ChannelMeta>
                     <S.MetaItem>
                       <i className="bx bx-user"></i>
@@ -1397,7 +1404,7 @@ export const ChannelAnalyzer: React.FC = () => {
                     {channelData.snippet.description ? (
                       <>
                         <S.DescriptionText>
-                          {channelData.snippet.description}
+                          {decodeHTMLEntities(channelData.snippet.description)}
                         </S.DescriptionText>
                         <S.DescriptionStats>
                           <S.StatItem>

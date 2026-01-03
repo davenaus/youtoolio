@@ -11,7 +11,7 @@ const Container = styled.div`
 `;
 
 const ContentWrapper = styled.div`
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 0 2rem;
 `;

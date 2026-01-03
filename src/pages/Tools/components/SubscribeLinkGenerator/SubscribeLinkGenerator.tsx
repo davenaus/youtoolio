@@ -192,7 +192,11 @@ export const SubscribeLinkGenerator: React.FC = () => {
       })) || [];
 
       // Extract the custom URL if available, otherwise use the handle
-      const customUrl = channelData.snippet.customUrl || handle;
+      // Remove @ if it's already there to avoid duplication
+      let customUrl = channelData.snippet.customUrl || handle;
+      if (customUrl.startsWith('@')) {
+        customUrl = customUrl.substring(1);
+      }
 
       return {
         id: channelData.id,

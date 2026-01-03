@@ -181,7 +181,6 @@ export const Footer: React.FC = () => {
             <FooterLinks>
               <li><a onClick={() => navigate('/blog')}>Blog</a></li>
               <li><a onClick={() => navigate('/education')}>Education Center</a></li>
-              <li><a onClick={() => navigate('/case-studies')}>Case Studies</a></li>
               <li><a onClick={() => navigate('/glossary')}>YouTube Glossary</a></li>
               <li><a onClick={() => navigate('/guides')}>Creator Guides</a></li>
               <li><a onClick={() => navigate('/help')}>Help Center</a></li>

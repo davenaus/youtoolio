@@ -29,16 +29,24 @@ export const EducationalContent = styled.div`
 
 export const SectionSubTitle = styled.h2`
   color: ${({ theme }) => theme.colors.red4};
-  font-size: 1.8rem;
+  font-size: 1.3rem;
   margin-bottom: 1rem;
   font-weight: 600;
+
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+  }
 `;
 
 export const EducationalText = styled.p`
   color: ${({ theme }) => theme.colors.text.secondary};
   margin-bottom: 1.5rem;
-  font-size: 1.1rem;
-  line-height: 1.7;
+  font-size: 0.90rem;
+  line-height: 1.6;
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+  }
 `;
 
 export const FeatureList = styled.ul`
@@ -53,16 +61,25 @@ export const FeatureListItem = styled.li`
   gap: 0.75rem;
   margin-bottom: 1rem;
   color: ${({ theme }) => theme.colors.text.secondary};
-  
+  font-size: 0.9rem;
+
   i {
     color: ${({ theme }) => theme.colors.success};
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     margin-top: 0.1rem;
     flex-shrink: 0;
   }
-  
+
   span {
     flex: 1;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+
+    i {
+      font-size: 1rem;
+    }
   }
 `;
 
@@ -89,8 +106,8 @@ export const StepItem = styled.div`
 `;
 
 export const StepNumberCircle = styled.div`
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
   color: white;
   border-radius: 50%;
@@ -98,21 +115,37 @@ export const StepNumberCircle = styled.div`
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(125, 0, 0, 0.3);
+
+  @media (max-width: 768px) {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
 `;
 
 export const StepContent = styled.div`
   flex: 1;
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+  }
 `;
 
 
 export const StepTitle = styled.h4`
   color: ${({ theme }) => theme.colors.text.primary};
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   font-weight: 600;
   margin: 0 0 0.75rem 0;
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+  }
 `;
 
 export const PageWrapper = styled.div`
@@ -247,29 +280,37 @@ export const ToggleButton = styled.button`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: ${({ theme }) => theme.colors.dark3};
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  border-radius: ${({ theme }) => theme.borderRadius.md};
+  padding: 0.875rem 1.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: ${({ theme }) => theme.colors.white};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
   font-family: ${({ theme }) => theme.fonts.primary};
   font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+
   &:hover {
-    background: ${({ theme }) => theme.colors.dark4};
-    color: ${({ theme }) => theme.colors.text.primary};
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.02);
   }
-  
+
   &.active {
-    background: ${({ theme }) => theme.colors.red3};
-    border-color: ${({ theme }) => theme.colors.red3};
-    color: ${({ theme }) => theme.colors.white};
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
   }
-  
+
   i {
-    font-size: 1rem;
+    font-size: 1.1rem;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
   }
 `;
 
@@ -396,14 +437,103 @@ export const BatchTextarea = styled.textarea`
   font-family: ${({ theme }) => theme.fonts.primary};
   resize: vertical;
   min-height: 120px;
-  
+
   &::placeholder {
     color: ${({ theme }) => theme.colors.text.muted};
   }
-  
+
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.colors.red3};
+  }
+`;
+
+export const BatchUrlRow = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  align-items: center;
+`;
+
+export const BatchInput = styled.input`
+  flex: 1;
+  padding: 0.875rem 1rem;
+  background: ${({ theme }) => theme.colors.dark4};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 0.9rem;
+
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.text.muted};
+  }
+
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.red3};
+  }
+`;
+
+export const RemoveButton = styled.button`
+  padding: 0.875rem;
+  background: ${({ theme }) => theme.colors.dark4};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+
+  i {
+    font-size: 1.1rem;
+  }
+
+  &:hover:not(:disabled) {
+    background: ${({ theme }) => theme.colors.red3};
+    border-color: ${({ theme }) => theme.colors.red3};
+    color: ${({ theme }) => theme.colors.white};
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+export const BatchActions = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+`;
+
+export const AddButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: ${({ theme }) => theme.colors.dark4};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  color: ${({ theme }) => theme.colors.text.primary};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px;
+
+  i {
+    font-size: 1.1rem;
+  }
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.dark5};
+    border-color: ${({ theme }) => theme.colors.red4};
+    color: ${({ theme }) => theme.colors.red4};
   }
 `;
 
@@ -420,18 +550,18 @@ export const BatchButton = styled.button`
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-top: 1rem;
-  
+  min-height: 44px;
+
   &:hover:not(:disabled) {
     background: linear-gradient(135deg, ${({ theme }) => theme.colors.red2}, ${({ theme }) => theme.colors.red3});
     transform: translateY(-2px);
   }
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
-  
+
   i {
     font-size: 1.1rem;
   }
@@ -445,7 +575,7 @@ export const Status = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.dark5};
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 `;
 
 export const ResultsContainer = styled.div`
@@ -931,6 +1061,16 @@ export const HeaderTextContent = styled.div`
   color: ${({ theme }) => theme.colors.text.primary};
 `;
 
+export const ControlsContainer = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+`;
+
 export const ToolTitle = styled.h1`
   font-size: 2.5rem;
   font-weight: 700;
@@ -972,7 +1112,7 @@ export const FeatureItem = styled.div`
   align-items: center;
   gap: 0.75rem;
   color: ${({ theme }) => theme.colors.text.primary};
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   
   i {
     color: ${({ theme }) => theme.colors.red4};
@@ -1033,7 +1173,7 @@ export const HeaderSearchInput = styled.input`
   
   @media (max-width: 768px) {
     padding: 0.875rem 1.25rem;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 `;
 

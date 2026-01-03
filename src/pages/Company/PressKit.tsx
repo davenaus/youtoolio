@@ -115,63 +115,79 @@ const LogoGrid = styled.div`
 `;
 
 const LogoCard = styled.div`
-  background: ${({ theme }) => theme.colors.dark4};
+  background: ${({ theme }) => theme.colors.dark3};
   border: 1px solid ${({ theme }) => theme.colors.dark5};
   border-radius: ${({ theme }) => theme.borderRadius.lg};
-  padding: 2rem;
+  padding: 0;
+  overflow: hidden;
   text-align: center;
   transition: all 0.3s ease;
 
   &:hover {
-    transform: translateY(-3px);
-    border-color: ${({ theme }) => theme.colors.red4};
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  a {
+    display: block;
+    text-decoration: none;
+    color: inherit;
   }
 
   .logo-preview {
-    width: 120px;
-    height: 120px;
-    background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
-    border-radius: ${({ theme }) => theme.borderRadius.lg};
+    width: 100%;
+    height: 200px;
+    background: ${({ theme }) => theme.colors.dark2};
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1rem auto;
-    color: white;
-    font-size: 2rem;
-    font-weight: bold;
+    padding: 2rem;
+    border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+
+    img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
   }
 
   h4 {
     color: ${({ theme }) => theme.colors.text.primary};
     font-size: 1.1rem;
-    margin-bottom: 0.5rem;
+    font-weight: 600;
+    margin: 1.5rem 0 0.5rem 0;
+    padding: 0 1.5rem;
   }
 
   p {
-    color: ${({ theme }) => theme.colors.text.muted};
+    color: ${({ theme }) => theme.colors.text.secondary};
     font-size: 0.9rem;
-    margin-bottom: 1rem;
+    margin: 0 0 1.5rem 0;
+    padding: 0 1.5rem;
   }
 `;
 
-const DownloadButton = styled.button`
-  background: ${({ theme }) => theme.colors.red4};
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: ${({ theme }) => theme.borderRadius.md};
+const DownloadButton = styled.div`
+  background: ${({ theme }) => theme.colors.dark4};
+  color: ${({ theme }) => theme.colors.text.primary};
+  border-top: 1px solid ${({ theme }) => theme.colors.dark5};
+  padding: 1rem;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  margin: 0 auto;
 
   &:hover {
-    background: ${({ theme }) => theme.colors.red5};
-    transform: translateY(-1px);
+    background: ${({ theme }) => theme.colors.red4};
+    color: white;
+  }
+
+  i {
+    font-size: 1.1rem;
   }
 `;
 
@@ -298,6 +314,39 @@ export const PressKit: React.FC = () => {
             <li>Comment analysis and engagement insights</li>
             <li>Competitor analysis and industry benchmarking</li>
           </ul>
+        </Section>
+
+        <Section>
+          <h2>
+            <i className="bx bx-image"></i>
+            Brand Assets
+          </h2>
+          <p>
+            Download our logo and brand assets for use in press articles, partnerships, and promotional materials.
+          </p>
+
+          <LogoGrid>
+            <LogoCard>
+              <a
+                href="https://64.media.tumblr.com/e000461398dfaa9247cc9db6eca187a2/0e01452f9f6dd974-6b/s2048x3072/0457337859cea0729cdfee1d7a9407e25f8f5cca.png"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="logo-preview">
+                  <img
+                    src="https://64.media.tumblr.com/e000461398dfaa9247cc9db6eca187a2/0e01452f9f6dd974-6b/s2048x3072/0457337859cea0729cdfee1d7a9407e25f8f5cca.png"
+                    alt="YouTool Logo"
+                  />
+                </div>
+                <h4>YouTool Logo</h4>
+                <p>High resolution PNG</p>
+                <DownloadButton>
+                  <i className="bx bx-download"></i>
+                  Open Full Size
+                </DownloadButton>
+              </a>
+            </LogoCard>
+          </LogoGrid>
         </Section>
 
         <ContactSection>

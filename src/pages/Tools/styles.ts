@@ -376,33 +376,37 @@ export const NoResults = styled.div`
 // Rest of the existing styles remain the same...
 export const ToolsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
 
   @media (max-width: 1024px) {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   }
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    gap: 1.25rem;
+    gap: 1rem;
   }
 
   @media (max-width: 480px) {
-    gap: 1rem;
+    gap: 0.875rem;
   }
 `;
 
 export const ToolImageContainer = styled.div<{ backgroundImage: string }>`
   position: relative;
-  height: 120px;
+  height: 100px;
   background-image: url(${props => props.backgroundImage});
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   border-radius: ${({ theme }) => theme.borderRadius.xl} ${({ theme }) => theme.borderRadius.xl} 0 0;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    height: 90px;
+  }
 `;
 
 export const ToolImageOverlay = styled.div`
@@ -419,6 +423,67 @@ export const ToolImageOverlay = styled.div`
     rgba(26, 26, 29, 1) 100%
   );
   transition: all 0.3s ease;
+`;
+
+export const FavoriteIconButton = styled.button<{ isFavorite: boolean }>`
+  position: absolute;
+  top: 0.625rem;
+  right: 0.625rem;
+  z-index: 10;
+  background: ${({ isFavorite }) =>
+    isFavorite
+      ? 'rgba(218, 165, 32, 0.2)'
+      : 'rgba(0, 0, 0, 0.5)'};
+  backdrop-filter: blur(10px);
+  border: 1px solid ${({ isFavorite }) =>
+    isFavorite
+      ? 'rgba(218, 165, 32, 0.4)'
+      : 'rgba(255, 255, 255, 0.2)'};
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  i {
+    font-size: 1rem;
+    color: ${({ isFavorite }) => isFavorite ? '#DAA520' : '#ffffff'};
+    transition: all 0.3s ease;
+    line-height: 1;
+  }
+
+  &:hover {
+    background: rgba(218, 165, 32, 0.3);
+    transform: scale(1.1);
+    border-color: rgba(218, 165, 32, 0.6);
+
+    i {
+      color: #DAA520;
+    }
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  @media (max-width: 768px) {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    min-height: 30px;
+    top: 0.5rem;
+    right: 0.5rem;
+
+    i {
+      font-size: 0.9rem;
+    }
+  }
 `;
 
 export const ToolCard = styled.div`
@@ -445,7 +510,7 @@ export const ToolCard = styled.div`
     transition: opacity 0.3s ease;
     z-index: 3;
   }
-    
+
     ${ToolImageOverlay} {
       background: linear-gradient(
         to bottom,
@@ -459,7 +524,7 @@ export const ToolCard = styled.div`
 `;
 
 export const ToolCardContent = styled.div`
-  padding: 1rem;
+  padding: 0.875rem;
   padding-top: 0.5rem;
   display: flex;
   flex-direction: column;
@@ -468,34 +533,51 @@ export const ToolCardContent = styled.div`
   position: relative;
   margin-top: -20px;
   z-index: 2;
+
+  @media (max-width: 768px) {
+    padding: 0.75rem;
+  }
 `;
 
 export const ToolIcon = styled.div`
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.625rem;
   box-shadow: ${({ theme }) => theme.shadows.glow};
 
   i {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     color: ${({ theme }) => theme.colors.white};
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  }
+
+  @media (max-width: 768px) {
+    width: 32px;
+    height: 32px;
+
+    i {
+      font-size: 1rem;
+    }
   }
 `;
 
 export const ToolName = styled.h3`
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   color: ${({ theme }) => theme.colors.text.primary};
   margin-bottom: 0.5rem;
   font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+  }
 `;
 
 export const StatusTag = styled.span<{ variant: 'new' | 'beta' }>`
@@ -513,14 +595,19 @@ export const StatusTag = styled.span<{ variant: 'new' | 'beta' }>`
 
 export const ToolDescription = styled.p`
   color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 0.85rem;
-  line-height: 1.5;
-  margin-bottom: 1rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  margin-bottom: 0.875rem;
   flex-grow: 1;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    font-size: 0.7rem;
+    margin-bottom: 0.75rem;
+  }
 `;
 
 export const CategorySection = styled.section`
@@ -537,14 +624,14 @@ export const CategorySection = styled.section`
 `;
 
 export const CategoryTitle = styled.h2`
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   color: ${({ theme }) => theme.colors.text.primary};
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.625rem;
   border-bottom: 2px solid ${({ theme }) => theme.colors.dark5};
   position: relative;
   font-weight: 600;
-  
+
   &::after {
     content: '';
     position: absolute;
@@ -553,6 +640,11 @@ export const CategoryTitle = styled.h2`
     width: 60px;
     height: 2px;
     background: linear-gradient(90deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  }
+
+  @media (max-width: 768px) {
+    font-size: 1.35rem;
+    margin-bottom: 1rem;
   }
 `;
 
@@ -620,8 +712,9 @@ export const EducationalCardBenefits = styled.p`
   line-height: 1.6;
   margin: 0;
   font-size: 0.95rem;
-  
+
   strong {
     color: ${({ theme }) => theme.colors.text.primary};
   }
 `;
+

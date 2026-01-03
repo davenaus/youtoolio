@@ -28,7 +28,6 @@ const Partnerships = lazy(() => import('../pages/Company').then(m => ({ default:
 const Changelog = lazy(() => import('../pages/Company').then(m => ({ default: m.Changelog })));
 const YouTubeEducationCenter = lazy(() => import('../pages/Company').then(m => ({ default: m.YouTubeEducationCenter })));
 const YouTubeGlossary = lazy(() => import('../pages/Company').then(m => ({ default: m.YouTubeGlossary })));
-const CaseStudies = lazy(() => import('../pages/Company').then(m => ({ default: m.CaseStudies })));
 
 // Blog Posts - lazy loaded
 const YouTubeAnalyticsMetrics = lazy(() => import('../pages/Company/BlogPosts').then(m => ({ default: m.YouTubeAnalyticsMetrics })));
@@ -112,7 +111,6 @@ export const AppRoutes: React.FC = () => {
         <Route path="/changelog" element={<Changelog />} />
         <Route path="/education" element={<YouTubeEducationCenter />} />
         <Route path="/glossary" element={<YouTubeGlossary />} />
-        <Route path="/case-studies" element={<CaseStudies />} />
         
         {/* Link in Bio Landing Page */}
         <Route path="/link-in-bio-page-maker" element={<LinkInBioLanding />} />

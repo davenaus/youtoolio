@@ -110,6 +110,13 @@ interface ChannelVideo {
   duration?: number;
 }
 
+// Helper function to decode HTML entities
+const decodeHTMLEntities = (text: string): string => {
+  const textArea = document.createElement('textarea');
+  textArea.innerHTML = text;
+  return textArea.value;
+};
+
 const VideoAnalyzer: React.FC = () => {
   const { videoId } = useParams<{ videoId: string }>();
   const navigate = useNavigate();
@@ -408,7 +415,7 @@ const VideoAnalyzer: React.FC = () => {
 
       return videosData.items.map((video: any) => ({
         id: video.id,
-        title: video.snippet.title,
+        title: decodeHTMLEntities(video.snippet.title),
         publishedAt: video.snippet.publishedAt,
         viewCount: parseInt(video.statistics.viewCount || '0'),
         likeCount: parseInt(video.statistics.likeCount || '0'),

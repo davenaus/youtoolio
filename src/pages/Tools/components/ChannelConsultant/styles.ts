@@ -29,16 +29,24 @@ export const EducationalContent = styled.div`
 
 export const SectionSubTitle = styled.h2`
   color: ${({ theme }) => theme.colors.red4};
-  font-size: 1.8rem;
+  font-size: 1.3rem;
   margin-bottom: 1rem;
   font-weight: 600;
+
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+  }
 `;
 
 export const EducationalText = styled.p`
   color: ${({ theme }) => theme.colors.text.secondary};
   margin-bottom: 1.5rem;
-  font-size: 1.1rem;
-  line-height: 1.7;
+  font-size: 0.90rem;
+  line-height: 1.6;
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+  }
 `;
 
 export const FeatureList = styled.ul`
@@ -53,16 +61,25 @@ export const FeatureListItem = styled.li`
   gap: 0.75rem;
   margin-bottom: 1rem;
   color: ${({ theme }) => theme.colors.text.secondary};
-  
+  font-size: 0.9rem;
+
   i {
     color: ${({ theme }) => theme.colors.success};
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     margin-top: 0.1rem;
     flex-shrink: 0;
   }
-  
+
   span {
     flex: 1;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+
+    i {
+      font-size: 1rem;
+    }
   }
 `;
 
@@ -89,8 +106,8 @@ export const StepItem = styled.div`
 `;
 
 export const StepNumberCircle = styled.div`
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
   color: white;
   border-radius: 50%;
@@ -98,22 +115,37 @@ export const StepNumberCircle = styled.div`
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(125, 0, 0, 0.3);
+
+  @media (max-width: 768px) {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
 `;
 
 export const StepContent = styled.div`
   flex: 1;
+  font-size: 0.95rem;
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+  }
 `;
 
 
 
 export const StepTitle = styled.h4`
   color: ${({ theme }) => theme.colors.text.primary};
-  font-size: 1.2rem;
+  font-size: 1.05rem;
   font-weight: 600;
   margin: 0 0 0.75rem 0;
+
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+  }
 `;
 
 export const BottomAdContainer = styled.div`

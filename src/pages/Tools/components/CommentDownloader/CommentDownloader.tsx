@@ -44,7 +44,7 @@ export const CommentDownloader: React.FC = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [videoData, setVideoData] = useState<any>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [batchUrls, setBatchUrls] = useState('');
+  const [batchUrls, setBatchUrls] = useState<string[]>(['']);
   const [showBatch, setShowBatch] = useState(false);
   const [batchResults, setBatchResults] = useState<any[]>([]);
   const [isBatchMode, setIsBatchMode] = useState(false);
@@ -77,6 +77,33 @@ export const CommentDownloader: React.FC = () => {
   const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_5;
   const MAX_RESULTS = 100;
   const MAX_PAGES = Math.ceil(filters.maxComments / MAX_RESULTS);
+
+  // Helper function to decode HTML entities and clean comment text
+  const decodeCommentText = (text: string): string => {
+    // Create a temporary element to decode HTML entities
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = text;
+    let decoded = textarea.value;
+
+    // Remove HTML anchor tags and keep just the text
+    decoded = decoded.replace(/<a[^>]*href="[^"]*"[^>]*>([^<]*)<\/a>/g, '$1');
+
+    // Decode any remaining HTML entities
+    const entityMap: { [key: string]: string } = {
+      '&amp;': '&',
+      '&lt;': '<',
+      '&gt;': '>',
+      '&quot;': '"',
+      '&#39;': "'",
+      '&apos;': "'"
+    };
+
+    Object.keys(entityMap).forEach(entity => {
+      decoded = decoded.split(entity).join(entityMap[entity]);
+    });
+
+    return decoded;
+  };
 
   useEffect(() => {
     if (videoId) {
@@ -135,7 +162,7 @@ export const CommentDownloader: React.FC = () => {
       
       return data.items?.map((item: any) => ({
         id: item.id,
-        text: item.snippet.textDisplay,
+        text: decodeCommentText(item.snippet.textDisplay),
         author: item.snippet.authorDisplayName,
         publishedAt: item.snippet.publishedAt,
         likeCount: item.snippet.likeCount || 0
@@ -226,7 +253,7 @@ export const CommentDownloader: React.FC = () => {
         for (const item of data.items) {
           const comment: Comment = {
             id: item.id,
-            text: item.snippet.topLevelComment.snippet.textDisplay,
+            text: decodeCommentText(item.snippet.topLevelComment.snippet.textDisplay),
             author: item.snippet.topLevelComment.snippet.authorDisplayName,
             publishedAt: item.snippet.topLevelComment.snippet.publishedAt,
             likeCount: item.snippet.topLevelComment.snippet.likeCount || 0,
@@ -238,7 +265,7 @@ export const CommentDownloader: React.FC = () => {
             if (item.replies?.comments) {
               comment.replies = item.replies.comments.map((reply: any) => ({
                 id: reply.id,
-                text: reply.snippet.textDisplay,
+                text: decodeCommentText(reply.snippet.textDisplay),
                 author: reply.snippet.authorDisplayName,
                 publishedAt: reply.snippet.publishedAt,
                 likeCount: reply.snippet.likeCount || 0
@@ -267,8 +294,24 @@ export const CommentDownloader: React.FC = () => {
     }
   };
 
+  const addBatchUrl = () => {
+    setBatchUrls([...batchUrls, '']);
+  };
+
+  const removeBatchUrl = (index: number) => {
+    if (batchUrls.length > 1) {
+      setBatchUrls(batchUrls.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateBatchUrl = (index: number, value: string) => {
+    const newUrls = [...batchUrls];
+    newUrls[index] = value;
+    setBatchUrls(newUrls);
+  };
+
   const handleBatchDownload = async () => {
-    const urls = batchUrls.split('\n').filter(url => url.trim());
+    const urls = batchUrls.filter(url => url.trim());
     if (urls.length === 0) return;
 
     setIsBatchMode(true); // Enable batch mode
@@ -304,7 +347,7 @@ export const CommentDownloader: React.FC = () => {
             for (const item of data.items) {
               const comment: Comment = {
                 id: item.id,
-                text: item.snippet.topLevelComment.snippet.textDisplay,
+                text: decodeCommentText(item.snippet.topLevelComment.snippet.textDisplay),
                 author: item.snippet.topLevelComment.snippet.authorDisplayName,
                 publishedAt: item.snippet.topLevelComment.snippet.publishedAt,
                 likeCount: item.snippet.topLevelComment.snippet.likeCount || 0,
@@ -315,7 +358,7 @@ export const CommentDownloader: React.FC = () => {
                 if (item.replies?.comments) {
                   comment.replies = item.replies.comments.map((reply: any) => ({
                     id: reply.id,
-                    text: reply.snippet.textDisplay,
+                    text: decodeCommentText(reply.snippet.textDisplay),
                     author: reply.snippet.authorDisplayName,
                     publishedAt: reply.snippet.publishedAt,
                     likeCount: reply.snippet.likeCount || 0
@@ -475,26 +518,27 @@ export const CommentDownloader: React.FC = () => {
                   </S.HeaderSearchButton>
                 </S.HeaderSearchBar>
               </S.HeaderSearchContainer>
+
+              {/* Toggle Buttons in Header */}
+              <S.ControlsContainer>
+                <S.ToggleButton
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={showFilters ? 'active' : ''}
+                >
+                  <i className="bx bx-filter"></i>
+                  Advanced Filters
+                </S.ToggleButton>
+                <S.ToggleButton
+                  onClick={() => setShowBatch(!showBatch)}
+                  className={showBatch ? 'active' : ''}
+                >
+                  <i className="bx bx-list-ul"></i>
+                  Batch Download
+                </S.ToggleButton>
+              </S.ControlsContainer>
             </S.HeaderTextContent>
           </S.HeaderContent>
         </S.EnhancedHeader>
-
-        <S.ToggleContainer>
-            <S.ToggleButton 
-              onClick={() => setShowFilters(!showFilters)}
-              className={showFilters ? 'active' : ''}
-            >
-              <i className="bx bx-filter"></i>
-              Advanced Filters
-            </S.ToggleButton>
-            <S.ToggleButton 
-              onClick={() => setShowBatch(!showBatch)}
-              className={showBatch ? 'active' : ''}
-            >
-              <i className="bx bx-list-ul"></i>
-              Batch Download
-            </S.ToggleButton>
-          </S.ToggleContainer>
 
         {showFilters && (
           <S.FiltersContainer>
@@ -579,17 +623,34 @@ export const CommentDownloader: React.FC = () => {
 
         {showBatch && (
           <S.BatchContainer>
-            <S.BatchLabel>Batch Download (one URL per line)</S.BatchLabel>
-            <S.BatchTextarea
-              value={batchUrls}
-              onChange={(e) => setBatchUrls(e.target.value)}
-              placeholder="https://youtube.com/watch?v=VIDEO_ID_1&#10;https://youtube.com/watch?v=VIDEO_ID_2&#10;..."
-              rows={5}
-            />
-            <S.BatchButton onClick={handleBatchDownload} disabled={isLoading || !batchUrls.trim()}>
-              <i className="bx bx-download"></i>
-              Download All
-            </S.BatchButton>
+            <S.BatchLabel>Batch Download - Add Multiple Videos</S.BatchLabel>
+            {batchUrls.map((url, index) => (
+              <S.BatchUrlRow key={index}>
+                <S.BatchInput
+                  type="text"
+                  value={url}
+                  onChange={(e) => updateBatchUrl(index, e.target.value)}
+                  placeholder={`Video URL ${index + 1}`}
+                />
+                <S.RemoveButton
+                  onClick={() => removeBatchUrl(index)}
+                  disabled={batchUrls.length === 1}
+                  title="Remove this URL"
+                >
+                  <i className="bx bx-trash"></i>
+                </S.RemoveButton>
+              </S.BatchUrlRow>
+            ))}
+            <S.BatchActions>
+              <S.AddButton onClick={addBatchUrl}>
+                <i className="bx bx-plus"></i>
+                Add Another Video
+              </S.AddButton>
+              <S.BatchButton onClick={handleBatchDownload} disabled={isLoading || batchUrls.every(url => !url.trim())}>
+                <i className="bx bx-download"></i>
+                Download All ({batchUrls.filter(url => url.trim()).length} videos)
+              </S.BatchButton>
+            </S.BatchActions>
           </S.BatchContainer>
         )}
 
