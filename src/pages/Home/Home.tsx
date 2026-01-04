@@ -400,6 +400,10 @@ const PreviewTitle = styled.h3`
   margin: 0;
   color: ${({ theme }) => theme.colors.text.primary};
   font-size: 1.1rem;
+
+  @media (max-width: 768px) {
+    margin-bottom: 1.5rem;
+  }
 `;
 
 const MetricRow = styled.div`
@@ -885,21 +889,21 @@ const StepTitle = styled.h3`
   font-weight: 700;
   color: ${({ theme }) => theme.colors.text.primary};
   margin-bottom: 1rem;
-  
+
   @media (max-width: ${breakpoints.xs}) {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     margin-bottom: 0.75rem;
   }
-  
+
   @media (max-width: ${breakpoints.sm}) {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     margin-bottom: 0.875rem;
   }
-  
+
   @media (max-width: ${breakpoints.md}) {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
   }
-  
+
   @media (min-width: ${breakpoints.xl}) {
     font-size: 2rem;
     margin-bottom: 1.25rem;

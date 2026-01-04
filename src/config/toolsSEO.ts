@@ -114,9 +114,9 @@ export const toolsSEO: Record<string, ToolSEOConfig> = {
     schemaType: 'WebApplication'
   },
   'outlier-finder': {
-    title: 'YouTube Outlier Finder - Find Viral Videos',
-    description: 'Discover high-performing outlier videos on YouTube. Find viral videos and trending content by analyzing view counts and engagement patterns.',
-    keywords: 'youtube outlier finder, find viral videos, trending videos, viral video finder, high performing videos, youtube trends, video discovery tool',
+    title: 'YouTube Viral Video Finder - Discover Trending & High-Performing Videos',
+    description: 'Find viral and trending YouTube videos by analyzing outlier performance. Discover high-performing videos with exceptional view counts and engagement. Free viral video finder tool.',
+    keywords: 'youtube viral video finder, find viral videos, trending youtube videos, youtube outlier finder, viral video discovery, high performing videos, youtube trends, trending video tool, outlier video finder',
     h1: 'YouTube Outlier Finder',
     schemaType: 'WebApplication'
   },

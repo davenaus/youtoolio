@@ -9,6 +9,7 @@ import * as S from './styles';
 import moment from 'moment';
 import { ANALYTICS_QUESTIONS, AnalyticsQuestion } from './analyticsQuestions';
 import { AnalyticsCalculator, AnalyticsResult } from './analyticsCalculator';
+import { trackToolUsage, trackResultsDisplayed, trackError, trackToolPageView, useTimeTracking } from '../../../../utils/googleAnalytics';
 
 interface VideoAnalysis {
   basicMetrics: {
@@ -145,6 +146,20 @@ const VideoAnalyzer: React.FC = () => {
     result?: AnalyticsResult;
     timestamp: Date;
   }>>([]);
+
+  // Analytics tracking
+  const timeTracking = useTimeTracking('Video Analyzer', 120);
+
+  // Track page view and start time tracking on mount
+  useEffect(() => {
+    trackToolPageView('Video Analyzer');
+    timeTracking.startTracking();
+
+    return () => {
+      timeTracking.stopTracking();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Enhanced search function with fuzzy matching
   const searchQuestions = useMemo(() => {
@@ -1089,8 +1104,12 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
     const targetId = id || extractVideoId(videoUrl);
     if (!targetId) {
       alert('Please enter a valid YouTube video URL or ID');
+      trackError('Video Analyzer', 'validation_error', 'Invalid video URL or ID');
       return;
     }
+
+    // Track tool usage
+    trackToolUsage('Video Analyzer', 'video_url');
 
     setIsLoading(true);
     setShowResults(false);
@@ -1115,6 +1134,9 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
       setAnalysisResults(analysis);
       setShowResults(true);
 
+      // Track successful results
+      trackResultsDisplayed('Video Analyzer', 1);
+
       // Add welcome message to conversation
       const welcomeMessage = {
         type: 'assistant' as const,
@@ -1125,7 +1147,9 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
 
     } catch (error) {
       console.error('Error:', error);
-      alert(`An error occurred while analyzing the video: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      alert(`An error occurred while analyzing the video: ${errorMessage}`);
+      trackError('Video Analyzer', 'api_error', errorMessage);
     } finally {
       setIsLoading(false);
       setLoadingStage('');
