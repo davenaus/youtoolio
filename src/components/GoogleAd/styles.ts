@@ -6,7 +6,7 @@ export const AdContainer = styled.div`
   max-width: 1200px;
   margin: 2rem auto;
   padding: 0 1rem;
-  display: flex;
+  display: none; /* Hidden until AdSense approval */
   justify-content: center;
   align-items: center;
   min-height: 100px;

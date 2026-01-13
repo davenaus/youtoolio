@@ -50,6 +50,7 @@ const QRCodeGenerator = lazy(() => import('../pages/Tools/components/QRCodeGener
 const TagGenerator = lazy(() => import('../pages/Tools/components/TagGenerator/TagGenerator').then(m => ({ default: m.TagGenerator })));
 const ThumbnailDownloader = lazy(() => import('../pages/Tools/components/ThumbnailDownloader/ThumbnailDownloader').then(m => ({ default: m.ThumbnailDownloader })));
 const ThumbnailTester = lazy(() => import('../pages/Tools/components/ThumbnailTester/ThumbnailTester').then(m => ({ default: m.ThumbnailTester })));
+const ThumbnailAnalyzer = lazy(() => import('../pages/Tools/components/ThumbnailAnalyzer/ThumbnailAnalyzer').then(m => ({ default: m.ThumbnailAnalyzer })));
 const YouTubeCalculator = lazy(() => import('../pages/Tools/components/YouTubeCalculator/YouTubeCalculator').then(m => ({ default: m.YouTubeCalculator })));
 const CommentPicker = lazy(() => import('../pages/Tools/components/CommentPicker/CommentPicker').then(m => ({ default: m.CommentPicker })));
 const SubscribeLinkGenerator = lazy(() => import('../pages/Tools/components/SubscribeLinkGenerator/SubscribeLinkGenerator').then(m => ({ default: m.SubscribeLinkGenerator })));
@@ -137,6 +138,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/tools/thumbnail-downloader" element={<ThumbnailDownloader />} />
         <Route path="/tools/thumbnail-downloader/:videoId" element={<ThumbnailDownloader />} />
         <Route path="/tools/thumbnail-tester" element={<ThumbnailTester />} />
+        <Route path="/tools/thumbnail-analyzer" element={<ThumbnailAnalyzer />} />
         <Route path="/tools/youtube-calculator" element={<YouTubeCalculator />} />
         <Route path="/tools/color-palette" element={<ColorPalette />} />
         <Route path="/tools/color-picker-from-image" element={<ColorPickerFromImage />} />

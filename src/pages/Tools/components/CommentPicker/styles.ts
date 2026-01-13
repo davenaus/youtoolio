@@ -301,12 +301,22 @@ export const SearchButton = styled.button`
   }
 `;
 
+export const ControlsContainer = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+`;
+
 export const ToggleContainer = styled.div`
   display: flex;
   gap: 0.5rem;
   justify-content: center;
     margin-bottom: 1rem;
-  
+
   @media (max-width: 768px) {
     flex-direction: column;
   }
@@ -316,29 +326,32 @@ export const ToggleButton = styled.button`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: ${({ theme }) => theme.colors.dark3};
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  border-radius: ${({ theme }) => theme.borderRadius.md};
+  padding: 0.875rem 1.25rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: ${({ theme }) => theme.colors.white};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
   font-family: ${({ theme }) => theme.fonts.primary};
   font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+
   &:hover {
-    background: ${({ theme }) => theme.colors.dark4};
-    color: ${({ theme }) => theme.colors.text.primary};
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.02);
   }
-  
+
   &.active {
-    background: ${({ theme }) => theme.colors.red3};
-    border-color: ${({ theme }) => theme.colors.red3};
-    color: ${({ theme }) => theme.colors.white};
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
   }
-  
+
   i {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
 `;
 

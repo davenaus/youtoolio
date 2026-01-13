@@ -624,8 +624,8 @@ export const ProfileUpload = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100px;
-  height: 100px;
+  width: 140px;
+  height: 140px;
   background: ${({ theme }) => theme.colors.dark5};
   border: 2px dashed ${({ theme }) => theme.colors.dark5};
   border-radius: 50%;
@@ -633,7 +633,7 @@ export const ProfileUpload = styled.div`
   transition: all 0.3s ease;
   margin: 0 auto;
   overflow: hidden;
-  
+
   &:hover {
     border-color: ${({ theme }) => theme.colors.red3};
     background: ${({ theme }) => theme.colors.dark4};
@@ -652,15 +652,17 @@ export const ProfilePlaceholder = styled.div`
   align-items: center;
   gap: 0.5rem;
   text-align: center;
-  
+  padding: 0.5rem;
+
   i {
-    font-size: 1.5rem;
+    font-size: 2rem;
     color: ${({ theme }) => theme.colors.red3};
   }
-  
+
   span {
     color: ${({ theme }) => theme.colors.text.secondary};
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+    line-height: 1.3;
   }
 `;
 

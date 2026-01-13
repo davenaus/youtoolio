@@ -2271,31 +2271,30 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
                       src={videoData.snippet.thumbnails.maxres?.url || videoData.snippet.thumbnails.high.url}
                       alt={videoData.snippet.title}
                     />
-                    <S.ThumbnailOverlay>
-                      <S.DownloadThumbnailButton
-                        onClick={() => {
-                          // Create a cleaner filename
-                          const cleanTitle = videoData.snippet.title
-                            .replace(/[^\w\s-]/g, '') // Remove special chars except word chars, spaces, and hyphens
-                            .replace(/\s+/g, '_') // Replace spaces with single underscore
-                            .replace(/_+/g, '_') // Replace multiple underscores with single
-                            .replace(/^_|_$/g, '') // Remove leading/trailing underscores
-                            .toLowerCase()
-                            .substring(0, 50); // Limit to 50 characters
-
-                          downloadThumbnail(
-                            videoData.snippet.thumbnails.maxres?.url || videoData.snippet.thumbnails.high.url,
-                            `${cleanTitle || 'youtube_video'}_thumbnail.jpg`
-                          );
-                        }}
-                      >
-                        <i className="bx bx-download"></i>
-                        Download Thumbnail
-                      </S.DownloadThumbnailButton>
-                    </S.ThumbnailOverlay>
                     <S.VideoDuration>
                       {analysisResults.technicalDetails.durationFormatted}
                     </S.VideoDuration>
+                    <S.ThumbnailDownloadButton
+                      onClick={() => {
+                        // Create a cleaner filename
+                        const cleanTitle = videoData.snippet.title
+                          .replace(/[^\w\s-]/g, '') // Remove special chars except word chars, spaces, and hyphens
+                          .replace(/\s+/g, '_') // Replace spaces with single underscore
+                          .replace(/_+/g, '_') // Replace multiple underscores with single
+                          .replace(/^_|_$/g, '') // Remove leading/trailing underscores
+                          .toLowerCase()
+                          .substring(0, 50); // Limit to 50 characters
+
+                        downloadThumbnail(
+                          videoData.snippet.thumbnails.maxres?.url || videoData.snippet.thumbnails.high.url,
+                          `${cleanTitle || 'youtube_video'}_thumbnail.jpg`
+                        );
+                      }}
+                      title="Download Thumbnail"
+                    >
+                      <i className="bx bx-image default-icon"></i>
+                      <i className="bx bx-download hover-icon"></i>
+                    </S.ThumbnailDownloadButton>
                   </S.ThumbnailContainer>
 
                   <S.VideoDetails>

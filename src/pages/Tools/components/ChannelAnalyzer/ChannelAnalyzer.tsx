@@ -80,6 +80,7 @@ export const ChannelAnalyzer: React.FC = () => {
   const [recentVideoCount, setRecentVideoCount] = useState<number>(0);
   const [analysisResults, setAnalysisResults] = useState<ChannelAnalysis | null>(null);
   const [showResults, setShowResults] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
 
   // Tool configuration
   const toolConfig = {
@@ -349,7 +350,7 @@ export const ChannelAnalyzer: React.FC = () => {
       return {
         id: searchItem.id.videoId,
         title: decodeHTMLEntities(searchItem.snippet.title),
-        thumbnail: searchItem.snippet.thumbnails.medium?.url || searchItem.snippet.thumbnails.default.url,
+        thumbnail: searchItem.snippet.thumbnails?.medium?.url || searchItem.snippet.thumbnails?.default?.url || 'https://via.placeholder.com/480x360?text=Video',
         views: parseInt(statsItem?.statistics?.viewCount || '0'),
         likes: parseInt(statsItem?.statistics?.likeCount || '0'),
         comments: parseInt(statsItem?.statistics?.commentCount || '0'),
@@ -697,7 +698,7 @@ export const ChannelAnalyzer: React.FC = () => {
       brandingBreakdown.push({ label: 'Channel Trailer', score: 0, max: 25, status: 'poor' });
     }
 
-    if (channelData.snippet.thumbnails.high) {
+    if (channelData.snippet.thumbnails?.high) {
       brandingScore += 15;
       brandingBreakdown.push({ label: 'Profile Picture', score: 15, max: 15, status: 'good' });
     } else {
@@ -1153,8 +1154,17 @@ export const ChannelAnalyzer: React.FC = () => {
               <S.ChannelInfo>
                 <S.ChannelLogoContainer>
                   <S.ChannelLogo
-                    src={channelData.snippet.thumbnails.high?.url || channelData.snippet.thumbnails.default.url}
+                    src={
+                      channelData.snippet.thumbnails?.high?.url ||
+                      channelData.snippet.thumbnails?.medium?.url ||
+                      channelData.snippet.thumbnails?.default?.url ||
+                      'https://via.placeholder.com/200x200?text=Channel'
+                    }
                     alt={channelData.snippet.title}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = 'https://via.placeholder.com/200x200?text=Channel';
+                    }}
                   />
                 </S.ChannelLogoContainer>
                 
@@ -1185,6 +1195,33 @@ export const ChannelAnalyzer: React.FC = () => {
                 </S.ChannelDetails>
               </S.ChannelInfo>
 
+              <S.TabNavigation>
+                <S.TabButton
+                  isActive={activeTab === 'overview'}
+                  onClick={() => setActiveTab('overview')}
+                >
+                  <i className="bx bx-chart"></i>
+                  <span>Overview</span>
+                </S.TabButton>
+                <S.TabButton
+                  isActive={activeTab === 'details'}
+                  onClick={() => setActiveTab('details')}
+                >
+                  <i className="bx bx-info-circle"></i>
+                  <span>Details</span>
+                </S.TabButton>
+                <S.TabButton
+                  isActive={activeTab === 'performance'}
+                  onClick={() => setActiveTab('performance')}
+                >
+                  <i className="bx bx-trending-up"></i>
+                  <span>Performance</span>
+                </S.TabButton>
+              </S.TabNavigation>
+
+              {/* Overview Tab */}
+              {activeTab === 'overview' && (
+                <>
               <S.MetricsGrid>
                 <S.MetricCard>
                   <S.MetricIcon className="bx bx-show"></S.MetricIcon>
@@ -1334,13 +1371,25 @@ export const ChannelAnalyzer: React.FC = () => {
                     <S.BrandingItem>
                       <S.BrandingPreview>
                         <S.BrandingImage
-                          src={channelData.snippet.thumbnails.medium?.url || channelData.snippet.thumbnails.default.url}
+                          src={
+                            channelData.snippet.thumbnails?.medium?.url ||
+                            channelData.snippet.thumbnails?.default?.url ||
+                            'https://via.placeholder.com/200x200?text=Channel'
+                          }
                           alt="Profile Picture"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = 'https://via.placeholder.com/200x200?text=Channel';
+                          }}
                         />
                       </S.BrandingPreview>
                       <S.BrandingLabel>Profile Picture</S.BrandingLabel>
                       <S.ViewButton
-                        href={channelData.snippet.thumbnails.high?.url || channelData.snippet.thumbnails.default.url}
+                        href={
+                          channelData.snippet.thumbnails?.high?.url ||
+                          channelData.snippet.thumbnails?.default?.url ||
+                          'https://via.placeholder.com/200x200?text=Channel'
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -1395,8 +1444,13 @@ export const ChannelAnalyzer: React.FC = () => {
                   ))}
                 </S.AnalysisSection>
               </S.AnalysisGrid>
+            </>
+          )}
+          {/* End Overview Tab */}
 
-              {/* New Detailed Analysis Sections */}
+          {/* Details Tab */}
+          {activeTab === 'details' && (
+            <>
               <S.DetailedAnalysisGrid>
                 {/* Channel Description */}
                 <S.DetailedSection>
@@ -1476,19 +1530,19 @@ export const ChannelAnalyzer: React.FC = () => {
                           // Check multiple sources for content type determination
                           if (channelData.status?.madeForKids === true) return 'Made for Kids';
                           if (channelData.status?.madeForKids === false) return 'General Audience';
-                          
+
                           // Fallback: analyze topic categories for content type hints
                           const topics = channelData.topicDetails?.topicCategories || [];
                           const kidsTopics = ['/m/0kt51', '/m/01sjng']; // Health/fitness, pets - often family friendly
                           const matureTopics = ['/m/0f2f9', '/m/04rlf']; // News/politics, music - often general audience
-                          
+
                           if (topics.some((topic: string) => kidsTopics.includes(topic))) {
                             return 'Family-Friendly Content';
                           }
                           if (topics.some((topic: string) => matureTopics.includes(topic))) {
                             return 'General Audience';
                           }
-                          
+
                           return 'Content Type Not Specified';
                         })()}
                       </S.CategoryValue>
@@ -1502,6 +1556,89 @@ export const ChannelAnalyzer: React.FC = () => {
                   </S.CategoryContainer>
                 </S.DetailedSection>
 
+                {/* Content Strategy Analysis */}
+                <S.DetailedSection>
+                  <S.SectionTitle>
+                    <i className="bx bx-brain"></i>
+                    Content Strategy Analysis
+                  </S.SectionTitle>
+                  <S.ContentStrategyContainer>
+                    <S.StrategyMetric>
+                      <S.MetricTitle>Content Consistency</S.MetricTitle>
+                      <S.MetricDescription>
+                        {(() => {
+                          const daysSinceCreation = Math.floor((Date.now() - new Date(channelData.snippet.publishedAt).getTime()) / (1000 * 60 * 60 * 24));
+                          const videosPerDay = parseInt(channelData.statistics.videoCount) / daysSinceCreation;
+                          if (videosPerDay > 0.5) return "Highly consistent (Daily content)";
+                          if (videosPerDay > 0.14) return "Moderately consistent (Weekly content)";
+                          if (videosPerDay > 0.03) return "Irregular (Monthly content)";
+                          return "Inconsistent (Sporadic uploads)";
+                        })()}
+                      </S.MetricDescription>
+                    </S.StrategyMetric>
+
+                    <S.StrategyMetric>
+                      <S.MetricTitle>Channel Growth Stage</S.MetricTitle>
+                      <S.MetricDescription>
+                        {(() => {
+                          const subs = parseInt(channelData.statistics.subscriberCount);
+
+                          if (subs < 1000) return "Discovery Phase (Building foundation)";
+                          if (subs < 10000) return "Growth Phase (Building audience)";
+                          if (subs < 100000) return "Expansion Phase (Scaling content)";
+                          if (subs < 1000000) return "Established Phase (Strong presence)";
+                          return "Authority Phase (Industry leader)";
+                        })()}
+                      </S.MetricDescription>
+                    </S.StrategyMetric>
+
+                    <S.StrategyMetric>
+                      <S.MetricTitle>Content Volume Strategy</S.MetricTitle>
+                      <S.MetricDescription>
+                        {(() => {
+                          const videosCount = parseInt(channelData.statistics.videoCount);
+                          if (videosCount > 1000) return "High Volume Creator (1000+ videos)";
+                          if (videosCount > 500) return "Regular Publisher (500+ videos)";
+                          if (videosCount > 100) return "Active Creator (100+ videos)";
+                          if (videosCount > 20) return "Emerging Creator (20+ videos)";
+                          return "New Creator (Starting journey)";
+                        })()}
+                      </S.MetricDescription>
+                    </S.StrategyMetric>
+
+                    <S.StrategyMetric>
+                      <S.MetricTitle>Optimization Score</S.MetricTitle>
+                      <S.MetricDescription>
+                        {(() => {
+                          let score = 0;
+                          if (channelData.snippet.description) score += 20;
+                          if (channelData.brandingSettings?.channel?.keywords) score += 20;
+                          if (channelData.brandingSettings?.image?.bannerExternalUrl) score += 20;
+                          if (channelData.brandingSettings?.channel?.unsubscribedTrailer) score += 20;
+                          if (playlistData.length > 0) score += 20;
+
+                          const getScoreLevel = (s: number) => {
+                            if (s >= 80) return "Excellent";
+                            if (s >= 60) return "Good";
+                            if (s >= 40) return "Fair";
+                            return "Needs Improvement";
+                          };
+
+                          return `${getScoreLevel(score)} - ${score}/100 optimization score`;
+                        })()}
+                      </S.MetricDescription>
+                    </S.StrategyMetric>
+                  </S.ContentStrategyContainer>
+                </S.DetailedSection>
+              </S.DetailedAnalysisGrid>
+            </>
+          )}
+          {/* End Details Tab */}
+
+          {/* Performance Tab */}
+          {activeTab === 'performance' && (
+            <>
+              <S.DetailedAnalysisGrid>
                 {/* Top Videos Section */}
                 {topVideos.length > 0 && (
                   <S.DetailedSection style={{ gridColumn: '1 / -1' }}>
@@ -1556,6 +1693,12 @@ export const ChannelAnalyzer: React.FC = () => {
                                   ))}
                                 </S.VideoInsights>
                               </S.VideoAnalysis>
+                              <S.AnalyzeButton
+                                onClick={() => navigate(`/tools/video-analyzer/${video.id}`)}
+                              >
+                                <i className="bx bx-line-chart"></i>
+                                Analyze Video
+                              </S.AnalyzeButton>
                             </S.VideoContent>
                           </S.VideoCard>
                         );
@@ -1596,81 +1739,6 @@ export const ChannelAnalyzer: React.FC = () => {
                       </S.MetricDescription>
                     </S.PerformanceMetric>
                   </S.PerformanceContainer>
-                </S.DetailedSection>
-
-                {/* Content Strategy Analysis */}
-                <S.DetailedSection>
-                  <S.SectionTitle>
-                    <i className="bx bx-brain"></i>
-                    Content Strategy Analysis
-                  </S.SectionTitle>
-                  <S.ContentStrategyContainer>
-                    <S.StrategyMetric>
-                      <S.MetricTitle>Content Consistency</S.MetricTitle>
-                      <S.MetricDescription>
-                        {(() => {
-                          const daysSinceCreation = Math.floor((Date.now() - new Date(channelData.snippet.publishedAt).getTime()) / (1000 * 60 * 60 * 24));
-                          const videosPerDay = parseInt(channelData.statistics.videoCount) / daysSinceCreation;
-                          if (videosPerDay > 0.5) return "Highly consistent (Daily content)";
-                          if (videosPerDay > 0.14) return "Moderately consistent (Weekly content)";
-                          if (videosPerDay > 0.03) return "Irregular (Monthly content)";
-                          return "Inconsistent (Sporadic uploads)";
-                        })()}
-                      </S.MetricDescription>
-                    </S.StrategyMetric>
-                    
-                    <S.StrategyMetric>
-                      <S.MetricTitle>Channel Growth Stage</S.MetricTitle>
-                      <S.MetricDescription>
-                        {(() => {
-                          const subs = parseInt(channelData.statistics.subscriberCount);
-                          
-                          if (subs < 1000) return "Discovery Phase (Building foundation)";
-                          if (subs < 10000) return "Growth Phase (Building audience)";
-                          if (subs < 100000) return "Expansion Phase (Scaling content)";
-                          if (subs < 1000000) return "Established Phase (Strong presence)";
-                          return "Authority Phase (Industry leader)";
-                        })()}
-                      </S.MetricDescription>
-                    </S.StrategyMetric>
-
-                    <S.StrategyMetric>
-                      <S.MetricTitle>Content Volume Strategy</S.MetricTitle>
-                      <S.MetricDescription>
-                        {(() => {
-                          const videosCount = parseInt(channelData.statistics.videoCount);
-                          if (videosCount > 1000) return "High Volume Creator (1000+ videos)";
-                          if (videosCount > 500) return "Regular Publisher (500+ videos)";
-                          if (videosCount > 100) return "Active Creator (100+ videos)";
-                          if (videosCount > 20) return "Emerging Creator (20+ videos)";
-                          return "New Creator (Starting journey)";
-                        })()}
-                      </S.MetricDescription>
-                    </S.StrategyMetric>
-
-                    <S.StrategyMetric>
-                      <S.MetricTitle>Optimization Score</S.MetricTitle>
-                      <S.MetricDescription>
-                        {(() => {
-                          let score = 0;
-                          if (channelData.snippet.description) score += 20;
-                          if (channelData.brandingSettings?.channel?.keywords) score += 20;
-                          if (channelData.brandingSettings?.image?.bannerExternalUrl) score += 20;
-                          if (channelData.brandingSettings?.channel?.unsubscribedTrailer) score += 20;
-                          if (playlistData.length > 0) score += 20;
-                          
-                          const getScoreLevel = (s: number) => {
-                            if (s >= 80) return "Excellent";
-                            if (s >= 60) return "Good";
-                            if (s >= 40) return "Fair";
-                            return "Needs Improvement";
-                          };
-                          
-                          return `${getScoreLevel(score)} - ${score}/100 optimization score`;
-                        })()}
-                      </S.MetricDescription>
-                    </S.StrategyMetric>
-                  </S.ContentStrategyContainer>
                 </S.DetailedSection>
 
                 {/* Audience Engagement Insights */}
@@ -1758,6 +1826,9 @@ export const ChannelAnalyzer: React.FC = () => {
                   </S.EngagementContainer>
                 </S.DetailedSection>
               </S.DetailedAnalysisGrid>
+            </>
+          )}
+          {/* End Performance Tab */}
 
             </>
           ) : null}

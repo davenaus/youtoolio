@@ -97,8 +97,8 @@ export const ThumbnailTester: React.FC = () => {
   const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) { // 10MB limit
-        alert('Image must be smaller than 10MB');
+      if (file.size > 50 * 1024 * 1024) { // 50MB limit
+        alert('Image must be smaller than 50MB');
         return;
       }
 
@@ -115,6 +115,33 @@ export const ThumbnailTester: React.FC = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleThumbnailDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      if (file.size > 50 * 1024 * 1024) { // 50MB limit
+        alert('Image must be smaller than 50MB');
+        return;
+      }
+
+      if (!file.type.startsWith('image/')) {
+        alert('Please select a valid image file');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setThumbnailUrl(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleThumbnailDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
   };
 
   const handleProfileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,6 +164,33 @@ export const ThumbnailTester: React.FC = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleProfileDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        alert('Profile image must be smaller than 5MB');
+        return;
+      }
+
+      if (!file.type.startsWith('image/')) {
+        alert('Please select a valid image file');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setProfileUrl(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleProfileDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
   };
 
   const extractChannelId = (url: string): string | null => {
@@ -675,14 +729,18 @@ export const ThumbnailTester: React.FC = () => {
                   <i className="bx bx-image"></i>
                   Thumbnail Image
                 </S.UploadSectionLabel>
-                <S.ThumbnailUpload onClick={() => document.getElementById('thumbnail-input')?.click()}>
+                <S.ThumbnailUpload
+                  onClick={() => document.getElementById('thumbnail-input')?.click()}
+                  onDrop={handleThumbnailDrop}
+                  onDragOver={handleThumbnailDragOver}
+                >
                   {thumbnailUrl ? (
                     <S.UploadedImage src={thumbnailUrl} alt="Uploaded thumbnail" />
                   ) : (
                     <S.UploadPlaceholder>
                       <i className="bx bx-image-add"></i>
-                      <div>Upload Thumbnail</div>
-                      <span>PNG, JPG, or WebP (max 10MB)</span>
+                      <div>Drop your thumbnail here</div>
+                      <span>or click to browse • PNG, JPG, or WebP (max 50MB)</span>
                     </S.UploadPlaceholder>
                   )}
                 </S.ThumbnailUpload>
@@ -724,13 +782,17 @@ export const ThumbnailTester: React.FC = () => {
                 <i className="bx bx-user"></i>
                 Profile Picture (Optional)
               </S.OptionalTitle>
-              <S.ProfileUpload onClick={() => document.getElementById('profile-input')?.click()}>
+              <S.ProfileUpload
+                onClick={() => document.getElementById('profile-input')?.click()}
+                onDrop={handleProfileDrop}
+                onDragOver={handleProfileDragOver}
+              >
                 {profileUrl ? (
                   <S.ProfilePreview src={profileUrl} alt="Profile" />
                 ) : (
                   <S.ProfilePlaceholder>
                     <i className="bx bx-user-plus"></i>
-                    <span>Add Profile Picture</span>
+                    <span>Drop or click to add profile picture</span>
                   </S.ProfilePlaceholder>
                 )}
               </S.ProfileUpload>

@@ -242,6 +242,39 @@ export const Changelog: React.FC = () => {
 
   const changelogEntries = [
     {
+      version: "v1.2.0",
+      title: "Enhanced User Experience & Tool Improvements",
+      date: "January 13, 2026",
+      description: "Major improvements to existing tools with enhanced UI organization, updated file size limits, and better mobile responsiveness. Focus on user experience and consistency across the platform.",
+      changes: {
+        new: [
+          "Channel Analyzer - New tab-based navigation system with Overview, Details, and Performance sections for better organization",
+          "Thumbnail Analyzer - Now featured as the newest tool with 'New' badge on tools page"
+        ],
+        improved: [
+          "Thumbnail Tester - Increased image upload limit from 10MB to 50MB (matching YouTube's updated requirements)",
+          "Thumbnail Tester - Added drag-and-drop support for both thumbnail and profile picture uploads",
+          "Thumbnail Tester - Enlarged profile upload circle from 100px to 140px for better visibility with new text",
+          "Thumbnail Analyzer - Increased image upload limit from 10MB to 50MB for consistency",
+          "Tag Generator - Moved Advanced Settings button into enhanced header for cleaner interface",
+          "Comment Picker - Moved advanced controls into enhanced header matching other tools",
+          "Comment Picker - Simplified multiple winners interface by removing toggle and always showing 'Number of Winners' in Advanced Filters",
+          "Playlist Analyzer - Moved Advanced Filters button into enhanced header",
+          "Channel Analyzer - Organized content into three intuitive tabs (Overview, Details, Performance)",
+          "Channel Analyzer - Fixed profile picture loading with proper fallback handling and error recovery",
+          "All Tools - Removed 'New' badges from older tools, keeping only Thumbnail Analyzer marked as new",
+          "Consistent UI patterns across all tools with advanced settings in headers"
+        ],
+        fixed: [
+          "Channel Analyzer - Fixed channel profile picture not displaying due to missing optional chaining",
+          "Channel Analyzer - Added fallback placeholder image for failed thumbnail loads",
+          "Channel Consultant - Improved channel profile picture loading with better error handling",
+          "Google Ads - Temporarily hidden all ad slots while building traffic for AdSense approval",
+          "File upload validation across all tools with proper size limit enforcement"
+        ]
+      }
+    },
+    {
       version: "v1.1.0",
       title: "New Tools & Major UX Improvements",
       date: "December 27, 2025",

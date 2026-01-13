@@ -701,6 +701,65 @@ export const VisitButton = styled.a`
   }
 `;
 
+// Tab Navigation
+export const TabNavigation = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid ${({ theme }) => theme.colors.dark5};
+
+  @media (max-width: 768px) {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+`;
+
+export const TabButton = styled.button<{ isActive: boolean; disabled?: boolean }>`
+  background: transparent;
+  color: ${({ isActive, disabled, theme }) =>
+    disabled ? theme.colors.text.muted + '60' :
+    isActive ? theme.colors.red3 : theme.colors.text.muted
+  };
+  border: none;
+  border-bottom: 3px solid ${({ isActive, disabled, theme }) =>
+    disabled ? 'transparent' :
+    isActive ? theme.colors.red3 : 'transparent'
+  };
+  padding: 1rem 1.5rem;
+  margin-bottom: -2px;
+  cursor: ${({ disabled }) => disabled ? 'not-allowed' : 'pointer'};
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+
+  &:hover:not(:disabled) {
+    color: ${({ isActive, theme }) => isActive ? theme.colors.red3 : theme.colors.text.primary};
+    border-bottom-color: ${({ isActive, disabled, theme }) =>
+      disabled ? 'transparent' :
+      isActive ? theme.colors.red3 : theme.colors.text.muted
+    };
+  }
+
+  i {
+    font-size: 1.1rem;
+  }
+
+  span {
+    @media (max-width: 480px) {
+      display: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+  }
+`;
+
 export const MetricsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1504,5 +1563,37 @@ export const VideoInsight = styled.div`
     i {
       font-size: 0.85rem;
     }
+  }
+`;
+
+export const AnalyzeButton = styled.button`
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
+  color: white;
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  }
+
+  i {
+    font-size: 1.1rem;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0.625rem;
+    font-size: 0.85rem;
   }
 `;

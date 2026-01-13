@@ -649,6 +649,16 @@ export const PlaylistAnalyzer: React.FC = () => {
   </S.HeaderSearchBar>
 </S.HeaderSearchContainer>
 
+              {/* Toggle Buttons in Header */}
+              <S.ControlsContainer>
+                <S.ToggleButton
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={showFilters ? 'active' : ''}
+                >
+                  <i className="bx bx-filter"></i>
+                  Advanced Filters
+                </S.ToggleButton>
+              </S.ControlsContainer>
           </S.HeaderTextContent>
         </S.HeaderContent>
       </S.EnhancedHeader>
@@ -657,13 +667,6 @@ export const PlaylistAnalyzer: React.FC = () => {
       <GoogleAd adSlot="1234567890" />
 
       <S.SearchContainer>
-
-        <S.ControlsContainer>
-          <S.FilterToggle onClick={() => setShowFilters(!showFilters)}>
-            <i className="bx bx-filter"></i>
-            Advanced Filters
-          </S.FilterToggle>
-        </S.ControlsContainer>
       </S.SearchContainer>
 
       {showFilters && (
@@ -1053,9 +1056,9 @@ export const PlaylistAnalyzer: React.FC = () => {
                   <i className="bx bx-video-recording"></i>
                   Videos in Playlist ({analysis.totalVideos})
                 </S.SectionTitle>
-                <S.ToggleButton onClick={() => setShowDetailedVideos(!showDetailedVideos)}>
+                <S.VideoToggleButton onClick={() => setShowDetailedVideos(!showDetailedVideos)}>
                   {showDetailedVideos ? 'Hide Videos' : 'Show Videos'}
-                </S.ToggleButton>
+                </S.VideoToggleButton>
               </S.VideoSectionHeader>
 
               {showDetailedVideos && (

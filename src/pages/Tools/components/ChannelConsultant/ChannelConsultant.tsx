@@ -10,8 +10,8 @@ interface ChannelData {
   snippet: {
     title: string;
     description: string;
-    thumbnails: {
-      default: {
+    thumbnails?: {
+      default?: {
         url: string;
       };
       medium?: {
@@ -537,10 +537,17 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
               <S.ChannelInfo>
                 <S.ChannelLogoContainer>
                   <S.ChannelLogo
-                    src={channelData.snippet.thumbnails.high?.url ||
-                      channelData.snippet.thumbnails.medium?.url ||
-                      channelData.snippet.thumbnails.default.url}
+                    src={
+                      channelData.snippet.thumbnails?.high?.url ||
+                      channelData.snippet.thumbnails?.medium?.url ||
+                      channelData.snippet.thumbnails?.default?.url ||
+                      'https://via.placeholder.com/200x200?text=Channel'
+                    }
                     alt="Channel Profile"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = 'https://via.placeholder.com/200x200?text=Channel';
+                    }}
                   />
                 </S.ChannelLogoContainer>
                 <S.ChannelDetails>

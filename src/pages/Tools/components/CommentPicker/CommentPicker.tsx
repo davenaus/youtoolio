@@ -44,7 +44,6 @@ export const CommentPicker: React.FC = () => {
   const [videoData, setVideoData] = useState<any>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [previousWinners, setPreviousWinners] = useState<Comment[]>([]);
-  const [isMultiPick, setIsMultiPick] = useState(false);
   const [numberOfWinners, setNumberOfWinners] = useState(1);
   const [multipleWinners, setMultipleWinners] = useState<Comment[]>([]);
 
@@ -374,7 +373,7 @@ export const CommentPicker: React.FC = () => {
       setIsLoading(false);
       
       // Start animation
-      await animateSelection(filtered, isMultiPick);
+      await animateSelection(filtered, numberOfWinners > 1);
       
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Failed to load comments');
@@ -391,7 +390,7 @@ export const CommentPicker: React.FC = () => {
       return;
     }
     
-    await animateSelection(filtered, isMultiPick);
+    await animateSelection(filtered, numberOfWinners > 1);
   };
 
   const resetAll = () => {
@@ -409,7 +408,7 @@ export const CommentPicker: React.FC = () => {
   };
 
   const exportWinners = () => {
-    const winners = isMultiPick ? multipleWinners : (winner ? [winner] : []);
+    const winners = numberOfWinners > 1 ? multipleWinners : (winner ? [winner] : []);
     const data = winners.map(w => ({
       name: w.name,
       comment: w.comment,
@@ -487,29 +486,23 @@ export const CommentPicker: React.FC = () => {
                   </S.HeaderSearchButton>
                 </S.HeaderSearchBar>
               </S.HeaderSearchContainer>
+
+              {/* Toggle Buttons in Header */}
+              <S.ControlsContainer>
+                <S.ToggleButton
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={showFilters ? 'active' : ''}
+                >
+                  <i className="bx bx-filter"></i>
+                  Advanced Filters
+                </S.ToggleButton>
+              </S.ControlsContainer>
             </S.HeaderTextContent>
           </S.HeaderContent>
         </S.EnhancedHeader>
 
         {/* Google Ad Spot */}
         <GoogleAd adSlot="1234567890" />
-
-                <S.ToggleContainer>
-            <S.ToggleButton 
-              onClick={() => setShowFilters(!showFilters)}
-              className={showFilters ? 'active' : ''}
-            >
-              <i className="bx bx-filter"></i>
-              Advanced Filters
-            </S.ToggleButton>
-            <S.ToggleButton 
-              onClick={() => setIsMultiPick(!isMultiPick)}
-              className={isMultiPick ? 'active' : ''}
-            >
-              <i className="bx bx-group"></i>
-              Multiple Winners
-            </S.ToggleButton>
-          </S.ToggleContainer>
 
         {showFilters && (
           <S.FiltersContainer>
@@ -544,21 +537,19 @@ export const CommentPicker: React.FC = () => {
                 />
               </S.FilterGroup>
 
-              {isMultiPick && (
-                <S.FilterGroup>
-                  <S.FilterLabel>Number of Winners</S.FilterLabel>
-                  <S.FilterSelect
-                    value={numberOfWinners}
-                    onChange={(e) => setNumberOfWinners(parseInt(e.target.value))}
-                  >
-                    <option value={1}>1 Winner</option>
-                    <option value={2}>2 Winners</option>
-                    <option value={3}>3 Winners</option>
-                    <option value={5}>5 Winners</option>
-                    <option value={10}>10 Winners</option>
-                  </S.FilterSelect>
-                </S.FilterGroup>
-              )}
+              <S.FilterGroup>
+                <S.FilterLabel>Number of Winners</S.FilterLabel>
+                <S.FilterSelect
+                  value={numberOfWinners}
+                  onChange={(e) => setNumberOfWinners(parseInt(e.target.value))}
+                >
+                  <option value={1}>1 Winner</option>
+                  <option value={2}>2 Winners</option>
+                  <option value={3}>3 Winners</option>
+                  <option value={5}>5 Winners</option>
+                  <option value={10}>10 Winners</option>
+                </S.FilterSelect>
+              </S.FilterGroup>
 
               <S.FilterGroup>
                 <S.FilterLabel>Date Range (Start)</S.FilterLabel>
@@ -697,7 +688,7 @@ export const CommentPicker: React.FC = () => {
           <S.SelectingAnimation>
             <S.AnimationText>{animatingName}</S.AnimationText>
             <S.AnimationSubtext>
-              {isMultiPick ? `Selecting ${numberOfWinners} winners...` : 'Selecting winner...'}
+              {numberOfWinners > 1 ? `Selecting ${numberOfWinners} winners...` : 'Selecting winner...'}
             </S.AnimationSubtext>
           </S.SelectingAnimation>
         )}
@@ -733,7 +724,7 @@ export const CommentPicker: React.FC = () => {
 
         {showResults && (
           <S.ResultsContainer>
-            {isMultiPick && multipleWinners.length > 0 ? (
+            {numberOfWinners > 1 && multipleWinners.length > 0 ? (
               <S.MultipleWinnersSection>
                 <S.SectionTitle>
                   <i className="bx bx-trophy"></i>
@@ -782,7 +773,7 @@ export const CommentPicker: React.FC = () => {
             <S.ActionButtons>
               <S.ActionButton onClick={handleReroll}>
                 <i className='bx bx-refresh'></i>
-                Pick {isMultiPick ? 'New Winners' : 'New Winner'}
+                Pick {numberOfWinners > 1 ? 'New Winners' : 'New Winner'}
               </S.ActionButton>
               <S.ActionButton onClick={exportWinners}>
                 <i className='bx bx-download'></i>

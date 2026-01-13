@@ -50,6 +50,13 @@ export const toolsSEO: Record<string, ToolSEOConfig> = {
     h1: 'YouTube Thumbnail Tester',
     schemaType: 'WebApplication'
   },
+  'thumbnail-analyzer': {
+    title: 'YouTube Thumbnail Analyzer - AI Attention Heatmap Analysis',
+    description: 'Analyze YouTube thumbnails with AI-powered attention heatmaps, composition scoring, lighting analysis, and optimization insights. Free thumbnail analyzer tool.',
+    keywords: 'youtube thumbnail analyzer, thumbnail heatmap, attention heatmap, thumbnail analysis, composition analysis, thumbnail optimization, ai thumbnail analyzer, thumbnail scoring',
+    h1: 'YouTube Thumbnail Analyzer',
+    schemaType: 'WebApplication'
+  },
   'channel-comparer': {
     title: 'YouTube Channel Comparison Tool - Compare Channels',
     description: 'Compare multiple YouTube channels side-by-side. Analyze subscribers, views, engagement, growth rate, and performance metrics. Free channel comparison tool.',

@@ -550,20 +550,23 @@ export const TagGenerator: React.FC = () => {
                   </S.HeaderSearchButton>
                 </S.HeaderSearchBar>
               </S.HeaderSearchContainer>
+
+              {/* Toggle Buttons in Header */}
+              <S.ControlsContainer>
+                <S.ToggleButton
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={showFilters ? 'active' : ''}
+                >
+                  <i className="bx bx-cog"></i>
+                  Advanced Settings
+                </S.ToggleButton>
+              </S.ControlsContainer>
             </S.HeaderTextContent>
           </S.HeaderContent>
         </S.EnhancedHeader>
 
         {/* Google Ad Spot */}
         <GoogleAd adSlot="1234567890" />
-
-        {/* Advanced Settings Container */}
-        <S.ControlsContainer>
-          <S.FilterToggle onClick={() => setShowFilters(!showFilters)}>
-            <i className="bx bx-cog"></i>
-            Advanced Settings
-          </S.FilterToggle>
-        </S.ControlsContainer>
 
         {showFilters && (
           <S.FiltersContainer>

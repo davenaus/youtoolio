@@ -515,6 +515,63 @@ export const VideoDuration = styled.div`
   z-index: 3;
 `;
 
+export const ThumbnailDownloadButton = styled.button`
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 4;
+
+  .default-icon {
+    position: absolute;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    font-size: 1.3rem;
+  }
+
+  .hover-icon {
+    position: absolute;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    font-size: 1.3rem;
+  }
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.red4};
+    border-color: ${({ theme }) => theme.colors.red4};
+    transform: scale(1.1);
+
+    .default-icon {
+      opacity: 0;
+    }
+
+    .hover-icon {
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 768px) {
+    width: 36px;
+    height: 36px;
+
+    .default-icon,
+    .hover-icon {
+      font-size: 1.1rem;
+    }
+  }
+`;
+
 export const VideoDetails = styled.div`
   flex: 1;
   display: flex;
