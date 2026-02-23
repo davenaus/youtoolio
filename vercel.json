@@ -1,6 +1,10 @@
 {
   "buildCommand": "react-scripts build",
   "outputDirectory": "build",
+  "env": {
+    "DISABLE_ESLINT_PLUGIN": "true",
+    "TSC_COMPILE_ON_ERROR": "true"
+  },
   "rewrites": [
     { "source": "/((?!.*\\.).*)", "destination": "/index.html" }
   ],

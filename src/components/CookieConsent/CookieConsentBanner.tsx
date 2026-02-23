@@ -319,7 +319,7 @@ export const CookieConsentBanner: React.FC = () => {
             <BannerDescription>
               We use cookies and similar technologies to provide essential functionality 
               and analyze usage. You can manage your preferences anytime. 
-              See our <a onClick={() => navigate('/cookie-policy')}>Cookie Policy</a> for details.
+              See our <a href="/cookie-policy" onClick={(e) => { e.preventDefault(); navigate('/cookie-policy'); }}>Cookie Policy</a> for details.
             </BannerDescription>
           </BannerText>
           <BannerActions>
