@@ -476,6 +476,56 @@ export const FeatureCard = styled.div`
   }
 `;
 
+export const EduContent = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  margin-top: 2rem;
+  line-height: 1.7;
+`;
+
+export const EduSubTitle = styled.h3`
+  color: ${({ theme }) => theme.colors.red4};
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+`;
+
+export const EduText = styled.p`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  margin-bottom: 1.2rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+`;
+
+export const EduList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+`;
+
+export const EduListItem = styled.li`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.9rem;
+  
+  i {
+    color: ${({ theme }) => theme.colors.success};
+    font-size: 1.1rem;
+    margin-top: 0.1rem;
+    flex-shrink: 0;
+  }
+  
+  span {
+    flex: 1;
+  }
+`;
+
 // Loading Section
 export const LoadingSection = styled.div`
   text-align: center;

@@ -428,7 +428,12 @@ export const CommentPicker: React.FC = () => {
   };
 
   const seoConfig = toolsSEO['comment-picker'];
-  const schemaData = generateToolSchema('comment-picker', seoConfig);
+  const schemaData = generateToolSchema('comment-picker', seoConfig, [
+    { question: 'Is the comment picker truly random?', answer: 'Yes. The selection algorithm uses JavaScript\'s Math.random() applied to a shuffled pool of eligible comments. Every eligible comment has an equal probability of being selected regardless of likes, date, or position in the thread. The animated selection display cycles through random names purely for visual effect — the actual winner is determined mathematically before the animation begins.' },
+    { question: 'How many comments can the tool load?', answer: 'The tool fetches up to 1,000 comments per video (10 pages × 100 comments per page) using the YouTube Data API. For videos with more than 1,000 comments, the tool retrieves the most recent and most relevant comments as determined by YouTube\'s API ordering.' },
+    { question: 'Does the tool include replies to comments?', answer: 'No. The tool fetches top-level comments only. Reply threads (nested comments) are not included in the selection pool. This is standard practice for YouTube giveaways since reply authors did not directly comment on the video.' },
+    { question: 'Do I need a YouTube account to use the Comment Picker?', answer: 'No. The tool works entirely through the public YouTube Data API — no login or YouTube account is required. Simply paste the video URL of any public video and the tool fetches all comments automatically.' }
+  ]);
 
   return (
     <>
@@ -666,11 +671,61 @@ export const CommentPicker: React.FC = () => {
               </S.FeatureList>
 
               <S.EducationalText>
-                Ideal for YouTubers, marketers, and businesses running contests or giveaways. The tool 
-                ensures complete fairness while providing the flexibility to target specific audience 
-                segments through intelligent filtering. Build trust with your audience through transparent, 
+                Ideal for YouTubers, marketers, and businesses running contests or giveaways. The tool
+                ensures complete fairness while providing the flexibility to target specific audience
+                segments through intelligent filtering. Build trust with your audience through transparent,
                 verifiable random selection processes.
               </S.EducationalText>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
+
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Is the comment picker truly random?</strong> Yes. The selection algorithm uses JavaScript's Math.random() applied to a shuffled pool of eligible comments. Every eligible comment has an equal probability of being selected regardless of likes, date, or position in the thread. The animated selection display cycles through random names purely for visual effect — the actual winner is determined mathematically before the animation begins.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>How many comments can the tool load?</strong> The tool fetches up to 1,000 comments per video (10 pages × 100 comments per page) using the YouTube Data API. For videos with more than 1,000 comments, the tool retrieves the most recent and most relevant comments as determined by YouTube's API ordering. For most giveaways, this covers the vast majority of participants.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Can I run a giveaway fairly if some commenters posted multiple times?</strong> Each comment thread entry is treated as a separate entry — if someone posted multiple top-level comments, they appear multiple times in the eligible pool. Use the keyword filter to require a specific entry phrase (e.g., "I entered") so that only qualifying comments are included, or use the minimum likes filter to prioritize engaged entries.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Does the tool include replies to comments?</strong> No. The tool fetches top-level comments only. Reply threads (nested comments) are not included in the selection pool. This is standard practice for YouTube giveaways since reply authors did not directly comment on the video.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>What does the Export Winners button do?</strong> Clicking Export Winners downloads a JSON file containing each winner's display name, comment text, timestamp, and like count. This gives you a permanent record of the giveaway result that you can share publicly or use to contact winners.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Do I need a YouTube account to use the Comment Picker?</strong> No. The tool works entirely through the public YouTube Data API — no login or YouTube account is required. Simply paste the video URL of any public video and the tool fetches all comments automatically.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
+
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/comment-downloader"><strong>Comment Downloader</strong></a> — Export all comments from any YouTube video as a CSV file for analysis, research, or record-keeping.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/moderation-checker"><strong>Moderation Checker</strong></a> — Scan comments for spam, profanity, and toxic content before running your giveaway to ensure a clean participant pool.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/video-analyzer"><strong>Video Analyzer</strong></a> — Get full engagement metrics for your giveaway video including comment count, like ratio, and audience retention data.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
             </S.EducationalContent>
           </S.EducationalSection>
         )}

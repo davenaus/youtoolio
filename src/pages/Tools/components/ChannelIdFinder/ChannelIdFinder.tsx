@@ -34,7 +34,12 @@ export const ChannelIdFinder: React.FC = () => {
 
   // ✅ SEO setup
   const seoConfig = toolsSEO['channel-id-finder'];
-  const schemaData = generateToolSchema('channel-id-finder', seoConfig);
+  const schemaData = generateToolSchema('channel-id-finder', seoConfig, [
+    { question: 'What is the difference between a channel ID and a handle?', answer: 'A channel ID is YouTube\'s permanent internal identifier — a 24-character string beginning with "UC" that never changes regardless of what the creator renames their channel. A handle is the @username the creator chose, which can be changed. For API integrations and long-term tracking, always use the channel ID.' },
+    { question: 'How do I find my own channel ID without this tool?', answer: 'In YouTube Studio, click your profile picture → Settings → Advanced Settings → Channel ID. The 24-character string shown there is your channel ID. Alternatively, open your channel page in a browser, right-click and view the page source, then search for "channelId" — it appears multiple times in the HTML.' },
+    { question: 'Can I look up a channel from a video URL?', answer: 'Yes. Paste any youtube.com/watch?v=VIDEO_ID URL into the search field and the tool will automatically fetch the video\'s associated channel ID and then retrieve full channel details.' },
+    { question: 'Does the tool work for channels that have changed their handle or URL?', answer: 'Yes. Because the tool resolves all lookups to the underlying channel ID, it works regardless of what the creator\'s current handle or custom URL is. If you search by an old URL that still redirects to the channel, the tool will find the correct channel ID.' }
+  ]);
 
   // Tool configuration
   const toolConfig = {
@@ -503,6 +508,63 @@ export const ChannelIdFinder: React.FC = () => {
                 access YouTube channel data. All results include both human-readable information and 
                 API-ready identifiers for seamless integration with your applications or analysis workflows.
               </S.EducationalText>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Why You Need Your Channel ID</S.SectionSubTitle>
+
+              <S.EducationalText>
+                Every YouTube channel has two primary identifiers: a human-readable handle (@username) and a machine-readable channel ID (the 24-character string starting with "UC"). While handles are easy to remember and share, channel IDs are required for many important technical tasks. The YouTube Data API v3 uses channel IDs — not handles — as the primary parameter for fetching channel statistics, video lists, playlists, and community posts programmatically.
+              </S.EducationalText>
+              <S.EducationalText>
+                Channel IDs are also permanent. Even if a creator changes their handle, custom URL, or channel name, their channel ID never changes. This makes the channel ID the most reliable identifier for long-term tracking, RSS feed subscriptions, API integrations, and database records.
+              </S.EducationalText>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
+
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>What is the difference between a channel ID and a handle?</strong> A channel ID is YouTube's permanent internal identifier — a 24-character string beginning with "UC" that never changes regardless of what the creator renames their channel. A handle is the @username the creator chose, which can be changed. For API integrations and long-term tracking, always use the channel ID. For sharing links with humans, handles are more readable.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>How do I find my own channel ID without this tool?</strong> In YouTube Studio, click your profile picture → Settings → Advanced Settings → Channel ID. The 24-character string shown there is your channel ID. Alternatively, open your channel page in a browser, right-click and view the page source, then search for "channelId" — it appears multiple times in the HTML.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>What is an uploads playlist ID and what is it used for?</strong> Every YouTube channel has a hidden playlist that contains all of its public uploads in chronological order. This uploads playlist ID (which starts with "UU" instead of "PL") is used by developers to retrieve all videos from a channel using the YouTube Data API's playlistItems endpoint — which is more efficient than the search endpoint for bulk video retrieval.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Can I look up a channel from a video URL?</strong> Yes. Paste any youtube.com/watch?v=VIDEO_ID URL into the search field and the tool will automatically fetch the video's associated channel ID and then retrieve full channel details. This is useful when you encounter a video you want to research but don't know the creator's handle or channel page URL.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Does the tool work for channels that have changed their handle or URL?</strong> Yes. Because the tool resolves all lookups to the underlying channel ID, it works regardless of what the creator's current handle or custom URL is. If you search by an old URL that still redirects to the channel, the tool will find the correct channel ID.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
+
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/subscribe-link-generator"><strong>Subscribe Link Generator</strong></a> — Use your channel ID to generate optimized subscribe links and QR codes for marketing materials.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/channel-analyzer"><strong>Channel Analyzer</strong></a> — Run a full analytics audit on any channel using its URL or ID to get engagement scores, SEO ratings, and growth metrics.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/channel-comparer"><strong>Channel Comparer</strong></a> — Compare two channels head-to-head across subscribers, views, engagement, and upload frequency using their channel IDs.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
             </S.EducationalContent>
           </S.EducationalSection>
         )}

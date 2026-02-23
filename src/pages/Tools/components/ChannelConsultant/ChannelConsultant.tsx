@@ -363,7 +363,12 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
   };
 
   const seoConfig = toolsSEO['channel-consultant'];
-  const schemaData = generateToolSchema('channel-consultant', seoConfig);
+  const schemaData = generateToolSchema('channel-consultant', seoConfig, [
+    { question: 'Which AI platform should I use the generated instructions with?', answer: 'The instructions work with any modern AI assistant — ChatGPT (GPT-4o or later), Claude (claude.ai), Google Gemini, or any AI that accepts a system-level custom instruction or custom GPT configuration. Claude and ChatGPT\'s GPT-4o are recommended for the highest quality output.' },
+    { question: 'What is the difference between the four modes?', answer: 'SEO Mode generates titles, descriptions, tags, and thumbnail concepts from a video transcript or topic. Ideation Mode produces 10 video ideas tailored to your niche. Script Mode writes a full 5,000-word script on any topic you specify. Trendjack Mode searches for upcoming events, product launches, and trends relevant to your content area.' },
+    { question: 'How often should I regenerate my consultant?', answer: 'Regenerate your consultant whenever your channel undergoes a significant change — a niche pivot, a major subscriber milestone, a shift in upload frequency, or a change in your top-performing content type. For most creators, regenerating every 2–3 months keeps the consultant current.' },
+    { question: 'Is my channel data stored or shared?', answer: 'No. Your channel data is fetched from the YouTube public API in real time and used only to generate the bot instructions text. No data is stored on our servers. The generated instructions text exists only in your browser session and clipboard.' }
+  ]);
 
 
   return (
@@ -517,6 +522,52 @@ SEO Guidelines Keywords: Use the main keyword at the beginning of the title and 
                 audience, and growth objectives. Get professional-level content strategy without the cost
                 of hiring a dedicated YouTube consultant.
               </S.EducationalText>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
+
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Which AI platform should I use the generated instructions with?</strong> The instructions work with any modern AI assistant — ChatGPT (GPT-4o or later), Claude (claude.ai), Google Gemini, or any AI that accepts a system-level custom instruction or "custom GPT" configuration. For best results, use a model that supports long context windows, as the generated instructions are detailed. Claude and ChatGPT's GPT-4o are recommended for the highest quality output.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>What is the difference between the four modes?</strong> SEO Mode generates titles, descriptions, tags, and thumbnail concepts from a video transcript or topic. Ideation Mode produces 10 video ideas tailored to your niche. Script Mode writes a full 5,000-word script on any topic you specify. Trendjack Mode searches for upcoming events, product launches, and trends relevant to your content area that you can create timely videos about.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>How often should I regenerate my consultant?</strong> Regenerate your consultant whenever your channel undergoes a significant change — a niche pivot, a major subscriber milestone, a shift in upload frequency, or a change in your top-performing content type. For most creators, regenerating every 2–3 months keeps the consultant current with your channel's growth and direction.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Does the tool work for brand new channels with no videos?</strong> The consultant works best when your channel has at least a few videos, since it analyzes your recent uploads and top performers to personalize recommendations. For brand new channels, you can still generate instructions — the bot will use your channel description and category to inform its advice, though it will have less historical data to draw from.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Is my channel data stored or shared?</strong> No. Your channel data is fetched from the YouTube public API in real time and used only to generate the bot instructions text. No data is stored on our servers. The generated instructions text exists only in your browser session and clipboard.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
+
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/channel-analyzer"><strong>Channel Analyzer</strong></a> — Get a full analytics report on your channel's SEO score, engagement rate, consistency, and branding before running your consultant session.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/youtool-playbooks"><strong>YouTool Playbooks</strong></a> — Browse a library of pre-built AI prompt playbooks for YouTube creators covering SEO, scripting, ideation, and more.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/tag-generator"><strong>Tag Generator</strong></a> — Use SEO Mode output from your consultant alongside the Tag Generator to build a complete, optimized tag set for your videos.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
             </S.EducationalContent>
           </S.EducationalSection>
         )}

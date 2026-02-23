@@ -171,10 +171,15 @@ export const toolsSEO: Record<string, ToolSEOConfig> = {
   }
 };
 
+export interface FAQItem {
+  question: string;
+  answer: string;
+}
+
 // Helper function to generate structured data for tools
-export const generateToolSchema = (toolId: string, toolConfig: ToolSEOConfig) => {
-  return {
-    '@context': 'https://schema.org',
+// Optionally accepts FAQ items to produce a combined @graph with FAQPage schema
+export const generateToolSchema = (toolId: string, toolConfig: ToolSEOConfig, faqs?: FAQItem[]) => {
+  const appSchema = {
     '@type': toolConfig.schemaType,
     'name': toolConfig.title,
     'description': toolConfig.description,
@@ -198,5 +203,31 @@ export const generateToolSchema = (toolId: string, toolConfig: ToolSEOConfig) =>
       'bestRating': '5',
       'worstRating': '1'
     }
+  };
+
+  if (faqs && faqs.length > 0) {
+    // Return a @graph with both WebApplication and FAQPage schemas
+    return {
+      '@context': 'https://schema.org',
+      '@graph': [
+        appSchema,
+        {
+          '@type': 'FAQPage',
+          'mainEntity': faqs.map(faq => ({
+            '@type': 'Question',
+            'name': faq.question,
+            'acceptedAnswer': {
+              '@type': 'Answer',
+              'text': faq.answer
+            }
+          }))
+        }
+      ]
+    };
+  }
+
+  return {
+    '@context': 'https://schema.org',
+    ...appSchema
   };
 };

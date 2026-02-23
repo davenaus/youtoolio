@@ -22,7 +22,17 @@ import {
   EmptyIcon,
   EmptyTitle,
   EmptyDescription,
-  EmptyList
+  EducationalSection,
+  EducationalContent,
+  SectionSubTitle,
+  EducationalText,
+  EduFeatureList,
+  EduFeatureListItem,
+  EduStepByStep,
+  EduStepItem,
+  EduStepNumberCircle,
+  EduStepContent,
+  EduStepTitle
 } from './styles';
 
 const YouToolPlaybooks: React.FC = () => {
@@ -99,6 +109,76 @@ const YouToolPlaybooks: React.FC = () => {
 
       {/* Google Ad Spot */}
       <GoogleAd adSlot="1234567890" />
+
+      {/* Educational Content */}
+      <EducationalSection>
+
+        <EducationalContent>
+          <SectionSubTitle>What Are YouTool Playbooks?</SectionSubTitle>
+          <EducationalText>
+            YouTool Playbooks are step-by-step strategy guides written for YouTube creators at every stage of their journey. Each playbook covers a specific challenge or opportunity — from launching a new channel and optimizing for search, to growing from 1K to 10K subscribers and building a sustainable upload schedule. Every guide is practical and action-oriented, with concrete steps you can execute immediately.
+          </EducationalText>
+          <EducationalText>
+            Unlike generic YouTube advice, these playbooks are built around the tools available on this platform. Each strategy connects to the specific tools you need to execute it — so you're not just reading theory, you have the actual tools to implement each step alongside the guide.
+          </EducationalText>
+        </EducationalContent>
+
+        <EducationalContent>
+          <SectionSubTitle>How to Use the Playbooks</SectionSubTitle>
+          <EduStepByStep>
+            <EduStepItem>
+              <EduStepNumberCircle>1</EduStepNumberCircle>
+              <EduStepContent>
+                <EduStepTitle>Browse by Category</EduStepTitle>
+                <EducationalText>
+                  Use the category filters to find playbooks relevant to your current challenge. Categories include channel growth, content strategy, SEO and discoverability, monetization, and thumbnail and branding. If you're not sure where to start, browse the "Getting Started" category for foundational strategies.
+                </EducationalText>
+              </EduStepContent>
+            </EduStepItem>
+            <EduStepItem>
+              <EduStepNumberCircle>2</EduStepNumberCircle>
+              <EduStepContent>
+                <EduStepTitle>Open a Playbook and Follow the Steps</EduStepTitle>
+                <EducationalText>
+                  Each playbook opens in a modal with numbered steps. Work through the steps in order — each one builds on the previous. Many steps link directly to tools on this site so you can complete the action immediately without leaving the page.
+                </EducationalText>
+              </EduStepContent>
+            </EduStepItem>
+            <EduStepItem>
+              <EduStepNumberCircle>3</EduStepNumberCircle>
+              <EduStepContent>
+                <EduStepTitle>Revisit as Your Channel Grows</EduStepTitle>
+                <EducationalText>
+                  The right playbook depends on your current channel stage. A strategy that's perfect at 500 subscribers may not apply at 50,000. Bookmark this page and return to different playbooks as your channel evolves — growth introduces new challenges and opportunities that earlier-stage playbooks don't address.
+                </EducationalText>
+              </EduStepContent>
+            </EduStepItem>
+          </EduStepByStep>
+        </EducationalContent>
+
+        <EducationalContent>
+          <SectionSubTitle>What Topics Do the Playbooks Cover?</SectionSubTitle>
+          <EduFeatureList>
+            <EduFeatureListItem>
+              <i className="bx bx-check-circle"></i>
+              <span><strong>Channel Launch and Setup:</strong> Everything you need to configure a new channel for discoverability from day one — channel keywords, description optimization, branding assets, and the first 10 videos strategy that establishes your niche positioning.</span>
+            </EduFeatureListItem>
+            <EduFeatureListItem>
+              <i className="bx bx-check-circle"></i>
+              <span><strong>SEO and Keyword Research:</strong> How to research what your audience is already searching for, how to structure titles and descriptions to rank in YouTube search, and how to build a keyword strategy that compounds over time rather than chasing trending topics.</span>
+            </EduFeatureListItem>
+            <EduFeatureListItem>
+              <i className="bx bx-check-circle"></i>
+              <span><strong>Thumbnail and Packaging Strategy:</strong> The psychology of click-through rates, how to design thumbnails that stand out in competitive feeds, how to A/B test thumbnail concepts before publishing, and how to build a consistent visual brand that viewers recognize instantly.</span>
+            </EduFeatureListItem>
+            <EduFeatureListItem>
+              <i className="bx bx-check-circle"></i>
+              <span><strong>Monetization and Revenue Growth:</strong> How to qualify for the YouTube Partner Program faster, how to optimize for advertiser-friendly content, how to layer multiple revenue streams beyond AdSense, and how to read your YouTube Studio analytics to identify your highest-value content.</span>
+            </EduFeatureListItem>
+          </EduFeatureList>
+        </EducationalContent>
+
+      </EducationalSection>
 
       {/* Category Filters */}
       <FiltersContainer>

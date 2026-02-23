@@ -420,6 +420,116 @@ export const StepConnector = styled.div<{ completed?: boolean }>`
 `;
 
 // Section Components
+// Educational Content Styled Components
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+export const EducationalSection = styled.div`
+  margin-bottom: 3rem;
+  animation: ${fadeIn} 0.8s ease-out;
+`;
+
+export const EducationalContent = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  margin-top: 2rem;
+  line-height: 1.7;
+`;
+
+export const SectionSubTitle = styled.h2`
+  color: ${({ theme }) => theme.colors.red4};
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+  }
+`;
+
+export const EducationalText = styled.p`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  margin-bottom: 1.5rem;
+  font-size: 0.90rem;
+  line-height: 1.6;
+`;
+
+export const FeatureList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+`;
+
+export const FeatureListItem = styled.li`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.9rem;
+  
+  i {
+    color: ${({ theme }) => theme.colors.success};
+    font-size: 1.1rem;
+    margin-top: 0.1rem;
+    flex-shrink: 0;
+  }
+  
+  span {
+    flex: 1;
+  }
+`;
+
+export const EduStepByStep = styled.div`
+  background: ${({ theme }) => theme.colors.dark4};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 2rem;
+  margin: 2rem 0;
+`;
+
+export const EduStepItem = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+export const EduStepNumberCircle = styled.div`
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(125, 0, 0, 0.3);
+`;
+
+export const EduStepContent = styled.div`
+  flex: 1;
+  font-size: 0.9rem;
+`;
+
+export const EduStepTitle = styled.h4`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+`;
+
 export const SectionTitle = styled.h2`
   display: flex;
   align-items: center;

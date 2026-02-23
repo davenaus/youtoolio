@@ -5,6 +5,116 @@ const pulseGlow = keyframes`
   50% { box-shadow: 0 0 40px rgba(229, 72, 72, 0.8); }
 `;
 
+
+// Educational Content Styled Components
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+export const EducationalSection = styled.div`
+  margin-bottom: 3rem;
+  animation: ${fadeIn} 0.8s ease-out;
+`;
+
+export const EducationalContent = styled.div`
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  margin-top: 2rem;
+  line-height: 1.7;
+`;
+
+export const SectionSubTitle = styled.h2`
+  color: #e54848;
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+  }
+`;
+
+export const EducationalText = styled.p`
+  color: rgba(255,255,255,0.65);
+  margin-bottom: 1.5rem;
+  font-size: 0.90rem;
+  line-height: 1.6;
+`;
+
+export const EduFeatureList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+`;
+
+export const EduFeatureListItem = styled.li`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  color: rgba(255,255,255,0.65);
+  font-size: 0.9rem;
+
+  i {
+    color: #10b981;
+    font-size: 1.1rem;
+    margin-top: 0.1rem;
+    flex-shrink: 0;
+  }
+
+  span {
+    flex: 1;
+  }
+`;
+
+export const EduStepByStep = styled.div`
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem 0;
+`;
+
+export const EduStepItem = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+export const EduStepNumberCircle = styled.div`
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #e54848, #b02020);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(125, 0, 0, 0.3);
+`;
+
+export const EduStepContent = styled.div`
+  flex: 1;
+  font-size: 0.9rem;
+`;
+
+export const EduStepTitle = styled.h4`
+  color: rgba(255,255,255,0.9);
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+`;
 export const Container = styled.div`
   min-height: 100vh;
   padding: ${({ theme }) => theme.spacing.xl} ${({ theme }) => theme.spacing.lg};

@@ -437,6 +437,114 @@ export const YouTubeCalculator: React.FC = () => {
         {/* Google Ad Spot */}
         <GoogleAd adSlot="1234567890" />
 
+        {/* Educational Content */}
+        {currentStep === 'input' && (
+          <S.EducationalSection>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>What This Tool Does</S.SectionSubTitle>
+              <S.EducationalText>
+                The YouTube Revenue Calculator estimates how much a video earns based on its view count, niche, watch time, and other monetization factors. It uses industry-standard CPM (Cost Per Mille) benchmarks for each content category to generate a realistic revenue range — from a conservative floor to an optimistic ceiling — giving you a more honest picture of potential earnings than a single-number estimate.
+              </S.EducationalText>
+              <S.EducationalText>
+                YouTube ad revenue is one of the most misunderstood topics in the creator economy. The actual amount varies enormously based on viewer geography, seasonal ad rates, content category, video length, and what percentage of viewers watch ads. This tool uses real-world CPM data to give you calibrated estimates rather than inflated projections.
+              </S.EducationalText>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Revenue Calculator</S.SectionSubTitle>
+              <S.EduStepByStep>
+                <S.EduStepItem>
+                  <S.EduStepNumberCircle>1</S.EduStepNumberCircle>
+                  <S.EduStepContent>
+                    <S.EduStepTitle>Enter Your Video Details</S.EduStepTitle>
+                    <S.EducationalText>
+                      Paste a YouTube video URL for automatic data fetching, or manually enter your view count, average watch time percentage, and video length. Manual entry is useful for projecting earnings on a video you haven't published yet based on expected performance.
+                    </S.EducationalText>
+                  </S.EduStepContent>
+                </S.EduStepItem>
+                <S.EduStepItem>
+                  <S.EduStepNumberCircle>2</S.EduStepNumberCircle>
+                  <S.EduStepContent>
+                    <S.EduStepTitle>Select Your Content Category</S.EduStepTitle>
+                    <S.EducationalText>
+                      Choose the category that best matches your content. CPM rates vary significantly by niche — finance and business content commands some of the highest CPMs ($15–$40+) because advertisers pay more to reach those audiences. Gaming and entertainment typically have lower CPMs ($2–$8). Selecting the right category is the most important input for an accurate estimate.
+                    </S.EducationalText>
+                  </S.EduStepContent>
+                </S.EduStepItem>
+                <S.EduStepItem>
+                  <S.EduStepNumberCircle>3</S.EduStepNumberCircle>
+                  <S.EduStepContent>
+                    <S.EduStepTitle>Review Your Revenue Breakdown</S.EduStepTitle>
+                    <S.EducationalText>
+                      The results show your estimated RPM (Revenue Per Mille), total ad revenue range, and a breakdown of how different factors affect your earnings. Use the detailed report to understand which variables have the biggest impact on your channel's monetization potential.
+                    </S.EducationalText>
+                  </S.EduStepContent>
+                </S.EduStepItem>
+              </S.EduStepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Key YouTube Revenue Concepts</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>CPM vs RPM:</strong> CPM (Cost Per Mille) is what advertisers pay per 1,000 ad impressions. RPM (Revenue Per Mille) is what creators actually earn per 1,000 video views — which is always lower than CPM because not every view results in an ad impression, and YouTube takes a 45% revenue share. Most creators earn 40–60% of the CPM rate as their RPM.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Watch time and ad load:</strong> YouTube serves more ads on longer videos (8+ minutes enables mid-roll ads). A 15-minute video with 60% average view duration earns significantly more than a 4-minute video with the same view count because it can display multiple ad slots per viewer session.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Seasonal rate fluctuations:</strong> Ad CPMs spike dramatically in Q4 (October–December) as advertisers compete for holiday ad inventory. CPMs in December can be 3–5x higher than January rates for the same content. This means the same 100,000-view video can earn $800 in January and $3,000 in December.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Geographic audience value:</strong> Viewer geography has a massive impact on revenue. US, UK, Canadian, and Australian viewers generate 5–15x more ad revenue per view than viewers from regions with lower advertiser demand. A channel with a predominantly US audience earns far more per view than one with equivalent views from other regions.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Why is my actual revenue different from the estimate?</strong> Ad revenue estimates have wide variance because they depend on factors that cannot be observed externally — your specific audience geography, the exact advertisers targeting your videos, your ad settings, and YouTube's real-time auction dynamics. Think of the calculator's output as an informed range, not a guarantee.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Does the estimate include YouTube Premium revenue?</strong> YouTube Premium revenue (where Premium subscribers watch your content without ads) adds a small additional amount beyond ad revenue — typically 5–15% additional on top of ad revenue. The calculator's estimate primarily models ad revenue; Premium revenue is a bonus on top.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>How can I increase my RPM?</strong> The most reliable ways to increase RPM are: create longer videos to enable mid-roll ads, target higher-CPM content categories (finance, business, tech reviews), grow your US/UK/AU viewer base through targeted SEO, and maintain high ad suitability by avoiding monetization-restricted topics in titles and descriptions.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/video-analyzer"><strong>Video Analyzer</strong></a> — Get detailed analytics on any video's performance metrics to compare against your revenue estimates.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/channel-analyzer"><strong>Channel Analyzer</strong></a> — Analyze a full channel's performance including engagement scores that directly correlate with monetization health.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/moderation-checker"><strong>Moderation Checker</strong></a> — Check your video titles and descriptions for content that could trigger demonetization before you publish.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+          </S.EducationalSection>
+        )}
+
         {renderStepIndicator()}
 
         {/* Step 1: Video Details */}

@@ -28,7 +28,12 @@ export const ProfilePictureDownloader: React.FC = () => {
 
   // SEO setup
   const seoConfig = toolsSEO['profile-picture-downloader'];
-  const schemaData = generateToolSchema('profile-picture-downloader', seoConfig);
+  const schemaData = generateToolSchema('profile-picture-downloader', seoConfig, [
+    { question: 'Why is the Max Resolution option not always 2048px?', answer: 'The actual maximum resolution depends on the size of the image the creator originally uploaded to YouTube. If the creator uploaded a 400×400px photo, the CDN cannot serve it at 2048px — it will be served at its native upload size. The tool requests 2048px and YouTube returns the best it has available.' },
+    { question: 'Can I download a profile picture from a private channel?', answer: 'No. Private channels are not accessible through the YouTube Data API. The tool can only retrieve profile pictures from public channels. Unlisted channels (channels that have not customized their URL but are still public) are generally accessible.' },
+    { question: 'What image format are the downloaded pictures?', answer: 'YouTube stores profile pictures as JPEG or PNG files depending on what the creator uploaded. The download preserves the original format. If you need to convert to a different format, use an image editor after downloading.' },
+    { question: 'Does this tool work for YouTube channels with new @handles?', answer: 'Yes. The tool supports all current YouTube channel URL and handle formats, including the newer @handle system that YouTube introduced in 2022. Simply paste the youtube.com/@handle URL directly into the search bar.' }
+  ]);
 
   // Tool configuration
   const toolConfig = {
@@ -328,43 +333,42 @@ export const ProfilePictureDownloader: React.FC = () => {
             {!pictureInfo && (
               <S.EducationalSection>
                 <S.EducationalContent>
-                  <S.SectionSubTitle>How to Use the Profile Picture Downloader</S.SectionSubTitle>
-
+                  <S.SectionSubTitle>What This Tool Does</S.SectionSubTitle>
                   <S.EducationalText>
-                    Our Profile Picture Downloader provides instant access to YouTube channel profile pictures
-                    in multiple resolutions (88px to 2048px). Perfect for creating collages, presentations, or archiving channel assets.
+                    The YouTube Profile Picture Downloader retrieves a channel's avatar (profile picture) at up to four resolution tiers — from the compact 88×88 default all the way up to 2048×2048 — and lets you download the image directly to your device. It works by querying the YouTube Data API v3 for the channel's snippet data, which includes the thumbnail object containing URLs for each available resolution. The tool then modifies the URL parameters to force the maximum quality before displaying the preview.
                   </S.EducationalText>
+                  <S.EducationalText>
+                    Profile pictures on YouTube are always square (1:1 aspect ratio) and stored as either JPEG or PNG files. This tool is useful for creators who need their own avatar at full resolution, researchers studying channel branding, and anyone building media kits or collaboration materials that reference specific YouTube channels.
+                  </S.EducationalText>
+                </S.EducationalContent>
 
+                <S.EducationalContent>
+                  <S.SectionSubTitle>How to Use the Profile Picture Downloader</S.SectionSubTitle>
                   <S.StepByStep>
                     <S.StepItem>
                       <S.StepNumberCircle>1</S.StepNumberCircle>
                       <S.StepContent>
-                        <S.StepTitle>Enter Channel Information</S.StepTitle>
+                        <S.StepTitle>Enter the Channel URL or Handle</S.StepTitle>
                         <S.EducationalText>
-                          Paste any YouTube channel URL, @handle, or channel name. Supports youtube.com/channel/,
-                          youtube.com/c/, youtube.com/@handle, and channel ID formats.
+                          Paste any YouTube channel URL or identifier into the search bar. Supported formats include: youtube.com/channel/CHANNEL_ID, youtube.com/@handle, youtube.com/c/CustomURL, youtube.com/user/OldUsername, and raw channel IDs beginning with "UC". You can also type a channel name directly and the tool will search for the best match.
                         </S.EducationalText>
                       </S.StepContent>
                     </S.StepItem>
-
                     <S.StepItem>
                       <S.StepNumberCircle>2</S.StepNumberCircle>
                       <S.StepContent>
-                        <S.StepTitle>Select Quality</S.StepTitle>
+                        <S.StepTitle>Choose a Resolution</S.StepTitle>
                         <S.EducationalText>
-                          Choose from 4 quality options: Default (88x88), Medium (240x240), High (800x800), or Max Resolution (2048x2048).
-                          Preview updates in real-time as you switch between qualities.
+                          After the channel loads, select from four quality options: Default (88×88), Medium (240×240), High (800×800), or Max Resolution (2048×2048). The preview updates in real time as you switch options. For most use cases, High (800×800) provides an excellent balance of quality and file size. Choose Max Resolution when you need print-quality output or plan to scale the image up.
                         </S.EducationalText>
                       </S.StepContent>
                     </S.StepItem>
-
                     <S.StepItem>
                       <S.StepNumberCircle>3</S.StepNumberCircle>
                       <S.StepContent>
-                        <S.StepTitle>Download or Copy URL</S.StepTitle>
+                        <S.StepTitle>Download or Copy the URL</S.StepTitle>
                         <S.EducationalText>
-                          Download the profile picture directly to your device or copy the URL for use in other applications.
-                          The file is automatically named with the channel title and quality for easy organization.
+                          Click "Download Picture" to save the image file to your device. Files are automatically named with the channel title and quality level for easy organization. Use "Copy URL" if you need to reference the image in a CMS, design tool, or automation without downloading the file locally.
                         </S.EducationalText>
                       </S.StepContent>
                     </S.StepItem>
@@ -372,28 +376,95 @@ export const ProfilePictureDownloader: React.FC = () => {
                 </S.EducationalContent>
 
                 <S.EducationalContent>
-                  <S.SectionSubTitle>Quality Options & Use Cases</S.SectionSubTitle>
-
+                  <S.SectionSubTitle>Understanding the Resolution Tiers</S.SectionSubTitle>
+                  <S.EducationalText>
+                    YouTube stores channel profile pictures in a resolution ladder. Here is when to use each tier:
+                  </S.EducationalText>
                   <S.FeatureList>
                     <S.FeatureListItem>
                       <i className="bx bx-check-circle"></i>
-                      <span><strong>Max Resolution (2048x2048):</strong> Perfect for high-quality prints, professional presentations, and detailed design work</span>
+                      <span><strong>Max Resolution — 2048×2048px:</strong> The highest quality available. Use this for print materials, large-format displays, or whenever you need to scale the image. This tier is generated by modifying the CDN URL parameters and may not always be available at exactly 2048px — the actual maximum depends on what resolution the creator originally uploaded.</span>
                     </S.FeatureListItem>
                     <S.FeatureListItem>
                       <i className="bx bx-check-circle"></i>
-                      <span><strong>High Quality (800x800):</strong> Ideal for website avatars, social media profiles, and most digital applications</span>
+                      <span><strong>High — 800×800px:</strong> The best standard quality tier for most digital use cases. Use this for website avatars, social media headers, media kit documents, and anywhere that requires a crisp, clear profile image.</span>
                     </S.FeatureListItem>
                     <S.FeatureListItem>
                       <i className="bx bx-check-circle"></i>
-                      <span><strong>Medium Quality (240x240):</strong> Great for thumbnails, small web widgets, and applications requiring faster loading</span>
+                      <span><strong>Medium — 240×240px:</strong> A compact square well-suited for comment section icons, notification images, and UI elements where the avatar appears at small sizes. Good file-size-to-quality ratio for web use.</span>
                     </S.FeatureListItem>
                     <S.FeatureListItem>
                       <i className="bx bx-check-circle"></i>
-                      <span><strong>Default Quality (88x88):</strong> Suitable for icons, mobile apps, and situations where file size is critical</span>
+                      <span><strong>Default — 88×88px:</strong> The smallest tier, matching the size YouTube uses in comment threads and subscription list thumbnails. Ideal for creating image catalogs, icon sets, or lightweight content where visual fidelity at small sizes is sufficient.</span>
+                    </S.FeatureListItem>
+                  </S.FeatureList>
+                </S.EducationalContent>
+
+                <S.EducationalContent>
+                  <S.SectionSubTitle>Common Use Cases</S.SectionSubTitle>
+                  <S.FeatureList>
+                    <S.FeatureListItem>
+                      <i className="bx bx-check-circle"></i>
+                      <span><strong>Backup Your Own Channel Avatar:</strong> Download your channel's current profile picture at max resolution before updating it. YouTube does not provide a direct export, so keeping a local backup of each avatar iteration helps you track your branding evolution over time.</span>
                     </S.FeatureListItem>
                     <S.FeatureListItem>
                       <i className="bx bx-check-circle"></i>
-                      <span><strong>Channel Research:</strong> Download creator profile pictures for competitive analysis and industry research</span>
+                      <span><strong>Collaboration and Partnership Documents:</strong> When creating sponsor decks, media kits, or collaboration proposals, you often need the other channel's profile picture for visual reference. Download it at High or Max resolution for professional-quality documents.</span>
+                    </S.FeatureListItem>
+                    <S.FeatureListItem>
+                      <i className="bx bx-check-circle"></i>
+                      <span><strong>Branding Research:</strong> Download profile pictures from top channels in your niche and study their design choices — photography vs illustration, color background vs transparent, full face vs logo. These patterns reveal what resonates with your target audience.</span>
+                    </S.FeatureListItem>
+                    <S.FeatureListItem>
+                      <i className="bx bx-check-circle"></i>
+                      <span><strong>Cross-Platform Consistency:</strong> If you use a YouTube channel's avatar on other platforms (podcast cover art, Patreon, Discord), download the highest resolution to ensure it scales well across different display contexts and aspect ratio crops.</span>
+                    </S.FeatureListItem>
+                  </S.FeatureList>
+                </S.EducationalContent>
+
+                <S.EducationalContent>
+                  <S.SectionSubTitle>Rights &amp; Usage Notice</S.SectionSubTitle>
+                  <S.EducationalText>
+                    YouTube channel profile pictures are creative works owned by the respective channel operators. This tool is intended for downloading profile pictures from your own channel, for channels where you have explicit permission from the owner, or for personal reference and research. Do not use downloaded profile pictures to impersonate another creator, claim ownership of their likeness or branding, or use them commercially without the copyright holder's permission.
+                  </S.EducationalText>
+                </S.EducationalContent>
+
+                <S.EducationalContent>
+                  <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
+                  <S.FeatureList>
+                    <S.FeatureListItem>
+                      <i className="bx bx-help-circle"></i>
+                      <span><strong>Why is the Max Resolution option not always 2048px?</strong> The actual maximum resolution depends on the size of the image the creator originally uploaded to YouTube. If the creator uploaded a 400×400px photo, the CDN cannot serve it at 2048px — it will be served at its native upload size. The tool requests 2048px and YouTube returns the best it has available.</span>
+                    </S.FeatureListItem>
+                    <S.FeatureListItem>
+                      <i className="bx bx-help-circle"></i>
+                      <span><strong>Can I download a profile picture from a private channel?</strong> No. Private channels are not accessible through the YouTube Data API. The tool can only retrieve profile pictures from public channels. Unlisted channels (channels that haven't customized their URL but are still public) are generally accessible.</span>
+                    </S.FeatureListItem>
+                    <S.FeatureListItem>
+                      <i className="bx bx-help-circle"></i>
+                      <span><strong>What image format are the downloaded pictures?</strong> YouTube stores profile pictures as JPEG or PNG files depending on what the creator uploaded. The download preserves the original format. If you need to convert to a different format, use an image editor after downloading.</span>
+                    </S.FeatureListItem>
+                    <S.FeatureListItem>
+                      <i className="bx bx-help-circle"></i>
+                      <span><strong>Does this tool work for YouTube channels with new @handles?</strong> Yes. The tool supports all current YouTube channel URL and handle formats, including the newer @handle system that YouTube introduced in 2022. Simply paste the youtube.com/@handle URL directly into the search bar.</span>
+                    </S.FeatureListItem>
+                  </S.FeatureList>
+                </S.EducationalContent>
+
+                <S.EducationalContent>
+                  <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
+                  <S.FeatureList>
+                    <S.FeatureListItem>
+                      <i className="bx bx-link"></i>
+                      <span><a href="/tools/banner-downloader"><strong>Channel Banner Downloader</strong></a> — Download the channel's banner art at full 2120px resolution alongside the profile picture.</span>
+                    </S.FeatureListItem>
+                    <S.FeatureListItem>
+                      <i className="bx bx-link"></i>
+                      <span><a href="/tools/color-picker-from-image"><strong>Color Picker from Image</strong></a> — Extract the exact hex color codes from the downloaded profile picture to match colors in your own branding.</span>
+                    </S.FeatureListItem>
+                    <S.FeatureListItem>
+                      <i className="bx bx-link"></i>
+                      <span><a href="/tools/channel-analyzer"><strong>Channel Analyzer</strong></a> — Get a full analytics and performance breakdown for any YouTube channel.</span>
                     </S.FeatureListItem>
                   </S.FeatureList>
                 </S.EducationalContent>

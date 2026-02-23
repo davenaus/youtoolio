@@ -457,6 +457,110 @@ export const ModerationChecker: React.FC = () => {
         {/* Google Ad Spot */}
         <GoogleAd adSlot="1234567890" />
 
+        {/* Educational Content */}
+        {!showResults && (
+          <S.EducationalSection>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>What This Tool Does</S.SectionSubTitle>
+              <S.EducationalText>
+                The Moderation Checker scans any text — a comment, video title, description, community post, or script — for content that may violate YouTube's Community Guidelines or advertiser-friendliness policies. It detects profanity, hate speech, spam patterns, violence indicators, and calculates an overall safety score with a risk level rating.
+              </S.EducationalText>
+              <S.EducationalText>
+                YouTube's content moderation directly affects monetization. Channels that regularly publish content with flaggable language or themes risk having their videos demonetized, limited in distribution, or removed entirely. Checking your content before you publish helps you catch issues before they become strikes or policy violations.
+              </S.EducationalText>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Moderation Checker</S.SectionSubTitle>
+              <S.StepByStep>
+                <S.StepItem>
+                  <S.StepNumberCircle>1</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Paste Your Content</S.StepTitle>
+                    <S.EducationalText>
+                      Enter any text into the analysis field. You can check a full video description, a comment reply, a pinned comment, a community post, or a video script. The tool works on any length of text — from a single comment to a full transcript.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+                <S.StepItem>
+                  <S.StepNumberCircle>2</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Review the Safety Scores</S.StepTitle>
+                    <S.EducationalText>
+                      The tool returns an overall risk level (Safe, Low Risk, Medium Risk, or High Risk) along with individual category scores for profanity, toxicity, spam, and violence. Each flagged term or pattern is identified specifically so you know exactly what triggered the alert.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+                <S.StepItem>
+                  <S.StepNumberCircle>3</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Apply the Recommendations</S.StepTitle>
+                    <S.EducationalText>
+                      The results include specific suggestions for how to rephrase or modify flagged content while preserving your intended meaning. Apply these changes to your content before publishing to reduce the risk of demonetization or distribution limits.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+              </S.StepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>What Each Score Category Means</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Profanity Score:</strong> Detects explicit language and profanity in the scanned text. A high profanity score doesn't automatically mean demonetization — context matters. However, YouTube's automated system can misidentify context, so reducing explicit language in titles, descriptions, and thumbnails reduces risk.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Toxicity Score:</strong> Measures the overall hostility or harmfulness of the content, including personal attacks, threats, and derogatory language targeting individuals or groups. High toxicity scores are strongly correlated with YouTube strikes under the harassment and cyberbullying policy.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Spam Score:</strong> Identifies repetitive phrases, excessive capitalization, misleading claims, and other patterns commonly used in spam. Spam-like descriptions or titles can trigger YouTube's automatic spam filters, reducing how often your video is recommended.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Violence Score:</strong> Flags language related to violence, self-harm, or dangerous activities. Content about sensitive topics can be discussed on YouTube, but descriptions and titles that lead with violent language are more likely to be age-restricted or demonetized by automated systems.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Does this tool use YouTube's actual moderation system?</strong> This tool uses its own moderation AI and detection patterns, not YouTube's internal system. YouTube's actual moderation combines multiple automated systems and human review. This tool provides a strong pre-check that flags likely problem areas, but cannot guarantee what YouTube's system will flag in a given context.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Should I check my comments section too?</strong> Yes. YouTube's automated systems can flag channels for patterns in their comments sections, not just in the video content itself. If you run community posts or allow open comments, periodically checking representative samples of your comments can help you identify whether you need to tighten your community guidelines or moderation settings.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>What's the difference between Limited Ads and No Ads?</strong> YouTube's ad suitability system has multiple tiers. "Limited or no ads" means YouTube's automated system found the content suitable for some advertisers but not all. "No ads" means the content was flagged as unsuitable for most advertisers. Titles and descriptions are among the fastest ways to trigger limited ads — this tool helps you identify which specific words or phrases are causing the issue.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/comment-downloader"><strong>Comment Downloader</strong></a> — Download your video's comments in bulk so you can run them through the Moderation Checker to assess your comment section's overall tone.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/video-analyzer"><strong>Video Analyzer</strong></a> — Analyze a video's full metadata including title, description, and tags to assess its SEO and content health holistically.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+          </S.EducationalSection>
+        )}
+
         <S.AnalysisContainer>
           <S.InputSection>
             <S.SectionTitle>

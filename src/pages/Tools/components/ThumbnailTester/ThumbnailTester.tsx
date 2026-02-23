@@ -717,6 +717,114 @@ export const ThumbnailTester: React.FC = () => {
 
         {renderStepIndicator()}
 
+        {/* Educational Content - shown before tool use */}
+        {currentStep === 'input' && (
+          <S.EducationalSection>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>What This Tool Does</S.SectionSubTitle>
+              <S.EducationalText>
+                The Thumbnail Tester lets you upload a YouTube thumbnail and compare it side-by-side against thumbnails from trending YouTube videos or from any specific channel. The goal is to answer a simple question before you publish: does your thumbnail look click-worthy and distinctive next to what's already performing well on the platform?
+              </S.EducationalText>
+              <S.EducationalText>
+                Thumbnails are one of the highest-leverage variables in YouTube performance. A compelling thumbnail can double your click-through rate, while a weak one will cause your video to be skipped even if the content is excellent. Testing before you publish costs nothing and can save weeks of effort.
+              </S.EducationalText>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Thumbnail Tester</S.SectionSubTitle>
+              <S.EduStepByStep>
+                <S.EduStepItem>
+                  <S.EduStepNumberCircle>1</S.EduStepNumberCircle>
+                  <S.EduStepContent>
+                    <S.EduStepTitle>Upload Your Thumbnail</S.EduStepTitle>
+                    <S.EducationalText>
+                      Click the upload area or drag and drop your thumbnail image. The tool accepts PNG, JPG, and WebP files. Your thumbnail will be previewed exactly as it appears on YouTube — 1280×720 pixels at a 16:9 aspect ratio.
+                    </S.EducationalText>
+                  </S.EduStepContent>
+                </S.EduStepItem>
+                <S.EduStepItem>
+                  <S.EduStepNumberCircle>2</S.EduStepNumberCircle>
+                  <S.EduStepContent>
+                    <S.EduStepTitle>Choose Your Comparison Mode</S.EduStepTitle>
+                    <S.EducationalText>
+                      Select "Compare with Trending" to see how your thumbnail looks next to YouTube's current trending videos — this is the most competitive benchmark. Select "Compare with Channel" to enter any YouTube channel URL and compare against that channel's top-performing videos, which is useful for competitive research within your niche.
+                    </S.EducationalText>
+                  </S.EduStepContent>
+                </S.EduStepItem>
+                <S.EduStepItem>
+                  <S.EduStepNumberCircle>3</S.EduStepNumberCircle>
+                  <S.EduStepContent>
+                    <S.EduStepTitle>Evaluate and Iterate</S.EduStepTitle>
+                    <S.EducationalText>
+                      Review how your thumbnail fits into the comparison grid. Ask yourself: does it stand out visually? Is the text readable at small sizes? Does the color palette contrast with adjacent thumbnails? Use these observations to iterate on your design before publishing.
+                    </S.EducationalText>
+                  </S.EduStepContent>
+                </S.EduStepItem>
+              </S.EduStepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>What Makes a Strong YouTube Thumbnail</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>High contrast and bold colors:</strong> Thumbnails that use vibrant, high-contrast color combinations draw the eye faster than muted palettes. Red, yellow, and orange are consistently among the highest-performing colors on YouTube because they create urgency and stand out in dark-themed interfaces.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Readable text at small sizes:</strong> YouTube displays thumbnails as small as 168×94 pixels on mobile. If you include text on your thumbnail, use large, bold fonts with strong contrast against the background. Limit text to 3–5 words maximum — the thumbnail title is not the video title.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>A clear focal point:</strong> Strong thumbnails typically have one dominant subject — often a face with a strong expression, or a product/outcome the video delivers on. Thumbnails that try to show too much end up showing nothing memorable.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Visual consistency across your channel:</strong> Once you find a thumbnail style that works, stick to it. Consistent styling (similar fonts, colors, layout) helps viewers recognize your content instantly in their subscriptions feed, which increases click-through rates from your existing audience.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Does the tool upload my thumbnail anywhere?</strong> No. Your thumbnail is processed locally in your browser and is never uploaded to any server. The comparison images are fetched from YouTube's CDN using publicly available thumbnail URLs.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>How many comparison thumbnails will I see?</strong> The comparison grid shows your thumbnail alongside 8–12 thumbnails from the selected comparison source (trending or channel). This replicates the density of thumbnails a viewer would see on YouTube's homepage or search results page.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>What thumbnail dimensions should I use?</strong> YouTube recommends 1280×720 pixels (HD) with a 16:9 aspect ratio and a file size under 2MB. PNG format generally provides the best image quality. The minimum acceptable size is 640×360 pixels.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/thumbnail-analyzer"><strong>Thumbnail Analyzer</strong></a> — Get a detailed AI-powered analysis of your thumbnail's composition, lighting, and readability score.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/thumbnail-downloader"><strong>Thumbnail Downloader</strong></a> — Download thumbnails from any YouTube video for competitive research and inspiration.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/outlier-finder"><strong>Outlier Finder</strong></a> — Find the highest-performing videos in any niche to study what thumbnail styles are driving breakout views.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+          </S.EducationalSection>
+        )}
+
         {/* Step 1: Upload Section */}
         {currentStep === 'input' && (
           <S.InputSection>

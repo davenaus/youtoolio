@@ -2167,47 +2167,42 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
           <S.EducationalSection>
 
             <S.EducationalContent>
-              <S.SectionSubTitle>How to Use the Video Analyzer</S.SectionSubTitle>
-
+              <S.SectionSubTitle>What This Tool Does</S.SectionSubTitle>
               <S.EducationalText>
-                Our Video Analyzer provides comprehensive insights into YouTube video performance,
-                helping content creators, marketers, and researchers understand what makes videos successful.
-                From engagement metrics to SEO optimization scores, get detailed analytics that drive results.
+                The YouTube Video Analyzer fetches comprehensive metadata for any public YouTube video using the YouTube Data API v3 and calculates a set of performance and quality scores on top of that raw data. In a single analysis you get engagement metrics, an SEO score, technical specifications, upload timing data, and tag analysis — all in one place, without needing access to YouTube Studio.
               </S.EducationalText>
+              <S.EducationalText>
+                This tool is designed for creators researching competitors, editors evaluating their own videos before and after optimization, and marketers building data-driven content strategies. Because it works on any public video, you can analyze your own content and your competitors' content with the same level of depth.
+              </S.EducationalText>
+            </S.EducationalContent>
 
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Video Analyzer</S.SectionSubTitle>
               <S.StepByStep>
                 <S.StepItem>
                   <S.StepNumberCircle>1</S.StepNumberCircle>
                   <S.StepContent>
-                    <S.StepTitle>Enter Video URL</S.StepTitle>
+                    <S.StepTitle>Paste Any YouTube Video URL</S.StepTitle>
                     <S.EducationalText>
-                      Input any YouTube video URL into the search bar above. Our system accepts various formats
-                      including youtube.com/watch?v=, youtu.be/, youtube.com/embed/, youtube.com/shorts/,
-                      or direct video IDs. The analyzer works with any public YouTube video.
+                      Copy the video URL from your browser or YouTube's share button and paste it into the search bar. Supported formats include youtube.com/watch?v=VIDEO_ID, youtu.be/VIDEO_ID, youtube.com/shorts/VIDEO_ID, and bare 11-character video IDs. The tool works with standard uploads, Shorts, and livestream replays.
                     </S.EducationalText>
                   </S.StepContent>
                 </S.StepItem>
-
                 <S.StepItem>
                   <S.StepNumberCircle>2</S.StepNumberCircle>
                   <S.StepContent>
-                    <S.StepTitle>Comprehensive Data Analysis</S.StepTitle>
+                    <S.StepTitle>Review the Overview Tab</S.StepTitle>
                     <S.EducationalText>
-                      Our system fetches detailed video metadata, engagement statistics, channel information,
-                      and technical specifications. We analyze performance patterns, content optimization,
-                      upload timing, and audience engagement metrics for complete insights.
+                      The Overview tab shows the headline numbers: view count, likes, comments, engagement rate, SEO score, and the upload date. This is where you quickly assess whether a video is performing well or needs attention. The engagement rate and SEO score are calculated metrics — not raw numbers from YouTube — which means they give you a normalized way to compare videos across different channels and sizes.
                     </S.EducationalText>
                   </S.StepContent>
                 </S.StepItem>
-
                 <S.StepItem>
                   <S.StepNumberCircle>3</S.StepNumberCircle>
                   <S.StepContent>
-                    <S.StepTitle>Review Detailed Insights</S.StepTitle>
+                    <S.StepTitle>Explore the Details and Recommendations</S.StepTitle>
                     <S.EducationalText>
-                      Navigate through organized tabs to explore video overview, technical details,
-                      channel analytics, and strategic recommendations. Use these insights to optimize
-                      your content strategy and improve video performance.
+                      Navigate through the tabs to see tag analysis, description quality, technical metadata, and channel context. The Recommendations tab summarizes the most actionable findings — things like missing tags, short descriptions, or sub-optimal upload timing that you can act on immediately.
                     </S.EducationalText>
                   </S.StepContent>
                 </S.StepItem>
@@ -2215,40 +2210,81 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
             </S.EducationalContent>
 
             <S.EducationalContent>
-              <S.SectionSubTitle>What Analytics Are Provided?</S.SectionSubTitle>
-
+              <S.SectionSubTitle>How to Interpret the Results</S.SectionSubTitle>
               <S.FeatureList>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
-                  <span><strong>Engagement Analysis:</strong> Like-to-view ratio, comment engagement rate, audience retention patterns, and social sharing metrics</span>
+                  <span><strong>Engagement Rate:</strong> Calculated as (likes + comments) ÷ views × 100. A rate above 4% is strong for most niches. Rates below 1% may indicate the video reached a large non-subscribed audience (common for viral videos) or that the content did not resonate deeply with viewers. Compare this metric against the channel's own average rather than an absolute benchmark.</span>
                 </S.FeatureListItem>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
-                  <span><strong>SEO Optimization Score:</strong> Title effectiveness, description quality, tag usage, and keyword optimization recommendations</span>
+                  <span><strong>SEO Score:</strong> A composite score based on title length and keyword density, description length and richness, number of tags used, and whether key terms appear consistently across all three fields. Scores above 70 indicate solid optimization. Below 40 usually means the title is too short, the description is sparse, or tags are missing entirely.</span>
                 </S.FeatureListItem>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
-                  <span><strong>Technical Specifications:</strong> Video resolution, duration analysis, upload quality, captions availability, and format details</span>
+                  <span><strong>Tag Analysis:</strong> Shows how many tags the video uses and flags whether they appear to be optimized. YouTube allows up to 500 characters of tags. Videos using fewer than 5 tags or over 30 tags often have lower discoverability than those using 10–20 well-chosen tags that match the title and description keywords.</span>
                 </S.FeatureListItem>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
-                  <span><strong>Content Performance:</strong> View velocity, subscriber conversion rate, watch time estimates, and trending potential analysis</span>
+                  <span><strong>Upload Timing:</strong> Shows the day of week and time the video was published. While YouTube's algorithm distributes content over time, videos published when your audience is most active tend to accumulate early engagement signals faster, which can boost algorithmic distribution in the first 24–48 hours.</span>
                 </S.FeatureListItem>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
-                  <span><strong>Channel Context:</strong> Publisher information, subscriber count, upload frequency, and channel authority metrics</span>
+                  <span><strong>Channel Context:</strong> Subscriber count, total channel views, and video count give you a baseline to judge the video's performance relative to the channel's overall size. A video with 50,000 views from a 500-subscriber channel is extraordinary; the same number from a 5-million-subscriber channel may indicate underperformance.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Common Use Cases</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Competitor Research:</strong> Analyze the top 5–10 videos in your niche to understand what titles, tag strategies, and description structures are earning high engagement. Look for patterns in videos with above-average engagement rates and reverse-engineer their approach.</span>
                 </S.FeatureListItem>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
-                  <span><strong>Upload Timing Analysis:</strong> Publication date strategy, optimal posting times, and schedule consistency evaluation</span>
+                  <span><strong>Pre-Publish Audit:</strong> Before publishing a new video, analyze a comparable top-performing video in your niche. Use its SEO score, tag count, and description length as a benchmark to ensure your own upload meets the same quality bar before it goes live.</span>
                 </S.FeatureListItem>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
-                  <span><strong>Competitive Insights:</strong> Performance benchmarking, niche analysis, and content gap identification for strategic planning</span>
+                  <span><strong>Optimization of Existing Videos:</strong> Analyze your own older videos that are not getting views. A low SEO score combined with a sparse description often means the video simply was not properly optimized at upload. Updating the title, description, and tags of an existing video can meaningfully improve its search ranking.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Can I analyze private or unlisted videos?</strong> Private videos cannot be accessed via the YouTube Data API. Unlisted videos can be analyzed if you have the direct video URL, since the API returns data for any video accessible with a valid link.</span>
                 </S.FeatureListItem>
                 <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Strategic Recommendations:</strong> Actionable insights for content optimization, audience growth, and engagement improvement</span>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Is the SEO score the same as YouTube's internal ranking signal?</strong> No. The SEO score is our own calculated metric based on publicly observable signals — title, description, and tags. YouTube's actual search ranking involves many additional factors including watch time, click-through rate, and viewer satisfaction that are not publicly accessible. The score is a useful proxy, not a definitive measure.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>How current is the data?</strong> Data is fetched live from the YouTube Data API each time you analyze a video. View counts, like counts, and comment counts reflect the current state at the moment of analysis.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/channel-analyzer"><strong>Channel Analyzer</strong></a> — Analyze the full channel behind the video for a broader performance picture.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/tag-generator"><strong>Tag Generator</strong></a> — Generate an optimized tag set for your next video based on your title.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/outlier-finder"><strong>Outlier Finder</strong></a> — Find videos in any niche that significantly outperformed their channel average.</span>
                 </S.FeatureListItem>
               </S.FeatureList>
             </S.EducationalContent>

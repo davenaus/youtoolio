@@ -377,6 +377,110 @@ export const QRCodeGenerator: React.FC = () => {
         {/* Google Ad Spot */}
         <GoogleAd adSlot="1234567890" />
 
+        {/* Educational Content */}
+        {currentStep === 'input' && (
+          <S.EducationalSection>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>What This Tool Does</S.SectionSubTitle>
+              <S.EducationalText>
+                The QR Code Generator creates custom, branded QR codes for any URL, text, email address, phone number, or channel link. Unlike generic QR generators, this tool lets you customize the colors, add your logo, and choose from multiple QR styles — so your QR code matches your channel's branding rather than looking like a generic black-and-white square.
+              </S.EducationalText>
+              <S.EducationalText>
+                QR codes are a powerful bridge between your offline presence and your YouTube channel. Use them on business cards, merchandise, event signage, video end screens printed materials, or anywhere a viewer might encounter your brand outside of YouTube.
+              </S.EducationalText>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the QR Code Generator</S.SectionSubTitle>
+              <S.StepByStep>
+                <S.StepItem>
+                  <S.StepNumberCircle>1</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Enter Your Content</S.StepTitle>
+                    <S.EducationalText>
+                      Paste the URL, text, email, or phone number you want to encode. For YouTube channels, use your channel's full URL (e.g., youtube.com/@handle) or your channel's subscribe link to drive direct subscriptions. You can also encode your most recent video URL to drive views to a specific piece of content.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+                <S.StepItem>
+                  <S.StepNumberCircle>2</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Customize the Design</S.StepTitle>
+                    <S.EducationalText>
+                      Choose foreground and background colors that match your brand. Optionally upload your channel logo to embed in the center of the QR code. Select a QR style — dots, rounded, or classic squares — to give your code a unique look while maintaining scannability.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+                <S.StepItem>
+                  <S.StepNumberCircle>3</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Download and Deploy</S.StepTitle>
+                    <S.EducationalText>
+                      Download your QR code as a high-resolution PNG. The QR code is generated at a resolution suitable for both digital use and print. For print materials, use the highest quality setting to ensure the code remains scannable at large sizes.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+              </S.StepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Best Uses for YouTube Creators</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Channel subscribe links:</strong> Generate a QR code that links directly to your YouTube subscribe page. Place it on merchandise, business cards, or at the end of your videos (rendered as a screen graphic) to make subscribing effortless for viewers who encounter your brand offline.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Event and speaking appearances:</strong> If you speak at events, conferences, or meetups, include your QR code on your slide deck or handouts so attendees can find your channel immediately without having to search.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Video end screens and outros:</strong> Design a QR code that links to your newest video or a curated playlist, then overlay it on your outro graphic. Viewers watching on a second screen (phone while TV plays) can scan it to continue watching.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Printed merchandise and packaging:</strong> T-shirts, stickers, and packaging are a natural place for QR codes. A branded QR code that matches your channel's color palette looks intentional rather than an afterthought.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Will adding a logo reduce scannability?</strong> Logos reduce scannability slightly because they cover part of the QR code's error-correction data. This tool uses QR error-correction level “H” when a logo is present, which allows up to 30% of the code to be obscured while remaining scannable. Keep logos small (under 20% of the QR code area) for best results.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Do the QR codes expire?</strong> The QR codes generated are static — they encode the URL directly in the pattern and do not expire. As long as the destination URL is live, the QR code will work indefinitely. Dynamic QR codes that can be updated after printing require a paid third-party service.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>What's the minimum print size for a QR code?</strong> For reliable scanning, QR codes should be printed at a minimum of 2.5 cm × 2.5 cm (approximately 1 inch × 1 inch). Larger is better — for billboard or signage use, scale proportionally and test scan distance before printing at scale.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/subscribe-link-generator"><strong>Subscribe Link Generator</strong></a> — Create a direct YouTube subscribe link with a confirmation prompt to maximize subscription conversions.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/channel-id-finder"><strong>Channel ID Finder</strong></a> — Find your channel ID to construct custom YouTube URLs for use in your QR codes.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+          </S.EducationalSection>
+        )}
+
         {renderStepIndicator()}
 
         {/* Step 1: Content Input */}

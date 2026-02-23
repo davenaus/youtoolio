@@ -1040,61 +1040,44 @@ export const ChannelAnalyzer: React.FC = () => {
         {/* Educational Content Section */}
         {!showResults && (
           <S.EducationalSection>
-            
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>What This Tool Does</S.SectionSubTitle>
+              <S.ContentText>
+                The YouTube Channel Analyzer retrieves comprehensive data for any public YouTube channel using the YouTube Data API v3 and calculates four scored performance pillars: SEO quality, audience engagement, upload consistency, and channel branding. The result is a channel scorecard that gives you an at-a-glance health assessment plus detailed breakdowns of where the channel is strong and where it has room to improve.
+              </S.ContentText>
+              <S.ContentText>
+                This tool is useful for creators auditing their own channel, researchers benchmarking competitors, brand managers evaluating potential sponsorship partners, and anyone who needs a fast, data-driven channel assessment without needing access to YouTube Studio.
+              </S.ContentText>
+            </S.EducationalContent>
+
             <S.EducationalContent>
               <S.SectionSubTitle>How to Use the Channel Analyzer</S.SectionSubTitle>
-              
-              <S.ContentText>
-                Our Channel Analyzer works with any public YouTube channel, providing insights that help you 
-                understand performance patterns, identify optimization opportunities, and develop strategic 
-                improvements. Here's how to get the most comprehensive analysis from our tool.
-              </S.ContentText>
-
               <S.StepByStep>
                 <S.StepItem>
                   <S.StepNumber>1</S.StepNumber>
                   <S.StepContent>
-                    <S.StepTitle>Enter Channel Information</S.StepTitle>
+                    <S.StepTitle>Enter Any Channel URL or Handle</S.StepTitle>
                     <S.ContentText>
-                      Input any YouTube channel URL, handle, or channel ID. Our system accepts various formats 
-                      including youtube.com/channel/UC..., youtube.com/@channelname, youtube.com/c/channelname, 
-                      or direct channel IDs. The analyzer automatically processes the input and locates the channel.
+                      Paste a YouTube channel URL into the search bar. Supported formats include youtube.com/channel/CHANNEL_ID, youtube.com/@handle, youtube.com/c/CustomURL, and raw channel IDs starting with "UC". You can also type a channel name and the tool will search for the closest match.
                     </S.ContentText>
                   </S.StepContent>
                 </S.StepItem>
-
                 <S.StepItem>
                   <S.StepNumber>2</S.StepNumber>
                   <S.StepContent>
-                    <S.StepTitle>Comprehensive Data Collection</S.StepTitle>
+                    <S.StepTitle>Wait for the Full Analysis</S.StepTitle>
                     <S.ContentText>
-                      The analyzer fetches channel metadata, subscriber statistics, video performance data, 
-                      upload patterns, and engagement metrics. This process takes 15-30 seconds as we collect 
-                      data from multiple sources and calculate advanced metrics for comprehensive analysis.
+                      The analyzer fetches channel metadata, subscriber count, total view count, video count, recent upload history, and branding data. It then calculates scores for each pillar. This typically takes 15–30 seconds because it collects data from multiple API endpoints to build a complete picture.
                     </S.ContentText>
                   </S.StepContent>
                 </S.StepItem>
-
                 <S.StepItem>
                   <S.StepNumber>3</S.StepNumber>
                   <S.StepContent>
-                    <S.StepTitle>Advanced Analytics Processing</S.StepTitle>
+                    <S.StepTitle>Review the Scorecard and Recommendations</S.StepTitle>
                     <S.ContentText>
-                      Our system calculates growth rates, engagement patterns, content consistency scores, 
-                      and optimization opportunities. We analyze historical performance, identify trending 
-                      content patterns, and benchmark against similar channels for contextual insights.
-                    </S.ContentText>
-                  </S.StepContent>
-                </S.StepItem>
-
-                <S.StepItem>
-                  <S.StepNumber>4</S.StepNumber>
-                  <S.StepContent>
-                    <S.StepTitle>Strategic Recommendations</S.StepTitle>
-                    <S.ContentText>
-                      Review detailed analysis results including growth opportunities, content optimization 
-                      suggestions, and strategic recommendations. Use these insights to improve channel 
-                      performance, optimize content strategy, and accelerate subscriber growth.
+                      The Overview tab shows the four pillar scores and headline stats. Navigate to the Details and Performance tabs for deeper breakdowns. The Recommendations section summarizes the most actionable findings — specific things you can change to improve each score.
                     </S.ContentText>
                   </S.StepContent>
                 </S.StepItem>
@@ -1102,40 +1085,59 @@ export const ChannelAnalyzer: React.FC = () => {
             </S.EducationalContent>
 
             <S.EducationalContent>
-              <S.SectionSubTitle>What Insights Are Provided?</S.SectionSubTitle>
-              
+              <S.SectionSubTitle>Understanding the Four Scoring Pillars</S.SectionSubTitle>
               <S.FeatureList>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
-                  <span>Complete subscriber growth analysis with trend identification and growth rate calculations</span>
+                  <span><strong>SEO Score (0–100):</strong> Evaluates how well the channel is optimized for YouTube search and discovery. Factors include whether the channel description is complete and keyword-rich, whether the channel has a custom URL, how many tags and keywords appear in recent video titles and descriptions, and whether uploads use closed captions. A score above 70 indicates solid baseline optimization.</span>
                 </S.FeatureListItem>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
-                  <span>Content performance patterns across different video types, lengths, and topics</span>
+                  <span><strong>Engagement Score (0–100):</strong> Measures how actively viewers interact with the channel's content. Calculated from the average like-to-view ratio and comment-to-view ratio across recent videos. Channels where viewers consistently like and comment score higher. Above 60 is strong for most niches; below 30 may indicate content that attracts passive views rather than an engaged audience.</span>
                 </S.FeatureListItem>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
-                  <span>Upload consistency analysis and optimal posting schedule recommendations</span>
+                  <span><strong>Consistency Score (0–100):</strong> Evaluates upload frequency and regularity. Channels that upload on a predictable schedule score higher because consistent uploads signal to YouTube's algorithm that the channel is active and reliable. The score weighs both the frequency of uploads and how evenly they are spaced over time.</span>
                 </S.FeatureListItem>
                 <S.FeatureListItem>
                   <i className="bx bx-check-circle"></i>
-                  <span>Channel SEO optimization score including title, description, and keyword analysis</span>
+                  <span><strong>Branding Score (0–100):</strong> Assesses whether the channel has the key visual and identity elements in place: a profile picture, a channel banner, a filled-out description, a custom URL, and consistent thumbnail styling across recent uploads. Channels missing these basics score lower regardless of their content quality.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Can I analyze private or brand accounts?</strong> The tool works with any public channel accessible through the YouTube Data API. Brand accounts are supported as long as they are public. Private channels and channels that have been terminated or suspended cannot be analyzed.</span>
                 </S.FeatureListItem>
                 <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span>Audience engagement metrics with like-to-view and comment-to-view ratio analysis</span>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>How many videos does the analysis cover?</strong> The analyzer retrieves the channel's most recent uploads (typically 50 videos) plus the channel's all-time aggregate statistics. Scores are calculated from this combined dataset, giving you a picture of both recent performance and long-term channel health.</span>
                 </S.FeatureListItem>
                 <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span>Content gaps analysis revealing untapped topics and optimization opportunities</span>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>How is this different from YouTube Studio?</strong> YouTube Studio only shows data for your own channels and requires you to be signed in. This tool works on any public channel without login, making it useful for competitor research, partnership evaluation, and benchmarking against channels you don't own.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/channel-comparer"><strong>Channel Comparer</strong></a> — Compare two channels side-by-side across all metrics.</span>
                 </S.FeatureListItem>
                 <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span>Channel branding assessment including thumbnail consistency and visual identity</span>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/video-analyzer"><strong>Video Analyzer</strong></a> — Drill down into individual video performance after reviewing the channel overview.</span>
                 </S.FeatureListItem>
                 <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span>Competitive benchmarking against similar channels in your niche and subscriber range</span>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/channel-consultant"><strong>Channel Consultant</strong></a> — Generate a custom AI assistant trained on this channel's data for ongoing strategy advice.</span>
                 </S.FeatureListItem>
               </S.FeatureList>
             </S.EducationalContent>

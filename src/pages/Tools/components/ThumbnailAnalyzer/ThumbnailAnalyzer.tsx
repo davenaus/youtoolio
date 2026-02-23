@@ -874,6 +874,75 @@ export const ThumbnailAnalyzer: React.FC = () => {
                       <p>Measure text clarity, contrast, and effectiveness</p>
                     </S.FeatureCard>
                   </S.FeatureGrid>
+
+                  <S.EduContent>
+                    <S.EduSubTitle>How the Thumbnail Analyzer Works</S.EduSubTitle>
+                    <S.EduText>
+                      Upload any YouTube thumbnail and the analyzer processes it through several visual analysis algorithms. It generates an attention heatmap showing where the human eye is likely to focus first, scores the composition against design principles like the rule of thirds, and evaluates text contrast and readability at the small sizes YouTube displays thumbnails.
+                    </S.EduText>
+                    <S.EduText>
+                      The analysis produces a score from 0–100 for each dimension, along with specific, actionable feedback. Use the results to iterate on your thumbnail design before publishing — fixing a low contrast score or a poorly placed subject can meaningfully increase your click-through rate.
+                    </S.EduText>
+                  </S.EduContent>
+
+                  <S.EduContent>
+                    <S.EduSubTitle>Understanding Your Analysis Results</S.EduSubTitle>
+                    <S.EduList>
+                      <S.EduListItem>
+                        <i className="bx bx-check-circle"></i>
+                        <span><strong>Attention Heatmap:</strong> The heatmap overlays color gradients on your thumbnail showing where visual attention concentrates — red areas receive the most attention, blue areas the least. Ideally, your most important element (a face, product, or text) should sit in a high-attention zone. If your key subject is in a low-attention area, consider repositioning it.</span>
+                      </S.EduListItem>
+                      <S.EduListItem>
+                        <i className="bx bx-check-circle"></i>
+                        <span><strong>Composition Score:</strong> Evaluates whether subjects are placed on or near the rule-of-thirds intersection points, whether the visual weight is balanced, and whether there's a clear hierarchy between elements. Thumbnails with strong composition feel immediately organized and professional even at a glance.</span>
+                      </S.EduListItem>
+                      <S.EduListItem>
+                        <i className="bx bx-check-circle"></i>
+                        <span><strong>Lighting and Contrast Score:</strong> Measures the overall brightness, dynamic range, and contrast ratio of the image. Thumbnails that are too dark or washed out become invisible in YouTube's dark-themed interface. High contrast thumbnails pop off the screen — the goal is a contrast ratio of at least 4.5:1 between the primary subject and the background.</span>
+                      </S.EduListItem>
+                      <S.EduListItem>
+                        <i className="bx bx-check-circle"></i>
+                        <span><strong>Text Readability Score:</strong> If your thumbnail includes text, this score evaluates whether it's readable at YouTube's smallest display sizes (168×94px on mobile). Key factors are font size, font weight, and contrast between text and background. The test simulates how your thumbnail looks scaled down to ensure the text doesn't disappear.</span>
+                      </S.EduListItem>
+                    </S.EduList>
+                  </S.EduContent>
+
+                  <S.EduContent>
+                    <S.EduSubTitle>Frequently Asked Questions</S.EduSubTitle>
+                    <S.EduList>
+                      <S.EduListItem>
+                        <i className="bx bx-help-circle"></i>
+                        <span><strong>Is my thumbnail uploaded to a server?</strong> No. All analysis is performed locally in your browser using the HTML5 Canvas API and JavaScript image processing. Your thumbnail image never leaves your device.</span>
+                      </S.EduListItem>
+                      <S.EduListItem>
+                        <i className="bx bx-help-circle"></i>
+                        <span><strong>What score should I aim for?</strong> A combined score above 75 generally indicates a strong thumbnail. Scores between 60–75 are acceptable with some room for improvement. Below 60 usually means there's a specific significant issue — low contrast, unreadable text, or a cluttered composition — that's worth addressing before publishing.</span>
+                      </S.EduListItem>
+                      <S.EduListItem>
+                        <i className="bx bx-help-circle"></i>
+                        <span><strong>How is this different from the Thumbnail Tester?</strong> The Thumbnail Analyzer evaluates your thumbnail in isolation using visual analysis algorithms — it tells you what's strong or weak about the image itself. The Thumbnail Tester places your thumbnail in a competitive context by showing how it looks alongside trending or competitor thumbnails. Both tools are complementary — use the Analyzer to improve the thumbnail, then the Tester to check if it stands out in the feed.</span>
+                      </S.EduListItem>
+                    </S.EduList>
+                  </S.EduContent>
+
+                  <S.EduContent>
+                    <S.EduSubTitle>Related Tools</S.EduSubTitle>
+                    <S.EduList>
+                      <S.EduListItem>
+                        <i className="bx bx-link"></i>
+                        <span><a href="/tools/thumbnail-tester"><strong>Thumbnail Tester</strong></a> — Compare your thumbnail side-by-side against trending videos or a competitor's channel to see how it looks in context.</span>
+                      </S.EduListItem>
+                      <S.EduListItem>
+                        <i className="bx bx-link"></i>
+                        <span><a href="/tools/thumbnail-downloader"><strong>Thumbnail Downloader</strong></a> — Download thumbnails from high-performing videos to analyze their composition and study what works in your niche.</span>
+                      </S.EduListItem>
+                      <S.EduListItem>
+                        <i className="bx bx-link"></i>
+                        <span><a href="/tools/color-palette"><strong>Color Palette Extractor</strong></a> — Extract the exact color palette from your thumbnail or from high-performing competitor thumbnails.</span>
+                      </S.EduListItem>
+                    </S.EduList>
+                  </S.EduContent>
+
                 </S.EducationalSection>
               </S.UploadSection>
             )}

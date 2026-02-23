@@ -501,6 +501,114 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         {/* Google Ad Spot */}
         <GoogleAd adSlot="1234567890" />
 
+        {/* Educational Content */}
+        {!imagePreview && (
+          <S.EducationalSection>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>What This Tool Does</S.SectionSubTitle>
+              <S.EducationalText>
+                The Color Palette Extractor analyzes any image you upload and identifies the dominant colors, presenting them as a clean, copyable palette with hex codes, RGB values, and HSL values. Upload a thumbnail, brand photo, logo, or any visual asset and instantly extract the exact colors used.
+              </S.EducationalText>
+              <S.EducationalText>
+                For YouTube creators, color consistency is a critical part of channel branding. When your thumbnails, channel art, and video graphics all share the same color palette, your channel looks cohesive and professional — which builds viewer recognition and trust over time.
+              </S.EducationalText>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use the Color Palette Extractor</S.SectionSubTitle>
+              <S.StepByStep>
+                <S.StepItem>
+                  <S.StepNumberCircle>1</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Upload an Image</S.StepTitle>
+                    <S.EducationalText>
+                      Drag and drop any image onto the upload area, or click to browse your files. The tool accepts JPEG, PNG, WebP, and most common image formats. You can upload a thumbnail from a top-performing video in your niche, your channel banner, a competitor's thumbnail, or any image whose color scheme you want to replicate.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+                <S.StepItem>
+                  <S.StepNumberCircle>2</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Review the Extracted Palette</S.StepTitle>
+                    <S.EducationalText>
+                      The tool extracts the most dominant colors from the image and displays them as color swatches. Each color shows its hex code (for web use), RGB values (for design tools), and a visual swatch. Colors are sorted by dominance — the most prevalent colors in the image appear first.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+                <S.StepItem>
+                  <S.StepNumberCircle>3</S.StepNumberCircle>
+                  <S.StepContent>
+                    <S.StepTitle>Copy and Apply Your Colors</S.StepTitle>
+                    <S.EducationalText>
+                      Click any color swatch to copy its hex code to your clipboard. Paste these codes directly into Canva, Photoshop, Figma, or any design tool to instantly match the color palette in your own thumbnails and graphics.
+                    </S.EducationalText>
+                  </S.StepContent>
+                </S.StepItem>
+              </S.StepByStep>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>How to Use Color Palettes for YouTube Branding</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Extract from your best-performing thumbnail:</strong> Upload the thumbnail from your most-viewed video and extract its palette. This is likely the color combination that resonates most with your audience — use it as the baseline for all future thumbnails.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Analyze competitor thumbnails:</strong> Download thumbnails from the top-performing videos in your niche using the Thumbnail Downloader tool, then extract their palettes here. Understanding what colors dominate in your niche helps you design thumbnails that both fit the category and stand out from competitors.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Build a consistent brand kit:</strong> Extract colors from your logo, channel banner, and profile picture to identify which colors consistently appear across your existing assets. Use these as your official brand colors so all future graphics stay visually coherent.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Find complementary accent colors:</strong> The extracted palette will reveal secondary and tertiary colors used alongside the dominant ones. These accent colors are often ideal for text overlays, borders, or graphic elements that need to pop against your primary thumbnail background.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>How many colors does the tool extract?</strong> The tool extracts the top 6–10 most dominant colors from the image. Very complex images with many gradients may show more variations, while simple graphics with flat colors will show a smaller palette that precisely matches the original design.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Is my image uploaded to any server?</strong> No. All color extraction happens locally in your browser using the HTML5 Canvas API. Your images are never transmitted to any server or stored anywhere outside your device.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>What format should I enter in Canva or Photoshop?</strong> Use the hex code format (e.g., #FF5733) for most design tools. Canva, Photoshop, Figma, and Illustrator all accept hex codes in their color picker dialogs. For CSS or web work, use either hex or the RGB values provided.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/color-picker-from-image"><strong>Color Picker From Image</strong></a> — Click anywhere on an image to pick an exact color at the pixel level, giving you precise control over color selection.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/thumbnail-downloader"><strong>Thumbnail Downloader</strong></a> — Download thumbnails from any YouTube video to analyze their color palettes.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/thumbnail-tester"><strong>Thumbnail Tester</strong></a> — After extracting colors and designing a new thumbnail, test it against trending videos to see if it stands out.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+          </S.EducationalSection>
+        )}
+
         {/* Step 1: Upload */}
         {!imagePreview && (
           <S.UploadSection>

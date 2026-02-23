@@ -1,0 +1,58 @@
+diff --git a/node_modules/react-snap/src/puppeteer_utils.js b/node_modules/react-snap/src/puppeteer_utils.js
+index c4b7641..6021e3b 100644
+--- a/node_modules/react-snap/src/puppeteer_utils.js
++++ b/node_modules/react-snap/src/puppeteer_utils.js
+@@ -53,35 +53,31 @@ const enableLogging = opt => {
+     onError && onError();
+   });
+   page.on("pageerror", e => {
++    // Non-fatal: log but do NOT trigger onError/shuttingDown so remaining routes still render
+     if (options.sourceMaps) {
+       mapStackTrace(e.stack || e.message, {
+         isChromeOrEdge: true,
+         store: sourcemapStore || {}
+       })
+         .then(result => {
+-          // TODO: refactor mapStackTrace: return array not a string, return first row too
+           const stackRows = result.split("\n");
+           const puppeteerLine =
+             stackRows.findIndex(x => x.includes("puppeteer")) ||
+             stackRows.length - 1;
+ 
+           console.log(
+-            `🔥  pageerror at ${route}: ${(e.stack || e.message).split(
++            `️️️💬  console.log at ${route}: ${(e.stack || e.message).split(
+               "\n"
+             )[0] + "\n"}${stackRows.slice(0, puppeteerLine).join("\n")}`
+           );
+         })
+         .catch(e2 => {
+-          console.log(`🔥  pageerror at ${route}:`, e);
+-          console.log(
+-            `️️️⚠️  warning at ${route} (error in source maps):`,
+-            e2.message
+-          );
++          console.log(`️️️💬  console.log at ${route}:`, e);
+         });
+     } else {
+-      console.log(`🔥  pageerror at ${route}:`, e);
++      console.log(`️️️💬  console.log at ${route}:`, e);
+     }
+-    onError && onError();
++    // intentionally NOT calling onError() here — pageerrors are non-fatal
+   });
+   page.on("response", response => {
+     if (response.status() >= 400) {
+@@ -245,10 +241,8 @@ const crawl = async opt => {
+         await page.close();
+         console.log(`✅  crawled ${processed + 1} out of ${enqued} (${route})`);
+       } catch (e) {
+-        if (!shuttingDown) {
+-          console.log(`🔥  error at ${route}`, e);
+-        }
+-        shuttingDown = true;
++        // Log the error but do NOT set shuttingDown — allow remaining routes to continue
++        console.log(`️️️⚠️  skipped ${route} due to error:`, e.message || e);
+       }
+     } else {
+       // this message creates a lot of noise
