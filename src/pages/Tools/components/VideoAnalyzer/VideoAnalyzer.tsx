@@ -2289,6 +2289,45 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
               </S.FeatureList>
             </S.EducationalContent>
 
+            <S.EducationalContent>
+              <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <strong>Q: What data does the Video Analyzer pull?</strong> The tool uses the YouTube Data API v3 to fetch video title, description, tags, view count, like count, comment count, duration, publish date, and thumbnail URLs. No private data is accessed — only publicly available information.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong>Q: Can I analyze competitor videos?</strong> Yes. Paste any public YouTube video URL or video ID. The tool works on any public video regardless of which channel owns it, making it useful for competitive research.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong>Q: Does this tool require a YouTube account?</strong> No. The Video Analyzer works entirely through the public YouTube Data API. You do not need to log in or connect your YouTube account.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong>Q: What does the SEO score measure?</strong> The SEO score evaluates factors like title length, description completeness, tag count and relevance, and thumbnail presence. Higher scores correlate with better discoverability in YouTube search.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong>Q: How often is the data updated?</strong> Data is pulled live from the YouTube API each time you analyze a video. View counts and engagement metrics reflect the current state of the video at the time of analysis.
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <strong><a href="/tools/channel-analyzer">Channel Analyzer</a></strong> — Analyze an entire channel's performance, not just a single video.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong><a href="/tools/tag-generator">Tag Generator</a></strong> — Generate optimized tag sets based on your video topic and niche.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong><a href="/tools/outlier-finder">Outlier Finder</a></strong> — Identify which videos in a channel are dramatically outperforming their baseline.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong><a href="/tools/thumbnail-tester">Thumbnail Tester</a></strong> — A/B test your thumbnails to see which performs better before publishing.
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
           </S.EducationalSection>
         )}
 

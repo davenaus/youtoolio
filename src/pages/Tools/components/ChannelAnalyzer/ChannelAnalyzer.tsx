@@ -1142,6 +1142,45 @@ export const ChannelAnalyzer: React.FC = () => {
               </S.FeatureList>
             </S.EducationalContent>
 
+            <S.EducationalContent>
+              <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <strong>Q: What metrics does the Channel Analyzer show?</strong> The tool displays subscriber count, total view count, video count, channel creation date, average views per video, engagement rate, upload frequency, and top-performing videos by view count.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong>Q: Can I analyze any YouTube channel?</strong> Yes. You can analyze any public YouTube channel using its URL, @handle, channel ID, or custom URL. Private channels with restricted visibility cannot be analyzed.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong>Q: How do I find growth rate data?</strong> The Channel Analyzer shows total views and subscriber milestones based on publicly available API data. For historical growth curves, use the data in combination with the Outlier Finder to spot performance trends over time.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong>Q: Is this tool useful for channels I do not own?</strong> Yes — many creators use it for competitive research. Analyzing similar channels in your niche helps you understand what upload cadence, video length, and content types are working for your competitors.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong>Q: Do I need to connect my YouTube channel?</strong> No. The tool uses the public YouTube Data API to fetch channel information. No login, OAuth, or channel connection is required.
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <strong><a href="/tools/video-analyzer">Video Analyzer</a></strong> — Drill into individual video performance, tags, and SEO scores.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong><a href="/tools/channel-comparer">Channel Comparer</a></strong> — Compare two channels side-by-side across key metrics.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong><a href="/tools/outlier-finder">Outlier Finder</a></strong> — Find which videos in any channel are dramatically outperforming the average.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong><a href="/tools/channel-consultant">Channel Consultant</a></strong> — Generate a custom AI strategy prompt trained on your channel's data.
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
           </S.EducationalSection>
         )}
 

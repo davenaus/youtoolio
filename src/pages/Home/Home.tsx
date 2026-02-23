@@ -612,6 +612,78 @@ const FeatureList = styled.ul`
   }
 `;
 
+// Free / Trust Banner Section
+const FreeBannerSection = styled.section`
+  padding: 3rem 0;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.dark3} 0%, ${({ theme }) => theme.colors.dark4} 100%);
+  border-top: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+`;
+
+const FreeBannerInner = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  text-align: center;
+`;
+
+const FreeBannerBadge = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 30px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.03em;
+`;
+
+const FreeBannerTitle = styled.h2`
+  font-size: 2rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin-bottom: 0.75rem;
+
+  @media (max-width: 640px) {
+    font-size: 1.5rem;
+  }
+`;
+
+const FreeBannerSubtitle = styled.p`
+  font-size: 1.1rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  line-height: 1.6;
+  max-width: 700px;
+  margin: 0 auto 2rem auto;
+`;
+
+const TrustPillsRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+`;
+
+const TrustPill = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: ${({ theme }) => theme.colors.dark2};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: 30px;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.95rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+
+  i {
+    color: ${({ theme }) => theme.colors.success};
+    font-size: 1.1rem;
+  }
+`;
+
 const CTASection = styled.section`
   padding: 6rem 0;
   background: linear-gradient(135deg, ${({ theme }) => theme.colors.dark2} 0%, ${({ theme }) => theme.colors.dark3} 100%);
@@ -1526,6 +1598,49 @@ export const Home: React.FC = () => {
           </LearningPath>
         </PathContainer>
       </LearningPathSection>
+
+      {/* Free / No Sign-Up Trust Banner */}
+      <FreeBannerSection>
+        <FreeBannerInner>
+          <FreeBannerBadge>
+            <i className="bx bx-check-shield"></i>
+            100% Free · No Account Required
+          </FreeBannerBadge>
+          <FreeBannerTitle>
+            Every Tool. Completely Free. No Sign-Up Needed.
+          </FreeBannerTitle>
+          <FreeBannerSubtitle>
+            YouTool is free to use for every creator — no subscription, no hidden fees, no account required.
+            Just paste your YouTube URL and get instant results.
+          </FreeBannerSubtitle>
+          <TrustPillsRow>
+            <TrustPill>
+              <i className="bx bx-check-circle"></i>
+              Free forever
+            </TrustPill>
+            <TrustPill>
+              <i className="bx bx-check-circle"></i>
+              No sign-up or login
+            </TrustPill>
+            <TrustPill>
+              <i className="bx bx-check-circle"></i>
+              No credit card
+            </TrustPill>
+            <TrustPill>
+              <i className="bx bx-check-circle"></i>
+              Powered by the YouTube Data API
+            </TrustPill>
+            <TrustPill>
+              <i className="bx bx-check-circle"></i>
+              Works on any device
+            </TrustPill>
+            <TrustPill>
+              <i className="bx bx-check-circle"></i>
+              15+ tools available
+            </TrustPill>
+          </TrustPillsRow>
+        </FreeBannerInner>
+      </FreeBannerSection>
 
       {/* CTA Section */}
       <CTASection>

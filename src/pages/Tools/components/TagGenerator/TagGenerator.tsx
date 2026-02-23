@@ -720,6 +720,42 @@ export const TagGenerator: React.FC = () => {
               </S.FeatureList>
             </S.EducationalContent>
 
+            <S.EducationalContent>
+              <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <strong>Q: How does the Tag Generator create tags?</strong> The tool analyzes your video topic, niche, and any seed keywords you provide, then generates a set of relevant, high-specificity tags optimized for YouTube search discoverability.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong>Q: How many tags should I use on a YouTube video?</strong> YouTube allows up to 500 characters of tags. Most high-performing videos use 10–20 well-chosen tags that mix broad category terms with specific long-tail phrases. The generator creates a balanced set within this range.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong>Q: Should I use the same tags on every video?</strong> No. Tags should be video-specific. Repeating identical tags across all videos provides little SEO benefit. Use your channel name and broad niche tags consistently, but vary the topic-specific tags for each upload.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong>Q: Can I copy the tags directly into YouTube Studio?</strong> Yes. Click the copy button to copy all generated tags as a comma-separated list that pastes directly into the Tags field in YouTube Studio's video details editor.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong>Q: Are these tags guaranteed to improve views?</strong> Tags are one ranking signal among many. They help YouTube understand the topic of your video but are less influential than title, description, and click-through rate. Use the Tag Generator alongside the Video Analyzer to build a complete SEO strategy.
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <strong><a href="/tools/video-analyzer">Video Analyzer</a></strong> — Analyze how your current tags are performing alongside other video SEO metrics.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong><a href="/tools/keyword-analyzer">Keyword Analyzer</a></strong> — Research search volume and competition for keywords before choosing your tags.
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <strong><a href="/tools/channel-analyzer">Channel Analyzer</a></strong> — See what tags and topics are driving the most views on any channel.
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
           </S.EducationalSection>
         )}
 
