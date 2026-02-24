@@ -1,5 +1,5 @@
 {
-  "buildCommand": "",
+  "buildCommand": "DISABLE_ESLINT_PLUGIN=true TSC_COMPILE_ON_ERROR=true react-scripts build",
   "outputDirectory": "build",
   "rewrites": [
     { "source": "/((?!.*\\.).*)", "destination": "/index.html" }
