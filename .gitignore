@@ -4,8 +4,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Production build
-build/
+# Production build (build/ is committed for Vercel static deployment)
 dist/
 
 # Environment variables

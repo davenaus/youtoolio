@@ -1,0 +1,26 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://youtool.io/sitemap.xml
+
+# Block access to admin areas and sensitive files
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /api/
+Disallow: /.well-known/
+
+# Allow static files (required for React apps)
+Allow: /static/
+
+# Allow important pages
+Allow: /tools/
+Allow: /blog/
+Allow: /help/
+Allow: /about/
+
+# Crawl delay for better server performance
+Crawl-delay: 1
+
+# Host directive
+Host: https://youtool.io
