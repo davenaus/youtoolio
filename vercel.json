@@ -1,5 +1,5 @@
 {
-  "buildCommand": "DISABLE_ESLINT_PLUGIN=true TSC_COMPILE_ON_ERROR=true react-scripts build && cp public/sitemap.xml build/",
+  "buildCommand": "DISABLE_ESLINT_PLUGIN=true TSC_COMPILE_ON_ERROR=true react-scripts build && cp public/sitemap.xml build/ && node prerender.js",
   "outputDirectory": "build",
   "rewrites": [
     { "source": "/((?!.*\\.).*)", "destination": "/index.html" }
