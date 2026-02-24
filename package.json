@@ -28,7 +28,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "build:local": "react-scripts build && npm run prerender",
-    "prerender": "cp public/sitemap.xml build/ && cp public/.htaccess build/ 2>/dev/null || true && react-snap",
+    "prerender": "cp public/sitemap.xml build/ && cp public/.htaccess build/ 2>/dev/null || true && node prerender.js",
     "postinstall": "patch-package",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
@@ -64,49 +64,6 @@
     "react-snap": "^1.23.0"
   },
   "reactSnap": {
-    "source": "build",
-    "minifyHtml": {
-      "collapseWhitespace": false
-    },
-    "puppeteerExecutablePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    "puppeteerArgs": [
-      "--no-sandbox",
-      "--disable-setuid-sandbox"
-    ],
-    "skipThirdPartyRequests": true,
-    "inlineCss": false,
-    "include": [
-      "/",
-      "/tools",
-      "/tools/thumbnail-downloader",
-      "/tools/video-analyzer",
-      "/tools/channel-analyzer",
-      "/tools/tag-generator",
-      "/tools/keyword-analyzer",
-      "/tools/thumbnail-tester",
-      "/tools/thumbnail-analyzer",
-      "/tools/channel-comparer",
-      "/tools/comment-downloader",
-      "/tools/comment-picker",
-      "/tools/playlist-analyzer",
-      "/tools/qr-code-generator",
-      "/tools/subscribe-link-generator",
-      "/tools/youtube-calculator",
-      "/tools/color-palette",
-      "/tools/color-picker-from-image",
-      "/tools/outlier-finder",
-      "/tools/channel-consultant",
-      "/tools/channel-id-finder",
-      "/tools/moderation-checker",
-      "/tools/banner-downloader",
-      "/tools/profile-picture-downloader",
-      "/tools/youtool-playbooks",
-      "/about",
-      "/blog",
-      "/privacy-policy",
-      "/terms-of-service",
-      "/glossary",
-      "/guides"
-    ]
+    "source": "build"
   }
 }
