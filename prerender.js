@@ -3,7 +3,10 @@
 // Locally on Mac: uses your installed Chrome
 
 const { run } = require('react-snap');
-const isCI = process.env.CI === 'true';
+const fs = require('fs');
+
+const LOCAL_CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const hasLocalChrome = fs.existsSync(LOCAL_CHROME);
 
 const baseConfig = {
   source: 'build',
@@ -52,10 +55,12 @@ const baseConfig = {
   ],
 };
 
-// Only set local Chrome path when NOT in CI
-if (!isCI) {
-  baseConfig.puppeteerExecutablePath =
-    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+// Only use local Chrome if it actually exists on this machine
+if (hasLocalChrome) {
+  baseConfig.puppeteerExecutablePath = LOCAL_CHROME;
+  console.log('Using local Chrome for prerendering');
+} else {
+  console.log('Using puppeteer bundled Chromium for prerendering');
 }
 
 run(baseConfig).catch((err) => {
