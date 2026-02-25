@@ -54,7 +54,7 @@ jobs:
             libxfixes3 \
             libxrandr2 \
             libgbm1 \
-            libasound2
+            libasound2t64
 
       - name: Prerender with react-snap
         run: node prerender.js
