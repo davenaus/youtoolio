@@ -34,6 +34,7 @@ const baseConfig = {
     '--no-zygote',
     '--single-process',
   ],
+  crawl: false,
   skipThirdPartyRequests: true,
   inlineCss: false,
   include: [
