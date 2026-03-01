@@ -1453,14 +1453,6 @@ export const Home: React.FC = () => {
               >
                 View Tools
               </Button>
-              <Button
-                variant="secondary"
-                size="lg"
-                icon="bx bx-play"
-                onClick={() => setShowVideoModal(true)}
-              >
-                See How It Works
-              </Button>
             </HeroButtons>
 
             <HeroStats>
@@ -1657,28 +1649,6 @@ export const Home: React.FC = () => {
         </CTAContent>
       </CTASection>
 
-      {/* Video Modal */}
-      {showVideoModal && (
-        <VideoModal onClick={() => setShowVideoModal(false)}>
-          <VideoModalBackdrop />
-          <VideoModalContent onClick={(e) => e.stopPropagation()}>
-            <VideoModalClose onClick={() => setShowVideoModal(false)}>
-              <i className="bx bx-x"></i>
-            </VideoModalClose>
-            <VideoPlayer>
-              <iframe
-                width="100%"
-                height="100%"
-                src="https://www.youtube.com/embed/m02ZZL-EWg0?autoplay=1&rel=0&modestbranding=1&controls=1&showinfo=0&fs=1&iv_load_policy=3"
-                title="YouTool Demo"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            </VideoPlayer>
-          </VideoModalContent>
-        </VideoModal>
-      )}
     </Container>
   );
 };
