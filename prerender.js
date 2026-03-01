@@ -37,8 +37,6 @@ const baseConfig = {
   skipThirdPartyRequests: true,
   inlineCss: false,
   include: [
-    '/',
-    '/tools',
     '/tools/thumbnail-downloader',
     '/tools/video-analyzer',
     '/tools/channel-analyzer',
