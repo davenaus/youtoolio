@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { SEO } from '../../../components/SEO';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -168,6 +169,11 @@ export const YouTubeMonetization2025: React.FC = () => {
 
   return (
     <Container>
+      <SEO
+        title="Complete Guide to YouTube Monetization in 2025 | YouTool.io"
+        description="Learn everything about YouTube monetization in 2025. From meeting YPP requirements to maximizing CPM and RPM, this guide covers all revenue strategies for creators."
+        canonical="https://youtool.io/blog/youtube-monetization-2025"
+      />
       <ContentWrapper>
         <BackButton onClick={() => navigate('/blog')}>
           <i className="bx bx-arrow-back"></i>

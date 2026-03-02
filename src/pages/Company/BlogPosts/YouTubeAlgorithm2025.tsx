@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { SEO } from '../../../components/SEO';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -144,6 +145,11 @@ export const YouTubeAlgorithm2025: React.FC = () => {
 
   return (
     <Container>
+      <SEO
+        title="Understanding the YouTube Algorithm in 2025: A Creator's Complete Guide | YouTool.io"
+        description="Understand how the YouTube algorithm works in 2025. Learn what signals affect video ranking, recommendations, and discovery to grow your channel faster."
+        canonical="https://youtool.io/blog/youtube-algorithm-2025"
+      />
       <ContentWrapper>
         <BackButton onClick={() => navigate('/blog')}>
           <i className="bx bx-arrow-back"></i>

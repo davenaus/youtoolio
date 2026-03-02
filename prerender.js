@@ -76,6 +76,8 @@ const baseConfig = {
     '/guides',
     '/help',
     '/cookie-policy',
+    '/privacy-policy',
+    '/terms-of-service',
   ],
 };
 

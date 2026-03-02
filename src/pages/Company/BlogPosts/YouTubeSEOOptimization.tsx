@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { SEO } from '../../../components/SEO';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -151,6 +152,11 @@ export const YouTubeSEOOptimization: React.FC = () => {
 
   return (
     <Container>
+      <SEO
+        title="How to Optimize Your YouTube Videos for Maximum Discoverability | YouTool.io"
+        description="A complete guide to YouTube SEO optimization. Learn how to rank higher in YouTube search with proven strategies for titles, descriptions, tags, and thumbnails."
+        canonical="https://youtool.io/blog/youtube-seo-optimization-guide"
+      />
       <ContentWrapper>
         <BackButton onClick={() => navigate('/blog')}>
           <i className="bx bx-arrow-back"></i>

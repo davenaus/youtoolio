@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { SEO } from '../../../components/SEO';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -136,6 +137,11 @@ export const YouTubeGrowthHacks: React.FC = () => {
 
   return (
     <Container>
+      <SEO
+        title="15 Proven YouTube Growth Hacks That Actually Work in 2025 | YouTool.io"
+        description="Discover 15 actionable YouTube growth hacks that actually work in 2025. Proven strategies to grow subscribers, increase views, and build a loyal audience faster."
+        canonical="https://youtool.io/blog/youtube-growth-hacks"
+      />
       <ContentWrapper>
         <BackButton onClick={() => navigate('/blog')}>
           <i className="bx bx-arrow-back"></i>

@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { SEO } from '../../../components/SEO';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -144,6 +145,11 @@ export const YouTubeThumbnailGuide: React.FC = () => {
 
   return (
     <Container>
+      <SEO
+        title="The Complete Guide to YouTube Thumbnails That Get Clicks | YouTool.io"
+        description="Everything you need to know about creating YouTube thumbnails that drive higher CTR. Design tips, sizing guidelines, and best practices for 2025."
+        canonical="https://youtool.io/blog/youtube-thumbnail-guide"
+      />
       <ContentWrapper>
         <BackButton onClick={() => navigate('/blog')}>
           <i className="bx bx-arrow-back"></i>

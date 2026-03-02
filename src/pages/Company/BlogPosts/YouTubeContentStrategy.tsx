@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { SEO } from '../../../components/SEO';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -136,6 +137,11 @@ export const YouTubeContentStrategy: React.FC = () => {
 
   return (
     <Container>
+      <SEO
+        title="Building a YouTube Content Strategy That Drives Long-Term Growth | YouTool.io"
+        description="Learn how to build a sustainable YouTube content strategy for long-term channel growth. Covers niche selection, content pillars, upload schedules, and audience retention."
+        canonical="https://youtool.io/blog/youtube-content-strategy"
+      />
       <ContentWrapper>
         <BackButton onClick={() => navigate('/blog')}>
           <i className="bx bx-arrow-back"></i>
