@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { SEO } from '../../components/SEO/SEO';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -124,6 +125,12 @@ export const PrivacyPolicy: React.FC = () => {
 
   return (
     <Container>
+      <SEO
+        title="Privacy Policy | YouTool.io"
+        description="YouTool.io privacy policy. Learn how we collect, use, and protect your data when you use our free YouTube analytics tools."
+        canonical="https://youtool.io/privacy-policy"
+        noIndex={true}
+      />
       <ContentWrapper>
         <BackButton onClick={() => navigate('/')}>
           <i className="bx bx-arrow-back"></i>

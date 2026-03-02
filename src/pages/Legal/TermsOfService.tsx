@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { SEO } from '../../components/SEO/SEO';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -137,6 +138,12 @@ export const TermsOfService: React.FC = () => {
 
   return (
     <Container>
+      <SEO
+        title="Terms of Service | YouTool.io"
+        description="YouTool.io terms of service. Read the terms and conditions for using our free YouTube analytics and optimization tools."
+        canonical="https://youtool.io/terms-of-service"
+        noIndex={true}
+      />
       <ContentWrapper>
         <BackButton onClick={() => navigate('/')}>
           <i className="bx bx-arrow-back"></i>

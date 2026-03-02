@@ -2,6 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { SEO } from '../../components/SEO/SEO';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -273,6 +274,11 @@ export const Blog: React.FC = () => {
 
   return (
     <Container>
+      <SEO
+        title="YouTube Creator Blog — Tips, Strategy & Growth Guides | YouTool.io"
+        description="Free guides and strategies for YouTube creators. Learn YouTube SEO, thumbnail optimization, channel growth tactics, monetization tips, and algorithm insights."
+        canonical="https://youtool.io/blog"
+      />
       <ContentWrapper>
         <BackButton onClick={() => navigate('/')}>
           <i className="bx bx-arrow-back"></i>

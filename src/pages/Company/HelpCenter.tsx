@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { SEO } from '../../components/SEO/SEO';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -317,6 +318,11 @@ const faqData = [
 
   return (
     <Container>
+      <SEO
+        title="Help Center — YouTool.io Support & FAQs"
+        description="Get answers to common questions about YouTool.io's free YouTube analytics tools. Learn how to use the video analyzer, channel analyzer, thumbnail tools, and more."
+        canonical="https://youtool.io/help"
+      />
       <ContentWrapper>
         <BackButton onClick={() => navigate('/')}>
           <i className="bx bx-arrow-back"></i>

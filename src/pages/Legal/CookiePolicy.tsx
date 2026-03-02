@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { SEO } from '../../components/SEO/SEO';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -206,6 +207,12 @@ export const CookiePolicy: React.FC = () => {
 
   return (
     <Container>
+      <SEO
+        title="Cookie Policy | YouTool.io"
+        description="YouTool.io cookie policy. Learn about the cookies we use and how to manage your cookie preferences on our YouTube tools platform."
+        canonical="https://youtool.io/cookie-policy"
+        noIndex={true}
+      />
       <ContentWrapper>
         <BackButton onClick={() => navigate('/')}>
           <i className="bx bx-arrow-back"></i>

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { SEO } from '../../components/SEO/SEO';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -387,6 +388,11 @@ export const YouTubeGlossary: React.FC = () => {
 
   return (
     <Container>
+      <SEO
+        title="YouTube Glossary — Key Terms Every Creator Should Know | YouTool.io"
+        description="A complete glossary of YouTube terms and definitions. Learn what CPM, RPM, CTR, impressions, end screens, cards, and 30+ other YouTube creator terms mean."
+        canonical="https://youtool.io/glossary"
+      />
       <ContentWrapper>
         <BackButton onClick={() => navigate('/')}>
           <i className="bx bx-arrow-back"></i>
