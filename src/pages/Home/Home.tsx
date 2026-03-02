@@ -1,7 +1,7 @@
 // src/pages/Home/Home.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DocumentMeta } from '../../hooks/useDocumentMeta';
+import { SEO } from '../../components/SEO';
 import styled, { keyframes } from 'styled-components';
 import { Button } from '../../components/Button/Button';
 
@@ -1411,17 +1411,12 @@ export const Home: React.FC = () => {
   return (
     <Container>
       {/* React 19 Native Metadata Support */}
-      <DocumentMeta
-        title="YouTool.io - YouTube Tools for Creators"
-        description="Professional-grade YouTube tools to help you analyze, optimize, and grow your channel. Video analytics, SEO tools, thumbnail testing, and more."
+      <SEO
+        title="YouTool.io — Free YouTube Tools for Creators"
+        description="Free professional-grade YouTube tools for content creators. Analyze videos and channels, research keywords, test thumbnails, generate tags, and more. No login required."
         keywords="YouTube tools, YouTube analytics, video SEO, thumbnail tester, channel analyzer, YouTube growth, video optimization, creator tools"
         canonical="https://youtool.io/"
-        ogTitle="YouTool.io - YouTube Tools for Creators"
-        ogDescription="Professional-grade YouTube tools to help you analyze, optimize, and grow your channel."
         ogImage="https://youtool.io/og-image.jpg"
-        twitterTitle="YouTool.io - YouTube Tools for Creators"
-        twitterDescription="Professional-grade YouTube tools to help you analyze, optimize, and grow your channel."
-        twitterImage="https://youtool.io/twitter-image.jpg"
       />
       {/* Hero Section */}
       <HeroSection>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/Button/Button';
+import { SEO } from '../../components/SEO';
 import * as S from './styles';
 
 interface Tool {
@@ -111,6 +112,13 @@ export const Tools: React.FC = () => {
 
   return (
     <>
+      <SEO
+        title="All YouTube Tools — Free Analytics & Optimization Suite | YouTool.io"
+        description="Browse 20+ free YouTube tools for creators. Analyze videos and channels, research keywords, test thumbnails, generate tags, download comments, and estimate revenue — all free, no login required."
+        keywords="YouTube tools, free YouTube analytics, YouTube SEO tools, thumbnail tester, channel analyzer, keyword research, tag generator, YouTube creator tools"
+        canonical="https://youtool.io/tools"
+        ogImage="https://youtool.io/og-image.jpg"
+      />
       <S.Container>
         <S.Header>
           <S.BackButton onClick={handleGoBack}>
