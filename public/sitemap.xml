@@ -164,6 +164,61 @@
     <priority>0.8</priority>
   </url>
 
+  <!-- Blog Posts -->
+  <url>
+    <loc>https://youtool.io/blog/youtube-analytics-metrics-2025</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://youtool.io/blog/youtube-seo-optimization-guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://youtool.io/blog/youtube-algorithm-2025</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://youtool.io/blog/youtube-thumbnail-guide</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://youtool.io/blog/youtube-monetization-2025</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://youtool.io/blog/youtube-content-strategy</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://youtool.io/blog/youtube-growth-hacks</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://youtool.io/glossary</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://youtool.io/guides</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
   <url>
     <loc>https://youtool.io/help</loc>
     <changefreq>monthly</changefreq>
@@ -176,16 +231,5 @@
     <priority>0.6</priority>
   </url>
 
-  <url>
-    <loc>https://youtool.io/privacy-policy</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-
-  <url>
-    <loc>https://youtool.io/terms-of-service</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
 
 </urlset>
