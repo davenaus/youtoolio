@@ -29,6 +29,11 @@ const pulse = keyframes`
   50% { transform: scale(1.05); }
 `;
 
+const bounce = keyframes`
+  0%, 60%, 100% { transform: translateX(-50%) translateY(0); }
+  30% { transform: translateX(-50%) translateY(-8px); }
+`;
+
 // Responsive breakpoints
 const breakpoints = {
   xs: '480px',
@@ -348,61 +353,105 @@ const HeroVisual = styled.div`
   animation: ${fadeInUp} 0.8s ease-out 0.2s both;
   position: relative;
 
-  @media (max-width: ${breakpoints.xs}) {
-    margin-top: 1rem;
+  @media (max-width: ${breakpoints.sm}) {
+    display: none;
   }
-  
+
   @media (max-width: ${breakpoints.md}) {
     margin-top: 1.5rem;
   }
 `;
 
-const AnalyticsPreview = styled.div`
+const MacWindow = styled.div`
   background: linear-gradient(135deg, ${({ theme }) => theme.colors.dark3}, ${({ theme }) => theme.colors.dark4});
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: ${({ theme }) => theme.borderRadius.xl};
-  padding: 2rem;
-  position: relative;
   overflow: hidden;
+  position: relative;
   animation: ${float} 3s ease-in-out infinite;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.28),
+    0 2px 6px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
+  @media (max-width: ${breakpoints.sm}) {
+    animation: none;
   }
 `;
 
-const PreviewHeader = styled.div`
-  display: flex;
+const ScrollArrow = styled.div`
+  position: absolute;
+  bottom: 1.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  animation: ${bounce} 2s ease-in-out infinite;
+  pointer-events: none;
+
+  i {
+    font-size: 1.75rem;
+    opacity: 0.6;
+  }
+
+  @media (max-width: ${breakpoints.sm}) {
+    display: flex;
+  }
 `;
 
-const PreviewIcon = styled.div`
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
-  border-radius: ${({ theme }) => theme.borderRadius.md};
+const MacTitleBar = styled.div`
+  background: ${({ theme }) => theme.colors.dark2};
+  height: 38px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.2rem;
+  padding: 0 12px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+  position: relative;
+
+  @media (max-width: ${breakpoints.sm}) {
+    height: 32px;
+    padding: 0 10px;
+  }
 `;
 
-const PreviewTitle = styled.h3`
-  margin: 0;
-  color: ${({ theme }) => theme.colors.text.primary};
-  font-size: 1.1rem;
+const MacDots = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+`;
 
-  @media (max-width: 768px) {
-    margin-bottom: 1.5rem;
+const MacDot = styled.div<{ $color: string }>`
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: ${({ $color }) => $color};
+  flex-shrink: 0;
+
+  @media (max-width: ${breakpoints.sm}) {
+    width: 10px;
+    height: 10px;
+  }
+`;
+
+const MacWindowTitle = styled.span`
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.78rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+`;
+
+const MacWindowBody = styled.div`
+  padding: 1.5rem 2rem;
+
+  @media (max-width: ${breakpoints.sm}) {
+    padding: 1rem 1.25rem;
   }
 `;
 
@@ -415,6 +464,10 @@ const MetricRow = styled.div`
 
   &:last-child {
     border-bottom: none;
+  }
+
+  @media (max-width: ${breakpoints.sm}) {
+    padding: 0.5rem 0;
   }
 `;
 
@@ -451,6 +504,20 @@ const SectionHeader = styled.div`
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
+
+  @media (max-width: ${breakpoints.xs}) {
+    margin-bottom: 1.5rem;
+    padding: 0 1.25rem;
+  }
+
+  @media (max-width: ${breakpoints.sm}) {
+    padding: 0 1.5rem;
+  }
+
+  @media (max-width: ${breakpoints.md}) {
+    margin-bottom: 2.5rem;
+    padding: 0 2rem;
+  }
 `;
 
 const SectionBadge = styled.span`
@@ -507,18 +574,18 @@ const FeaturesGrid = styled.div`
   @media (max-width: ${breakpoints.xs}) {
     padding: 0 1rem;
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1rem;
   }
-  
+
   @media (max-width: ${breakpoints.sm}) {
     padding: 0 1.5rem;
-    grid-template-columns: 1fr;
-    gap: 1.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
   }
-  
+
   @media (max-width: ${breakpoints.md}) {
-    grid-template-columns: 1fr;
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
   }
   
   @media (max-width: ${breakpoints.lg}) {
@@ -541,6 +608,14 @@ const FeatureCard = styled.div`
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+
+  @media (max-width: ${breakpoints.xs}) {
+    padding: 1.25rem;
+  }
+
+  @media (max-width: ${breakpoints.sm}) {
+    padding: 1.5rem;
+  }
 
   &:hover {
     transform: translateY(-5px);
@@ -576,6 +651,13 @@ const FeatureIcon = styled.div`
   margin-bottom: 1.5rem;
   color: white;
   font-size: 1.5rem;
+
+  @media (max-width: ${breakpoints.sm}) {
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
 `;
 
 const FeatureTitle = styled.h3`
@@ -589,12 +671,21 @@ const FeatureDescription = styled.p`
   color: ${({ theme }) => theme.colors.text.secondary};
   line-height: 1.6;
   margin-bottom: 1.5rem;
+
+  @media (max-width: ${breakpoints.sm}) {
+    margin-bottom: 0;
+    font-size: 0.95rem;
+  }
 `;
 
 const FeatureList = styled.ul`
   list-style: none;
   padding: 0;
   margin: 0;
+
+  @media (max-width: ${breakpoints.sm}) {
+    display: none;
+  }
 
   li {
     display: flex;
@@ -665,6 +756,12 @@ const TrustPillsRow = styled.div`
   flex-wrap: wrap;
   justify-content: center;
   gap: 1rem;
+
+  @media (max-width: ${breakpoints.sm}) {
+    & > *:nth-child(n+4) {
+      display: none;
+    }
+  }
 `;
 
 const TrustPill = styled.div`
@@ -987,6 +1084,17 @@ const StepDescription = styled.p`
   line-height: 1.7;
   margin-bottom: 1.5rem;
   font-size: 1.1rem;
+
+  @media (max-width: ${breakpoints.xs}) {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: ${breakpoints.sm}) {
+    font-size: 0.95rem;
+    margin-bottom: 1.25rem;
+  }
 `;
 
 const StepFeatures = styled.div`
@@ -1469,23 +1577,29 @@ export const Home: React.FC = () => {
           </HeroContent>
 
           <HeroVisual>
-            <AnalyticsPreview>
-              <PreviewHeader>
-                <PreviewIcon>
-                  <i className="bx bx-chart"></i>
-                </PreviewIcon>
-                <PreviewTitle>Example Channel Analytics</PreviewTitle>
-              </PreviewHeader>
-              
-              {metrics.map((metric, index) => (
-                <MetricRow key={index} style={{ opacity: index === currentMetric ? 1 : 0.6 }}>
-                  <MetricLabel>{metric.label}</MetricLabel>
-                  <MetricValue>{metric.value}</MetricValue>
-                </MetricRow>
-              ))}
-            </AnalyticsPreview>
+            <MacWindow>
+              <MacTitleBar>
+                <MacDots>
+                  <MacDot $color="#FF5F57" />
+                  <MacDot $color="#FFBD2E" />
+                  <MacDot $color="#28C840" />
+                </MacDots>
+                <MacWindowTitle>Example Channel Analytics</MacWindowTitle>
+              </MacTitleBar>
+              <MacWindowBody>
+                {metrics.map((metric, index) => (
+                  <MetricRow key={index} style={{ opacity: index === currentMetric ? 1 : 0.6 }}>
+                    <MetricLabel>{metric.label}</MetricLabel>
+                    <MetricValue>{metric.value}</MetricValue>
+                  </MetricRow>
+                ))}
+              </MacWindowBody>
+            </MacWindow>
           </HeroVisual>
         </ContentWrapper>
+        <ScrollArrow>
+          <i className="bx bx-chevron-down"></i>
+        </ScrollArrow>
       </HeroSection>
 
       {/* Features Section */}
