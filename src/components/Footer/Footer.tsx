@@ -1,6 +1,6 @@
 // src/components/Footer/Footer.tsx
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 
 const FooterContainer = styled.footer`
@@ -143,7 +143,6 @@ const Logo = styled.div`
 `;
 
 export const Footer: React.FC = () => {
-  const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -153,8 +152,10 @@ export const Footer: React.FC = () => {
           <FooterSection>
             <Logo>
               <img
-                src="https://64.media.tumblr.com/e000461398dfaa9247cc9db6eca187a2/0e01452f9f6dd974-6b/s2048x3072/0457337859cea0729cdfee1d7a9407e25f8f5cca.png"
+                src="/images/logo.png"
                 alt="YouTool Logo"
+                width="1135"
+                height="200"
               />
             </Logo>
             <p>
@@ -167,35 +168,35 @@ export const Footer: React.FC = () => {
           <FooterSection>
             <h4>Tools</h4>
             <FooterLinks>
-              <li><a onClick={() => navigate('/tools/video-analyzer')}>Video Analyzer</a></li>
-              <li><a onClick={() => navigate('/tools/channel-analyzer')}>Channel Analyzer</a></li>
-              <li><a onClick={() => navigate('/tools/keyword-analyzer')}>Keyword Analyzer</a></li>
-              <li><a onClick={() => navigate('/tools/tag-generator')}>Tag Generator</a></li>
-              <li><a onClick={() => navigate('/tools/thumbnail-tester')}>Thumbnail Tester</a></li>
-              <li><a onClick={() => navigate('/tools')}>View All Tools</a></li>
+              <li><Link to="/tools/video-analyzer">Video Analyzer</Link></li>
+              <li><Link to="/tools/channel-analyzer">Channel Analyzer</Link></li>
+              <li><Link to="/tools/keyword-analyzer">Keyword Analyzer</Link></li>
+              <li><Link to="/tools/tag-generator">Tag Generator</Link></li>
+              <li><Link to="/tools/thumbnail-tester">Thumbnail Tester</Link></li>
+              <li><Link to="/tools">View All Tools</Link></li>
             </FooterLinks>
           </FooterSection>
 
           <FooterSection>
             <h4>Resources</h4>
             <FooterLinks>
-              <li><a onClick={() => navigate('/blog')}>Blog</a></li>
-              <li><a onClick={() => navigate('/education')}>Education Center</a></li>
-              <li><a onClick={() => navigate('/glossary')}>YouTube Glossary</a></li>
-              <li><a onClick={() => navigate('/guides')}>Creator Guides</a></li>
-              <li><a onClick={() => navigate('/help')}>Help Center</a></li>
-              <li><a onClick={() => navigate('/changelog')}>Changelog</a></li>
+              <li><Link to="/blog">Blog</Link></li>
+              <li><Link to="/education">Education Center</Link></li>
+              <li><Link to="/glossary">YouTube Glossary</Link></li>
+              <li><Link to="/guides">Creator Guides</Link></li>
+              <li><Link to="/help">Help Center</Link></li>
+              <li><Link to="/changelog">Changelog</Link></li>
             </FooterLinks>
           </FooterSection>
 
           <FooterSection>
             <h4>Company</h4>
             <FooterLinks>
-              <li><a onClick={() => navigate('/about')}>About Us</a></li>
+              <li><Link to="/about">About Us</Link></li>
               <li><a href="mailto:youtool.io.business@gmail.com">Contact</a></li>
-              <li><a onClick={() => navigate('/careers')}>Careers</a></li>
-              <li><a onClick={() => navigate('/press')}>Press Kit</a></li>
-              <li><a onClick={() => navigate('/partnerships')}>Partnerships</a></li>
+              <li><Link to="/careers">Careers</Link></li>
+              <li><Link to="/press">Press Kit</Link></li>
+              <li><Link to="/partnerships">Partnerships</Link></li>
             </FooterLinks>
           </FooterSection>
         </FooterGrid>
@@ -205,10 +206,10 @@ export const Footer: React.FC = () => {
             © {currentYear} All rights reserved. Made with ❤️ for creators.
           </Copyright>
           <LegalLinks>
-            <a onClick={() => navigate('/privacy-policy')}>Privacy Policy</a>
-            <a onClick={() => navigate('/terms-of-service')}>Terms of Service</a>
-            <a onClick={() => navigate('/cookie-policy')}>Cookie Policy</a>
-            <a onClick={() => navigate('/data-usage')}>Data Usage</a>
+            <Link to="/privacy-policy">Privacy Policy</Link>
+            <Link to="/terms-of-service">Terms of Service</Link>
+            <Link to="/cookie-policy">Cookie Policy</Link>
+            <Link to="/data-usage">Data Usage</Link>
           </LegalLinks>
         </FooterBottom>
       </FooterContent>

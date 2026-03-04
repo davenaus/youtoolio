@@ -1427,6 +1427,8 @@ export const Home: React.FC = () => {
               <LogoImage
                 src="/images/logo.png"
                 alt="YouTool Logo"
+                width="1135"
+                height="200"
               />
             </Logo>
 
