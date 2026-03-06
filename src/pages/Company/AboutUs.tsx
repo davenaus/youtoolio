@@ -524,7 +524,7 @@ export const AboutUs: React.FC = () => {
 
           <StatsGrid>
             <StatCard>
-              <div className="stat-number">15+</div>
+              <div className="stat-number">20+</div>
               <div className="stat-label">Free Tools</div>
             </StatCard>
             <StatCard>

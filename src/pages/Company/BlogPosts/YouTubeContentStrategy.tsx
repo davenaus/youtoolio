@@ -193,7 +193,7 @@ export const YouTubeContentStrategy: React.FC = () => {
           <ToolCallout
             icon="bx-book-content"
             toolName="YouTool Playbooks"
-            description="Access 15+ expert-designed strategy playbooks covering channel launch, SEO, thumbnails, monetisation, and growth. Each one generates a fully customised AI prompt — zero writing required."
+            description="Access 20+ expert-designed strategy playbooks covering channel launch, SEO, thumbnails, monetisation, and growth. Each one generates a fully customised AI prompt — zero writing required."
             href="/tools/youtool-playbooks"
           />
 

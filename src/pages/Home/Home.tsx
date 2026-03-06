@@ -362,20 +362,130 @@ const HeroVisual = styled.div`
   }
 `;
 
-const MacWindow = styled.div`
-  background: linear-gradient(135deg, ${({ theme }) => theme.colors.dark3}, ${({ theme }) => theme.colors.dark4});
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  overflow: hidden;
-  position: relative;
-  animation: ${float} 3s ease-in-out infinite;
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.28),
-    0 2px 6px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+// ─── Tool Category Hub ────────────────────────────────────────────────────────
+const CategoryHub = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  gap: 0.75rem;
 
-  @media (max-width: ${breakpoints.sm}) {
-    animation: none;
+  @media (max-width: ${breakpoints.lg}) {
+    max-width: 480px;
+  }
+`;
+
+const PanelBadge = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(185, 28, 28, 0.1);
+  border: 1px solid rgba(185, 28, 28, 0.25);
+  color: ${({ theme }) => theme.colors.red4};
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.3rem 0.9rem;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+`;
+
+const CategoryGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+`;
+
+const CategoryCard = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: 16px;
+  padding: 13px;
+  transition: border-color 0.2s ease;
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.red4}55;
+  }
+`;
+
+const CatHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 9px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+`;
+
+const CatIcon = styled.i`
+  font-size: 1rem;
+  color: ${({ theme }) => theme.colors.red4};
+  line-height: 1;
+`;
+
+const CatName = styled.span`
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text.primary};
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+`;
+
+const ToolList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+`;
+
+const ToolChip = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: ${({ theme }) => theme.colors.dark4};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: 7px;
+  padding: 3px 7px;
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  white-space: nowrap;
+  transition: all 0.18s ease;
+
+  i {
+    font-size: 0.75rem;
+    color: ${({ theme }) => theme.colors.red4};
+    line-height: 1;
+  }
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.red4};
+    color: ${({ theme }) => theme.colors.red4};
+    background: rgba(185, 28, 28, 0.07);
+    transform: translateY(-1px);
+  }
+`;
+
+const SeeAllRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding-top: 0.25rem;
+
+  i {
+    font-size: 1rem;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.red4};
+    i { transform: translateX(4px); }
   }
 `;
 
@@ -399,81 +509,6 @@ const ScrollArrow = styled.div`
   @media (max-width: ${breakpoints.sm}) {
     display: flex;
   }
-`;
-
-const MacTitleBar = styled.div`
-  background: ${({ theme }) => theme.colors.dark2};
-  height: 38px;
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
-  position: relative;
-
-  @media (max-width: ${breakpoints.sm}) {
-    height: 32px;
-    padding: 0 10px;
-  }
-`;
-
-const MacDots = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-`;
-
-const MacDot = styled.div<{ $color: string }>`
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: ${({ $color }) => $color};
-  flex-shrink: 0;
-
-  @media (max-width: ${breakpoints.sm}) {
-    width: 10px;
-    height: 10px;
-  }
-`;
-
-const MacWindowTitle = styled.span`
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.78rem;
-  color: ${({ theme }) => theme.colors.text.muted};
-  font-weight: 500;
-  white-space: nowrap;
-  pointer-events: none;
-`;
-
-const MacWindowBody = styled.div`
-  padding: 1.5rem 2rem;
-
-  @media (max-width: ${breakpoints.sm}) {
-    padding: 1rem 1.25rem;
-  }
-`;
-
-const MetricRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  @media (max-width: ${breakpoints.sm}) {
-    padding: 0.5rem 0;
-  }
-`;
-
-const MetricLabel = styled.span`
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 0.9rem;
 `;
 
 
@@ -1465,22 +1500,54 @@ const VideoPlayer = styled.div`
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
-  const [currentMetric, setCurrentMetric] = useState(0);
   const [showVideoModal, setShowVideoModal] = useState(false);
 
-  const metrics = [
-    { label: 'Channel Growth', value: '+127%', trend: 'up' },
-    { label: 'Engagement Rate', value: '8.4%', trend: 'up' },
-    { label: 'Video Performance', value: '94/100', trend: 'up' },
-    { label: 'SEO Score', value: 'A+', trend: 'up' }
+  // ── Tool category data ────────────────────────────────────────────────────
+  const toolCategories = [
+    {
+      icon: 'bx-bar-chart-alt-2', name: 'Analytics',
+      tools: [
+        { name: 'Channel Analyzer',  icon: 'bx-line-chart',  url: '/tools/channel-analyzer' },
+        { name: 'Video Analyzer',    icon: 'bx-chart',        url: '/tools/video-analyzer' },
+        { name: 'Channel Comparer',  icon: 'bx-git-compare', url: '/tools/channel-comparer' },
+        { name: 'Playlist Analyzer', icon: 'bx-list-ul',      url: '/tools/playlist-analyzer' },
+      ],
+    },
+    {
+      icon: 'bx-search-alt', name: 'SEO & Discovery',
+      tools: [
+        { name: 'Keyword Analyzer',  icon: 'bx-search-alt',       url: '/tools/keyword-analyzer' },
+        { name: 'Tag Generator',     icon: 'bx-purchase-tag-alt', url: '/tools/tag-generator' },
+        { name: 'Outlier Finder',    icon: 'bx-trophy',            url: '/tools/outlier-finder' },
+        { name: 'Channel ID Finder', icon: 'bx-id-card',           url: '/tools/channel-id-finder' },
+      ],
+    },
+    {
+      icon: 'bx-image-alt', name: 'Thumbnails & Design',
+      tools: [
+        { name: 'Thumb Tester',   icon: 'bx-photo-album', url: '/tools/thumbnail-tester' },
+        { name: 'Thumb Analyzer', icon: 'bx-scan',         url: '/tools/thumbnail-analyzer' },
+        { name: 'Thumb Download', icon: 'bx-download',     url: '/tools/thumbnail-downloader' },
+        { name: 'Banner Download',icon: 'bx-image',        url: '/tools/banner-downloader' },
+        { name: 'Profile Picture',icon: 'bx-user-circle',  url: '/tools/profile-picture-downloader' },
+        { name: 'Color Palette',  icon: 'bx-palette',      url: '/tools/color-palette' },
+        { name: 'Color Picker',   icon: 'bx-eyedropper',   url: '/tools/color-picker-from-image' },
+      ],
+    },
+    {
+      icon: 'bx-wrench', name: 'Creator Toolkit',
+      tools: [
+        { name: 'Comment Picker',   icon: 'bx-gift',           url: '/tools/comment-picker' },
+        { name: 'Comment Export',   icon: 'bx-comment-detail', url: '/tools/comment-downloader' },
+        { name: 'QR Code',          icon: 'bx-qr-scan',        url: '/tools/qr-code-generator' },
+        { name: 'Subscribe Link',   icon: 'bx-link',           url: '/tools/subscribe-link-generator' },
+        { name: 'YouTube Earnings', icon: 'bx-calculator',     url: '/tools/youtube-calculator' },
+        { name: 'AI Consultant',    icon: 'bx-bot',            url: '/tools/channel-consultant' },
+        { name: 'Mod Checker',      icon: 'bx-shield',         url: '/tools/moderation-checker' },
+        { name: 'Playbooks',        icon: 'bx-book-open',      url: '/tools/youtool-playbooks' },
+      ],
+    },
   ];
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentMetric((prev) => (prev + 1) % metrics.length);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     if (showVideoModal) {
@@ -1562,7 +1629,7 @@ export const Home: React.FC = () => {
 
             <HeroStats>
               <HeroStat>
-                <StatNumber>15+</StatNumber>
+                <StatNumber>20+</StatNumber>
                 <StatLabel>Analytics Tools</StatLabel>
               </HeroStat>
               <HeroStat>
@@ -1577,24 +1644,32 @@ export const Home: React.FC = () => {
           </HeroContent>
 
           <HeroVisual>
-            <MacWindow>
-              <MacTitleBar>
-                <MacDots>
-                  <MacDot $color="#FF5F57" />
-                  <MacDot $color="#FFBD2E" />
-                  <MacDot $color="#28C840" />
-                </MacDots>
-                <MacWindowTitle>Example Channel Analytics</MacWindowTitle>
-              </MacTitleBar>
-              <MacWindowBody>
-                {metrics.map((metric, index) => (
-                  <MetricRow key={index} style={{ opacity: index === currentMetric ? 1 : 0.6 }}>
-                    <MetricLabel>{metric.label}</MetricLabel>
-                    <MetricValue>{metric.value}</MetricValue>
-                  </MetricRow>
+            <CategoryHub>
+              <PanelBadge>
+                <i className="bx bx-grid-alt" /> 24 free tools for YouTubers
+              </PanelBadge>
+              <CategoryGrid>
+                {toolCategories.map((cat) => (
+                  <CategoryCard key={cat.name}>
+                    <CatHeader>
+                      <CatIcon className={`bx ${cat.icon}`} />
+                      <CatName>{cat.name}</CatName>
+                    </CatHeader>
+                    <ToolList>
+                      {cat.tools.map((tool) => (
+                        <ToolChip key={tool.name} onClick={() => navigate(tool.url)}>
+                          <i className={`bx ${tool.icon}`} />
+                          {tool.name}
+                        </ToolChip>
+                      ))}
+                    </ToolList>
+                  </CategoryCard>
                 ))}
-              </MacWindowBody>
-            </MacWindow>
+              </CategoryGrid>
+              <SeeAllRow onClick={() => navigate('/tools')}>
+                View all 24 tools <i className="bx bx-right-arrow-alt" />
+              </SeeAllRow>
+            </CategoryHub>
           </HeroVisual>
         </ContentWrapper>
         <ScrollArrow>

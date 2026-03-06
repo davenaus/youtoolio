@@ -253,7 +253,7 @@ const faqData = [
       questions: [
         {
           question: 'What tools are available on YouTool?',
-          answer: 'We offer 15+ professional tools including Video Analyzer, Channel Analyzer, Keyword Analyzer, Tag Generator, Thumbnail Tester, Outlier Finder, Comment Analyzer, Playlist Analyzer, and many more. Each tool is designed to help you understand and optimize different aspects of your YouTube presence.'
+          answer: 'We offer 20+ professional tools including Video Analyzer, Channel Analyzer, Keyword Analyzer, Tag Generator, Thumbnail Tester, Outlier Finder, Comment Analyzer, Playlist Analyzer, and many more. Each tool is designed to help you understand and optimize different aspects of your YouTube presence.'
         },
         {
           question: 'How accurate is the analytics data?',
