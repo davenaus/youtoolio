@@ -110,6 +110,43 @@ const YouToolPlaybooks: React.FC = () => {
       {/* Google Ad Spot */}
       <GoogleAd adSlot="1234567890" />
 
+      {/* Category Filters */}
+      <FiltersContainer>
+        {categories.map((category) => (
+          <FilterButton
+            key={category.name}
+            active={activeCategory === category.name}
+            onClick={() => handleCategoryClick(category.name)}
+          >
+            {category.name} ({category.count})
+          </FilterButton>
+        ))}
+      </FiltersContainer>
+
+      {/* Playbooks Grid or Empty State */}
+      {filteredPlaybooks.length > 0 ? (
+        <PlaybooksGrid>
+          {filteredPlaybooks.map((playbook) => (
+            <PlaybookCard
+              key={playbook.id}
+              playbook={playbook}
+              onGenerate={setSelectedPlaybook}
+            />
+          ))}
+        </PlaybooksGrid>
+      ) : (
+        <EmptyState>
+          <EmptyIcon>
+            <i className="bx bx-book-content"></i>
+          </EmptyIcon>
+          <EmptyTitle>No playbooks in this category</EmptyTitle>
+          <EmptyDescription>Try browsing a different category or view all playbooks.</EmptyDescription>
+          <FilterButton active={false} onClick={() => handleCategoryClick('All')}>
+            View All Playbooks
+          </FilterButton>
+        </EmptyState>
+      )}
+
       {/* Educational Content */}
       <EducationalSection>
 
@@ -179,43 +216,6 @@ const YouToolPlaybooks: React.FC = () => {
         </EducationalContent>
 
       </EducationalSection>
-
-      {/* Category Filters */}
-      <FiltersContainer>
-        {categories.map((category) => (
-          <FilterButton
-            key={category.name}
-            active={activeCategory === category.name}
-            onClick={() => handleCategoryClick(category.name)}
-          >
-            {category.name} ({category.count})
-          </FilterButton>
-        ))}
-      </FiltersContainer>
-
-      {/* Playbooks Grid or Empty State */}
-      {filteredPlaybooks.length > 0 ? (
-        <PlaybooksGrid>
-          {filteredPlaybooks.map((playbook) => (
-            <PlaybookCard
-              key={playbook.id}
-              playbook={playbook}
-              onGenerate={setSelectedPlaybook}
-            />
-          ))}
-        </PlaybooksGrid>
-      ) : (
-        <EmptyState>
-          <EmptyIcon>
-            <i className="bx bx-book-content"></i>
-          </EmptyIcon>
-          <EmptyTitle>No playbooks in this category</EmptyTitle>
-          <EmptyDescription>Try browsing a different category or view all playbooks.</EmptyDescription>
-          <FilterButton active={false} onClick={() => handleCategoryClick('All')}>
-            View All Playbooks
-          </FilterButton>
-        </EmptyState>
-      )}
 
       {/* Modal */}
       {selectedPlaybook && (

@@ -1,140 +1,12 @@
 // src/pages/Company/BlogPosts/YouTubeAnalyticsMetrics.tsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
 import { SEO } from '../../../components/SEO';
-
-const Container = styled.div`
-  min-height: 100vh;
-  background: ${({ theme }) => theme.colors.dark2};
-  color: ${({ theme }) => theme.colors.text.primary};
-  padding: 2rem 0;
-`;
-
-const ContentWrapper = styled.div`
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 0 2rem;
-`;
-
-const BackButton = styled.button`
-  background: ${({ theme }) => theme.colors.dark3};
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  padding: 0.75rem 1.5rem;
-  border-radius: ${({ theme }) => theme.borderRadius.md};
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 3rem;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: ${({ theme }) => theme.colors.dark4};
-    color: ${({ theme }) => theme.colors.text.primary};
-  }
-
-  i {
-    font-size: 1.2rem;
-  }
-`;
-
-const Header = styled.div`
-  margin-bottom: 3rem;
-  text-align: center;
-`;
-
-const Category = styled.span`
-  background: ${({ theme }) => theme.colors.red4};
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  display: inline-block;
-  margin-bottom: 1rem;
-`;
-
-const Title = styled.h1`
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin-bottom: 1rem;
-  line-height: 1.2;
-
-  @media (max-width: 768px) {
-    font-size: 2rem;
-  }
-`;
-
-const Meta = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  color: ${({ theme }) => theme.colors.text.muted};
-  font-size: 0.9rem;
-`;
-
-const Content = styled.div`
-  line-height: 1.8;
-  font-size: 1.1rem;
-
-  h2 {
-    color: ${({ theme }) => theme.colors.text.primary};
-    font-size: 1.8rem;
-    margin: 2.5rem 0 1rem 0;
-    font-weight: 600;
-  }
-
-  h3 {
-    color: ${({ theme }) => theme.colors.text.primary};
-    font-size: 1.4rem;
-    margin: 2rem 0 1rem 0;
-    font-weight: 600;
-  }
-
-  p {
-    margin-bottom: 1.5rem;
-    color: ${({ theme }) => theme.colors.text.secondary};
-  }
-
-  ul, ol {
-    margin-bottom: 1.5rem;
-    padding-left: 2rem;
-    
-    li {
-      margin-bottom: 0.5rem;
-      color: ${({ theme }) => theme.colors.text.secondary};
-    }
-  }
-
-  strong {
-    color: ${({ theme }) => theme.colors.text.primary};
-    font-weight: 600;
-  }
-
-  em {
-    color: ${({ theme }) => theme.colors.red4};
-    font-style: normal;
-    font-weight: 500;
-  }
-`;
-
-const HighlightBox = styled.div`
-  background: ${({ theme }) => theme.colors.dark3};
-  border: 1px solid ${({ theme }) => theme.colors.red4};
-  border-radius: ${({ theme }) => theme.borderRadius.lg};
-  padding: 1.5rem;
-  margin: 2rem 0;
-
-  h4 {
-    color: ${({ theme }) => theme.colors.red4};
-    margin-bottom: 1rem;
-    font-size: 1.2rem;
-  }
-`;
+import {
+  Container, ContentWrapper, BackButton, PostHeader, Category,
+  Title, Meta, Content, TipBox, ToolCallout, KeyTakeaway,
+  StatGrid, StatCard, TableWrapper, DataTable,
+} from './BlogComponents';
 
 export const YouTubeAnalyticsMetrics: React.FC = () => {
   const navigate = useNavigate();
@@ -143,147 +15,238 @@ export const YouTubeAnalyticsMetrics: React.FC = () => {
     <Container>
       <SEO
         title="10 YouTube Analytics Metrics Every Creator Should Track in 2025 | YouTool.io"
-        description="Learn the 10 most important YouTube analytics metrics every creator needs to monitor. Track views, watch time, CTR, engagement rate, and more to grow your channel."
+        description="Discover the most important YouTube analytics metrics for channel growth. Learn what watch time, CTR, audience retention and engagement rate really mean for your strategy."
         canonical="https://youtool.io/blog/youtube-analytics-metrics-2025"
       />
       <ContentWrapper>
         <BackButton onClick={() => navigate('/blog')}>
-          <i className="bx bx-arrow-back"></i>
-          Back to Blog
+          <i className="bx bx-arrow-back"></i> Back to Blog
         </BackButton>
 
-        <Header>
-          <Category>Analytics</Category>
+        <PostHeader>
+          <Category color="#16a34a">Analytics</Category>
           <Title>10 YouTube Analytics Metrics Every Creator Should Track in 2025</Title>
           <Meta>
-            <span>
-              <i className="bx bx-calendar"></i>
-              January 15, 2025
-            </span>
-            <span>•</span>
-            <span>
-              <i className="bx bx-time"></i>
-              8 min read
-            </span>
+            <span><i className="bx bx-calendar"></i> July 15, 2025</span>
+            <span><i className="bx bx-time"></i> 10 min read</span>
+            <span><i className="bx bx-user"></i> YouTool Team</span>
           </Meta>
-        </Header>
+        </PostHeader>
 
         <Content>
           <p>
-            As we enter 2025, YouTube's algorithm continues to evolve, making it more crucial than ever for creators to understand and track the right metrics. While it's tempting to focus solely on subscriber count and total views, the most successful YouTubers know that deeper analytics hold the key to sustainable growth.
+            Data-driven creators grow faster. Not because they obsess over every number, but because
+            they know which metrics actually move the needle — and which ones are vanity metrics that
+            feel good but don't tell you anything actionable. This guide covers the 10 metrics that
+            matter most in 2025, what each one actually means, and the benchmarks to aim for.
           </p>
 
+          {/* Key metric benchmarks */}
+          <StatGrid>
+            <StatCard accent="#16a34a">
+              <div className="label">Good CTR (most niches)</div>
+              <div className="value">4–8%</div>
+              <div className="desc">Below 2% = thumbnail or title problem. Above 10% = exceptional.</div>
+            </StatCard>
+            <StatCard accent="#16a34a">
+              <div className="label">Average View Duration Target</div>
+              <div className="value">40–60%</div>
+              <div className="desc">Percentage of total video length viewed on average</div>
+            </StatCard>
+            <StatCard accent="#16a34a">
+              <div className="label">Good Engagement Rate</div>
+              <div className="value">3–6%</div>
+              <div className="desc">(Likes + Comments) ÷ Views — above 6% is strong</div>
+            </StatCard>
+            <StatCard accent="#16a34a">
+              <div className="label">Subscriber Conversion Rate</div>
+              <div className="value">1–3%</div>
+              <div className="desc">Percentage of views that result in a new subscriber</div>
+            </StatCard>
+          </StatGrid>
+
+          <h2>The 10 Metrics That Actually Matter</h2>
+
+          <h3>1. Click-Through Rate (CTR)</h3>
           <p>
-            In this comprehensive guide, we'll explore the 10 most important YouTube analytics metrics that every creator should monitor in 2025. These metrics will help you understand your audience, optimize your content strategy, and make data-driven decisions that accelerate your channel's growth.
+            CTR measures how often viewers click your video when shown the thumbnail. It's one of
+            the clearest signals of how well your thumbnail and title work together. A low CTR means
+            your packaging isn't compelling enough — even if the content itself is excellent.
           </p>
-
-          <h2>1. Watch Time (Total Watch Hours)</h2>
           <p>
-            <strong>Watch time</strong> remains the most critical metric for YouTube success. It measures the total amount of time viewers spend watching your videos, and it's the primary factor YouTube's algorithm uses to determine which videos to promote.
+            Most channels see 2–5% CTR. If you're consistently below 2%, start with your thumbnail.
+            If below the average for your niche, your title may not be speaking to search intent.
           </p>
 
-          <HighlightBox>
-            <h4>Why it matters:</h4>
-            <p>YouTube's goal is to keep viewers on the platform as long as possible. Videos with higher watch time are seen as more valuable and are more likely to be recommended to other users.</p>
-          </HighlightBox>
+          <ToolCallout
+            icon="bx-video"
+            toolName="Video Analyzer"
+            description="Analyse any video's engagement rate, estimated performance, and SEO score in seconds. Compare against channel averages to identify which videos are punching above their weight."
+            href="/tools/video-analyzer"
+          />
 
+          <h3>2. Average View Duration</h3>
           <p>
-            <em>Pro tip:</em> Focus on creating longer-form content that maintains viewer interest throughout. Use YouTool's Video Analyzer to identify which parts of your videos have the highest retention rates.
+            This tells you how long, on average, people watch your videos. The YouTube algorithm
+            uses this heavily in its recommendation decisions. A 40–60% average view duration is
+            considered good for longer-form content. For videos under 5 minutes, aim for 60%+.
           </p>
 
-          <h2>2. Average View Duration</h2>
+          <h3>3. Audience Retention</h3>
           <p>
-            While total watch time shows overall performance, <strong>average view duration</strong> reveals how engaging your content is on a per-video basis. This metric shows how long viewers typically watch before clicking away.
+            The retention graph in YouTube Studio shows you exactly where viewers drop off. More
+            valuable than the average — it tells you which sections are losing people. If there's
+            a cliff at the 0:15 mark, your hook is weak. If people leave at the 80% mark, you're
+            spending too long on your outro.
           </p>
 
-          <ul>
-            <li>Good: 40-60% of total video length</li>
-            <li>Excellent: 60%+ of total video length</li>
-            <li>Needs improvement: Less than 30% of total video length</li>
-          </ul>
-
-          <h2>3. Audience Retention Rate</h2>
+          <h3>4. Impressions</h3>
           <p>
-            The audience retention graph shows you exactly when viewers drop off during your videos. This invaluable data helps you identify what content keeps viewers engaged and what causes them to leave.
+            Impressions count how many times your thumbnail was shown to logged-in YouTube users.
+            High impressions with low CTR = packaging problem. Low impressions = algorithm isn't
+            surfacing your content — look at SEO, publishing time, and topic selection.
           </p>
 
-          <h3>Key retention points to analyze:</h3>
-          <ul>
-            <li><strong>Introduction (0-15 seconds):</strong> Critical hook period</li>
-            <li><strong>Middle segments:</strong> Content delivery effectiveness</li>
-            <li><strong>Ending (last 30 seconds):</strong> Call-to-action performance</li>
-          </ul>
-
-          <h2>4. Click-Through Rate (CTR)</h2>
+          <h3>5. Watch Time (Hours)</h3>
           <p>
-            Your <strong>CTR</strong> measures how often viewers click on your video after seeing the thumbnail and title. A higher CTR indicates that your packaging (thumbnail + title) is compelling and relevant to your target audience.
+            Total watch time is the cumulative hours viewers have spent on your channel. YouTube
+            uses this as a proxy for value created. Channels that generate more watch time per
+            subscriber get better distribution. Longer videos don't automatically mean more
+            watch time — high retention on shorter videos can outperform.
           </p>
 
-          <HighlightBox>
-            <h4>CTR Benchmarks for 2025:</h4>
-            <ul>
-              <li>2-4%: Average for most channels</li>
-              <li>4-6%: Good performance</li>
-              <li>6%+: Excellent performance</li>
-            </ul>
-          </HighlightBox>
-
-          <h2>5. Subscriber Growth Rate</h2>
+          <h3>6. Engagement Rate</h3>
           <p>
-            While total subscribers matter, <strong>subscriber growth rate</strong> gives you a better picture of your channel's momentum. Track both net subscriber gain and the rate of growth over time.
+            Engagement rate = (Likes + Comments) ÷ Views. A high engagement rate signals to the
+            algorithm that your content is resonating, not just being watched passively. Aim to
+            create content that prompts a reaction — ask questions, take positions, include
+            memorable moments people want to comment on.
           </p>
 
-          <h2>6. Revenue Metrics (RPM & CPM)</h2>
+          <KeyTakeaway>
+            <i className="bx bx-bar-chart-alt-2"></i>
+            <div>
+              <p><strong>The ratio that matters most:</strong> Watch time × Engagement rate. A video
+              with both high watch time AND high engagement gets dramatically better algorithmic
+              distribution than one with just one of these.</p>
+            </div>
+          </KeyTakeaway>
+
+          <h3>7. Subscriber Growth Rate</h3>
           <p>
-            For monetized channels, understanding your <strong>Revenue Per Mille (RPM)</strong> and <strong>Cost Per Mille (CPM)</strong> is crucial for optimizing your income strategy.
+            How many new subscribers you gain per video and per month. A slow growth rate relative
+            to views means people are watching but not finding enough value to subscribe. If
+            subscriber growth accelerates after certain videos, look carefully at what was different
+            about those — topic, format, CTA placement.
           </p>
 
-          <ul>
-            <li><strong>RPM:</strong> Your actual earnings per 1,000 views</li>
-            <li><strong>CPM:</strong> What advertisers pay per 1,000 ad impressions</li>
-          </ul>
-
-          <h2>7. Traffic Sources</h2>
+          <h3>8. Traffic Sources</h3>
           <p>
-            Understanding where your viewers come from helps you optimize your promotion strategy. Key traffic sources include:
+            Where your views come from matters as much as how many you get. Browse features
+            (home feed + suggested) = algorithm is recommending you. Search = your SEO is working.
+            External = you have audience outside YouTube. Direct = your subscribers actively
+            seeking out your content.
           </p>
 
-          <ul>
-            <li>YouTube search</li>
-            <li>Suggested videos</li>
-            <li>Browse features</li>
-            <li>External sources</li>
-            <li>Direct traffic</li>
-          </ul>
-
-          <h2>8. Engagement Rate</h2>
+          <h3>9. Revenue per Mille (RPM)</h3>
           <p>
-            <strong>Engagement rate</strong> combines likes, comments, shares, and other interactions relative to your view count. High engagement signals to YouTube that your content resonates with viewers.
+            RPM is how much you earn per 1,000 video views after YouTube takes its cut. Different
+            niches have wildly different RPMs — finance and B2B content earns 10–20× more per view
+            than gaming or entertainment. Understanding your RPM helps you make better content
+            strategy decisions.
           </p>
 
-          <h2>9. Top-Performing Content</h2>
+          <ToolCallout
+            icon="bx-dollar-circle"
+            toolName="YouTube Calculator"
+            description="Estimate your earnings based on your views, niche, and geography. Understand how RPM varies across content categories and what it means for your channel's revenue potential."
+            href="/tools/youtube-calculator"
+          />
+
+          <h3>10. Re-watch Rate</h3>
           <p>
-            Regularly analyze your best-performing videos to identify patterns in topics, formats, and presentation styles that your audience prefers.
+            Portions of your video that viewers watch multiple times show up as spikes in the
+            retention graph. These spikes indicate your most valuable content — the moments that
+            made people stop and rewind. Study these sections and create more content around
+            what drives them.
           </p>
 
-          <h2>10. Audience Demographics</h2>
+          <h2>A Practical Dashboard: What to Check Each Week</h2>
+
+          <TableWrapper>
+            <DataTable>
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th>Check frequency</th>
+                  <th>Action if below target</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>CTR</strong></td>
+                  <td>First 48 hours post-upload</td>
+                  <td>A/B test a new thumbnail or rewrite the title</td>
+                </tr>
+                <tr>
+                  <td><strong>Avg View Duration</strong></td>
+                  <td>First 72 hours post-upload</td>
+                  <td>Strengthen your hook; audit the first 30 seconds</td>
+                </tr>
+                <tr>
+                  <td><strong>Impressions</strong></td>
+                  <td>Weekly</td>
+                  <td>Review SEO, tags, publish time, topic demand</td>
+                </tr>
+                <tr>
+                  <td><strong>Engagement Rate</strong></td>
+                  <td>Weekly</td>
+                  <td>Add a clear CTA; ask a question in the video</td>
+                </tr>
+                <tr>
+                  <td><strong>Subscriber Growth</strong></td>
+                  <td>Monthly</td>
+                  <td>Improve subscribe CTA; refine channel proposition</td>
+                </tr>
+                <tr>
+                  <td><strong>Traffic Sources</strong></td>
+                  <td>Monthly</td>
+                  <td>If mostly external, improve internal SEO; if 0 browse, fix packaging</td>
+                </tr>
+              </tbody>
+            </DataTable>
+          </TableWrapper>
+
+          <h2>Common Analytics Mistakes</h2>
+
+          <h3>Chasing Views Over Watch Time</h3>
           <p>
-            Understanding your audience's age, gender, geography, and viewing habits helps you create more targeted content and optimize your upload schedule.
+            A video with 100,000 views and 20% retention delivers less value to the algorithm than
+            one with 30,000 views and 70% retention. Don't optimise for the vanity number.
           </p>
 
-          <HighlightBox>
-            <h4>Take Action Today:</h4>
-            <p>Use YouTool's comprehensive analytics suite to track all these metrics in one dashboard. Our Channel Analyzer provides deep insights into your performance and actionable recommendations for growth.</p>
-          </HighlightBox>
-
-          <h2>Conclusion</h2>
+          <h3>Ignoring Traffic Source Breakdown</h3>
           <p>
-            Success on YouTube in 2025 requires more than just creating good content – it demands a data-driven approach to understanding your audience and optimizing your strategy. By tracking these 10 essential metrics, you'll have the insights needed to make informed decisions that drive real growth.
+            If 80% of your traffic comes from External (links you share), the algorithm isn't
+            recommending you — which means you don't have a compounding growth engine. Shift
+            focus to content that gets browse and suggested traffic.
           </p>
 
-          <p>
-            Remember, these metrics work together to paint a complete picture of your channel's performance. Focus on improving one or two metrics at a time, and you'll see compound improvements across your entire channel.
-          </p>
+          <TipBox>
+            <h4><i className="bx bx-trending-up"></i> Advanced Analytics</h4>
+            <p>
+              Use YouTool's Channel Analyzer to get an independent view of your channel's performance
+              score across four dimensions: SEO, engagement, consistency, and branding. Compare against
+              channels in your niche to benchmark your progress.
+            </p>
+          </TipBox>
+
+          <ToolCallout
+            icon="bx-bar-chart-alt-2"
+            toolName="Channel Analyzer"
+            description="Get a full channel health score — covering SEO, engagement rate, upload consistency, and branding — plus a breakdown of your top-performing videos and what made them work."
+            href="/tools/channel-analyzer"
+          />
         </Content>
       </ContentWrapper>
     </Container>

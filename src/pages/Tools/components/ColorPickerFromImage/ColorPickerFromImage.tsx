@@ -425,6 +425,83 @@ const ColorPickerFromImage: React.FC = () => {
                 your creative and technical projects.
               </S.EducationalText>
             </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>How the Color Picker Works</S.SectionSubTitle>
+
+              <S.EducationalText>
+                The Color Picker uses the HTML5 Canvas API to read pixel data directly from your image in the browser. When you upload an image, it is drawn onto a hidden canvas element at its native resolution. As you move your cursor over the displayed image, the tool maps your pointer position to the corresponding pixel coordinates on the canvas and calls <strong>getImageData()</strong> to read the red, green, and blue values stored at that exact pixel.
+              </S.EducationalText>
+              <S.EducationalText>
+                The RGB values (each 0–255) are then converted to the hexadecimal notation designers and developers use — for example, <code>rgb(185, 28, 28)</code> becomes <code>#b91c1c</code>. All processing happens locally in your browser using the Canvas 2D rendering context. No image data is uploaded to any server at any point. This means the tool works entirely offline once the page has loaded.
+              </S.EducationalText>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Use Cases for YouTube Creators</S.SectionSubTitle>
+
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Thumbnail Brand Consistency:</strong> Download a competitor's thumbnail with the Thumbnail Downloader, then use this tool to extract the exact colours they're using. Understand what palette is performing well in your niche and build a complementary (but distinct) colour scheme.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Channel Branding:</strong> Extract precise hex codes from your logo, banner, or brand assets so you can apply exactly the same colours in every thumbnail, end screen, and graphic — no guessing or eyeballing.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Background Matching:</strong> If you shoot against a coloured backdrop or wall, pick the exact background colour to use in motion graphics, overlays, or lower-thirds that appear in your videos.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-check-circle"></i>
+                  <span><strong>Design Tool Import:</strong> Hex codes copied from this tool work directly in Canva, Photoshop, Figma, Adobe Express, and any other design application that accepts hex input — paste them straight in without needing to manually adjust RGB sliders.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
+
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Is my image uploaded to a server?</strong> No. All colour extraction happens entirely in your browser using the HTML5 Canvas API. Your image never leaves your device — nothing is sent to any server. This also means the tool works offline after the page has loaded.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>What colour format does the tool output?</strong> The tool outputs hex codes (e.g. <code>#b91c1c</code>), which is the most universally accepted format across design tools, CSS, and HTML. Hex is directly usable in Canva, Photoshop, Figma, and all major design applications without conversion.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>Can I pick colours from a YouTube screenshot?</strong> Yes. Take a screenshot of any YouTube thumbnail, video frame, or channel page, then upload it here. This is one of the most common use cases — extracting colours from competitor thumbnails or from a frame of your own video to ensure consistency.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-help-circle"></i>
+                  <span><strong>What image formats are supported?</strong> JPG, PNG, GIF, WebP, and BMP are all supported. For screenshots and thumbnails, PNG and JPG are most common and work perfectly. Very large images may take a moment to load onto the canvas but are fully supported.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
+
+              <S.FeatureList>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/color-palette"><strong>Color Palette Generator</strong></a> — Upload an image and automatically extract the 5–10 dominant colours as a complete palette. Better for generating a full colour scheme; the Color Picker is better when you need one specific exact pixel value.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/thumbnail-downloader"><strong>Thumbnail Downloader</strong></a> — Download any YouTube video's thumbnail at full resolution, then bring it here to extract the exact colours used.</span>
+                </S.FeatureListItem>
+                <S.FeatureListItem>
+                  <i className="bx bx-link"></i>
+                  <span><a href="/tools/thumbnail-analyzer"><strong>Thumbnail Analyzer</strong></a> — Analyse your thumbnail's contrast, composition, and text readability — useful context once you've built your colour scheme.</span>
+                </S.FeatureListItem>
+              </S.FeatureList>
+            </S.EducationalContent>
+
           </S.EducationalSection>
         )}
 

@@ -49,6 +49,40 @@ interface TagStats {
   estimatedReach: number;
 }
 
+// Rate limit: max 5 queries per 2-minute window, stored per browser in localStorage
+const RATE_LIMIT_KEY = 'tag-generator-rl';
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 2 * 60 * 1000; // 2 minutes
+
+function getRateLimitTimestamps(): number[] {
+  try {
+    const raw = localStorage.getItem(RATE_LIMIT_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function checkAndRecordQuery(): { allowed: boolean; retryInMs: number } {
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW_MS;
+  const timestamps = getRateLimitTimestamps().filter(ts => ts > windowStart);
+
+  if (timestamps.length >= RATE_LIMIT_MAX) {
+    // Oldest timestamp in the window — user can retry once it falls out
+    const retryInMs = timestamps[0] + RATE_LIMIT_WINDOW_MS - now;
+    return { allowed: false, retryInMs: Math.max(retryInMs, 0) };
+  }
+
+  timestamps.push(now);
+  try {
+    localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(timestamps));
+  } catch {
+    // localStorage full or unavailable — allow the query anyway
+  }
+  return { allowed: true, retryInMs: 0 };
+}
+
 export const TagGenerator: React.FC = () => {
   const { searchTitle } = useParams<{ searchTitle: string }>();
   const navigate = useNavigate();
@@ -62,6 +96,7 @@ export const TagGenerator: React.FC = () => {
   const [copySuccess, setCopySuccess] = useState('');
   const [analysisMode, setAnalysisMode] = useState<'basic' | 'advanced'>('advanced');
   const [targetAudience, setTargetAudience] = useState<'general' | 'gaming' | 'education' | 'entertainment' | 'tech'>('general');
+  const [rateLimitError, setRateLimitError] = useState<string | null>(null);
 
   // Tool configuration
   const toolConfig = {
@@ -100,6 +135,19 @@ export const TagGenerator: React.FC = () => {
       return;
     }
 
+    // Client-side rate limit check
+    const { allowed, retryInMs } = checkAndRecordQuery();
+    if (!allowed) {
+      const seconds = Math.ceil(retryInMs / 1000);
+      setRateLimitError(
+        `You've made several searches in quick succession. Please wait ${seconds}s before trying again.`
+      );
+      // Auto-clear the message once the window expires
+      setTimeout(() => setRateLimitError(null), retryInMs);
+      return;
+    }
+
+    setRateLimitError(null);
     setIsLoading(true);
     setShowResults(false);
 
@@ -550,6 +598,25 @@ export const TagGenerator: React.FC = () => {
                   </S.HeaderSearchButton>
                 </S.HeaderSearchBar>
               </S.HeaderSearchContainer>
+
+              {/* Rate limit warning */}
+              {rateLimitError && (
+                <div style={{
+                  marginTop: '0.75rem',
+                  padding: '0.6rem 1rem',
+                  background: 'rgba(185, 28, 28, 0.15)',
+                  border: '1px solid rgba(185, 28, 28, 0.4)',
+                  borderRadius: '8px',
+                  color: '#fca5a5',
+                  fontSize: '0.875rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}>
+                  <i className="bx bx-time-five" style={{ flexShrink: 0 }}></i>
+                  {rateLimitError}
+                </div>
+              )}
 
               {/* Toggle Buttons in Header */}
               <S.ControlsContainer>

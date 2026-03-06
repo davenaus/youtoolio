@@ -37,6 +37,13 @@ const YouTubeThumbnailGuide = lazy(() => import('../pages/Company/BlogPosts').th
 const YouTubeMonetization2025 = lazy(() => import('../pages/Company/BlogPosts').then(m => ({ default: m.YouTubeMonetization2025 })));
 const YouTubeContentStrategy = lazy(() => import('../pages/Company/BlogPosts').then(m => ({ default: m.YouTubeContentStrategy })));
 const YouTubeGrowthHacks = lazy(() => import('../pages/Company/BlogPosts').then(m => ({ default: m.YouTubeGrowthHacks })));
+const YouTubeNicheResearch = lazy(() => import('../pages/Company/BlogPosts').then(m => ({ default: m.YouTubeNicheResearch })));
+const YouTubeSubscriberTactics = lazy(() => import('../pages/Company/BlogPosts').then(m => ({ default: m.YouTubeSubscriberTactics })));
+const YouTubeCommentStrategy = lazy(() => import('../pages/Company/BlogPosts').then(m => ({ default: m.YouTubeCommentStrategy })));
+const YouTubeCompetitorAnalysis = lazy(() => import('../pages/Company/BlogPosts').then(m => ({ default: m.YouTubeCompetitorAnalysis })));
+const YouTubePlaylistStrategy = lazy(() => import('../pages/Company/BlogPosts').then(m => ({ default: m.YouTubePlaylistStrategy })));
+const YouTubeChannelArtGuide = lazy(() => import('../pages/Company/BlogPosts').then(m => ({ default: m.YouTubeChannelArtGuide })));
+const YouTubeGiveawayGuide = lazy(() => import('../pages/Company/BlogPosts').then(m => ({ default: m.YouTubeGiveawayGuide })));
 
 // Tool components - lazy loaded (HUGE performance win)
 const OutlierFinder = lazy(() => import('../pages/Tools/components/OutlierFinder/OutlierFinder').then(m => ({ default: m.OutlierFinder })));
@@ -101,6 +108,13 @@ export const AppRoutes: React.FC = () => {
         <Route path="/blog/youtube-monetization-2025" element={<YouTubeMonetization2025 />} />
         <Route path="/blog/youtube-content-strategy" element={<YouTubeContentStrategy />} />
         <Route path="/blog/youtube-growth-hacks" element={<YouTubeGrowthHacks />} />
+        <Route path="/blog/youtube-niche-research" element={<YouTubeNicheResearch />} />
+        <Route path="/blog/youtube-subscriber-tactics" element={<YouTubeSubscriberTactics />} />
+        <Route path="/blog/youtube-comment-strategy" element={<YouTubeCommentStrategy />} />
+        <Route path="/blog/youtube-competitor-analysis" element={<YouTubeCompetitorAnalysis />} />
+        <Route path="/blog/youtube-playlist-strategy" element={<YouTubePlaylistStrategy />} />
+        <Route path="/blog/youtube-channel-art-guide" element={<YouTubeChannelArtGuide />} />
+        <Route path="/blog/youtube-giveaway-guide" element={<YouTubeGiveawayGuide />} />
         
         <Route path="/guides" element={<CreatorGuides />} />
         <Route path="/help" element={<HelpCenter />} />
