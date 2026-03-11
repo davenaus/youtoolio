@@ -452,7 +452,7 @@ export const Partnerships: React.FC = () => {
             Tell us about your vision, how you serve creators, and what kind of collaboration you're 
             interested in.
           </p>
-          <ContactButton onClick={() => window.open('mailto:youtool.io.business@gmail.com?subject=Partnership Opportunity')}>
+          <ContactButton onClick={() => navigate('/contact')}>
             <i className="bx bx-envelope"></i>
             Start the Conversation
           </ContactButton>

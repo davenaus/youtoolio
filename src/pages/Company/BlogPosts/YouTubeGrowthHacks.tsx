@@ -37,9 +37,9 @@ export const YouTubeGrowthHacks: React.FC = () => {
           <p>
             "Growth hacks" get a bad reputation because most of them are low-quality shortcuts.
             The 15 tactics in this guide are different — they're specific, actionable strategies
-            with documented results across diverse niches. None require paid promotion. All of them
-            compound over time. Apply three or four seriously and you'll see measurable results
-            within 60 days.
+            with documented application across diverse niches. None require paid promotion. All of them
+            compound over time. Apply three or four consistently and many creators notice meaningful
+            progress — though results depend on your niche, starting point, and publishing frequency.
           </p>
 
           <ToolCallout
@@ -269,8 +269,8 @@ export const YouTubeGrowthHacks: React.FC = () => {
             <i className="bx bx-rocket"></i>
             <div>
               <p><strong>Where to start:</strong> Tactics 1, 2, 3, and 6 have the highest impact
-              and require no tools or significant time investment. Apply those four consistently for
-              60 days before adding more.</p>
+              and require no tools or significant time investment. Apply those four consistently
+              before layering in additional tactics.</p>
             </div>
           </KeyTakeaway>
 

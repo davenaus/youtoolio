@@ -252,15 +252,7 @@ export const Careers: React.FC = () => {
 
 
         <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-          <p style={{ color: '#9CA3AF', marginBottom: '1rem' }}>
-            Even if we don't have open positions, we'd love to hear from passionate people 
-            who want to help creators succeed.
-          </p>
-          
-          <ContactButton onClick={() => window.open('mailto:youtool.io.business@gmail.com?subject=Future Career Opportunities')}>
-            <i className="bx bx-envelope"></i>
-            Stay in Touch
-          </ContactButton>
+  
         </div>
       </ContentWrapper>
     </Container>

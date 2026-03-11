@@ -507,8 +507,7 @@ export const DataUsageDisclosure: React.FC = () => {
             For specific questions about our data usage or to exercise your rights:
           </p>
           <ul>
-            <li><strong>Data Protection Email:</strong> youtool.io.business@gmail.com</li>
-            <li><strong>General Contact:</strong> youtool.io.business@gmail.com</li>
+            <li><strong>Contact:</strong> <a href="/contact">Contact Page</a></li>
             <li><strong>Website:</strong> <a href="https://youtool.io">https://youtool.io</a></li>
           </ul>
 

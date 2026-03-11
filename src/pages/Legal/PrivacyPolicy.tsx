@@ -287,7 +287,7 @@ export const PrivacyPolicy: React.FC = () => {
             If you have any questions about this Privacy Policy or our data practices, please contact us at:
           </p>
           <ul>
-            <li><strong>Email:</strong> youtool.io.business@gmail.com</li>
+            <li><strong>Contact:</strong> <a href="/contact">Contact Page</a></li>
             <li><strong>Website:</strong> <a href="https://youtool.io">https://youtool.io</a></li>
           </ul>
 

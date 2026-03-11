@@ -242,6 +242,29 @@ export const Changelog: React.FC = () => {
 
   const changelogEntries = [
     {
+      version: "v1.3.0",
+      title: "Site-Wide Polish & Content Improvements",
+      date: "March 10, 2026",
+      description: "A focused polish update improving consistency across the site — better tool layouts, unified navigation, and updated blog content.",
+      changes: {
+        new: [],
+        improved: [
+          "All Tools - Educational content and related resources now consistently appear below the tool interface across every tool page for a more natural use flow",
+          "All Tools - Google Ad placement standardised — now appears between the tool UI and educational content on every tool page",
+          "Site-Wide - All contact and support links throughout the site now navigate to the Contact page instead of opening an email client",
+          "Help Center, Changelog, Press Kit, Partnerships - Support buttons all route to the Contact page",
+          "About Page - 'Get in Touch' and 'Contact Austin' buttons now go to the Contact page",
+          "Blog: YouTube Monetization 2025 - CPM and sponsorship figures now clearly labelled as industry estimates with context on how widely actual results can vary",
+          "Blog: YouTube Growth Hacks - Intro and summary updated to reflect that results depend on niche, consistency, and starting point"
+        ],
+        fixed: [
+          "Moderation Checker - Header text was incorrectly centre-aligned; now left-aligned to match all other tool pages",
+          "Moderation Checker - Analysis container and educational section max-width restored after a styling regression",
+          "Legal Pages (Privacy Policy, Terms of Service, Cookie Policy, Data Usage) - Contact information section now links to the Contact page"
+        ]
+      }
+    },
+    {
       version: "v1.2.0",
       title: "Enhanced User Experience & Tool Improvements",
       date: "January 13, 2026",
@@ -454,7 +477,7 @@ export const Changelog: React.FC = () => {
               cursor: 'pointer',
               fontWeight: '600'
             }}
-            onClick={() => window.open('mailto:youtool.io.business@gmail.com?subject=Feature Request')}
+            onClick={() => navigate('/contact')}
           >
             <i className="bx bx-bulb" style={{ marginRight: '0.5rem' }}></i>
             Suggest a Feature

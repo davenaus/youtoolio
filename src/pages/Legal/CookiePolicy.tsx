@@ -388,7 +388,7 @@ export const CookiePolicy: React.FC = () => {
             If you have questions about our use of cookies or this policy:
           </p>
           <ul>
-            <li><strong>Email:</strong> youtool.io.business@gmail.com</li>
+            <li><strong>Contact:</strong> <a href="/contact">Contact Page</a></li>
             <li><strong>Website:</strong> <a href="https://youtool.io">https://youtool.io</a></li>
           </ul>
         </Content>

@@ -293,7 +293,7 @@ const faqData = [
         },
         {
           question: 'The tool shows an error message. What should I do?',
-          answer: 'Most errors are temporary and resolve quickly. Try refreshing the page or waiting a few minutes before trying again. If you continue experiencing issues, please contact us at youtool.io.business@gmail.com with details about the error and the URL you were trying to analyze.'
+          answer: 'Most errors are temporary and resolve quickly. Try refreshing the page or waiting a few minutes before trying again. If you continue experiencing issues, please visit our contact page with details about the error and the URL you were trying to analyze.'
         },
         {
           question: 'Do your tools work on mobile devices?',
@@ -381,10 +381,10 @@ const faqData = [
         <ContactSection>
           <h3>Still Need Help?</h3>
           <p>
-            Can't find what you're looking for? Our team is here to help! 
-            Send us an email and we'll get back to you as soon as possible.
+            Can't find what you're looking for? Our team is here to help!
+            Reach out and we'll get back to you as soon as possible.
           </p>
-          <ContactButton onClick={() => window.open('mailto:youtool.io.business@gmail.com?subject=Help Center Support Request')}>
+          <ContactButton onClick={() => navigate('/contact')}>
             <i className="bx bx-envelope"></i>
             Contact Support
           </ContactButton>

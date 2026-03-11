@@ -65,6 +65,9 @@ export const YouTubeMonetization2025: React.FC = () => {
               <div className="desc">Large audiences but lower ad rates — sponsorships offset AdSense</div>
             </StatCard>
           </StatGrid>
+          <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '-0.5rem', marginBottom: '1.5rem' }}>
+            <em>These are estimated CPM ranges based on industry data and creator reports. Actual earnings vary widely depending on audience geography, content type, advertiser competition, and seasonality. No specific earnings are guaranteed.</em>
+          </p>
 
           <h2>The YouTube Partner Program (YPP) — Your Foundation</h2>
 
@@ -133,10 +136,11 @@ export const YouTubeMonetization2025: React.FC = () => {
           <h2>Sponsorships and Brand Deals</h2>
 
           <p>
-            Brand sponsorships are typically the highest-revenue stream for mid-sized channels
-            (10K–500K subscribers). Industry rates vary, but a common benchmark is $20–$40 per
-            1,000 views for an integrated mention, and $50–$100 per 1,000 views for a dedicated
-            video. Niche and audience demographics affect rates significantly.
+            Brand sponsorships can be a significant revenue stream for mid-sized channels
+            (10K–500K subscribers). Rates vary widely, but industry estimates generally fall
+            around $20–$40 per 1,000 views for an integrated mention, and $50–$100 per 1,000
+            views for a dedicated video. Niche, audience demographics, and engagement rates all
+            affect what you can realistically negotiate.
           </p>
 
           <TableWrapper>
@@ -145,7 +149,7 @@ export const YouTubeMonetization2025: React.FC = () => {
                 <tr>
                   <th>Placement Type</th>
                   <th>Duration</th>
-                  <th>Typical Rate per 1K Views</th>
+                  <th>Estimated Rate per 1K Views</th>
                   <th>Notes</th>
                 </tr>
               </thead>
@@ -204,10 +208,10 @@ export const YouTubeMonetization2025: React.FC = () => {
           <h2>Courses and Digital Products</h2>
           <p>
             Selling your own digital products — courses, ebooks, templates, presets, Notion
-            dashboards — is the highest-margin revenue stream available. A 10,000-subscriber
-            channel in the right niche can generate more revenue from a $197 course than a
-            1,000,000-subscriber channel earns from AdSense. The requirement: an engaged,
-            trust-rich audience who sees you as an authority.
+            dashboards — tends to be one of the highest-margin revenue streams available to creators.
+            Channels with smaller but highly engaged audiences in focused niches can sometimes
+            out-earn much larger channels through digital products alone. The key requirement:
+            an audience that trusts you as an authority and has a clear problem your product solves.
           </p>
 
           <TipBox>

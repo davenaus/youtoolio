@@ -356,7 +356,7 @@ export const PressKit: React.FC = () => {
             please reach out to our team. We're happy to provide additional information, 
             quotes, or arrange interviews.
           </p>
-          <ContactButton onClick={() => window.open('mailto:youtool.io.business@gmail.com?subject=Press Inquiry')}>
+          <ContactButton onClick={() => navigate('/contact')}>
             <i className="bx bx-envelope"></i>
             Contact Press Team
           </ContactButton>

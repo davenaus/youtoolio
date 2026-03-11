@@ -433,7 +433,7 @@ export const AboutUs: React.FC = () => {
                   YouTube Channel
                 </FounderLink>
                 <FounderLink
-                  href="mailto:youtool.io.business@gmail.com"
+                  href="/contact"
                 >
                   <i className="bx bx-envelope"></i>
                   Get in Touch
@@ -565,9 +565,9 @@ export const AboutUs: React.FC = () => {
             content strategy and channel growth process.
           </p>
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-            <ContactButton href="mailto:youtool.io.business@gmail.com?subject=Hello from a Fellow Creator">
+            <ContactButton href="/contact">
               <i className="bx bx-envelope"></i>
-              Email Austin
+              Contact Austin
             </ContactButton>
             <ContactButton
               href="https://www.youtube.com/@AustinDavenport"

@@ -475,7 +475,7 @@ export const Contact: React.FC = () => {
     } catch (err) {
       console.error('Formspark submit error:', err);
       setSubmitError(
-        "Something went wrong sending your message. Please try again, or email us directly at youtool.io.business@gmail.com."
+        "Something went wrong sending your message. Please refresh the page and try again."
       );
     } finally {
       setLoading(false);

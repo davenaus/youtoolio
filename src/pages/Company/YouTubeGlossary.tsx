@@ -483,21 +483,21 @@ export const YouTubeGlossary: React.FC = () => {
           </div>
         )}
 
-        <div style={{ 
-          background: '#374151', 
-          borderRadius: '12px', 
-          padding: '2rem', 
-          textAlign: 'center', 
+        <div style={{
+          background: '#1A1A1D',
+          borderRadius: '12px',
+          padding: '2rem',
+          textAlign: 'center',
           marginTop: '3rem',
-          border: '1px solid #4B5563'
+          border: '1px solid #2D2D32'
         }}>
-          <h3 style={{ color: '#F3F4F6', marginBottom: '1rem' }}>Need More Help?</h3>
+          <h3 style={{ color: '#F8F9FA', marginBottom: '1rem' }}>Need More Help?</h3>
           <p style={{ color: '#9CA3AF', marginBottom: '1.5rem' }}>
-            Explore our comprehensive guides and tutorials in the Education Center, or check out 
+            Explore our comprehensive guides and tutorials in the Education Center, or check out
             our blog for detailed explanations of YouTube strategies and best practices.
           </p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button 
+            <button
               style={{
                 background: 'linear-gradient(135deg, #DC2626, #B91C1C)',
                 color: 'white',
@@ -512,11 +512,11 @@ export const YouTubeGlossary: React.FC = () => {
               <i className="bx bx-book" style={{ marginRight: '0.5rem' }}></i>
               Education Center
             </button>
-            <button 
+            <button
               style={{
-                background: '#6B7280',
-                color: 'white',
-                border: 'none',
+                background: '#242428',
+                color: '#F8F9FA',
+                border: '1px solid #2D2D32',
                 padding: '0.75rem 1.5rem',
                 borderRadius: '8px',
                 cursor: 'pointer',
