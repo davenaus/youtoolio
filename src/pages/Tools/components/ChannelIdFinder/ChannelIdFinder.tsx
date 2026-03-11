@@ -396,9 +396,6 @@ export const ChannelIdFinder: React.FC = () => {
           </S.HeaderContent>
         </S.EnhancedHeader>
 
-        {/* Google Ad Spot */}
-        <GoogleAd adSlot="1234567890" />
-
         {/* Error Message */}
         {error && (
           <S.ErrorMessage>
@@ -421,6 +418,9 @@ export const ChannelIdFinder: React.FC = () => {
             </S.HistoryList>
           </S.HistorySection>
         )}
+
+        {/* Google Ad Spot */}
+        <GoogleAd adSlot="1234567890" />
 
         {/* Educational Content Section */}
         {!showResults && !isSearching && (

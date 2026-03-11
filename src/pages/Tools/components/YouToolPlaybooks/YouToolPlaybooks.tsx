@@ -107,9 +107,6 @@ const YouToolPlaybooks: React.FC = () => {
         </HeaderContent>
       </EnhancedHeader>
 
-      {/* Google Ad Spot */}
-      <GoogleAd adSlot="1234567890" />
-
       {/* Category Filters */}
       <FiltersContainer>
         {categories.map((category) => (
@@ -146,6 +143,9 @@ const YouToolPlaybooks: React.FC = () => {
           </FilterButton>
         </EmptyState>
       )}
+
+      {/* Google Ad Spot */}
+      <GoogleAd adSlot="1234567890" />
 
       {/* Educational Content */}
       <EducationalSection>

@@ -437,9 +437,6 @@ export const SubscribeLinkGenerator: React.FC = () => {
           </S.HeaderContent>
         </S.EnhancedHeader>
 
-        {/* Google Ad Spot */}
-        <GoogleAd adSlot="1234567890" />
-
         {searchHistory.length > 0 && !channelInfo && (
           <S.HistorySection>
             <S.HistoryLabel>Recent channels:</S.HistoryLabel>
@@ -453,6 +450,9 @@ export const SubscribeLinkGenerator: React.FC = () => {
             </S.HistoryList>
           </S.HistorySection>
         )}
+
+        {/* Google Ad Spot */}
+        <GoogleAd adSlot="1234567890" />
 
         {/* Educational Content Section */}
         {!channelInfo && !isLoading && (

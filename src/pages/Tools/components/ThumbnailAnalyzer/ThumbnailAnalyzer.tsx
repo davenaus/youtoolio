@@ -796,9 +796,6 @@ export const ThumbnailAnalyzer: React.FC = () => {
               </S.HeaderContent>
             </S.EnhancedHeader>
 
-            {/* Google Ad Spot */}
-            <GoogleAd adSlot="1234567890" />
-
             {error && (
               <S.ErrorMessage>
                 <i className="bx bx-error-circle"></i>
@@ -808,6 +805,7 @@ export const ThumbnailAnalyzer: React.FC = () => {
 
             {/* Upload Section */}
             {currentStep === 'upload' && (
+              <>
               <S.UploadSection>
                 <S.DropZone
                   onDrop={handleDrop}
@@ -849,8 +847,13 @@ export const ThumbnailAnalyzer: React.FC = () => {
                   </S.ActionButtons>
                 )}
 
-                {/* Educational Content */}
-                <S.EducationalSection>
+              </S.UploadSection>
+
+              {/* Google Ad Spot */}
+              <GoogleAd adSlot="1234567890" />
+
+              {/* Educational Content */}
+              <S.EducationalSection>
                   <S.SectionTitle>What This Tool Analyzes</S.SectionTitle>
                   <S.FeatureGrid>
                     <S.FeatureCard>
@@ -944,7 +947,7 @@ export const ThumbnailAnalyzer: React.FC = () => {
                   </S.EduContent>
 
                 </S.EducationalSection>
-              </S.UploadSection>
+              </>
             )}
 
             {/* Analyzing Section */}

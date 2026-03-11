@@ -447,10 +447,35 @@ export const ThumbnailDownloader: React.FC = () => {
             </S.HeaderContent>
           </S.EnhancedHeader>
 
+          {renderStepIndicator()}
+
+          {/* Step 1: URL Input */}
+          {currentStep === 'input' && (
+            <S.InputSection>
+
+
+
+              {downloadHistory.length > 0 && (
+                <S.HistorySection>
+                  <S.HistoryTitle>Recent downloads:</S.HistoryTitle>
+                  <S.HistoryList>
+                    {downloadHistory.slice(0, 5).map((item, index) => (
+                      <S.HistoryItem key={index} onClick={() => window.open(item.url, '_blank')}>
+                        <S.HistoryThumbnail src={item.url} alt={item.title} />
+                        <S.HistoryInfo>
+                          <S.HistoryItemTitle>{item.title}</S.HistoryItemTitle>
+                          <S.HistoryDate>{formatDate(item.downloadedAt)}</S.HistoryDate>
+                        </S.HistoryInfo>
+                      </S.HistoryItem>
+                    ))}
+                  </S.HistoryList>
+                </S.HistorySection>
+              )}
+            </S.InputSection>
+          )}
+
           {/* Google Ad Spot */}
           <GoogleAd adSlot="1234567890" />
-
-          {renderStepIndicator()}
 
           {/* Educational Content Section */}
           {currentStep === 'input' && (
@@ -598,31 +623,6 @@ export const ThumbnailDownloader: React.FC = () => {
               </S.EducationalContent>
 
             </S.EducationalSection>
-          )}
-
-          {/* Step 1: URL Input */}
-          {currentStep === 'input' && (
-            <S.InputSection>
-
-
-
-              {downloadHistory.length > 0 && (
-                <S.HistorySection>
-                  <S.HistoryTitle>Recent downloads:</S.HistoryTitle>
-                  <S.HistoryList>
-                    {downloadHistory.slice(0, 5).map((item, index) => (
-                      <S.HistoryItem key={index} onClick={() => window.open(item.url, '_blank')}>
-                        <S.HistoryThumbnail src={item.url} alt={item.title} />
-                        <S.HistoryInfo>
-                          <S.HistoryItemTitle>{item.title}</S.HistoryItemTitle>
-                          <S.HistoryDate>{formatDate(item.downloadedAt)}</S.HistoryDate>
-                        </S.HistoryInfo>
-                      </S.HistoryItem>
-                    ))}
-                  </S.HistoryList>
-                </S.HistorySection>
-              )}
-            </S.InputSection>
           )}
 
           {/* Step 2: Preview */}

@@ -281,9 +281,6 @@ const ColorPickerFromImage: React.FC = () => {
           </S.HeaderContent>
         </S.EnhancedHeader>
 
-        {/* Google Ad Spot */}
-        <GoogleAd adSlot="1234567890" />
-
         {/* Upload Section */}
         {!imagePreview && (
           <S.UploadSection>
@@ -336,6 +333,8 @@ const ColorPickerFromImage: React.FC = () => {
           </S.UploadSection>
         )}
 
+        {/* Google Ad Spot */}
+        <GoogleAd adSlot="1234567890" />
 
         {/* Educational Content Section */}
         {!imagePreview && (

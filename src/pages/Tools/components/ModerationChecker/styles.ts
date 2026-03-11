@@ -13,7 +13,7 @@ const fadeIn = keyframes`
 `;
 
 export const EducationalSection = styled.div`
-  margin-bottom: 3rem;
+  margin: 0 auto 3rem auto;
   animation: ${fadeIn} 0.8s ease-out;
 `;
 
@@ -181,7 +181,6 @@ export const MainContainer = styled.div`
 
 export const Header = styled.div`
   margin-bottom: 3rem;
-  text-align: center;
 `;
 
 export const BackButton = styled.button`
@@ -237,7 +236,6 @@ export const Subtitle = styled.p`
 `;
 
 export const AnalysisContainer = styled.div`
-  max-width: 800px;
   margin: 0 auto 3rem auto;
 `;
 

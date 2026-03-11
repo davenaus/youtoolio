@@ -498,6 +498,53 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
           </S.HeaderContent>
         </S.EnhancedHeader>
 
+        {/* Step 1: Upload */}
+        {!imagePreview && (
+          <S.UploadSection>
+            <S.StepIndicator>
+              <S.StepNumber>1</S.StepNumber>
+              <S.StepTitle>Upload Your Image</S.StepTitle>
+            </S.StepIndicator>
+
+            <S.UploadContainer
+              $isDragging={isDragging}
+              onDragEnter={handleDragIn}
+              onDragLeave={handleDragOut}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+            >
+              <S.UploadContent>
+                <S.UploadIcon className="bx bx-cloud-upload"></S.UploadIcon>
+                <S.UploadTitle>
+                  {isDragging ? 'Drop your image here!' : 'Choose or Drop an Image'}
+                </S.UploadTitle>
+                <S.UploadText>
+                  Upload any image to extract its color palette
+                </S.UploadText>
+
+                <S.UploadActions>
+                  <S.UploadButton onClick={handleChooseFile}>
+                    <i className="bx bx-image-add"></i>
+                    Choose Image
+                  </S.UploadButton>
+                  <S.UploadHint>or drag and drop</S.UploadHint>
+                </S.UploadActions>
+
+                <S.SupportedFormats>
+                  Supports: JPG, PNG, GIF, WebP, BMP
+                </S.SupportedFormats>
+              </S.UploadContent>
+            </S.UploadContainer>
+
+            <S.FileInput
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileInputChange}
+            />
+          </S.UploadSection>
+        )}
+
         {/* Google Ad Spot */}
         <GoogleAd adSlot="1234567890" />
 
@@ -608,55 +655,6 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 
           </S.EducationalSection>
         )}
-
-        {/* Step 1: Upload */}
-        {!imagePreview && (
-          <S.UploadSection>
-            <S.StepIndicator>
-              <S.StepNumber>1</S.StepNumber>
-              <S.StepTitle>Upload Your Image</S.StepTitle>
-            </S.StepIndicator>
-            
-            <S.UploadContainer
-              $isDragging={isDragging}
-              onDragEnter={handleDragIn}
-              onDragLeave={handleDragOut}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-            >
-              <S.UploadContent>
-                <S.UploadIcon className="bx bx-cloud-upload"></S.UploadIcon>
-                <S.UploadTitle>
-                  {isDragging ? 'Drop your image here!' : 'Choose or Drop an Image'}
-                </S.UploadTitle>
-                <S.UploadText>
-                  Upload any image to extract its color palette
-                </S.UploadText>
-                
-                <S.UploadActions>
-                  <S.UploadButton onClick={handleChooseFile}>
-                    <i className="bx bx-image-add"></i>
-                    Choose Image
-                  </S.UploadButton>
-                  <S.UploadHint>or drag and drop</S.UploadHint>
-                </S.UploadActions>
-                
-                <S.SupportedFormats>
-                  Supports: JPG, PNG, GIF, WebP, BMP
-                </S.SupportedFormats>
-              </S.UploadContent>
-            </S.UploadContainer>
-            
-            <S.FileInput
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileInputChange}
-            />
-          </S.UploadSection>
-        )}
-
-        
 
         {/* Step 2: Processing */}
         {imagePreview && isLoading && (

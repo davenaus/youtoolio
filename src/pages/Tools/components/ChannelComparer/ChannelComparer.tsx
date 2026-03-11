@@ -493,9 +493,6 @@ export const ChannelComparer: React.FC = () => {
           </S.HeaderContent>
         </S.EnhancedHeader>
 
-        {/* Google Ad Spot */}
-        <GoogleAd adSlot="1234567890" />
-
         <S.InputContainer>
           <S.InputGroup>
             <S.InputLabel>Channel 1</S.InputLabel>
@@ -530,6 +527,9 @@ export const ChannelComparer: React.FC = () => {
           )}
           {isLoading ? 'Analyzing...' : 'Compare Channels'}
         </S.CompareButton>
+
+        {/* Google Ad Spot */}
+        <GoogleAd adSlot="1234567890" />
 
         {/* Educational Content Section */}
         {!showResults && !isLoading && (

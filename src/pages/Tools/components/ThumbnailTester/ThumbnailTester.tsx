@@ -712,12 +712,114 @@ export const ThumbnailTester: React.FC = () => {
           </S.HeaderContent>
         </S.EnhancedHeader>
 
-        {/* Google Ad Spot */}
-        <GoogleAd adSlot="1234567890" />
+
 
         {renderStepIndicator()}
 
-        {/* Educational Content - shown before tool use */}
+        {/* Step 1: Upload Section */}
+        {currentStep === 'input' && (
+          <S.InputSection>
+
+            {/* New side-by-side layout */}
+            <S.UploadAndFormWrapper>
+              {/* Left side - Thumbnail upload */}
+              <S.UploadArea>
+                <S.UploadSectionLabel>
+                  <i className="bx bx-image"></i>
+                  Thumbnail Image
+                </S.UploadSectionLabel>
+                <S.ThumbnailUpload
+                  onClick={() => document.getElementById('thumbnail-input')?.click()}
+                  onDrop={handleThumbnailDrop}
+                  onDragOver={handleThumbnailDragOver}
+                >
+                  {thumbnailUrl ? (
+                    <S.UploadedImage src={thumbnailUrl} alt="Uploaded thumbnail" />
+                  ) : (
+                    <S.UploadPlaceholder>
+                      <i className="bx bx-image-add"></i>
+                      <div>Drop your thumbnail here</div>
+                      <span>or click to browse • PNG, JPG, or WebP (max 50MB)</span>
+                    </S.UploadPlaceholder>
+                  )}
+                </S.ThumbnailUpload>
+
+                <input
+                  id="thumbnail-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleThumbnailUpload}
+                  style={{ display: 'none' }}
+                />
+              </S.UploadArea>
+
+              {/* Right side - Title and Channel inputs */}
+              <S.MainFormInputs>
+                <S.InputGroup>
+                  <S.InputLabel>Video Title</S.InputLabel>
+                  <S.TextInput
+                    value={title}
+                    onChange={handleTitleChange}
+                    placeholder="Enter your video title to see how it looks"
+                  />
+                </S.InputGroup>
+
+                <S.InputGroup>
+                  <S.InputLabel>Channel Name</S.InputLabel>
+                  <S.TextInput
+                    value={channelName}
+                    onChange={handleChannelNameChange}
+                    placeholder="Your channel name"
+                  />
+                </S.InputGroup>
+              </S.MainFormInputs>
+            </S.UploadAndFormWrapper>
+
+            {/* Profile picture section stays below as a separate section */}
+            <S.FormSection>
+              <S.OptionalTitle>
+                <i className="bx bx-user"></i>
+                Profile Picture (Optional)
+              </S.OptionalTitle>
+              <S.ProfileUpload
+                onClick={() => document.getElementById('profile-input')?.click()}
+                onDrop={handleProfileDrop}
+                onDragOver={handleProfileDragOver}
+              >
+                {profileUrl ? (
+                  <S.ProfilePreview src={profileUrl} alt="Profile" />
+                ) : (
+                  <S.ProfilePlaceholder>
+                    <i className="bx bx-user-plus"></i>
+                    <span>Drop or click to add profile picture</span>
+                  </S.ProfilePlaceholder>
+                )}
+              </S.ProfileUpload>
+
+              <input
+                id="profile-input"
+                type="file"
+                accept="image/*"
+                onChange={handleProfileUpload}
+                style={{ display: 'none' }}
+              />
+            </S.FormSection>
+
+            {thumbnailUrl && (
+              <S.ActionButtons>
+                <S.PrimaryButton onClick={() => setCurrentStep('preview')}>
+                  <i className="bx bx-right-arrow-alt"></i>
+                  Preview Layouts
+                </S.PrimaryButton>
+              </S.ActionButtons>
+            )}
+          </S.InputSection>
+        )}
+
+                {/* Google Ad Spot */}
+        <GoogleAd adSlot="1234567890" />
+
+        {/* Educational Content - shown below input */}
         {currentStep === 'input' && (
           <S.EducationalSection>
 
@@ -823,106 +925,6 @@ export const ThumbnailTester: React.FC = () => {
             </S.EducationalContent>
 
           </S.EducationalSection>
-        )}
-
-        {/* Step 1: Upload Section */}
-        {currentStep === 'input' && (
-          <S.InputSection>
-
-            {/* New side-by-side layout */}
-            <S.UploadAndFormWrapper>
-              {/* Left side - Thumbnail upload */}
-              <S.UploadArea>
-                <S.UploadSectionLabel>
-                  <i className="bx bx-image"></i>
-                  Thumbnail Image
-                </S.UploadSectionLabel>
-                <S.ThumbnailUpload
-                  onClick={() => document.getElementById('thumbnail-input')?.click()}
-                  onDrop={handleThumbnailDrop}
-                  onDragOver={handleThumbnailDragOver}
-                >
-                  {thumbnailUrl ? (
-                    <S.UploadedImage src={thumbnailUrl} alt="Uploaded thumbnail" />
-                  ) : (
-                    <S.UploadPlaceholder>
-                      <i className="bx bx-image-add"></i>
-                      <div>Drop your thumbnail here</div>
-                      <span>or click to browse • PNG, JPG, or WebP (max 50MB)</span>
-                    </S.UploadPlaceholder>
-                  )}
-                </S.ThumbnailUpload>
-
-                <input
-                  id="thumbnail-input"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleThumbnailUpload}
-                  style={{ display: 'none' }}
-                />
-              </S.UploadArea>
-
-              {/* Right side - Title and Channel inputs */}
-              <S.MainFormInputs>
-                <S.InputGroup>
-                  <S.InputLabel>Video Title</S.InputLabel>
-                  <S.TextInput
-                    value={title}
-                    onChange={handleTitleChange}
-                    placeholder="Enter your video title to see how it looks"
-                  />
-                </S.InputGroup>
-
-                <S.InputGroup>
-                  <S.InputLabel>Channel Name</S.InputLabel>
-                  <S.TextInput
-                    value={channelName}
-                    onChange={handleChannelNameChange}
-                    placeholder="Your channel name"
-                  />
-                </S.InputGroup>
-              </S.MainFormInputs>
-            </S.UploadAndFormWrapper>
-
-            {/* Profile picture section stays below as a separate section */}
-            <S.FormSection>
-              <S.OptionalTitle>
-                <i className="bx bx-user"></i>
-                Profile Picture (Optional)
-              </S.OptionalTitle>
-              <S.ProfileUpload
-                onClick={() => document.getElementById('profile-input')?.click()}
-                onDrop={handleProfileDrop}
-                onDragOver={handleProfileDragOver}
-              >
-                {profileUrl ? (
-                  <S.ProfilePreview src={profileUrl} alt="Profile" />
-                ) : (
-                  <S.ProfilePlaceholder>
-                    <i className="bx bx-user-plus"></i>
-                    <span>Drop or click to add profile picture</span>
-                  </S.ProfilePlaceholder>
-                )}
-              </S.ProfileUpload>
-
-              <input
-                id="profile-input"
-                type="file"
-                accept="image/*"
-                onChange={handleProfileUpload}
-                style={{ display: 'none' }}
-              />
-            </S.FormSection>
-
-            {thumbnailUrl && (
-              <S.ActionButtons>
-                <S.PrimaryButton onClick={() => setCurrentStep('preview')}>
-                  <i className="bx bx-right-arrow-alt"></i>
-                  Preview Layouts
-                </S.PrimaryButton>
-              </S.ActionButtons>
-            )}
-          </S.InputSection>
         )}
 
         {/* Step 2: Preview Section */}

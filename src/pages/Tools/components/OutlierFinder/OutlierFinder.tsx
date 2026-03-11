@@ -474,9 +474,6 @@ export const OutlierFinder: React.FC = () => {
           </S.HeaderContent>
         </S.EnhancedHeader>
 
-        {/* Google Ad Spot */}
-        <GoogleAd adSlot="1234567890" />
-
         {showFilters && (
           <S.FiltersContainer>
             <S.FilterGrid>
@@ -567,6 +564,9 @@ export const OutlierFinder: React.FC = () => {
             </S.HistoryTags>
           </S.SearchHistory>
         )}
+
+        {/* Google Ad Spot */}
+        <GoogleAd adSlot="1234567890" />
 
         {/* Educational Content Section */}
         {!showResults && (
