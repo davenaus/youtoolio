@@ -7,9 +7,6 @@ import { Home } from '../pages/Home/Home';
 import { Tools } from '../pages/Tools/Tools';
 import { NotFound } from '../pages/NotFound/NotFound';
 
-// Lazy load everything else to reduce initial bundle size
-const LinkInBioLanding = lazy(() => import('../pages/LinkInBioLanding/LinkInBioLanding').then(m => ({ default: m.LinkInBioLanding })));
-
 // Legal Pages - lazy loaded
 const PrivacyPolicy = lazy(() => import('../pages/Legal').then(m => ({ default: m.PrivacyPolicy })));
 const TermsOfService = lazy(() => import('../pages/Legal').then(m => ({ default: m.TermsOfService })));
@@ -126,9 +123,6 @@ export const AppRoutes: React.FC = () => {
         <Route path="/changelog" element={<Changelog />} />
         <Route path="/education" element={<YouTubeEducationCenter />} />
         <Route path="/glossary" element={<YouTubeGlossary />} />
-        
-        {/* Link in Bio Landing Page */}
-        <Route path="/link-in-bio-page-maker" element={<LinkInBioLanding />} />
         
         {/* Tool Routes */}
         <Route path="/tools/outlier-finder" element={<OutlierFinder />} />
