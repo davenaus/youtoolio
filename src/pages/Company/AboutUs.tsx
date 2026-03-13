@@ -475,11 +475,6 @@ export const AboutUs: React.FC = () => {
               <p>Just paste your YouTube URL and get results. No sign-up, no login, no email required.</p>
             </BeliefCard>
             <BeliefCard>
-              <i className="bx bx-lock"></i>
-              <h4>Privacy-Focused</h4>
-              <p>We use the public YouTube Data API. We do not store your channel data or personal information.</p>
-            </BeliefCard>
-            <BeliefCard>
               <i className="bx bx-cog"></i>
               <h4>Creator-First Design</h4>
               <p>Built from real creator frustrations, not theoretical features. Every tool solves a specific problem.</p>
