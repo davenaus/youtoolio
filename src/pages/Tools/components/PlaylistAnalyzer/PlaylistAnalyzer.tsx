@@ -643,8 +643,12 @@ export const PlaylistAnalyzer: React.FC = () => {
       placeholder="Enter YouTube playlist URL for analysis"
       onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
     />
-    <S.HeaderSearchButton onClick={handleSearch} aria-label="Search">
-      <i className="bx bx-search" />
+    <S.HeaderSearchButton onClick={handleSearch} disabled={isLoading} aria-label="Search">
+      {isLoading ? (
+        <i className="bx bx-loader-alt bx-spin" />
+      ) : (
+        <i className="bx bx-search" />
+      )}
     </S.HeaderSearchButton>
   </S.HeaderSearchBar>
 </S.HeaderSearchContainer>

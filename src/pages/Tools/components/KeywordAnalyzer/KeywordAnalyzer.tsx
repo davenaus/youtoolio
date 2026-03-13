@@ -181,94 +181,72 @@ export const KeywordAnalyzer: React.FC = () => {
     }
 
     try {
-      // Enhanced search queries for better relevance
-      const searchQueries = [
-        searchTerm,
-        `"${searchTerm}"`, // Exact phrase match
-        `${searchTerm} tutorial`,
-        `${searchTerm} guide`,
-        `how to ${searchTerm}`,
-        `${searchTerm} tips`,
-        `${searchTerm} review`
-      ];
-
-      let allVideos: YouTubeVideo[] = [];
-
-      for (const query of searchQueries) {
-        try {
-          const searchResponse = await fetch(
-            `https://www.googleapis.com/youtube/v3/search?` +
-            `part=snippet&type=video&q=${encodeURIComponent(query)}&` +
-            `maxResults=25&order=relevance&key=${API_KEY}&publishedAfter=${new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()}`
-          );
-
-          if (!searchResponse.ok) continue;
-
-          const searchData = await searchResponse.json();
-
-          if (searchData.items && searchData.items.length > 0) {
-            const videoIds = searchData.items.map((item: any) => item.id.videoId).join(',');
-
-            const statsResponse = await fetch(
-              `https://www.googleapis.com/youtube/v3/videos?` +
-              `part=statistics,contentDetails,snippet&id=${videoIds}&key=${API_KEY}`
-            );
-
-            if (!statsResponse.ok) continue;
-
-            const statsData = await statsResponse.json();
-
-            const videos: YouTubeVideo[] = searchData.items.map((searchItem: any) => {
-              const statsItem = statsData.items.find((stat: any) => stat.id === searchItem.id.videoId);
-
-              const video: YouTubeVideo = {
-                id: searchItem.id.videoId,
-                title: searchItem.snippet.title,
-                description: searchItem.snippet.description || '',
-                thumbnail: searchItem.snippet.thumbnails.medium?.url || searchItem.snippet.thumbnails.default.url,
-                views: parseInt(statsItem?.statistics?.viewCount || '0'),
-                likes: parseInt(statsItem?.statistics?.likeCount || '0'),
-                publishedAt: searchItem.snippet.publishedAt,
-                channelTitle: searchItem.snippet.channelTitle,
-                channelId: searchItem.snippet.channelId,
-                duration: statsItem?.contentDetails?.duration || 'PT0S',
-                tags: statsItem?.snippet?.tags || []
-              };
-
-              // Calculate relevance score
-              video.relevanceScore = calculateRelevanceScore(video, searchTerm);
-
-              return video;
-            }).filter((video: YouTubeVideo) => {
-              // Enhanced filtering criteria
-              const duration = parseDuration(video.duration);
-              return video.views >= 1000 && // Minimum 1K views
-                video.relevanceScore! >= 20 && // Minimum relevance score
-                video.title.length > 10 && // Avoid spam titles
-                duration >= 60 && // Exclude Shorts (must be 60+ seconds)
-                !video.title.toLowerCase().includes('live stream') && // Exclude live streams
-                !video.title.toLowerCase().includes('compilation'); // Exclude compilations
-            });
-
-            allVideos = [...allVideos, ...videos];
-          }
-        } catch (queryError) {
-          console.warn(`Error with query "${query}":`, queryError);
-          continue;
-        }
-      }
-
-      // Remove duplicates and sort by relevance score combined with performance
-      const uniqueVideos = allVideos.filter((video, index, self) =>
-        index === self.findIndex(v => v.id === video.id)
+      // Single optimized search call — preserves API quota (was 7 calls = 700 units, now 1 = 100 units)
+      const searchResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?` +
+        `part=snippet&type=video&q=${encodeURIComponent(searchTerm)}&` +
+        `maxResults=50&order=relevance&key=${API_KEY}&publishedAfter=${new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()}`
       );
 
-      // Enhanced sorting algorithm: combine relevance and performance
-      return uniqueVideos.sort((a, b) => {
+      if (!searchResponse.ok) {
+        const errData = await searchResponse.json().catch(() => ({}));
+        throw new Error(errData?.error?.message || 'YouTube API request failed');
+      }
+
+      const searchData = await searchResponse.json();
+
+      if (!searchData.items || searchData.items.length === 0) {
+        throw new Error('No videos found for this keyword');
+      }
+
+      const videoIds = searchData.items.map((item: any) => item.id.videoId).join(',');
+
+      const statsResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?` +
+        `part=statistics,contentDetails,snippet&id=${videoIds}&key=${API_KEY}`
+      );
+
+      if (!statsResponse.ok) {
+        throw new Error('Failed to fetch video details');
+      }
+
+      const statsData = await statsResponse.json();
+
+      const allVideos: YouTubeVideo[] = searchData.items.map((searchItem: any) => {
+        const statsItem = statsData.items?.find((stat: any) => stat.id === searchItem.id.videoId);
+
+        const video: YouTubeVideo = {
+          id: searchItem.id.videoId,
+          title: searchItem.snippet.title,
+          description: searchItem.snippet.description || '',
+          thumbnail: searchItem.snippet.thumbnails.medium?.url || searchItem.snippet.thumbnails.default.url,
+          views: parseInt(statsItem?.statistics?.viewCount || '0'),
+          likes: parseInt(statsItem?.statistics?.likeCount || '0'),
+          publishedAt: searchItem.snippet.publishedAt,
+          channelTitle: searchItem.snippet.channelTitle,
+          channelId: searchItem.snippet.channelId,
+          duration: statsItem?.contentDetails?.duration || 'PT0S',
+          tags: statsItem?.snippet?.tags || []
+        };
+
+        video.relevanceScore = calculateRelevanceScore(video, searchTerm);
+        return video;
+      }).filter((video: YouTubeVideo) => {
+        const duration = parseDuration(video.duration);
+        return video.views >= 1000 &&
+          video.relevanceScore! >= 20 &&
+          video.title.length > 10 &&
+          duration >= 60 &&
+          !video.title.toLowerCase().includes('live stream') &&
+          !video.title.toLowerCase().includes('compilation');
+      });
+
+      // Sort by combined relevance + performance score
+      return allVideos.sort((a, b) => {
         const scoreA = (a.relevanceScore || 0) * 0.6 + Math.log10(a.views + 1) * 0.4;
         const scoreB = (b.relevanceScore || 0) * 0.6 + Math.log10(b.views + 1) * 0.4;
         return scoreB - scoreA;
-      }).slice(0, 80); // Take top 80 most relevant videos
+      }).slice(0, 80);
 
     } catch (error) {
       console.error('YouTube API Error:', error);
@@ -637,7 +615,12 @@ export const KeywordAnalyzer: React.FC = () => {
       setShowResults(true);
     } catch (error) {
       console.error('Error analyzing keyword:', error);
-      setError(error instanceof Error ? error.message : 'Failed to analyze keyword. Please try again.');
+      const msg = error instanceof Error ? error.message : '';
+      if (msg.toLowerCase().includes('quota')) {
+        setError('The Keyword Analyzer is on cooldown — try again tomorrow.');
+      } else {
+        setError(msg || 'Failed to analyze keyword. Please try again.');
+      }
     } finally {
       setIsAnalyzing(false);
     }
