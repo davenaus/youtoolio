@@ -58,6 +58,7 @@ export interface ChannelVideo {
   commentCount: number;
   duration?: number;
   isShort?: boolean;
+  tags?: string[];
 }
 
 export class AnalyticsCalculator {
@@ -136,13 +137,19 @@ export class AnalyticsCalculator {
       };
     }
 
+    // Use only last 12 months to avoid skew from unlisted/old content
+    const oneYearAgo = moment().subtract(1, 'year');
+    const recentVideos = targetVideos.filter(v => moment(v.publishedAt).isAfter(oneYearAgo));
+    const videosToCount = recentVideos.length > 0 ? recentVideos : targetVideos;
+    const periodDays = recentVideos.length > 0 ? 365 : moment().diff(moment(this.channelData.snippet.publishedAt), 'days');
     const channelAge = moment().diff(moment(this.channelData.snippet.publishedAt), 'days');
-    const postsPerWeek = (targetVideos.length / Math.max(channelAge / 7, 1));
+
+    const postsPerWeek = (videosToCount.length / Math.max(periodDays / 7, 1));
     const postsPerMonth = postsPerWeek * 4.33;
-    
+
     let frequency = '';
     let details = [];
-    
+
     if (postsPerWeek >= 7) {
       frequency = `${postsPerWeek.toFixed(1)} videos per week (multiple daily)`;
     } else if (postsPerWeek >= 1) {
@@ -154,9 +161,9 @@ export class AnalyticsCalculator {
       frequency = `${postsPerYear.toFixed(1)} videos per year`;
     }
 
-    details.push(`Total ${videoType} videos: ${targetVideos.length}`);
+    details.push(`${videoType} videos in last 12 months: ${videosToCount.length}`);
     details.push(`Channel age: ${Math.floor(channelAge / 365)} years, ${Math.floor((channelAge % 365) / 30)} months`);
-    details.push(`Average time between uploads: ${Math.round(channelAge / targetVideos.length)} days`);
+    details.push(`Average time between uploads: ${Math.round(periodDays / Math.max(videosToCount.length, 1))} days`);
 
     const insights = [];
     if (postsPerWeek > 3) {

@@ -25,6 +25,12 @@ export const EducationalContent = styled.div`
   margin-bottom: 2rem;
   margin-top: 2rem;
   line-height: 1.7;
+
+  @media (max-width: 768px) {
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    margin-top: 1.5rem;
+  }
 `;
 
 export const SectionSubTitle = styled.h2`
@@ -88,6 +94,11 @@ export const StepByStep = styled.div`
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   padding: 2rem;
   margin: 2rem 0;
+
+  @media (max-width: 768px) {
+    padding: 1.25rem 1rem;
+    margin: 1.25rem 0;
+  }
 `;
 
 export const StepItem = styled.div`
@@ -237,7 +248,8 @@ export const EnhancedHeader = styled.div<{ backgroundImage: string }>`
   }
   
   @media (max-width: 768px) {
-    padding: 2rem 1.5rem;
+    padding: 1.5rem 1.25rem;
+    margin-bottom: 2rem;
   }
 `;
 
@@ -321,9 +333,10 @@ export const ToolTitle = styled.h1`
   color: ${({ theme }) => theme.colors.text.primary};
   margin: 0 0 1rem 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  
+
   @media (max-width: 768px) {
-    font-size: 2rem;
+    font-size: 1.75rem;
+    margin-bottom: 0.75rem;
   }
 `;
 
@@ -333,9 +346,10 @@ export const ToolDescription = styled.p`
   line-height: 1.6;
   margin: 0 0 1.5rem 0;
   opacity: 0.95;
-  
+
   @media (max-width: 768px) {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
   }
 `;
 
@@ -440,6 +454,10 @@ export const LoadingContainer = styled.div`
   padding: 3rem;
   text-align: center;
   margin-bottom: 2rem;
+
+  @media (max-width: 768px) {
+    padding: 2rem 1.25rem;
+  }
 `;
 
 export const LoadingAnimation = styled.div`
@@ -518,10 +536,19 @@ export const SectionTitle = styled.h2`
   font-size: 2rem;
   font-weight: 600;
   margin: 0 0 1rem 0;
-  
+
   i {
     color: ${({ theme }) => theme.colors.red3};
     font-size: 1.75rem;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 1.35rem;
+    gap: 0.5rem;
+
+    i {
+      font-size: 1.25rem;
+    }
   }
 `;
 
@@ -575,7 +602,8 @@ export const PremiumOverviewSection = styled.div`
   }
   
   @media (max-width: 768px) {
-    border-radius: 20px;
+    border-radius: 16px;
+    margin-bottom: 2rem;
   }
 `;
 
@@ -588,7 +616,7 @@ export const PremiumOverviewHeader = styled.div`
   );
   
   @media (max-width: 768px) {
-    padding: 1.5rem 2rem 1rem 2rem;
+    padding: 1rem 1rem 0.75rem 1rem;
   }
 `;
 
@@ -596,7 +624,7 @@ export const PremiumOverviewContent = styled.div`
   padding: 2rem 3rem 3rem 3rem;
   
   @media (max-width: 768px) {
-    padding: 1.5rem 2rem 2rem 2rem;
+    padding: 1rem;
   }
 `;
 
@@ -649,6 +677,10 @@ export const TagScoreHeroCard = styled.div`
     background: radial-gradient(circle, ${({ theme }) => theme.colors.red1}15 0%, transparent 70%);
     border-radius: 50%;
     transform: translate(-30%, 30%);
+  }
+
+  @media (max-width: 768px) {
+    padding: 1.5rem 1.25rem;
   }
 `;
 
@@ -788,7 +820,7 @@ export const MetricsCardContainer = styled.div`
 `;
 
 export const PremiumMetricCard = styled.div`
-  background: linear-gradient(135deg, 
+  background: linear-gradient(135deg,
     ${({ theme }) => theme.colors.dark4}85,
     ${({ theme }) => theme.colors.dark5}90
   );
@@ -796,6 +828,11 @@ export const PremiumMetricCard = styled.div`
   border-radius: 16px;
   padding: 1.75rem;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  @media (max-width: 768px) {
+    padding: 1.25rem 1rem;
+    border-radius: 12px;
+  }
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(10px);
@@ -964,14 +1001,15 @@ export const DetailedMetricsGrid = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
   margin-bottom: 3rem;
-  
+
   @media (max-width: 768px) {
     grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
   }
-  
+
   @media (max-width: 480px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 `;
 
@@ -984,6 +1022,10 @@ export const MetricCard = styled.div`
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    padding: 1.25rem 1rem;
+  }
   
   &::before {
     content: '';
@@ -1013,6 +1055,11 @@ export const MetricIcon = styled.i`
   color: ${({ theme }) => theme.colors.red3};
   margin-bottom: 1rem;
   display: block;
+
+  @media (max-width: 768px) {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
 `;
 
 export const DetailedMetricValue = styled.div`
@@ -1033,9 +1080,10 @@ export const ChartSection = styled.div`
   border-radius: ${({ theme }) => theme.borderRadius.xl};
   padding: 2rem;
   margin-bottom: 3rem;
-  
+
   @media (max-width: 768px) {
-    padding: 1.5rem 1rem;
+    padding: 1.25rem 1rem;
+    margin-bottom: 2rem;
     overflow-x: hidden;
   }
 `;
@@ -1071,11 +1119,6 @@ export const HeatmapContainer = styled.div`
   flex-direction: column;
   gap: 0.5rem;
   width: 100%;
-  
-  @media (max-width: 480px) {
-    transform: scale(0.7);
-    margin-bottom: -60px;
-  }
 `;
 
 export const HourLabels = styled.div`
@@ -1144,7 +1187,32 @@ export const HeatmapCell = styled.div<{ color: string }>`
   background: ${props => props.color};
   border-radius: 2px;
   transition: opacity 0.2s ease;
-  
+  position: relative;
+  cursor: default;
+
+  &:hover {
+    opacity: 0.85;
+    z-index: 10;
+  }
+
+  &[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a1a;
+    color: #e5e5e5;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    padding: 5px 8px;
+    border-radius: 4px;
+    border: 1px solid #444;
+    pointer-events: none;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  }
+
   @media (max-width: 768px) {
     width: 12px;
     height: 12px;
@@ -1270,6 +1338,11 @@ export const UploadInsightsSection = styled.div`
   border-radius: ${({ theme }) => theme.borderRadius.xl};
   padding: 2rem;
   margin-bottom: 3rem;
+
+  @media (max-width: 768px) {
+    padding: 1.25rem 1rem;
+    margin-bottom: 2rem;
+  }
 `;
 
 export const UploadInsightsList = styled.div`
@@ -1283,6 +1356,10 @@ export const InsightCard = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.dark5};
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   padding: 1.5rem;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 `;
 
 export const InsightTitle = styled.h4`
@@ -1317,10 +1394,11 @@ export const AnalysisGrid = styled.div`
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
   margin-bottom: 3rem;
-  
+
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1rem;
+    margin-bottom: 2rem;
   }
 `;
 
@@ -1329,6 +1407,10 @@ export const AnalysisCard = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.dark5};
   border-radius: ${({ theme }) => theme.borderRadius.xl};
   padding: 2rem;
+
+  @media (max-width: 768px) {
+    padding: 1.25rem 1rem;
+  }
 `;
 
 export const CardTitle = styled.h3`
@@ -1339,10 +1421,19 @@ export const CardTitle = styled.h3`
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0 0 1.5rem 0;
-  
+
   i {
     color: ${({ theme }) => theme.colors.red3};
     font-size: 1.5rem;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 1.05rem;
+    margin-bottom: 1rem;
+
+    i {
+      font-size: 1.2rem;
+    }
   }
 `;
 
@@ -1434,59 +1525,64 @@ export const TopVideosSection = styled.div`
   border-radius: ${({ theme }) => theme.borderRadius.xl};
   padding: 2rem;
   margin-bottom: 3rem;
+
+  @media (max-width: 768px) {
+    padding: 1.25rem 1rem;
+    margin-bottom: 2rem;
+  }
 `;
 
 export const VideosList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
 `;
 
 export const VideoCard = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   background: ${({ theme }) => theme.colors.dark4};
   border: 1px solid ${({ theme }) => theme.colors.dark5};
-  border-radius: ${({ theme }) => theme.borderRadius.lg};
-  padding: 1rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  padding: 0.6rem 0.75rem;
   transition: all 0.2s ease;
-  
+
   &:hover {
     background: ${({ theme }) => theme.colors.dark5};
     border-color: ${({ theme }) => theme.colors.red3};
   }
-  
+
   @media (max-width: 768px) {
-    flex-direction: column;
-    text-align: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.65rem;
   }
 `;
 
 export const VideoRank = styled.div`
   background: ${({ theme }) => theme.colors.red3};
   color: ${({ theme }) => theme.colors.white};
-  width: 32px;
-  height: 32px;
+  width: 22px;
+  height: 22px;
   border-radius: ${({ theme }) => theme.borderRadius.full};
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.7rem;
   flex-shrink: 0;
 `;
 
 export const VideoThumbnail = styled.img`
-  width: 120px;
-  height: 68px;
-  border-radius: ${({ theme }) => theme.borderRadius.md};
+  width: 80px;
+  height: 45px;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
   object-fit: cover;
   flex-shrink: 0;
-  
+
   @media (max-width: 768px) {
-    width: 160px;
-    height: 90px;
+    width: 70px;
+    height: 39px;
   }
 `;
 
@@ -1497,64 +1593,61 @@ export const VideoInfo = styled.div`
 
 export const VideoTitle = styled.h4`
   color: ${({ theme }) => theme.colors.text.primary};
-  font-size: 1rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.2rem 0;
   line-height: 1.3;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 `;
 
 export const VideoChannel = styled.div`
   color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  margin-bottom: 0.2rem;
 `;
 
 export const VideoMeta = styled.div`
   display: flex;
-  gap: 1rem;
+  gap: 0.6rem;
   flex-wrap: wrap;
-  
-  @media (max-width: 768px) {
-    justify-content: center;
-  }
 `;
 
 export const VideoMetaItem = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.2rem;
   color: ${({ theme }) => theme.colors.text.muted};
-  font-size: 0.85rem;
-  
+  font-size: 0.72rem;
+
   i {
     color: ${({ theme }) => theme.colors.red3};
+    font-size: 0.7rem;
   }
 `;
 
 export const VideoAction = styled.a`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
   background: ${({ theme }) => theme.colors.red3};
   color: ${({ theme }) => theme.colors.white};
-  padding: 0.75rem 1rem;
-  border-radius: ${({ theme }) => theme.borderRadius.md};
+  width: 30px;
+  height: 30px;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
   text-decoration: none;
-  font-weight: 500;
   transition: all 0.2s ease;
   flex-shrink: 0;
-  
+
   &:hover {
     background: ${({ theme }) => theme.colors.red2};
     transform: translateY(-1px);
   }
-  
+
   i {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
   }
 `;
 
@@ -1564,6 +1657,11 @@ export const RecommendationsSection = styled.div`
   border-radius: ${({ theme }) => theme.borderRadius.xl};
   padding: 2rem;
   margin-bottom: 3rem;
+
+  @media (max-width: 768px) {
+    padding: 1.25rem 1rem;
+    margin-bottom: 2rem;
+  }
 `;
 
 export const RecommendationsList = styled.div`
@@ -1573,6 +1671,7 @@ export const RecommendationsList = styled.div`
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
+    gap: 0.5rem;
   }
 `;
 
@@ -1642,6 +1741,10 @@ export const RecommendationCard = styled.div<{ rating: string }>`
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   }
+
+  @media (max-width: 768px) {
+    padding: 0.75rem 0.875rem;
+  }
 `;
 
 export const RecommendationHeader = styled.div`
@@ -1650,6 +1753,12 @@ export const RecommendationHeader = styled.div`
   align-items: flex-start;
   margin-bottom: 0.75rem;
   gap: 1rem;
+
+  @media (max-width: 768px) {
+    margin-bottom: 0.4rem;
+    gap: 0.5rem;
+    align-items: center;
+  }
 `;
 
 export const RecommendationMetric = styled.h4`
@@ -1657,6 +1766,10 @@ export const RecommendationMetric = styled.h4`
   font-size: 1rem;
   font-weight: 600;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 0.875rem;
+  }
 `;
 
 export const RecommendationRating = styled.span<{ rating: string }>`
@@ -1665,6 +1778,7 @@ export const RecommendationRating = styled.span<{ rating: string }>`
   padding: 0.25rem 0.75rem;
   border-radius: 999px;
   white-space: nowrap;
+  flex-shrink: 0;
   background: ${({ rating }) => {
     switch (rating) {
       case 'excellent': return '#4caf5020';
@@ -1683,6 +1797,11 @@ export const RecommendationRating = styled.span<{ rating: string }>`
       default: return '#2196f3';
     }
   }};
+
+  @media (max-width: 768px) {
+    font-size: 0.72rem;
+    padding: 0.15rem 0.5rem;
+  }
 `;
 
 export const RecommendationValue = styled.div`
@@ -1690,6 +1809,11 @@ export const RecommendationValue = styled.div`
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+  }
 `;
 
 export const RecommendationAction = styled.p`
@@ -1697,6 +1821,11 @@ export const RecommendationAction = styled.p`
   font-size: 0.9rem;
   line-height: 1.5;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
 `;
 
 export const BottomAdContainer = styled.div`

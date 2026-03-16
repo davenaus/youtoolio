@@ -931,6 +931,118 @@ export const AIButton = styled.button<{ color: string }>`
   }
 `;
 
+// Results redesign components
+export const ResultsStatsStrip = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+
+  @media (max-width: 480px) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+`;
+
+export const ResultsStatTile = styled.div`
+  background: ${({ theme }) => theme.colors.dark4};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 0.75rem 1rem;
+  text-align: center;
+`;
+
+export const ResultsStatValue = styled.div`
+  color: ${({ theme }) => theme.colors.red5};
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.2;
+
+  @media (max-width: 480px) {
+    font-size: 1.1rem;
+  }
+`;
+
+export const ResultsStatLabel = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.75rem;
+  margin-top: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+`;
+
+export const DownloadButtonInner = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+`;
+
+export const DownloadButtonSub = styled.span`
+  font-size: 0.72rem;
+  opacity: 0.65;
+  font-weight: 400;
+`;
+
+export const CommentRank = styled.div`
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.red5};
+  background: rgba(229, 72, 72, 0.12);
+  border: 1px solid rgba(229, 72, 72, 0.25);
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  padding: 0.1rem 0.45rem;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 0.15rem;
+`;
+
+export const CommentAvatar = styled.div<{ initial: string }>`
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.colors.red3};
+  color: ${({ theme }) => theme.colors.white};
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+`;
+
+export const CommentBody = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+export const CommentMeta = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+  gap: 0.5rem;
+`;
+
+export const CommentLikesPill = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(229, 72, 72, 0.1);
+  border: 1px solid rgba(229, 72, 72, 0.2);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.red5};
+  flex-shrink: 0;
+
+  i {
+    font-size: 0.8rem;
+    color: ${({ theme }) => theme.colors.red5};
+  }
+`;
+
 export const BottomAdContainer = styled.div`
   margin: 2rem 0;
   text-align: center;

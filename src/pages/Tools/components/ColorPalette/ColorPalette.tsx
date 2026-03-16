@@ -5,13 +5,6 @@ import { GoogleAd } from '../../../../components/GoogleAd';
 import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
-interface Color {
-  hex: string;
-  r: number;
-  g: number;
-  b: number;
-  count: number;
-}
 
 const ColorPaletteComponent: React.FC = () => {
   const navigate = useNavigate();
@@ -34,7 +27,6 @@ const ColorPaletteComponent: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [gradientSeed, setGradientSeed] = useState(1);
   const [copyFeedback, setCopyFeedback] = useState<string>('');
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [previewColor, setPreviewColor] = useState<string>();
@@ -42,7 +34,6 @@ const ColorPaletteComponent: React.FC = () => {
 
   // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const gradientCanvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pickerCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -55,135 +46,89 @@ const ColorPaletteComponent: React.FC = () => {
     return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
   };
 
-  const calculateColorDistance = (r1: number, g1: number, b1: number, r2: number, g2: number, b2: number): number => {
-    const rmean = (r1 + r2) / 2;
-    const dr = r1 - r2;
-    const dg = g1 - g2;
-    const db = b1 - b2;
-    return Math.sqrt(
-      (2 + rmean/256) * dr**2 +
-      4 * dg**2 +
-      (2 + (255-rmean)/256) * db**2
-    );
+  // Perceptual color distance (weighted RGB approximation)
+  const colorDist = (a: number[], b: number[]): number => {
+    const dr = a[0] - b[0], dg = a[1] - b[1], db = a[2] - b[2];
+    const rmean = (a[0] + b[0]) / 2;
+    return (2 + rmean / 256) * dr * dr + 4 * dg * dg + (2 + (255 - rmean) / 256) * db * db;
   };
 
+  // K-means clustering with k-means++ initialization for accurate palette extraction
   const extractColors = (imageData: Uint8ClampedArray): string[] => {
-    const colorBuckets = new Map<string, Color>();
-    const BUCKET_SIZE = 24;
-    
-    for (let i = 0; i < imageData.length; i += 4) {
-      const r = Math.floor(imageData[i] / BUCKET_SIZE) * BUCKET_SIZE;
-      const g = Math.floor(imageData[i + 1] / BUCKET_SIZE) * BUCKET_SIZE;
-      const b = Math.floor(imageData[i + 2] / BUCKET_SIZE) * BUCKET_SIZE;
-      
-      const brightness = (r + g + b) / 3;
-      if (brightness < 20 || brightness > 235) continue;
-      
-      const key = `${r},${g},${b}`;
-      if (!colorBuckets.has(key)) {
-        colorBuckets.set(key, {
-          hex: rgbToHex(imageData[i], imageData[i + 1], imageData[i + 2]),
-          r: imageData[i],
-          g: imageData[i + 1],
-          b: imageData[i + 2],
-          count: 0
-        });
-      }
-      colorBuckets.get(key)!.count++;
-    }
-    
-    const sortedColors = Array.from(colorBuckets.values())
-      .sort((a, b) => b.count - a.count);
-    
-    const distinctColors: Color[] = [];
-    for (const color of sortedColors) {
-      if (distinctColors.length >= 8) break;
-      
-      const isDifferentEnough = distinctColors.every(selected => {
-        const deltaE = calculateColorDistance(
-          color.r, color.g, color.b,
-          selected.r, selected.g, selected.b
-        );
-        return deltaE > 30;
-      });
-      
-      if (isDifferentEnough) {
-        distinctColors.push(color);
-      }
-    }
-    
-    return distinctColors.map(color => color.hex);
-  };
+    const K = 8;
+    const MAX_ITER = 15;
 
-  // Gradient functions
-  const seededRandom = (seed: number) => {
-    return () => {
-      seed = (seed * 16807) % 2147483647;
-      return (seed - 1) / 2147483646;
+    // Sample every 8th pixel for performance
+    const pixels: number[][] = [];
+    for (let i = 0; i < imageData.length; i += 32) {
+      const a = imageData[i + 3];
+      if (a < 128) continue; // skip transparent
+      pixels.push([imageData[i], imageData[i + 1], imageData[i + 2]]);
+    }
+
+    if (pixels.length < K) return pixels.map(p => rgbToHex(p[0], p[1], p[2]));
+
+    // k-means++ initialization (deterministic seed)
+    let seed = 42;
+    const rand = () => {
+      seed = (seed * 1664525 + 1013904223) & 0x7fffffff;
+      return seed / 0x7fffffff;
     };
-  };
 
-  const shuffleArray = (array: string[], seed: number): string[] => {
-    const random = seededRandom(seed);
-    const newArray = [...array];
-    for (let i = newArray.length - 1; i > 0; i--) {
-      const j = Math.floor(random() * (i + 1));
-      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-    }
-    return newArray;
-  };
-
-  const generateGradient = useCallback((currentColors: string[] = extractedColors) => {
-    const validColors = (currentColors || [])
-      .filter((color): color is string => 
-        typeof color === 'string' && 
-        color.startsWith('#') && 
-        color.length === 7
-      );
-
-    if (validColors.length < 2) return;
-
-    const canvas = gradientCanvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const width = canvas.width;
-    const height = canvas.height;
-    
-    ctx.clearRect(0, 0, width, height);
-
-    const shuffledColors = shuffleArray([...validColors], gradientSeed);
-    const angle = 45 * (Math.PI / 180);
-    
-    const gradient = ctx.createLinearGradient(0, 0, width, height);
-    
-    shuffledColors.forEach((color, index) => {
-      if (typeof color === 'string' && color.startsWith('#')) {
-        const position = index / (shuffledColors.length - 1);
-        gradient.addColorStop(position, color);
+    const centroids: number[][] = [[...pixels[Math.floor(rand() * pixels.length)]]];
+    for (let i = 1; i < K; i++) {
+      const dists = pixels.map(p => Math.min(...centroids.map(c => colorDist(p, c))));
+      const total = dists.reduce((s, d) => s + d, 0);
+      let r = rand() * total;
+      let idx = 0;
+      for (let j = 0; j < dists.length; j++) {
+        r -= dists[j];
+        if (r <= 0) { idx = j; break; }
       }
-    });
-    
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
-    
-    const gradientDataUrl = canvas.toDataURL('image/png');
-    
-    requestAnimationFrame(() => {
-      const gradientPreview = document.querySelector<HTMLDivElement>('.gradient-preview');
-      if (gradientPreview) {
-        gradientPreview.style.backgroundImage = `url(${gradientDataUrl})`;
-      }
-    });
-  }, [extractedColors, gradientSeed]);
-
-  React.useEffect(() => {
-    if (extractedColors.length >= 2) {
-      generateGradient();
+      centroids.push([...pixels[idx]]);
     }
-  }, [extractedColors, gradientSeed, generateGradient]);
+
+    // K-means iterations
+    const assignments = new Int32Array(pixels.length);
+    for (let iter = 0; iter < MAX_ITER; iter++) {
+      let changed = false;
+      for (let i = 0; i < pixels.length; i++) {
+        let best = 0, bestDist = Infinity;
+        for (let j = 0; j < K; j++) {
+          const d = colorDist(pixels[i], centroids[j]);
+          if (d < bestDist) { bestDist = d; best = j; }
+        }
+        if (assignments[i] !== best) { assignments[i] = best; changed = true; }
+      }
+      if (!changed) break;
+
+      // Recompute centroids as mean of assigned pixels
+      const sums = Array.from({ length: K }, () => [0, 0, 0]);
+      const counts = new Int32Array(K);
+      for (let i = 0; i < pixels.length; i++) {
+        const j = assignments[i];
+        sums[j][0] += pixels[i][0];
+        sums[j][1] += pixels[i][1];
+        sums[j][2] += pixels[i][2];
+        counts[j]++;
+      }
+      for (let j = 0; j < K; j++) {
+        if (counts[j] > 0) {
+          centroids[j] = [sums[j][0] / counts[j], sums[j][1] / counts[j], sums[j][2] / counts[j]];
+        }
+      }
+    }
+
+    // Sort clusters by size (most dominant color first)
+    const counts = new Int32Array(K);
+    for (let i = 0; i < pixels.length; i++) counts[assignments[i]]++;
+
+    return centroids
+      .map((c, i) => ({ hex: rgbToHex(Math.round(c[0]), Math.round(c[1]), Math.round(c[2])), count: counts[i] }))
+      .filter(c => c.count > 0)
+      .sort((a, b) => b.count - a.count)
+      .map(c => c.hex);
+  };
 
   // Image processing
   const processImage = useCallback((dataUrl: string) => {
@@ -214,10 +159,9 @@ const ColorPaletteComponent: React.FC = () => {
       const colors = extractColors(imageData);
       setExtractedColors(colors);
       setIsLoading(false);
-      generateGradient(colors);
     };
     img.src = dataUrl;
-  }, [generateGradient]);
+  }, []);
 
   // File handling
   const handleFileUpload = (file: File) => {
@@ -241,7 +185,6 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Reset all state when a new image is selected
     setExtractedColors([]);
     setImagePreview('');
-    setGradientSeed(1);
     setCopyFeedback('');
     setShowColorPicker(false);
     setPreviewColor(undefined);
@@ -295,21 +238,42 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX;
-    const y = e.clientY;
-    setMousePos({ x, y });
+    setMousePos({ x: e.clientX, y: e.clientY });
 
-    const scaleX = e.currentTarget.naturalWidth / rect.width;
-    const scaleY = e.currentTarget.naturalHeight / rect.height;
+    const img = e.currentTarget;
+    const rect = img.getBoundingClientRect();
 
-    const pixelX = Math.floor((e.clientX - rect.left) * scaleX);
-    const pixelY = Math.floor((e.clientY - rect.top) * scaleY);
+    // Account for object-fit: contain letterboxing
+    const naturalAspect = img.naturalWidth / img.naturalHeight;
+    const displayAspect = rect.width / rect.height;
+
+    let renderedW: number, renderedH: number, offsetX: number, offsetY: number;
+    if (naturalAspect > displayAspect) {
+      renderedW = rect.width;
+      renderedH = rect.width / naturalAspect;
+      offsetX = 0;
+      offsetY = (rect.height - renderedH) / 2;
+    } else {
+      renderedH = rect.height;
+      renderedW = rect.height * naturalAspect;
+      offsetX = (rect.width - renderedW) / 2;
+      offsetY = 0;
+    }
+
+    const localX = e.clientX - rect.left - offsetX;
+    const localY = e.clientY - rect.top - offsetY;
+
+    if (localX < 0 || localY < 0 || localX > renderedW || localY > renderedH) {
+      setPreviewColor(undefined);
+      return;
+    }
+
+    const pixelX = Math.floor((localX / renderedW) * img.naturalWidth);
+    const pixelY = Math.floor((localY / renderedH) * img.naturalHeight);
 
     try {
       const pixelData = ctx.getImageData(pixelX, pixelY, 1, 1).data;
-      const color = rgbToHex(pixelData[0], pixelData[1], pixelData[2]);
-      setPreviewColor(color);
+      setPreviewColor(rgbToHex(pixelData[0], pixelData[1], pixelData[2]));
     } catch (error) {
       console.error('Error getting pixel data:', error);
     }
@@ -338,9 +302,7 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
   };
 
   const removeColor = (index: number) => {
-    const newColors = extractedColors.filter((_, i) => i !== index);
-    setExtractedColors(newColors);
-    generateGradient(newColors);
+    setExtractedColors(extractedColors.filter((_, i) => i !== index));
   };
 
   const addCustomColor = () => {
@@ -369,7 +331,6 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
   const resetAll = () => {
     setExtractedColors([]);
     setImagePreview('');
-    setGradientSeed(1);
     setCopyFeedback('');
   };
 
@@ -438,21 +399,39 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     document.body.removeChild(link);
   };
 
-  const downloadGradient = () => {
-    if (extractedColors.length < 2) {
-      alert('Please add at least 2 colors to generate a gradient');
-      return;
-    }
-    
-    const canvas = gradientCanvasRef.current;
-    if (!canvas) return;
-
+  const exportCSS = () => {
+    const lines = extractedColors.map((color, i) => `  --color-${i + 1}: ${color};`);
+    const css = `:root {\n${lines.join('\n')}\n}\n`;
+    const blob = new Blob([css], { type: 'text/css' });
     const link = document.createElement('a');
-    link.download = `gradient-${gradientSeed}.png`;
-    link.href = canvas.toDataURL('image/png');
+    link.download = 'palette.css';
+    link.href = URL.createObjectURL(blob);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
+
+  const exportJSON = () => {
+    const json = JSON.stringify(extractedColors, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.download = 'palette.json';
+    link.href = URL.createObjectURL(blob);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
+
+  const copyAllHex = async () => {
+    try {
+      await navigator.clipboard.writeText(extractedColors.join(', '));
+      setCopyFeedback('__all__');
+      setTimeout(() => setCopyFeedback(''), 2000);
+    } catch (error) {
+      console.error('Failed to copy colors:', error);
+    }
   };
 
   const seoConfig = toolsSEO['color-palette'];
@@ -545,7 +524,141 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
           </S.UploadSection>
         )}
 
-        {/* Google Ad Spot */}
+
+
+        {/* Step 2: Processing */}
+        {imagePreview && isLoading && (
+          <S.ProcessingSection>
+            <S.StepIndicator>
+              <S.StepNumber>2</S.StepNumber>
+              <S.StepTitle>Extracting Colors</S.StepTitle>
+            </S.StepIndicator>
+            
+            <S.ImagePreviewCard>
+              <S.ImagePreview src={imagePreview} alt="Uploaded image" />
+              <S.ProcessingOverlay>
+                <S.LoadingSpinner className='bx bx-loader-alt bx-spin'></S.LoadingSpinner>
+                <S.ProcessingText>Analyzing image colors...</S.ProcessingText>
+              </S.ProcessingOverlay>
+            </S.ImagePreviewCard>
+          </S.ProcessingSection>
+        )}
+
+        {/* Step 3: Results */}
+        {extractedColors.length > 0 && !isLoading && (
+          <S.ResultsSection>
+            <S.StepIndicator>
+              <S.StepNumber>3</S.StepNumber>
+              <S.StepTitle>Your Color Palette</S.StepTitle>
+            </S.StepIndicator>
+
+            {/* Image Preview */}
+            <S.ImageResultCard>
+              <S.ImagePreview src={imagePreview} alt="Source image" />
+<S.ImageActions>
+  <S.ActionButton onClick={() => window.location.reload()}>
+    <i className="bx bx-image"></i>
+    Try Different Image
+  </S.ActionButton>
+</S.ImageActions>
+            </S.ImageResultCard>
+
+            {/* Color Palette */}
+            <S.PaletteCard>
+              <S.PaletteHeader>
+                <S.PaletteTitle>
+                  <i className="bx bx-palette"></i>
+                  Extracted Colors ({extractedColors.length})
+                </S.PaletteTitle>
+                <S.PaletteActions>
+                  <S.ActionButton onClick={addCustomColor}>
+                    <i className="bx bx-plus"></i>
+                    {imagePreview ? 'Pick from Image' : 'Add Color'}
+                  </S.ActionButton>
+                  <S.ActionButton onClick={shuffleColors}>
+                    <i className="bx bx-shuffle"></i>
+                    Shuffle
+                  </S.ActionButton>
+                </S.PaletteActions>
+              </S.PaletteHeader>
+              
+              <S.ColorsGrid>
+                {extractedColors.map((color, index) => (
+                  <S.ColorCard 
+                    key={`${color}-${index}`}
+                    $color={color}
+                    onClick={() => copyColor(color)}
+                    title={`Click to copy ${color}`}
+                  >
+                    <S.ColorSwatchPreview $color={color} />
+                    <S.ColorCode>{color}</S.ColorCode>
+                    <S.CopyIndicator $show={copyFeedback === color}>
+                      Copied!
+                    </S.CopyIndicator>
+                    <S.ColorActions>
+                      <S.RemoveButton onClick={(e) => {
+                        e.stopPropagation();
+                        removeColor(index);
+                      }}>
+                        <i className="bx bx-x"></i>
+                      </S.RemoveButton>
+                    </S.ColorActions>
+                  </S.ColorCard>
+                ))}
+              </S.ColorsGrid>
+            </S.PaletteCard>
+
+            {/* Export Actions */}
+            <S.ExportCard>
+              <S.ExportTitle>Export Your Palette</S.ExportTitle>
+              <S.ExportActions>
+                <S.ExportButton onClick={exportPalette}>
+                  <i className="bx bx-image"></i>
+                  <div>
+                    <div>Download PNG</div>
+                    <S.ExportSubtext>High-res swatch card with hex codes</S.ExportSubtext>
+                  </div>
+                </S.ExportButton>
+
+                <S.ExportButton onClick={exportCSS}>
+                  <i className="bx bx-code-alt"></i>
+                  <div>
+                    <div>Download CSS</div>
+                    <S.ExportSubtext>CSS custom properties (--color-1…)</S.ExportSubtext>
+                  </div>
+                </S.ExportButton>
+
+                <S.ExportButton onClick={exportJSON}>
+                  <i className="bx bx-file"></i>
+                  <div>
+                    <div>Download JSON</div>
+                    <S.ExportSubtext>Hex array for design tools &amp; APIs</S.ExportSubtext>
+                  </div>
+                </S.ExportButton>
+
+                <S.ExportButton onClick={copyAllHex}>
+                  <i className={`bx ${copyFeedback === '__all__' ? 'bx-check' : 'bx-copy'}`}></i>
+                  <div>
+                    <div>{copyFeedback === '__all__' ? 'Copied!' : 'Copy All Hex'}</div>
+                    <S.ExportSubtext>All codes as a comma-separated list</S.ExportSubtext>
+                  </div>
+                </S.ExportButton>
+              </S.ExportActions>
+
+              <S.ExportResetRow>
+                <S.ExportButton onClick={resetAll} $variant="secondary">
+                  <i className="bx bx-reset"></i>
+                  <div>
+                    <div>Start Over</div>
+                    <S.ExportSubtext>Upload a new image</S.ExportSubtext>
+                  </div>
+                </S.ExportButton>
+              </S.ExportResetRow>
+            </S.ExportCard>
+          </S.ResultsSection>
+        )}
+
+                {/* Google Ad Spot */}
         <GoogleAd adSlot="1234567890" />
 
         {/* Educational Content */}
@@ -656,165 +769,7 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
           </S.EducationalSection>
         )}
 
-        {/* Step 2: Processing */}
-        {imagePreview && isLoading && (
-          <S.ProcessingSection>
-            <S.StepIndicator>
-              <S.StepNumber>2</S.StepNumber>
-              <S.StepTitle>Extracting Colors</S.StepTitle>
-            </S.StepIndicator>
-            
-            <S.ImagePreviewCard>
-              <S.ImagePreview src={imagePreview} alt="Uploaded image" />
-              <S.ProcessingOverlay>
-                <S.LoadingSpinner className='bx bx-loader-alt bx-spin'></S.LoadingSpinner>
-                <S.ProcessingText>Analyzing image colors...</S.ProcessingText>
-              </S.ProcessingOverlay>
-            </S.ImagePreviewCard>
-          </S.ProcessingSection>
-        )}
-
-        {/* Step 3: Results */}
-        {extractedColors.length > 0 && !isLoading && (
-          <S.ResultsSection>
-            <S.StepIndicator>
-              <S.StepNumber>3</S.StepNumber>
-              <S.StepTitle>Your Color Palette</S.StepTitle>
-            </S.StepIndicator>
-
-            {/* Image Preview */}
-            <S.ImageResultCard>
-              <S.ImagePreview src={imagePreview} alt="Source image" />
-<S.ImageActions>
-  <S.ActionButton onClick={() => window.location.reload()}>
-    <i className="bx bx-image"></i>
-    Try Different Image
-  </S.ActionButton>
-</S.ImageActions>
-            </S.ImageResultCard>
-
-            {/* Color Palette */}
-            <S.PaletteCard>
-              <S.PaletteHeader>
-                <S.PaletteTitle>
-                  <i className="bx bx-palette"></i>
-                  Extracted Colors ({extractedColors.length})
-                </S.PaletteTitle>
-                <S.PaletteActions>
-                  <S.ActionButton onClick={addCustomColor}>
-                    <i className="bx bx-plus"></i>
-                    {imagePreview ? 'Pick from Image' : 'Add Color'}
-                  </S.ActionButton>
-                  <S.ActionButton onClick={shuffleColors}>
-                    <i className="bx bx-shuffle"></i>
-                    Shuffle
-                  </S.ActionButton>
-                </S.PaletteActions>
-              </S.PaletteHeader>
-              
-              <S.ColorsGrid>
-                {extractedColors.map((color, index) => (
-                  <S.ColorCard 
-                    key={`${color}-${index}`}
-                    $color={color}
-                    onClick={() => copyColor(color)}
-                    title={`Click to copy ${color}`}
-                  >
-                    <S.ColorSwatchPreview $color={color} />
-                    <S.ColorCode>{color}</S.ColorCode>
-                    <S.ColorActions>
-                      <S.CopyIndicator $show={copyFeedback === color}>
-                        Copied!
-                      </S.CopyIndicator>
-                      <S.RemoveButton onClick={(e) => {
-                        e.stopPropagation();
-                        removeColor(index);
-                      }}>
-                        <i className="bx bx-x"></i>
-                      </S.RemoveButton>
-                    </S.ColorActions>
-                  </S.ColorCard>
-                ))}
-              </S.ColorsGrid>
-            </S.PaletteCard>
-
-            {/* Gradient Section */}
-            {extractedColors.length >= 2 && (
-              <S.GradientCard>
-                <S.GradientHeader>
-                  <S.GradientTitle>
-                    <i className="bx bx-color-fill"></i>
-                    Generated Gradient
-                  </S.GradientTitle>
-                  <S.GradientControls>
-                    <S.SeedControl>
-                      <S.SeedLabel>Variation:</S.SeedLabel>
-                      <S.SeedInput
-                        type="number"
-                        value={gradientSeed}
-                        onChange={(e) => setGradientSeed(parseInt(e.target.value) || 1)}
-                        min={1}
-                        max={100}
-                      />
-                    </S.SeedControl>
-                  </S.GradientControls>
-                </S.GradientHeader>
-                
-                <S.GradientPreview 
-                  className="gradient-preview"
-                  onClick={downloadGradient}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <canvas
-                    ref={gradientCanvasRef}
-                    width={3840}
-                    height={2160}
-                    style={{ display: 'none' }}
-                  />
-                  <S.GradientDownloadHint>
-                    Download 4K Version
-                  </S.GradientDownloadHint>
-                </S.GradientPreview>
-              </S.GradientCard>
-            )}
-
-            {/* Export Actions */}
-            <S.ExportCard>
-              <S.ExportTitle>Export Your Work</S.ExportTitle>
-              <S.ExportActions>
-                <S.ExportButton onClick={exportPalette}>
-                  <i className="bx bx-download"></i>
-                  <div>
-                    <div>Download Palette</div>
-                    <S.ExportSubtext>High-res PNG with color codes</S.ExportSubtext>
-                  </div>
-                </S.ExportButton>
-                
-                {extractedColors.length >= 2 && (
-                  <S.ExportButton onClick={downloadGradient}>
-                    <i className="bx bx-color-fill"></i>
-                    <div>
-                      <div>Download Gradient</div>
-                      <S.ExportSubtext>4K resolution background</S.ExportSubtext>
-                    </div>
-                  </S.ExportButton>
-                )}
-                
-                <S.ExportButton onClick={resetAll} $variant="secondary">
-                  <i className="bx bx-reset"></i>
-                  <div>
-                    <div>Start Over</div>
-                    <S.ExportSubtext>Upload a new image</S.ExportSubtext>
-                  </div>
-                </S.ExportButton>
-              </S.ExportActions>
-            </S.ExportCard>
-          </S.ResultsSection>
-        )}
-
-        
-
-        {/* Hidden canvas for processing */}
+        {/* Hidden canvases for processing and color picking */}
         <canvas ref={canvasRef} style={{ display: 'none' }} />
         <canvas ref={pickerCanvasRef} style={{ display: 'none' }} />
 
@@ -838,12 +793,12 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
                 <img 
                   src={imagePreview} 
                   alt="Color picker"
-                  style={{ 
-                    width: '100%', 
-                    height: 'auto', 
+                  style={{
+                    width: '100%',
+                    height: 'auto',
                     cursor: 'crosshair',
                     borderRadius: '8px',
-                    maxHeight: '400px',
+                    maxHeight: '600px',
                     objectFit: 'contain'
                   }}
                   onMouseMove={handleImageMouseMove}

@@ -49,6 +49,21 @@ interface TagStats {
   estimatedReach: number;
 }
 
+const decodeHtml = (html: string): string => {
+  const txt = document.createElement('textarea');
+  txt.innerHTML = html;
+  return txt.value;
+};
+
+// Expanded blocklist — prevents generic noise from polluting every category
+const GENERIC_TAGS = new Set([
+  'video', 'youtube', 'new', 'best', 'top', 'like', 'subscribe', 'comment', 'share',
+  'watch', 'channel', 'official', 'vlog', 'viral', 'trending', 'shorts',
+  'funny', 'lol', 'omg', 'wow', 'amazing', 'awesome', 'great', 'good', 'cool',
+  'free', 'online', 'live', 'stream', 'streaming', 'today', 'part', 'full',
+  '2023', '2024', '2025', '2026', 'ft', 'feat', 'vs', 'ep'
+]);
+
 // Rate limit: max 5 queries per 2-minute window, stored per browser in localStorage
 const RATE_LIMIT_KEY = 'tag-generator-rl';
 const RATE_LIMIT_MAX = 5;
@@ -97,6 +112,7 @@ export const TagGenerator: React.FC = () => {
   const [analysisMode, setAnalysisMode] = useState<'basic' | 'advanced'>('advanced');
   const [targetAudience, setTargetAudience] = useState<'general' | 'gaming' | 'education' | 'entertainment' | 'tech'>('general');
   const [rateLimitError, setRateLimitError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // Tool configuration
   const toolConfig = {
@@ -148,6 +164,7 @@ export const TagGenerator: React.FC = () => {
     }
 
     setRateLimitError(null);
+    setApiError(null);
     setIsLoading(true);
     setShowResults(false);
 
@@ -158,7 +175,12 @@ export const TagGenerator: React.FC = () => {
       setShowResults(true);
     } catch (error) {
       console.error('Error generating tags:', error);
-      alert(`Failed to generate tags: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const msg = error instanceof Error ? error.message : '';
+      if (msg.toLowerCase().includes('quota')) {
+        setApiError('The Tag Generator is on cooldown — YouTube API quota exceeded. Try again tomorrow.');
+      } else {
+        setApiError(msg || 'Failed to generate tags. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -166,73 +188,62 @@ export const TagGenerator: React.FC = () => {
 
   const generateAdvancedTags = async (searchTerm: string) => {
     const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
-    if (!API_KEY) {
-      throw new Error('YouTube API key not configured');
-    }
+    if (!API_KEY) throw new Error('YouTube API key not configured');
 
-    // Multiple search strategies for better tag diversity
-    const searchQueries = [
-      searchTerm,
-      `${searchTerm} tutorial`,
-      `${searchTerm} how to`,
-      `${searchTerm} ${new Date().getFullYear()}`,
-      `best ${searchTerm}`
-    ];
-
-    const allTagAnalysis: TagAnalysis[] = [];
-    const processedVideos: VideoDetails[] = [];
-
-    for (const query of searchQueries) {
-      try {
-        // Search for videos
-        const searchResponse = await fetch(
+    // 3 parallel searches: relevance gives broad coverage, viewCount gives tags from
+    // best-performing videos, date gives fresh/trending content. All 50 results each.
+    const orders = ['relevance', 'viewCount', 'date'];
+    const settled = await Promise.allSettled(
+      orders.map(order =>
+        fetch(
           `https://www.googleapis.com/youtube/v3/search?` +
           `key=${API_KEY}&` +
-          `q=${encodeURIComponent(query)}&` +
-          `part=snippet&` +
-          `type=video&` +
-          `maxResults=15&` +
-          `order=relevance&` +
-          `publishedAfter=${new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()}`
-        );
+          `q=${encodeURIComponent(searchTerm)}&` +
+          `part=snippet&type=video&maxResults=50&order=${order}`
+        ).then(r => r.json())
+      )
+    );
 
-        if (!searchResponse.ok) continue;
-        const searchData = await searchResponse.json();
-
-        if (!searchData.items?.length) continue;
-
-        // Get detailed video information
-        const videoIds = searchData.items.map((item: any) => item.id.videoId).join(',');
-        const detailsResponse = await fetch(
-          `https://www.googleapis.com/youtube/v3/videos?` +
-          `key=${API_KEY}&` +
-          `part=snippet,statistics&` +
-          `id=${videoIds}`
-        );
-
-        if (!detailsResponse.ok) continue;
-        const detailsData = await detailsResponse.json();
-
-        detailsData.items.forEach((video: VideoDetails) => {
-          processedVideos.push(video);
-          const videoTags = video.snippet.tags || [];
-
-          videoTags.forEach(tag => {
-            const analysis = analyzeTag(tag, video, searchTerm);
-            if (analysis.score > 0) {
-              allTagAnalysis.push(analysis);
-            }
-          });
-        });
-
-        // Small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 100));
-      } catch (error) {
-        console.warn(`Error processing query "${query}":`, error);
+    // Deduplicate by videoId — same video can appear in multiple orderings
+    const seen = new Set<string>();
+    const allSearchItems: any[] = [];
+    for (const result of settled) {
+      if (result.status === 'fulfilled' && !result.value.error) {
+        for (const item of result.value.items || []) {
+          if (!seen.has(item.id.videoId)) {
+            seen.add(item.id.videoId);
+            allSearchItems.push(item);
+          }
+        }
       }
     }
 
-    return categorizeAndRankTags(allTagAnalysis, processedVideos, searchTerm);
+    if (!allSearchItems.length) throw new Error('No videos found for this topic');
+
+    // Batch-fetch video details (50 IDs per request)
+    const allVideoDetails: VideoDetails[] = [];
+    for (let i = 0; i < allSearchItems.length; i += 50) {
+      const batch = allSearchItems.slice(i, i + 50);
+      const ids = batch.map((v: any) => v.id.videoId).join(',');
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?key=${API_KEY}&part=snippet,statistics&id=${ids}`
+      );
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      allVideoDetails.push(...(data.items || []));
+    }
+
+    // Analyze tags from all unique videos — decode HTML entities in tags
+    const allTagAnalysis: TagAnalysis[] = [];
+    allVideoDetails.forEach(video => {
+      const videoTags = (video.snippet.tags || []).map(decodeHtml);
+      videoTags.forEach(tag => {
+        const analysis = analyzeTag(tag, video, searchTerm);
+        if (analysis.score > 0) allTagAnalysis.push(analysis);
+      });
+    });
+
+    return categorizeAndRankTags(allTagAnalysis, allVideoDetails, searchTerm);
   };
 
   const analyzeTag = (tag: string, video: VideoDetails, searchTerm: string): TagAnalysis => {
@@ -245,9 +256,8 @@ export const TagGenerator: React.FC = () => {
     let score = 0;
     let relevanceScore = 0;
 
-    // Filter out very generic/irrelevant tags
-    const genericTags = ['video', 'youtube', 'new', 'best', 'top', 'like', 'subscribe', 'comment', 'share'];
-    if (genericTags.includes(lowercaseTag)) {
+    // Filter out generic/irrelevant tags using expanded blocklist
+    if (GENERIC_TAGS.has(lowercaseTag)) {
       return { tag, score: 0, frequency: 1, category: 'general', relevanceScore: 0 };
     }
 
@@ -386,19 +396,19 @@ export const TagGenerator: React.FC = () => {
       .filter(tag => tag.tag.length > 2 && tag.tag.length < 50)
       .sort((a, b) => b.score - a.score);
 
-    // Categorize tags
+    // Categorize tags — thresholds scaled for ~150-video pool
     const highPerformance = consolidatedTags
-      .filter(tag => tag.score >= 15 && tag.frequency >= 2)
+      .filter(tag => tag.score >= 20 && tag.frequency >= 3)
       .slice(0, 10)
       .map(tag => tag.tag);
 
     const trending = consolidatedTags
-      .filter(tag => tag.relevanceScore >= 8 && tag.frequency >= 3)
+      .filter(tag => tag.relevanceScore >= 10 && tag.frequency >= 4)
       .slice(0, 15)
       .map(tag => tag.tag);
 
     const niche = consolidatedTags
-      .filter(tag => tag.frequency <= 2 && tag.score >= 8)
+      .filter(tag => tag.frequency <= 3 && tag.score >= 10)
       .slice(0, 20)
       .map(tag => tag.tag);
 
@@ -434,31 +444,42 @@ export const TagGenerator: React.FC = () => {
   };
 
   const generateSuggestedTags = (searchTerm: string, existingTags: TagAnalysis[]): string[] => {
+    const termWords = new Set(searchTerm.toLowerCase().split(' ').filter(w => w.length > 2));
+    const existingSet = new Set(existingTags.map(t => t.tag.toLowerCase()));
+
+    // Extract modifier words that actually appear in top-performing tags for this niche.
+    // This gives data-driven suggestions instead of hardcoded templates.
+    const modifierFreq = new Map<string, number>();
+    existingTags.slice(0, 40).forEach(({ tag }) => {
+      tag.toLowerCase().split(' ').forEach(word => {
+        if (word.length > 3 && !termWords.has(word) && !GENERIC_TAGS.has(word)) {
+          modifierFreq.set(word, (modifierFreq.get(word) || 0) + 1);
+        }
+      });
+    });
+
+    const topModifiers = Array.from(modifierFreq.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([word]) => word);
+
     const suggestions: string[] = [];
-    const currentYear = new Date().getFullYear();
+    topModifiers.forEach(mod => {
+      const fwd = `${searchTerm} ${mod}`;
+      const rev = `${mod} ${searchTerm}`;
+      if (!existingSet.has(fwd.toLowerCase())) suggestions.push(fwd);
+      if (mod.length > 4 && !existingSet.has(rev.toLowerCase())) suggestions.push(rev);
+    });
 
-    // Time-based suggestions
-    suggestions.push(
-      `${searchTerm} ${currentYear}`,
-      `${searchTerm} tutorial`,
-      `${searchTerm} guide`,
-      `how to ${searchTerm}`,
-      `best ${searchTerm}`,
-      `${searchTerm} tips`,
-      `${searchTerm} review`
-    );
-
-    // Audience-based suggestions
+    // Audience-specific suggestions (still useful when set)
     if (targetAudience !== 'general') {
-      suggestions.push(
-        `${searchTerm} for ${targetAudience}`,
-        `${targetAudience} ${searchTerm}`
-      );
+      const audFwd = `${searchTerm} for ${targetAudience}`;
+      const audRev = `${targetAudience} ${searchTerm}`;
+      if (!existingSet.has(audFwd.toLowerCase())) suggestions.push(audFwd);
+      if (!existingSet.has(audRev.toLowerCase())) suggestions.push(audRev);
     }
 
-    return suggestions.filter(tag =>
-      !existingTags.some(existing => existing.tag.toLowerCase() === tag.toLowerCase())
-    );
+    return suggestions;
   };
 
   const getTopCategories = (tags: TagAnalysis[]): string[] => {
@@ -616,6 +637,13 @@ export const TagGenerator: React.FC = () => {
                   <i className="bx bx-time-five" style={{ flexShrink: 0 }}></i>
                   {rateLimitError}
                 </div>
+              )}
+
+              {apiError && (
+                <S.ErrorMessage>
+                  <i className="bx bx-error"></i>
+                  {apiError}
+                </S.ErrorMessage>
               )}
 
               {/* Toggle Buttons in Header */}

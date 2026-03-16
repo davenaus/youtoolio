@@ -1,10 +1,30 @@
 // src/pages/Tools/components/KeywordAnalyzer/KeywordAnalyzer.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { SEO } from '../../../../components/SEO';
 import { GoogleAd } from '../../../../components/GoogleAd';
 import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
+
+const KW_API_KEYS = [
+  process.env.REACT_APP_YOUTUBE_API_KEY_6,  // primary — KeywordAnalyzer dedicated
+  process.env.REACT_APP_YOUTUBE_API_KEY,    // fallback 1
+  process.env.REACT_APP_YOUTUBE_API_KEY_11, // fallback 2
+].filter(Boolean) as string[];
+
+const isKwQuotaError = (status: number, data: any): boolean => {
+  if (status === 403 || status === 429) {
+    const reason = data?.error?.errors?.[0]?.reason || '';
+    return ['quotaExceeded', 'dailyLimitExceeded', 'rateLimitExceeded'].includes(reason);
+  }
+  return false;
+};
+
+const decodeHtml = (html: string): string => {
+  const txt = document.createElement('textarea');
+  txt.innerHTML = html;
+  return txt.value;
+};
 
 interface YouTubeVideo {
   id: string;
@@ -74,6 +94,7 @@ export const KeywordAnalyzer: React.FC = () => {
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const kwKeyIndexRef = useRef(0);
 
   // Tool configuration
   const toolConfig = {
@@ -121,132 +142,144 @@ export const KeywordAnalyzer: React.FC = () => {
 
     // Exact keyword match in title (highest weight)
     if (titleLower.includes(keywordLower)) {
-      score += 40;
+      score += 45;
       // Bonus for keyword at the beginning of title
       if (titleLower.startsWith(keywordLower)) {
-        score += 20;
+        score += 15;
       }
     }
 
-    // Partial keyword matches in title
-    const keywordWords = keywordLower.split(' ');
-    keywordWords.forEach(word => {
-      if (word.length > 2 && titleLower.includes(word)) {
-        score += 10;
-      }
-    });
+    // Partial keyword matches in title (only words not already matched by exact)
+    const keywordWords = keywordLower.split(' ').filter(w => w.length > 2);
+    if (!titleLower.includes(keywordLower)) {
+      keywordWords.forEach(word => {
+        if (titleLower.includes(word)) score += 8;
+      });
+    }
 
     // Keyword in description
     if (descriptionLower.includes(keywordLower)) {
       score += 15;
     }
 
-    // Keyword in tags
+    // Keyword in tags — cap tag contribution to prevent accumulation
+    let tagScore = 0;
     tagsLower.forEach(tag => {
       if (tag.includes(keywordLower)) {
-        score += 15;
+        tagScore += 15;
+      } else {
+        keywordWords.forEach(word => {
+          if (tag.includes(word)) tagScore += 4;
+        });
       }
-      keywordWords.forEach(word => {
-        if (word.length > 2 && tag.includes(word)) {
-          score += 5;
-        }
-      });
     });
-
-    // Performance indicators
-    const engagementRate = video.likes / Math.max(1, video.views);
-    if (engagementRate > 0.01) score += 10; // Good engagement
-    if (engagementRate > 0.03) score += 10; // Excellent engagement
-
-    // View threshold bonus
-    if (video.views > 10000) score += 5;
-    if (video.views > 100000) score += 10;
-    if (video.views > 1000000) score += 15;
-
-    // Recency bonus (within last 6 months)
-    const videoAge = Date.now() - new Date(video.publishedAt).getTime();
-    const sixMonthsInMs = 6 * 30 * 24 * 60 * 60 * 1000;
-    if (videoAge < sixMonthsInMs) {
-      score += 10;
-    }
+    score += Math.min(25, tagScore); // cap at 25 regardless of tag count
 
     return Math.min(100, score);
   };
 
-  const fetchYouTubeData = async (searchTerm: string): Promise<YouTubeVideo[]> => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_6;
-
-    if (!API_KEY) {
-      throw new Error('YouTube API key not configured.');
-    }
+  const fetchYouTubeData = async (searchTerm: string, apiKey: string): Promise<YouTubeVideo[]> => {
+    // Helper: fetch a URL and throw a special error if quota is exceeded
+    const quotaFetch = async (url: string) => {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (isKwQuotaError(res.status, data)) {
+        throw new Error('__QUOTA_EXHAUSTED__');
+      }
+      if (!res.ok) {
+        throw new Error(data?.error?.message || `API Error (${res.status})`);
+      }
+      return data;
+    };
 
     try {
-      // Single optimized search call — preserves API quota (was 7 calls = 700 units, now 1 = 100 units)
-      const searchResponse = await fetch(
+      // Page 1 search — no date filter so all-time results are included
+      const buildSearchUrl = (pageToken?: string) =>
         `https://www.googleapis.com/youtube/v3/search?` +
         `part=snippet&type=video&q=${encodeURIComponent(searchTerm)}&` +
-        `maxResults=50&order=relevance&key=${API_KEY}&publishedAfter=${new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()}`
-      );
+        `maxResults=50&order=relevance&key=${apiKey}` +
+        (pageToken ? `&pageToken=${pageToken}` : '');
 
-      if (!searchResponse.ok) {
-        const errData = await searchResponse.json().catch(() => ({}));
-        throw new Error(errData?.error?.message || 'YouTube API request failed');
-      }
+      const page1Data = await quotaFetch(buildSearchUrl());
 
-      const searchData = await searchResponse.json();
-
-      if (!searchData.items || searchData.items.length === 0) {
+      if (!page1Data.items || page1Data.items.length === 0) {
         throw new Error('No videos found for this keyword');
       }
 
-      const videoIds = searchData.items.map((item: any) => item.id.videoId).join(',');
+      // Page 2 search in parallel with page 1 stats fetch
+      const page2Promise = page1Data.nextPageToken
+        ? quotaFetch(buildSearchUrl(page1Data.nextPageToken)).catch(() => ({ items: [] }))
+        : Promise.resolve({ items: [] });
 
-      const statsResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/videos?` +
-        `part=statistics,contentDetails,snippet&id=${videoIds}&key=${API_KEY}`
+      const page1Ids = page1Data.items.map((item: any) => item.id.videoId).join(',');
+      const stats1Promise = quotaFetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=statistics,contentDetails,snippet&id=${page1Ids}&key=${apiKey}`
       );
 
-      if (!statsResponse.ok) {
-        throw new Error('Failed to fetch video details');
+      const [page2Data, stats1Data] = await Promise.all([page2Promise, stats1Promise]);
+
+      // Page 2 stats (if we got a second page)
+      let stats2Data = { items: [] as any[] };
+      if (page2Data.items?.length > 0) {
+        const page2Ids = page2Data.items.map((item: any) => item.id.videoId).join(',');
+        stats2Data = await quotaFetch(
+          `https://www.googleapis.com/youtube/v3/videos?part=statistics,contentDetails,snippet&id=${page2Ids}&key=${apiKey}`
+        );
       }
 
-      const statsData = await statsResponse.json();
+      // Combine all search items and stats
+      const allSearchItems = [
+        ...(page1Data.items || []),
+        ...(page2Data.items || [])
+      ];
+      const allStatsItems = [
+        ...(stats1Data.items || []),
+        ...(stats2Data.items || [])
+      ];
 
-      const allVideos: YouTubeVideo[] = searchData.items.map((searchItem: any) => {
-        const statsItem = statsData.items?.find((stat: any) => stat.id === searchItem.id.videoId);
+      const seenIds = new Set<string>();
+      const allVideos: YouTubeVideo[] = allSearchItems
+        .filter((searchItem: any) => {
+          if (seenIds.has(searchItem.id.videoId)) return false;
+          seenIds.add(searchItem.id.videoId);
+          return true;
+        })
+        .map((searchItem: any) => {
+          const statsItem = allStatsItems.find((stat: any) => stat.id === searchItem.id.videoId);
 
-        const video: YouTubeVideo = {
-          id: searchItem.id.videoId,
-          title: searchItem.snippet.title,
-          description: searchItem.snippet.description || '',
-          thumbnail: searchItem.snippet.thumbnails.medium?.url || searchItem.snippet.thumbnails.default.url,
-          views: parseInt(statsItem?.statistics?.viewCount || '0'),
-          likes: parseInt(statsItem?.statistics?.likeCount || '0'),
-          publishedAt: searchItem.snippet.publishedAt,
-          channelTitle: searchItem.snippet.channelTitle,
-          channelId: searchItem.snippet.channelId,
-          duration: statsItem?.contentDetails?.duration || 'PT0S',
-          tags: statsItem?.snippet?.tags || []
-        };
+          const video: YouTubeVideo = {
+            id: searchItem.id.videoId,
+            title: decodeHtml(searchItem.snippet.title),
+            description: searchItem.snippet.description || '',
+            thumbnail: searchItem.snippet.thumbnails.medium?.url || searchItem.snippet.thumbnails.default.url,
+            views: parseInt(statsItem?.statistics?.viewCount || '0'),
+            likes: parseInt(statsItem?.statistics?.likeCount || '0'),
+            publishedAt: searchItem.snippet.publishedAt,
+            channelTitle: searchItem.snippet.channelTitle,
+            channelId: searchItem.snippet.channelId,
+            duration: statsItem?.contentDetails?.duration || 'PT0S',
+            tags: statsItem?.snippet?.tags || []
+          };
 
-        video.relevanceScore = calculateRelevanceScore(video, searchTerm);
-        return video;
-      }).filter((video: YouTubeVideo) => {
-        const duration = parseDuration(video.duration);
-        return video.views >= 1000 &&
-          video.relevanceScore! >= 20 &&
-          video.title.length > 10 &&
-          duration >= 60 &&
-          !video.title.toLowerCase().includes('live stream') &&
-          !video.title.toLowerCase().includes('compilation');
-      });
+          video.relevanceScore = calculateRelevanceScore(video, searchTerm);
+          return video;
+        })
+        .filter((video: YouTubeVideo) => {
+          const duration = parseDuration(video.duration);
+          return video.views >= 1000 &&
+            video.relevanceScore! >= 20 &&
+            video.title.length > 10 &&
+            duration >= 60 &&
+            !video.title.toLowerCase().includes('live stream') &&
+            !video.title.toLowerCase().includes('compilation');
+        });
 
-      // Sort by combined relevance + performance score
+      // Sort by combined relevance + performance
       return allVideos.sort((a, b) => {
         const scoreA = (a.relevanceScore || 0) * 0.6 + Math.log10(a.views + 1) * 0.4;
         const scoreB = (b.relevanceScore || 0) * 0.6 + Math.log10(b.views + 1) * 0.4;
         return scoreB - scoreA;
-      }).slice(0, 80);
+      });
 
     } catch (error) {
       console.error('YouTube API Error:', error);
@@ -275,29 +308,34 @@ export const KeywordAnalyzer: React.FC = () => {
   };
 
   const analyzeUploadTimes = (videos: YouTubeVideo[]): UploadTimeData[] => {
-    const timeData: { [key: string]: { count: number; totalViews: number } } = {};
+    const timeData: { [key: string]: { count: number; totalViews: number; totalDaysOld: number } } = {};
 
     videos.forEach(video => {
       const date = new Date(video.publishedAt);
       const day = date.toLocaleDateString('en-US', { weekday: 'long' });
       const hour = date.getHours();
       const key = `${day}-${hour}`;
+      // Age in days — used to normalize views so old viral videos don't skew slot rankings
+      const daysOld = Math.max(1, (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
 
       if (!timeData[key]) {
-        timeData[key] = { count: 0, totalViews: 0 };
+        timeData[key] = { count: 0, totalViews: 0, totalDaysOld: 0 };
       }
 
       timeData[key].count++;
       timeData[key].totalViews += video.views;
+      timeData[key].totalDaysOld += daysOld;
     });
 
     return Object.entries(timeData).map(([key, data]) => {
       const [day, hourStr] = key.split('-');
+      // avgViews = age-normalized views/day so older videos don't dominate rankings
+      const avgViewsPerDay = data.totalViews / Math.max(1, data.totalDaysOld);
       return {
         day,
         hour: parseInt(hourStr),
         count: data.count,
-        avgViews: data.totalViews / data.count
+        avgViews: Math.round(avgViewsPerDay)
       };
     });
   };
@@ -305,72 +343,98 @@ export const KeywordAnalyzer: React.FC = () => {
   const calculateTagScore = (videos: YouTubeVideo[], keyword: string): number => {
     if (videos.length === 0) return 0;
 
-    const totalViews = videos.reduce((sum, video) => sum + video.views, 0);
     const totalLikes = videos.reduce((sum, video) => sum + video.likes, 0);
-    const averageViews = totalViews / videos.length;
+    // Use median views to resist outlier skew (one viral video shouldn't inflate demand)
+    const sortedViews = [...videos].map(v => v.views).sort((a, b) => a - b);
+    const mid = Math.floor(sortedViews.length / 2);
+    const medianViews = sortedViews.length % 2 !== 0
+      ? sortedViews[mid]
+      : (sortedViews[mid - 1] + sortedViews[mid]) / 2;
     const averageLikes = totalLikes / videos.length;
+    const averageViews = medianViews; // alias for downstream thresholds
     const averageRelevance = videos.reduce((sum, video) => sum + (video.relevanceScore || 0), 0) / videos.length;
 
-    // 1. Relevance Quality Factor (0-40 points) - MOST IMPORTANT
-    // Only keywords with high relevance should score well
-    let relevanceFactor = 0;
-    if (averageRelevance >= 70) relevanceFactor = 40;
-    else if (averageRelevance >= 60) relevanceFactor = 32;
-    else if (averageRelevance >= 50) relevanceFactor = 24;
-    else if (averageRelevance >= 40) relevanceFactor = 16;
-    else if (averageRelevance >= 30) relevanceFactor = 8;
-    else relevanceFactor = 0;
+    // 1. Demand Signal (0-30 pts)
+    // Are people consuming this content? Median views proxies search interest.
+    // Capped at 500K — beyond that extra views signal competition more than opportunity.
+    let demandFactor = 0;
+    if (averageViews >= 500000) demandFactor = 30;
+    else if (averageViews >= 200000) demandFactor = 26;
+    else if (averageViews >= 100000) demandFactor = 22;
+    else if (averageViews >= 50000) demandFactor = 17;
+    else if (averageViews >= 20000) demandFactor = 12;
+    else if (averageViews >= 10000) demandFactor = 8;
+    else if (averageViews >= 5000) demandFactor = 4;
+    else demandFactor = 1;
 
-    // 2. Performance Factor (0-30 points) - Based on view count
-    // Realistic YouTube view thresholds
-    let performanceFactor = 0;
-    if (averageViews >= 1000000) performanceFactor = 30;      // 1M+ views = excellent
-    else if (averageViews >= 500000) performanceFactor = 26;   // 500K+ views = very good
-    else if (averageViews >= 100000) performanceFactor = 22;   // 100K+ views = good
-    else if (averageViews >= 50000) performanceFactor = 18;    // 50K+ views = decent
-    else if (averageViews >= 10000) performanceFactor = 12;    // 10K+ views = moderate
-    else if (averageViews >= 5000) performanceFactor = 6;      // 5K+ views = low
-    else performanceFactor = 2;                                 // <5K views = very low
+    // Recency bonus: active recent uploads confirm demand is current
+    const recentVideos = videos.filter(v =>
+      new Date(v.publishedAt) > new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+    );
+    if (recentVideos.length / videos.length > 0.4) demandFactor = Math.min(30, demandFactor + 4);
 
-    // 3. Engagement Quality Factor (0-20 points)
+    // 2. Opportunity / Rankability (0-30 pts) — most important for a creator
+    // Two components:
+    //   a) Channel diversity: results spread across many channels = easier to break in (0-15)
+    //   b) Title gap: keyword not yet in most titles = underutilized, easier to stand out (0-15)
+    const channelCounts: Record<string, number> = {};
+    videos.forEach(v => { channelCounts[v.channelId] = (channelCounts[v.channelId] || 0) + 1; });
+    const uniqueChannels = Object.keys(channelCounts).length;
+    const channelDiversityRatio = uniqueChannels / videos.length; // 1.0 = all different channels
+    const diversityScore = Math.round(channelDiversityRatio * 15);
+
+    const keywordInTitleCount = videos.filter(v =>
+      v.title.toLowerCase().includes(keyword.toLowerCase())
+    ).length;
+    const titleSaturationRatio = keywordInTitleCount / videos.length;
+    const titleGapScore = Math.round((1 - titleSaturationRatio) * 15); // low saturation = more room
+
+    const opportunityFactor = diversityScore + titleGapScore;
+
+    // 3. Engagement Quality (0-25 pts)
+    // High engagement signals YouTube's algorithm will reward this content
     const engagementRate = averageLikes / Math.max(1, averageViews);
     let engagementFactor = 0;
-    if (engagementRate >= 0.05) engagementFactor = 20;        // 5%+ = exceptional
-    else if (engagementRate >= 0.03) engagementFactor = 16;   // 3%+ = very good
-    else if (engagementRate >= 0.02) engagementFactor = 12;   // 2%+ = good
-    else if (engagementRate >= 0.01) engagementFactor = 8;    // 1%+ = average
-    else if (engagementRate >= 0.005) engagementFactor = 4;   // 0.5%+ = below average
-    else engagementFactor = 1;                                 // <0.5% = poor
+    if (engagementRate >= 0.05) engagementFactor = 25;       // 5%+ exceptional
+    else if (engagementRate >= 0.03) engagementFactor = 20;  // 3%+ very good
+    else if (engagementRate >= 0.02) engagementFactor = 15;  // 2%+ good
+    else if (engagementRate >= 0.01) engagementFactor = 10;  // 1%+ average
+    else if (engagementRate >= 0.005) engagementFactor = 5;  // 0.5%+ below average
+    else engagementFactor = 1;
 
-    // 4. Competition/Opportunity Factor (0-10 points)
-    // Fewer high-quality results = better opportunity
-    const highRelevanceCount = videos.filter(v => (v.relevanceScore || 0) >= 60).length;
-    let opportunityFactor = 0;
-    if (highRelevanceCount <= 10) opportunityFactor = 10;     // Low competition
-    else if (highRelevanceCount <= 25) opportunityFactor = 6;  // Moderate competition
-    else if (highRelevanceCount <= 40) opportunityFactor = 3;  // High competition
-    else opportunityFactor = 0;                                // Very high competition
+    // 4. Content Relevance (0-15 pts)
+    // Are the top results actually about this keyword?
+    // Lower weight because filtering already removed low-relevance videos.
+    let relevanceFactor = 0;
+    if (averageRelevance >= 70) relevanceFactor = 15;
+    else if (averageRelevance >= 55) relevanceFactor = 12;
+    else if (averageRelevance >= 40) relevanceFactor = 8;
+    else if (averageRelevance >= 25) relevanceFactor = 4;
+    else relevanceFactor = 0;
 
-    const tagScore = Math.round(relevanceFactor + performanceFactor + engagementFactor + opportunityFactor);
+    const tagScore = Math.round(demandFactor + opportunityFactor + engagementFactor + relevanceFactor);
     return Math.min(100, Math.max(0, tagScore));
   };
 
   const calculateSearchVolume = (videos: YouTubeVideo[]): { label: 'Low' | 'Moderate' | 'High' | 'Very High'; score: number } => {
-    const totalViews = videos.reduce((sum, video) => sum + video.views, 0);
-    const averageViews = totalViews / videos.length;
+    // Use median views (consistent with tagScore demand signal)
+    const sortedViews = [...videos].map(v => v.views).sort((a, b) => a - b);
+    const mid = Math.floor(sortedViews.length / 2);
+    const medianViews = sortedViews.length % 2 !== 0
+      ? sortedViews[mid]
+      : (sortedViews[mid - 1] + sortedViews[mid]) / 2;
     const averageRelevance = videos.reduce((sum, video) => sum + (video.relevanceScore || 0), 0) / videos.length;
 
-    // Enhanced scoring with relevance consideration
-    const videoCountScore = Math.min(30, (videos.length / 80) * 30);
-    const viewsScore = Math.min(35, (Math.log10(Math.max(1, averageViews)) - 3) * 8);
-    const relevanceScore = Math.min(20, (averageRelevance / 100) * 20);
+    // videoCountScore removed — we always fetch 80-100 videos so it was always near max
+    const viewsScore = Math.min(50, (Math.log10(Math.max(1, medianViews)) - 3) * 12);
+    const relevanceScore = Math.min(30, (averageRelevance / 100) * 30);
 
     const recentVideos = videos.filter(video =>
       new Date(video.publishedAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     );
-    const recentActivityScore = Math.min(15, (recentVideos.length / videos.length) * 15);
+    const recentActivityScore = Math.min(20, (recentVideos.length / videos.length) * 20);
 
-    const rawScore = videoCountScore + viewsScore + relevanceScore + recentActivityScore;
+    const rawScore = viewsScore + relevanceScore + recentActivityScore;
     const volumeScore = Math.max(1, Math.min(100, rawScore));
 
     let label: 'Low' | 'Moderate' | 'High' | 'Very High';
@@ -383,26 +447,32 @@ export const KeywordAnalyzer: React.FC = () => {
   };
 
   const calculateCompetitiveness = (videos: YouTubeVideo[], keyword: string): { label: 'Low' | 'Moderate' | 'High' | 'Very High'; score: number } => {
-    // Channel dominance
+    // 1. Channel concentration (0-40 pts)
+    // What share of results do the top 3 channels hold?
     const channelCount = videos.reduce((acc, video) => {
       acc[video.channelId] = (acc[video.channelId] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-    const dominantChannels = Object.values(channelCount).filter(count => count > 2).length;
-    const dominanceScore = (dominantChannels / videos.length) * 30;
+    const sortedChannelCounts = Object.values(channelCount).sort((a, b) => b - a);
+    const top3Share = sortedChannelCounts.slice(0, 3).reduce((s, n) => s + n, 0) / videos.length;
+    const concentrationScore = Math.round(top3Share * 40); // 100% from 3 channels = 40
 
-    // Keyword optimization (enhanced)
-    const highRelevanceVideos = videos.filter(video => (video.relevanceScore || 0) > 50).length;
-    const optimizationScore = (highRelevanceVideos / videos.length) * 40;
+    // 2. Keyword optimization saturation (0-35 pts)
+    // How many creators have already optimized for this exact keyword in their title?
+    const keywordInTitle = videos.filter(v =>
+      v.title.toLowerCase().includes(keyword.toLowerCase())
+    ).length;
+    const optimizationScore = Math.round((keywordInTitle / videos.length) * 35);
 
-    // Recent competition
+    // 3. Recent upload velocity (0-25 pts)
+    // Active creators uploading right now = you'd be entering a hot competition
     const recentUploads = videos.filter(video =>
       new Date(video.publishedAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     ).length;
-    const recencyScore = Math.min(30, (recentUploads / videos.length) * 100);
+    const recencyScore = Math.min(25, Math.round((recentUploads / videos.length) * 100));
 
-    const totalScore = Math.round(dominanceScore + optimizationScore + recencyScore);
+    const totalScore = Math.min(100, concentrationScore + optimizationScore + recencyScore);
 
     let label: 'Low' | 'Moderate' | 'High' | 'Very High';
     if (totalScore >= 75) label = 'Very High';
@@ -415,15 +485,15 @@ export const KeywordAnalyzer: React.FC = () => {
 
   const generatePerformanceDescription = (tagScore: number): string => {
     if (tagScore >= 85) {
-      return "This tag is excellent and has strong growth potential with low effort required.";
+      return "Strong demand with real ranking opportunity — an ideal keyword for most creators to target.";
     } else if (tagScore >= 70) {
-      return "This tag is high quality and has potential for growth, but may require some effort to improve its performance.";
+      return "Good balance of demand and opportunity. Worth targeting with well-optimized content.";
     } else if (tagScore >= 50) {
-      return "This tag shows moderate potential but will require strategic optimization to compete effectively.";
+      return "Decent potential but either competition is stiff or demand is limited. Use long-tail variations to find a better angle.";
     } else if (tagScore >= 30) {
-      return "This tag has limited potential and faces significant competition. Consider alternative keywords.";
+      return "Either too competitive to rank or too niche to drive meaningful traffic. Consider related keywords with better scores.";
     } else {
-      return "This tag is highly competitive with low opportunity. Focus on long-tail variations instead.";
+      return "Low opportunity — dominated by established channels or very low demand. Focus on long-tail variations instead.";
     }
   };
 
@@ -460,10 +530,11 @@ export const KeywordAnalyzer: React.FC = () => {
     // Upload time analysis
     const uploadTimeDistribution = analyzeUploadTimes(videos);
 
-    // Best upload times
-    const bestTimes = uploadTimeDistribution
-      .sort((a, b) => b.avgViews - a.avgViews)
-      .slice(0, 3);
+    // Best upload times — prefer slots with 2+ videos to avoid single-video flukes
+    const reliableSlots = uploadTimeDistribution.filter(t => t.count >= 2);
+    const sortedSlots = (reliableSlots.length >= 3 ? reliableSlots : uploadTimeDistribution)
+      .sort((a, b) => b.avgViews - a.avgViews);
+    const bestTimes = sortedSlots.slice(0, 3);
 
     const bestUploadDays = Array.from(new Set(bestTimes.map(t => t.day))).slice(0, 3);
     const bestUploadTimes = bestTimes.map(t => ({ day: t.day, hour: t.hour }));
@@ -476,28 +547,34 @@ export const KeywordAnalyzer: React.FC = () => {
     const recentVideos = videos.filter(video =>
       new Date(video.publishedAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     );
+    const lastWeekVideos = videos.filter(video =>
+      new Date(video.publishedAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    );
 
     let trend: 'Rising' | 'Stable' | 'Declining' = 'Stable';
     const recentRatio = recentVideos.length / videos.length;
     if (recentRatio > 0.3) trend = 'Rising';
     else if (recentRatio < 0.1) trend = 'Declining';
 
-    // Generate related keywords
+    // Generate related keywords — use only actual tag phrases, not individual title words
+    // Single words from titles are too noisy and not useful as keyword suggestions
     const allTags = videos.flatMap(video => video.tags);
-    const allTitles = videos.map(video => video.title).join(' ');
+    const keywordLowerForRelated = keyword.toLowerCase();
 
-    const relatedKeywords = Array.from(new Set([
-      ...allTags.filter(tag =>
-        tag.toLowerCase() !== keyword.toLowerCase() &&
-        tag.length > 2 &&
-        tag.length < 20
-      ),
-      ...allTitles.split(/\s+/).filter(word =>
-        word.toLowerCase() !== keyword.toLowerCase() &&
-        word.length > 3 &&
-        !['the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can'].includes(word.toLowerCase())
-      )
-    ])).slice(0, 12);
+    const relatedKeywords = Array.from(new Set(
+      allTags
+        .map(tag => tag.trim())
+        .filter(tag => {
+          const tl = tag.toLowerCase();
+          return (
+            tl !== keywordLowerForRelated &&          // not the searched keyword itself
+            tag.length > 4 &&                         // skip very short tags
+            tag.length < 50 &&                        // skip overly long tags
+            tl.split(' ').length >= 2 &&              // phrase-level only (2+ words)
+            !tl.includes(keywordLowerForRelated)      // exclude tags that are just the keyword + noise
+          );
+        })
+    )).slice(0, 12);
 
     // Top channels analysis
     const channelCount = videos.reduce((acc, video) => {
@@ -548,8 +625,13 @@ export const KeywordAnalyzer: React.FC = () => {
       {
         metric: 'Title Optimization',
         value: `${keywordInTitlePercentage}% use exact keyword`,
-        rating: (keywordInTitlePercentage > 70 ? 'excellent' : keywordInTitlePercentage > 50 ? 'good' : keywordInTitlePercentage > 30 ? 'fair' : 'poor') as 'excellent' | 'good' | 'fair' | 'poor',
-        action: keywordInTitlePercentage > 70 ? 'Essential to include keyword in title for ranking' : 'Consider keyword variations and long-tail phrases in title'
+        // Low saturation = fewer competitors have optimized for this exact phrase = more opportunity
+        rating: (keywordInTitlePercentage < 30 ? 'excellent' : keywordInTitlePercentage < 55 ? 'good' : keywordInTitlePercentage < 75 ? 'fair' : 'poor') as 'excellent' | 'good' | 'fair' | 'poor',
+        action: keywordInTitlePercentage < 30
+          ? 'Hidden gem — few competitors use this exact phrase. Include it in your title for a ranking edge.'
+          : keywordInTitlePercentage < 75
+          ? 'Moderately competitive title space. Use the exact keyword phrase + a strong hook.'
+          : 'Highly saturated — most competitors already use this phrase. Differentiate with a unique angle or long-tail variation.'
       },
       {
         metric: 'Optimal Upload Time',
@@ -585,7 +667,7 @@ export const KeywordAnalyzer: React.FC = () => {
         bestUploadTimes,
         topChannels,
         totalResults: videos.length,
-        newVideosLastWeek: recentVideos.length,
+        newVideosLastWeek: lastWeekVideos.length,
         keywordInTitlePercentage,
         averageLikes,
         engagementRate,
@@ -601,29 +683,51 @@ export const KeywordAnalyzer: React.FC = () => {
     setShowResults(false);
     setError(null);
 
-    try {
-      const videos = await fetchYouTubeData(searchTerm);
-
-      if (videos.length === 0) {
-        throw new Error('No videos found for this keyword');
-      }
-
-      const analysis = analyzeKeywordData(videos, searchTerm);
-
-      saveToHistory(searchTerm);
-      setResults(analysis);
-      setShowResults(true);
-    } catch (error) {
-      console.error('Error analyzing keyword:', error);
-      const msg = error instanceof Error ? error.message : '';
-      if (msg.toLowerCase().includes('quota')) {
-        setError('The Keyword Analyzer is on cooldown — try again tomorrow.');
-      } else {
-        setError(msg || 'Failed to analyze keyword. Please try again.');
-      }
-    } finally {
+    if (KW_API_KEYS.length === 0) {
+      setError('No API keys configured for the Keyword Analyzer.');
       setIsAnalyzing(false);
+      return;
     }
+
+    let lastError: string = '';
+
+    for (let attempt = 0; attempt < KW_API_KEYS.length; attempt++) {
+      const idx = (kwKeyIndexRef.current + attempt) % KW_API_KEYS.length;
+      const key = KW_API_KEYS[idx];
+
+      try {
+        const videos = await fetchYouTubeData(searchTerm, key);
+
+        if (videos.length === 0) {
+          throw new Error('No videos found for this keyword');
+        }
+
+        const analysis = analyzeKeywordData(videos, searchTerm);
+        kwKeyIndexRef.current = idx; // remember the working key
+        saveToHistory(searchTerm);
+        setResults(analysis);
+        setShowResults(true);
+        setIsAnalyzing(false);
+        return;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : '';
+        if (msg === '__QUOTA_EXHAUSTED__') {
+          // rotate to the next key and retry
+          kwKeyIndexRef.current = (idx + 1) % KW_API_KEYS.length;
+          lastError = 'quota';
+          continue;
+        }
+        // non-quota error — surface immediately
+        console.error('Error analyzing keyword:', err);
+        setError(msg || 'Failed to analyze keyword. Please try again.');
+        setIsAnalyzing(false);
+        return;
+      }
+    }
+
+    // All keys exhausted
+    setError('The Keyword Analyzer is on cooldown — all API keys are exhausted. Try again tomorrow.');
+    setIsAnalyzing(false);
   };
 
   const analyzeKeyword = async () => {
@@ -720,19 +824,19 @@ export const KeywordAnalyzer: React.FC = () => {
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const hours = Array.from({ length: 24 }, (_, i) => i);
 
-    const getHeatmapValue = (day: string, hour: number) => {
-      const item = data.find(d => d.day === day && d.hour === hour);
-      return item ? item.count : 0;
+    const getHeatmapItem = (day: string, hour: number) => {
+      return data.find(d => d.day === day && d.hour === hour) || null;
     };
 
-    const maxCount = Math.max(...data.map(d => d.count), 1);
+    // Relative performance scale: color intensity based on views/day vs dataset max
+    const maxAvgViews = Math.max(...data.map(d => d.avgViews), 1);
 
-    const getHeatColor = (count: number) => {
-      if (count === 0) return '#1a1a1a';
-      if (count === 1) return '#28a745'; // 1 video = green
-      if (count === 2) return '#fac11b'; // 2 videos = yellow
-      if (count >= 3) return '#d73527'; // 3+ videos = red
-      return '#28a745'; // fallback
+    const getHeatColor = (item: ReturnType<typeof getHeatmapItem>) => {
+      if (!item || item.count === 0) return '#1a1a1a'; // empty
+      const ratio = item.avgViews / maxAvgViews;
+      if (ratio >= 0.66) return '#d73527'; // top third — most active/performing
+      if (ratio >= 0.33) return '#fac11b'; // middle third
+      return '#28a745';                    // bottom third — least active
     };
 
 
@@ -746,8 +850,12 @@ export const KeywordAnalyzer: React.FC = () => {
       ];
 
       return timeSlots.map(slot => {
-        const totalUploads = data.filter(item => slot.hours.includes(item.hour)).reduce((sum, item) => sum + item.count, 0);
-        const avgViews = data.filter(item => slot.hours.includes(item.hour)).reduce((sum, item) => sum + item.avgViews, 0) / slot.hours.length;
+        const slotsWithData = data.filter(item => slot.hours.includes(item.hour));
+        const totalUploads = slotsWithData.reduce((sum, item) => sum + item.count, 0);
+        // Divide only by slots that have data, not total hours in the window
+        const avgViews = slotsWithData.length > 0
+          ? slotsWithData.reduce((sum, item) => sum + item.avgViews, 0) / slotsWithData.length
+          : 0;
 
         return {
           ...slot,
@@ -766,14 +874,14 @@ export const KeywordAnalyzer: React.FC = () => {
           <>
             <S.ChartTitle>Upload Time Distribution</S.ChartTitle>
             <S.ChartSubtitle>
-              Visual representation of upload timing patterns
+              Upload frequency by day & hour — hover cells for views/day detail
             </S.ChartSubtitle>
           </>
         )}
 
         {isIntegrated && (
           <S.ChartSubtitle style={{ fontSize: '0.8rem', marginBottom: '1rem', opacity: 0.8 }}>
-            Visual representation of upload timing patterns
+            Upload frequency by day & hour — hover cells for views/day detail
           </S.ChartSubtitle>
         )}
 
@@ -788,12 +896,16 @@ export const KeywordAnalyzer: React.FC = () => {
                 <S.MobileSummaryProgress>
                   <S.MobileSummaryFill
                     intensity={slot.intensity}
-                    color={getHeatColor(slot.totalUploads)}
+                    color={
+                      slot.totalUploads === 0 ? '#1a1a1a' :
+                      slot.intensity >= 0.66 ? '#d73527' :
+                      slot.intensity >= 0.33 ? '#fac11b' : '#28a745'
+                    }
                   />
                 </S.MobileSummaryProgress>
                 <S.MobileSummaryStats>
                   <span>{slot.totalUploads} uploads</span>
-                  <span>{formatViewCount(slot.avgViews)} avg views</span>
+                  <span>{formatViewCount(slot.avgViews)} views/day avg</span>
                 </S.MobileSummaryStats>
               </S.MobileSummaryBar>
             ))}
@@ -829,12 +941,15 @@ export const KeywordAnalyzer: React.FC = () => {
                 {days.map(day => (
                   <S.HeatmapRow key={day}>
                     {hours.map(hour => {
-                      const count = getHeatmapValue(day, hour);
+                      const item = getHeatmapItem(day, hour);
+                      const label = item
+                        ? `${day} ${hour.toString().padStart(2, '0')}:00 — ${item.count} video${item.count !== 1 ? 's' : ''}, ${formatViewCount(item.avgViews)} views/day avg`
+                        : `${day} ${hour.toString().padStart(2, '0')}:00 — no uploads`;
                       return (
                         <S.HeatmapCell
                           key={`${day}-${hour}`}
-                          color={getHeatColor(count)}
-                          title={`${day} ${hour.toString().padStart(2, '0')}:00 - ${count} uploads`}
+                          color={getHeatColor(item)}
+                          data-tooltip={label}
                         />
                       );
                     })}
@@ -846,9 +961,9 @@ export const KeywordAnalyzer: React.FC = () => {
         )}
 
         <S.HeatmapLegend style={isIntegrated ? { marginTop: '0.5rem', fontSize: '0.8rem' } : {}}>
-          <span>1 Video</span>
+          <span>Lower activity</span>
           <S.LegendGradient />
-          <span>3+ Videos</span>
+          <span>Higher activity</span>
         </S.HeatmapLegend>
 
       </S.UploadTimeChart>
@@ -1336,9 +1451,9 @@ export const KeywordAnalyzer: React.FC = () => {
                       href={`https://youtube.com/watch?v=${video.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
+                      title="Watch on YouTube"
                     >
                       <i className="bx bx-play"></i>
-                      Watch
                     </S.VideoAction>
                   </S.VideoCard>
                 ))}

@@ -641,16 +641,20 @@ export const CopyIndicator = styled.div<{ $show: boolean }>`
 `;
 
 export const RemoveButton = styled.button`
-  background: ${({ theme }) => theme.colors.warning};
+  background: ${({ theme }) => theme.colors.red4};
   color: ${({ theme }) => theme.colors.white};
   border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.full};
+  border-radius: 50%;
   width: 28px;
   height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   opacity: 0;
   transition: all 0.2s ease;
   
@@ -659,7 +663,7 @@ export const RemoveButton = styled.button`
   }
   
   &:hover {
-    background: #dc3545;
+    background: ${({ theme }) => theme.colors.red3};
     transform: scale(1.1);
   }
   
@@ -820,12 +824,20 @@ export const ExportTitle = styled.h3`
 
 export const ExportActions = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
-  
-  @media (max-width: 768px) {
+
+  @media (max-width: 640px) {
     grid-template-columns: 1fr;
   }
+`;
+
+export const ExportResetRow = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid ${({ theme }) => theme.colors.dark5};
 `;
 
 export const ExportButton = styled.button<{ $variant?: 'secondary' }>`
@@ -919,7 +931,7 @@ export const ColorPickerContent = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.dark5};
   border-radius: ${({ theme }) => theme.borderRadius.xl};
   width: 90%;
-  max-width: 600px;
+  max-width: 900px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: ${({ theme }) => theme.shadows.xl};

@@ -7,6 +7,8 @@ import { SEO } from '../../../../components/SEO';
 import { GoogleAd } from '../../../../components/GoogleAd';
 import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
+import { ANALYTICS_QUESTIONS, AnalyticsQuestion } from '../VideoAnalyzer/analyticsQuestions';
+import { AnalyticsCalculator, AnalyticsResult, ChannelVideo } from '../VideoAnalyzer/analyticsCalculator';
 
 interface VideoData {
   id: string;
@@ -68,6 +70,19 @@ const decodeHTMLEntities = (text: string): string => {
   return textArea.value;
 };
 
+// Parse YouTube channel keywords — handles "quoted phrases" and single words
+const parseChannelKeywords = (keywords: string): string[] => {
+  if (!keywords) return [];
+  const result: string[] = [];
+  const regex = /"([^"]+)"|(\S+)/g;
+  let match;
+  while ((match = regex.exec(keywords)) !== null) {
+    const kw = (match[1] || match[2]).trim();
+    if (kw.length > 0) result.push(kw);
+  }
+  return result;
+};
+
 export const ChannelAnalyzer: React.FC = () => {
   const { channelId } = useParams<{ channelId: string }>();
   const navigate = useNavigate();
@@ -81,6 +96,11 @@ export const ChannelAnalyzer: React.FC = () => {
   const [analysisResults, setAnalysisResults] = useState<ChannelAnalysis | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [analyticsResults, setAnalyticsResults] = useState<{ [key: string]: AnalyticsResult }>({});
+  const [calculatingQuestion, setCalculatingQuestion] = useState<string | null>(null);
+  const [analyticsVideoType, setAnalyticsVideoType] = useState<'long-form' | 'shorts'>('long-form');
+  const [channelVideosForAnalytics, setChannelVideosForAnalytics] = useState<ChannelVideo[]>([]);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // Tool configuration
   const toolConfig = {
@@ -118,7 +138,7 @@ export const ChannelAnalyzer: React.FC = () => {
     // Check if it's just a handle (with or without @)
     if (/^@?[\w-]+$/.test(input) && !input.includes('youtube.com')) {
       const handle = input.startsWith('@') ? input.substring(1) : input;
-      const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_10;
+      const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_9;
 
       // First try forHandle
       let response = await fetch(
@@ -156,7 +176,7 @@ export const ChannelAnalyzer: React.FC = () => {
           return match[1];
         } else if (type === 'handleWithoutAt') {
           // Try to fetch by handle (without @)
-          const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_10;
+          const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_9;
           const handle = match[1];
 
           // First try forHandle
@@ -177,7 +197,7 @@ export const ChannelAnalyzer: React.FC = () => {
             return data.items[0].id.channelId;
           }
         } else {
-          const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_10;
+          const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_9;
           const response = await fetch(
             `https://www.googleapis.com/youtube/v3/channels?part=id&${type === 'user' ? 'forUsername' : 'forHandle'}=${match[1]}&key=${API_KEY}`
           );
@@ -202,39 +222,95 @@ export const ChannelAnalyzer: React.FC = () => {
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Invalid channel URL or ID');
+      setApiError('Invalid channel URL or ID');
+    }
+  };
+
+  const handleQuestionSelect = async (question: AnalyticsQuestion) => {
+    if (!channelData || channelVideosForAnalytics.length === 0) return;
+    setCalculatingQuestion(question.id);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 400));
+      // Pass a minimal mock videoData since AnalyticsCalculator never actually uses it
+      const mockVideoData = {
+        id: '',
+        snippet: { title: '', description: '', publishedAt: '', channelId: '', tags: [], categoryId: '' },
+        statistics: { viewCount: '0', likeCount: '0', commentCount: '0' },
+        contentDetails: { duration: 'PT0S' }
+      };
+      const calculator = new AnalyticsCalculator(mockVideoData, channelData, channelVideosForAnalytics);
+      const result = calculator.calculateAnswer(question);
+      setAnalyticsResults(prev => ({ ...prev, [question.id]: result }));
+    } catch (error) {
+      console.error('Error calculating analytics:', error);
+    } finally {
+      setCalculatingQuestion(null);
     }
   };
 
   const handleAnalyze = async (id?: string) => {
     if (!id && !channelUrl.trim()) {
-      alert('Please enter a YouTube channel URL');
+      setApiError('Please enter a YouTube channel URL');
       return;
     }
 
     setIsLoading(true);
     setShowResults(false);
+    setApiError(null);
+    setAnalyticsResults({});
 
     try {
       const channelId = id || await getChannelId(channelUrl);
       const channel = await fetchChannelData(channelId);
-      const playlists = await fetchPlaylistData(channelId);
-      const latestVideo = await fetchLatestVideoData(channelId);
-      const videos = await fetchTopVideos(channelId);
-      const recentVideos = await fetchRecentVideos(channelId);
+      const uploadsPlaylistId = channel.contentDetails?.relatedPlaylists?.uploads;
+      if (!uploadsPlaylistId) throw new Error('Could not find channel uploads playlist');
+
+      // Fetch playlists and all channel videos in parallel
+      const [playlists, allVideos] = await Promise.all([
+        fetchPlaylistData(channelId),
+        fetchChannelVideosForAnalytics(uploadsPlaylistId),
+      ]);
+
+      if (allVideos.length === 0) throw new Error('No videos found for this channel');
+
+      // Derive latestVideoData from the most recent upload (compatible shape: {snippet:{publishedAt}})
+      const latestVideo = { snippet: { publishedAt: allVideos[0].publishedAt } };
+
+      // Derive top 6 videos by view count from the fetched set
+      const videos: VideoData[] = [...allVideos]
+        .sort((a, b) => b.viewCount - a.viewCount)
+        .slice(0, 6)
+        .map(v => ({
+          id: v.id,
+          title: v.title,
+          thumbnail: `https://i.ytimg.com/vi/${v.id}/mqdefault.jpg`,
+          views: v.viewCount,
+          likes: v.likeCount,
+          comments: v.commentCount,
+          publishedAt: v.publishedAt,
+          duration: `PT${Math.floor((v.duration || 0) / 60)}M${(v.duration || 0) % 60}S`,
+          tags: v.tags || [],
+          description: '',
+        }));
+
+      // Derive recent video count (last 6 months) from the fetched set
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      const recentVideos = allVideos.filter(v => new Date(v.publishedAt) >= sixMonthsAgo).length;
 
       setChannelData(channel);
       setPlaylistData(playlists);
       setLatestVideoData(latestVideo);
       setTopVideos(videos);
       setRecentVideoCount(recentVideos);
+      setChannelVideosForAnalytics(allVideos);
 
       const analysis = analyzeChannelData(latestVideo, channel, playlists, videos, recentVideos);
       setAnalysisResults(analysis);
       setShowResults(true);
     } catch (error) {
       console.error('Error:', error);
-      alert(`An error occurred while analyzing the channel: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setApiError(error instanceof Error ? error.message : 'An unknown error occurred');
     } finally {
       setIsLoading(false);
     }
@@ -253,45 +329,50 @@ export const ChannelAnalyzer: React.FC = () => {
     return `${bannerUrl}=w2120-fcrop64=1,00000000ffffffff-k-c0xffffffff-no-nd-rj`;
   };
 
-  const fetchChannelData = async (channelId: string) => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_10;
-    if (!API_KEY) {
-      throw new Error('YouTube API key not configured');
+  const fetchWithKeyFallback = async (buildUrl: (key: string) => string): Promise<any> => {
+    const key1 = process.env.REACT_APP_YOUTUBE_API_KEY_9 || '';
+    const key2 = process.env.REACT_APP_YOUTUBE_API_KEY_10 || '';
+    const res1 = await fetch(buildUrl(key1));
+    const data1 = await res1.json();
+    const reason1 = data1.error?.errors?.[0]?.reason;
+    if (reason1 === 'quotaExceeded' || reason1 === 'dailyLimitExceeded') {
+      // Try fallback key
+      const res2 = await fetch(buildUrl(key2));
+      const data2 = await res2.json();
+      const reason2 = data2.error?.errors?.[0]?.reason;
+      if (reason2 === 'quotaExceeded' || reason2 === 'dailyLimitExceeded') {
+        throw new Error('The Channel Analyzer is on cooldown — try again tomorrow.');
+      }
+      if (data2.error) throw new Error(data2.error.message || 'API error');
+      return data2;
     }
-    
-    const response = await fetch(
+    if (data1.error) throw new Error(data1.error.message || 'API error');
+    return data1;
+  };
+
+  const fetchChannelData = async (channelId: string) => {
+    const data = await fetchWithKeyFallback(key =>
       `https://www.googleapis.com/youtube/v3/channels?` +
       `part=snippet,statistics,brandingSettings,status,topicDetails,contentDetails&` +
-      `id=${channelId}&key=${API_KEY}`
+      `id=${channelId}&key=${key}`
     );
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch channel data');
-    }
-    
-    const data = await response.json();
+
     if (!data.items?.[0]) {
       throw new Error('Channel not found');
     }
-    
-    // Debug logging - check console to see what topicDetails contains
-    console.log('Topic Details from API:', data.items[0].topicDetails);
-    
+
     return data.items[0];
   };
 
   const fetchPlaylistData = async (channelId: string) => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_10;
-    const response = await fetch(
-      `https://www.googleapis.com/youtube/v3/playlists?` +
-      `part=id&channelId=${channelId}&maxResults=5&key=${API_KEY}`
+    const data = await fetchWithKeyFallback(key =>
+      `https://www.googleapis.com/youtube/v3/playlists?part=id&channelId=${channelId}&maxResults=5&key=${key}`
     );
-    const data = await response.json();
     return data.items || [];
   };
 
   const fetchLatestVideoData = async (channelId: string) => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_10;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_9;
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/search?` +
       `part=snippet&channelId=${channelId}&order=date&type=video&` +
@@ -303,7 +384,7 @@ export const ChannelAnalyzer: React.FC = () => {
   };
 
   const fetchRecentVideos = async (channelId: string): Promise<number> => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_10;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_9;
 
     // Calculate date 6 months ago
     const sixMonthsAgo = new Date();
@@ -322,7 +403,7 @@ export const ChannelAnalyzer: React.FC = () => {
   };
 
   const fetchTopVideos = async (channelId: string): Promise<VideoData[]> => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_10;
+    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_9;
 
     // Get top 6 videos by view count
     const searchResponse = await fetch(
@@ -358,6 +439,45 @@ export const ChannelAnalyzer: React.FC = () => {
         duration: statsItem?.contentDetails?.duration || 'PT0S',
         tags: statsItem?.snippet?.tags || [],
         description: decodeHTMLEntities(statsItem?.snippet?.description || '')
+      };
+    });
+  };
+
+  const fetchChannelVideosForAnalytics = async (uploadsPlaylistId: string): Promise<ChannelVideo[]> => {
+    const playlistJson = await fetchWithKeyFallback(key =>
+      `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=50&key=${key}`
+    );
+
+    if (!playlistJson.items?.length) return [];
+
+    const videoIds = playlistJson.items
+      .map((item: any) => item.snippet?.resourceId?.videoId)
+      .filter(Boolean)
+      .join(',');
+
+    if (!videoIds) return [];
+
+    const videosJson = await fetchWithKeyFallback(key =>
+      `https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet,contentDetails&id=${videoIds}&key=${key}`
+    );
+
+    if (!videosJson.items?.length) return [];
+
+    return videosJson.items.map((video: any) => {
+      const dur = video.contentDetails.duration || 'PT0S';
+      const match = dur.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+      const seconds = match
+        ? parseInt(match[1] || '0') * 3600 + parseInt(match[2] || '0') * 60 + parseInt(match[3] || '0')
+        : 0;
+      return {
+        id: video.id,
+        title: video.snippet.title,
+        publishedAt: video.snippet.publishedAt,
+        viewCount: parseInt(video.statistics?.viewCount || '0'),
+        likeCount: parseInt(video.statistics?.likeCount || '0'),
+        commentCount: parseInt(video.statistics?.commentCount || '0'),
+        duration: seconds,
+        tags: video.snippet?.tags || [],
       };
     });
   };
@@ -411,7 +531,7 @@ export const ChannelAnalyzer: React.FC = () => {
 
     // Keywords check
     if (channelKeywords) {
-      const keywordCount = channelKeywords.split(',').length;
+      const keywordCount = parseChannelKeywords(channelKeywords).length;
       achievements.push(`Channel uses ${keywordCount} keywords for SEO`);
     } else {
       drawbacks.push("Channel has no keywords set for discoverability");
@@ -490,7 +610,7 @@ export const ChannelAnalyzer: React.FC = () => {
 
     let keywordsScore = 0;
     if (channelKeywords) {
-      const keywordCount = channelKeywords.split(',').length;
+      const keywordCount = parseChannelKeywords(channelKeywords).length;
       if (keywordCount >= 10) {
         keywordsScore = 25;
         seoBreakdown.push({ label: `Keywords (${keywordCount})`, score: 25, max: 25, status: 'good' });
@@ -773,10 +893,7 @@ export const ChannelAnalyzer: React.FC = () => {
     return `${months} month${months > 1 ? 's' : ''}`;
   };
 
-  const formatChannelKeywords = (keywords: string): string[] => {
-    if (!keywords) return [];
-    return keywords.split(',').map(keyword => keyword.trim()).filter(keyword => keyword.length > 0);
-  };
+  const formatChannelKeywords = parseChannelKeywords;
 
   const getScoreColor = (score: number): string => {
     if (score >= 80) return '#10b981'; // Green
@@ -969,6 +1086,124 @@ export const ChannelAnalyzer: React.FC = () => {
     }
     
     return 'General Content';
+  };
+
+  const renderAnalyticsTab = () => {
+    const filtered = ANALYTICS_QUESTIONS.filter(
+      q => q.videoType === 'both' || q.videoType === analyticsVideoType
+    );
+    const categories = Array.from(new Set(filtered.map(q => q.category)));
+
+    return (
+      <S.AnalyticsTabContent>
+        <S.AnalyticsHeader>
+          <S.AnalyticsTitle>
+            <i className="bx bx-bar-chart-alt-2"></i>
+            Channel Analytics
+          </S.AnalyticsTitle>
+          <S.AnalyticsSubtitle>
+            Click any question to calculate the answer from this channel's data
+          </S.AnalyticsSubtitle>
+          <S.VideoTypeToggleRow>
+            <S.VideoTypeOption
+              isActive={analyticsVideoType === 'long-form'}
+              onClick={() => setAnalyticsVideoType('long-form')}
+            >
+              <i className="bx bx-video"></i>
+              Long-form
+            </S.VideoTypeOption>
+            <S.VideoTypeOption
+              isActive={analyticsVideoType === 'shorts'}
+              onClick={() => setAnalyticsVideoType('shorts')}
+            >
+              <i className="bx bx-mobile"></i>
+              Shorts
+            </S.VideoTypeOption>
+          </S.VideoTypeToggleRow>
+        </S.AnalyticsHeader>
+
+        {channelVideosForAnalytics.length === 0 ? (
+          <S.AnalyticsEmptyState>
+            <i className="bx bx-bar-chart-alt-2"></i>
+            <span>Analyze a channel first to unlock analytics</span>
+          </S.AnalyticsEmptyState>
+        ) : (
+          categories.map(category => {
+            const questions = filtered.filter(q => q.category === category);
+            return (
+              <S.AnalyticsCategorySection key={category}>
+                <S.AnalyticsCategoryHeader>
+                  <S.AnalyticsCategoryTitle>{category}</S.AnalyticsCategoryTitle>
+                  <S.AnalyticsCategoryCount>{questions.length} questions</S.AnalyticsCategoryCount>
+                </S.AnalyticsCategoryHeader>
+                <S.AnalyticsCardsGrid>
+                  {questions.map(question => {
+                    const result = analyticsResults[question.id];
+                    const isCalculating = calculatingQuestion === question.id;
+                    const hasResult = !!result;
+                    return (
+                      <S.AnalyticsCard
+                        key={question.id}
+                        hasResult={hasResult}
+                        clickable={!isCalculating && !hasResult}
+                        onClick={() => !isCalculating && !hasResult && handleQuestionSelect(question)}
+                      >
+                        <S.AnalyticsCardTop>
+                          <S.AnalyticsCardQuestion>{question.question}</S.AnalyticsCardQuestion>
+                          <S.AnalyticsComplexityBadge complexity={question.complexity}>
+                            {question.complexity}
+                          </S.AnalyticsComplexityBadge>
+                        </S.AnalyticsCardTop>
+
+                        {isCalculating && (
+                          <S.AnalyticsCalculating>
+                            <i className="bx bx-loader-alt bx-spin"></i>
+                            Calculating...
+                          </S.AnalyticsCalculating>
+                        )}
+
+                        {hasResult && (
+                          <S.AnalyticsResult>
+                            <S.AnalyticsResultAnswer>{result.answer}</S.AnalyticsResultAnswer>
+                            {result.details.slice(0, 3).length > 0 && (
+                              <S.AnalyticsResultDetails>
+                                {result.details.slice(0, 3).map((detail: string, i: number) => (
+                                  <S.AnalyticsResultDetail key={i}>
+                                    <i className="bx bx-dot-circle"></i>
+                                    {detail}
+                                  </S.AnalyticsResultDetail>
+                                ))}
+                              </S.AnalyticsResultDetails>
+                            )}
+                            <S.AnalyticsRecalculate onClick={(e) => {
+                              e.stopPropagation();
+                              setAnalyticsResults(prev => {
+                                const next = { ...prev };
+                                delete next[question.id];
+                                return next;
+                              });
+                            }}>
+                              <i className="bx bx-refresh"></i>
+                            </S.AnalyticsRecalculate>
+                          </S.AnalyticsResult>
+                        )}
+
+                        {!isCalculating && !hasResult && (
+                          <S.AnalyticsCardCTA>
+                            <i className="bx bx-play-circle"></i>
+                            Calculate
+                          </S.AnalyticsCardCTA>
+                        )}
+                      </S.AnalyticsCard>
+                    );
+                  })}
+                </S.AnalyticsCardsGrid>
+              </S.AnalyticsCategorySection>
+            );
+          })
+        )}
+      </S.AnalyticsTabContent>
+    );
   };
 
   const seoConfig = toolsSEO['channel-analyzer'];
@@ -1184,6 +1419,13 @@ export const ChannelAnalyzer: React.FC = () => {
           </S.EducationalSection>
         )}
 
+        {apiError && (
+          <S.ErrorMessage>
+            <i className="bx bx-error-circle"></i>
+            {apiError}
+          </S.ErrorMessage>
+        )}
+
         <S.ResultsContainer className={showResults ? 'visible' : ''}>
           {isLoading ? (
             <S.LoadingContainer>
@@ -1257,6 +1499,13 @@ export const ChannelAnalyzer: React.FC = () => {
                 >
                   <i className="bx bx-trending-up"></i>
                   <span>Performance</span>
+                </S.TabButton>
+                <S.TabButton
+                  isActive={activeTab === 'analytics'}
+                  onClick={() => setActiveTab('analytics')}
+                >
+                  <i className="bx bx-bar-chart-alt-2"></i>
+                  <span>Analytics</span>
                 </S.TabButton>
               </S.TabNavigation>
 
@@ -1681,14 +1930,23 @@ export const ChannelAnalyzer: React.FC = () => {
             <>
               <S.DetailedAnalysisGrid>
                 {/* Top Videos Section */}
-                {topVideos.length > 0 && (
+                {topVideos.length > 0 && (() => {
+                  const parseDurationSecs = (dur: string) => {
+                    const m = dur.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+                    if (!m) return 0;
+                    return parseInt(m[1] || '0') * 3600 + parseInt(m[2] || '0') * 60 + parseInt(m[3] || '0');
+                  };
+                  const longFormVideos = topVideos.filter(v => parseDurationSecs(v.duration) > 60);
+                  const shortsVideos = topVideos.filter(v => parseDurationSecs(v.duration) <= 60);
+
+                  const renderVideoList = (videos: VideoData[], label: string, icon: string) => videos.length === 0 ? null : (
                   <S.DetailedSection style={{ gridColumn: '1 / -1' }}>
                     <S.SectionTitle>
-                      <i className="bx bx-trending-up"></i>
-                      Top Performing Videos
+                      <i className={icon}></i>
+                      {label}
                     </S.SectionTitle>
                     <S.TopVideosGrid>
-                      {topVideos.map((video, index) => {
+                      {videos.map((video, index) => {
                         const analysis = analyzeVideoPerformance(video);
                         return (
                           <S.VideoCard key={video.id}>
@@ -1746,7 +2004,15 @@ export const ChannelAnalyzer: React.FC = () => {
                       })}
                     </S.TopVideosGrid>
                   </S.DetailedSection>
-                )}
+                  );
+
+                  return (
+                    <>
+                      {renderVideoList(longFormVideos, 'Top Long-form Videos', 'bx bx-video')}
+                      {renderVideoList(shortsVideos, 'Top Shorts', 'bx bx-mobile')}
+                    </>
+                  );
+                })()}
 
                 {/* Channel Performance Metrics */}
                 <S.DetailedSection>
@@ -1870,6 +2136,8 @@ export const ChannelAnalyzer: React.FC = () => {
             </>
           )}
           {/* End Performance Tab */}
+
+          {activeTab === 'analytics' && renderAnalyticsTab()}
 
             </>
           ) : null}

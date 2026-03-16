@@ -1,5 +1,5 @@
 // src/pages/Tools/components/VideoAnalyzer/VideoAnalyzer.tsx - IMPROVED VERSION
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ToolPageWrapper } from '../../../../components/ToolPageWrapper';
 import { SEO } from '../../../../components/SEO';
@@ -7,8 +7,6 @@ import { GoogleAd } from '../../../../components/GoogleAd';
 import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 import moment from 'moment';
-import { ANALYTICS_QUESTIONS, AnalyticsQuestion } from './analyticsQuestions';
-import { AnalyticsCalculator, AnalyticsResult } from './analyticsCalculator';
 import { trackToolUsage, trackResultsDisplayed, trackError, trackToolPageView, useTimeTracking } from '../../../../utils/googleAnalytics';
 
 interface VideoAnalysis {
@@ -72,6 +70,10 @@ interface VideoAnalysis {
     bestVideoTimeframe: string;
     currentViewsPerDay: number;
     avgViewsPerDayComparison: number;
+    channelMedianViews: number;
+    outlierRatio: number;
+    isOutlier: boolean;
+    isUnderperformer: boolean;
   };
 
   performanceScores: {
@@ -125,27 +127,22 @@ const VideoAnalyzer: React.FC = () => {
   const [videoUrl, setVideoUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState('');
+  const [apiError, setApiError] = useState<string | null>(null);
   const [videoData, setVideoData] = useState<any>(null);
   const [channelData, setChannelData] = useState<any>(null);
   const [channelVideos, setChannelVideos] = useState<ChannelVideo[]>([]);
   const [analysisResults, setAnalysisResults] = useState<VideoAnalysis | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
-
-  // AI Chatbot Interface States
-  const [chatQuery, setChatQuery] = useState('');
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [selectedDropdownIndex, setSelectedDropdownIndex] = useState(-1);
-  const [askVideoType, setAskVideoType] = useState<'long-form' | 'shorts'>('long-form');
-  const [analyticsResults, setAnalyticsResults] = useState<{ [key: string]: AnalyticsResult }>({});
-  const [calculatingQuestion, setCalculatingQuestion] = useState<string | null>(null);
-  const [selectedResult, setSelectedResult] = useState<AnalyticsResult | null>(null);
-  const [conversationHistory, setConversationHistory] = useState<Array<{
-    type: 'user' | 'assistant';
-    content: string;
-    result?: AnalyticsResult;
-    timestamp: Date;
-  }>>([]);
+  const [tagModalOpen, setTagModalOpen] = useState(false);
+  const [thumbScores, setThumbScores] = useState<{
+    composition: number; compositionReason: string;
+    lighting: number; lightingReason: string;
+    textReadability: number; textReadabilityReason: string;
+    overall: number;
+    heatmapUrl: string;
+    insights: string[];
+  } | null>(null);
 
   // Analytics tracking
   const timeTracking = useTimeTracking('Video Analyzer', 120);
@@ -160,72 +157,6 @@ const VideoAnalyzer: React.FC = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Enhanced search function with fuzzy matching
-  const searchQuestions = useMemo(() => {
-    if (!chatQuery.trim()) return [];
-
-    const query = chatQuery.toLowerCase();
-    const words = query.split(' ').filter(word => word.length > 0);
-
-    const scoredQuestions = ANALYTICS_QUESTIONS
-      .filter(question => {
-        // Filter by video type
-        return question.videoType === 'both' || question.videoType === askVideoType;
-      })
-      .map(question => {
-        let score = 0;
-        const searchableText = [
-          question.question,
-          question.category,
-          question.description,
-          ...question.tags
-        ].join(' ').toLowerCase();
-
-        // Exact phrase match gets highest score
-        if (searchableText.includes(query)) {
-          score += 100;
-        }
-
-        // All words present gets high score
-        const allWordsPresent = words.every(word => searchableText.includes(word));
-        if (allWordsPresent) {
-          score += 50;
-        }
-
-        // Individual word matches
-        words.forEach(word => {
-          if (searchableText.includes(word)) {
-            score += 10;
-          }
-        });
-
-        // Question text matches get bonus
-        if (question.question.toLowerCase().includes(query)) {
-          score += 30;
-        }
-
-        // Category matches get bonus
-        if (question.category.toLowerCase().includes(query)) {
-          score += 20;
-        }
-
-        // Tag matches get bonus
-        question.tags.forEach(tag => {
-          if (tag.toLowerCase().includes(query)) {
-            score += 15;
-          }
-        });
-
-        return { question, score };
-      })
-      .filter(({ score }) => score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 8) // Limit to 8 suggestions
-      .map(({ question }) => question);
-
-    return scoredQuestions;
-  }, [chatQuery, askVideoType]);
 
   const toolConfig = {
     name: 'Video Analyzer',
@@ -247,53 +178,6 @@ const VideoAnalyzer: React.FC = () => {
     }
     // Don't default to Ask tab anymore - let user navigate there after analysis
   }, [videoId]);
-
-  // Switch to overview tab when analysis results become available
-  useEffect(() => {
-    if (analysisResults && videoData && channelData) {
-      // Only switch to overview if we're not already on a valid tab
-      if (activeTab === 'ask' && !analysisResults) {
-        setActiveTab('overview');
-      }
-    }
-  }, [analysisResults, videoData, channelData]);
-
-  // Handle keyboard navigation for dropdown
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!showDropdown || searchQuestions.length === 0) return;
-
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault();
-          setSelectedDropdownIndex(prev =>
-            prev < searchQuestions.length - 1 ? prev + 1 : 0
-          );
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          setSelectedDropdownIndex(prev =>
-            prev > 0 ? prev - 1 : searchQuestions.length - 1
-          );
-          break;
-        case 'Enter':
-          e.preventDefault();
-          if (selectedDropdownIndex >= 0 && selectedDropdownIndex < searchQuestions.length) {
-            handleQuestionSelect(searchQuestions[selectedDropdownIndex]);
-          } else if (searchQuestions.length > 0) {
-            handleQuestionSelect(searchQuestions[0]);
-          }
-          break;
-        case 'Escape':
-          setShowDropdown(false);
-          setSelectedDropdownIndex(-1);
-          break;
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showDropdown, searchQuestions, selectedDropdownIndex]);
 
   const downloadThumbnail = async (url: string, filename?: string) => {
     try {
@@ -493,18 +377,18 @@ const VideoAnalyzer: React.FC = () => {
     let linksReason = '';
 
     // Title optimization (35 points max)
-    if (contentAnalysis.titleLength >= 50 && contentAnalysis.titleLength <= 60) {
+    if (contentAnalysis.titleLength >= 35 && contentAnalysis.titleLength <= 65) {
       titleScore = 35;
       titleReason = `Perfect length (${contentAnalysis.titleLength} chars) - maximizes visibility`;
-    } else if (contentAnalysis.titleLength >= 40 && contentAnalysis.titleLength <= 70) {
+    } else if (contentAnalysis.titleLength >= 25 && contentAnalysis.titleLength <= 70) {
       titleScore = 25;
       titleReason = `Good length (${contentAnalysis.titleLength} chars) - could be optimized`;
-    } else if (contentAnalysis.titleLength >= 30 && contentAnalysis.titleLength <= 80) {
+    } else if (contentAnalysis.titleLength >= 15 && contentAnalysis.titleLength <= 80) {
       titleScore = 15;
       titleReason = `Acceptable length (${contentAnalysis.titleLength} chars) - room for improvement`;
     } else {
       titleScore = 5;
-      titleReason = `Poor length (${contentAnalysis.titleLength} chars) - ${contentAnalysis.titleLength < 30 ? 'too short' : 'too long'}`;
+      titleReason = `Poor length (${contentAnalysis.titleLength} chars) - too short/too long`;
     }
     seoScore += titleScore;
 
@@ -706,7 +590,7 @@ const VideoAnalyzer: React.FC = () => {
       strengths.push(`Good engagement rate of ${((likes + comments) / views * 100).toFixed(2)}% - above typical performance`);
     }
 
-    if (contentAnalysis.titleLength >= 40 && contentAnalysis.titleLength <= 60) {
+    if (contentAnalysis.titleLength >= 35 && contentAnalysis.titleLength <= 65) {
       strengths.push(`Perfect title length (${contentAnalysis.titleLength} chars) maximizes visibility in search and suggested videos`);
     }
 
@@ -747,13 +631,13 @@ const VideoAnalyzer: React.FC = () => {
     }
 
     // Title optimization
-    if (contentAnalysis.titleLength < 40) {
+    if (contentAnalysis.titleLength < 35) {
       improvements.push(`Title too short (${contentAnalysis.titleLength} chars) - missing keyword opportunities`);
-      const missingChars = 50 - contentAnalysis.titleLength;
+      const missingChars = 35 - contentAnalysis.titleLength;
       recommendations.push(`Add ${missingChars} more characters with high-search keywords. Consider adding: numbers, year, or emotional triggers`);
-    } else if (contentAnalysis.titleLength > 60) {
+    } else if (contentAnalysis.titleLength > 65) {
       improvements.push(`Title too long (${contentAnalysis.titleLength} chars) - will be truncated in search`);
-      recommendations.push(`Shorten title to 50-60 chars. Move less important words to description`);
+      recommendations.push(`Shorten title to 35-65 chars. Move less important words to description`);
     }
 
     // Tag optimization
@@ -829,90 +713,6 @@ const VideoAnalyzer: React.FC = () => {
     }
 
     return { strengths, improvements, recommendations };
-  };
-
-  const handleQuestionSelect = async (question: AnalyticsQuestion) => {
-    // Check if we have the necessary data
-    if (!videoData || !channelData || channelVideos.length === 0) {
-      // Add error message to conversation
-      const errorMessage = {
-        type: 'assistant' as const,
-        content: 'Please analyze a video first to get analytics results! Go to the Overview tab and enter a YouTube URL.',
-        timestamp: new Date()
-      };
-      setConversationHistory(prev => [...prev, errorMessage]);
-      setChatQuery('');
-      setShowDropdown(false);
-      return;
-    }
-
-    // Add user question to conversation
-    const userMessage = {
-      type: 'user' as const,
-      content: question.question,
-      timestamp: new Date()
-    };
-    setConversationHistory(prev => [...prev, userMessage]);
-
-    setCalculatingQuestion(question.id);
-    setChatQuery('');
-    setShowDropdown(false);
-
-    try {
-      // Add a small delay for better UX
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      const calculator = new AnalyticsCalculator(videoData, channelData, channelVideos);
-      const result = calculator.calculateAnswer(question);
-
-      setAnalyticsResults(prev => ({
-        ...prev,
-        [question.id]: result
-      }));
-
-      // Add assistant response to conversation
-      const assistantMessage = {
-        type: 'assistant' as const,
-        content: result.answer,
-        result: result,
-        timestamp: new Date()
-      };
-      setConversationHistory(prev => [...prev, assistantMessage]);
-
-    } catch (error) {
-      console.error('Error calculating analytics:', error);
-      const errorMessage = {
-        type: 'assistant' as const,
-        content: 'Sorry, there was an error calculating this analytics question. Please try again.',
-        timestamp: new Date()
-      };
-      setConversationHistory(prev => [...prev, errorMessage]);
-    } finally {
-      setCalculatingQuestion(null);
-    }
-  };
-
-  const handleChatSubmit = () => {
-    if (!chatQuery.trim()) return;
-
-    if (searchQuestions.length > 0) {
-      handleQuestionSelect(searchQuestions[0]);
-    } else {
-      // Add user message and no results found
-      const userMessage = {
-        type: 'user' as const,
-        content: chatQuery,
-        timestamp: new Date()
-      };
-      const assistantMessage = {
-        type: 'assistant' as const,
-        content: `I couldn't find any analytics questions matching "${chatQuery}". Try asking about video performance, engagement metrics, or upload patterns.`,
-        timestamp: new Date()
-      };
-      setConversationHistory(prev => [...prev, userMessage, assistantMessage]);
-      setChatQuery('');
-      setShowDropdown(false);
-    }
   };
 
   const performAnalysis = async (videoData: any, channelData: any, channelVideos: ChannelVideo[]): Promise<VideoAnalysis> => {
@@ -1026,6 +826,19 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
     const recentUploads = channelVideos.filter(v => moment(v.publishedAt).isAfter(thirtyDaysAgo)).length;
     const recentUploadRate = `${recentUploads} videos in last 30 days`;
 
+    // Outlier detection: median views of channel's recent videos (excluding this video)
+    const otherVideos = channelVideos.filter(v => v.id !== videoData.id);
+    const sortedViews = [...otherVideos].map(v => v.viewCount).sort((a, b) => a - b);
+    const mid = Math.floor(sortedViews.length / 2);
+    const channelMedianViews = sortedViews.length > 0
+      ? sortedViews.length % 2 !== 0
+        ? sortedViews[mid]
+        : (sortedViews[mid - 1] + sortedViews[mid]) / 2
+      : 0;
+    const outlierRatio = channelMedianViews > 0 ? currentViews / channelMedianViews : 0;
+    const isOutlier = outlierRatio >= 2;
+    const isUnderperformer = channelMedianViews > 0 && outlierRatio < 0.5;
+
     const channelMetrics = {
       channelAge,
       totalVideos,
@@ -1049,7 +862,11 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
         videosToConsider.length > 0 ? 'last 12 months' :
           'recent uploads',
       currentViewsPerDay,
-      avgViewsPerDayComparison
+      avgViewsPerDayComparison,
+      channelMedianViews,
+      outlierRatio,
+      isOutlier,
+      isUnderperformer
     };
 
     const insights = generateInsights(videoData, contentAnalysis, scores, channelMetrics);
@@ -1091,6 +908,207 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
     };
   };
 
+  const analyzeThumbnail = async (imageUrl: string) => {
+    const loadImage = (url: string): Promise<string> => new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        canvas.getContext('2d')!.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL());
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+
+    const generateHeatmap = (dataUrl: string): Promise<string> => new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 800;
+        const scale = Math.min(maxDim / img.width, maxDim / img.height, 1);
+        const w = Math.floor(img.width * scale), h = Math.floor(img.height * scale);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d')!;
+        canvas.width = w; canvas.height = h;
+        ctx.drawImage(img, 0, 0, w, h);
+        const d = ctx.getImageData(0, 0, w, h).data;
+        const gray = new Uint8Array(w * h);
+        for (let i = 0; i < d.length; i += 4) gray[i/4] = (d[i]+d[i+1]+d[i+2])/3;
+        const sal = new Float32Array(w * h);
+        for (let y = 1; y < h-1; y++) for (let x = 1; x < w-1; x++) {
+          const idx = y*w+x;
+          const gx = -gray[(y-1)*w+(x-1)] + gray[(y-1)*w+(x+1)] - 2*gray[y*w+(x-1)] + 2*gray[y*w+(x+1)] - gray[(y+1)*w+(x-1)] + gray[(y+1)*w+(x+1)];
+          const gy = -gray[(y-1)*w+(x-1)] - 2*gray[(y-1)*w+x] - gray[(y-1)*w+(x+1)] + gray[(y+1)*w+(x-1)] + 2*gray[(y+1)*w+x] + gray[(y+1)*w+(x+1)];
+          const i4 = idx*4, r=d[i4], g=d[i4+1], b=d[i4+2];
+          const mx=Math.max(r,g,b), mn=Math.min(r,g,b), sat=mx===0?0:(mx-mn)/mx;
+          const skin = (r>120&&g>80&&b>60&&r>b&&Math.abs(r-g)<50)?60:0;
+          sal[idx] = Math.sqrt(gx*gx+gy*gy)*0.6 + sat*100 + (r+g+b)/3*0.4 + skin;
+        }
+        const cx2=w/2, cy2=h/2;
+        for (let y=0;y<h;y++) for (let x=0;x<w;x++) {
+          const dx=(x-cx2)/w, dy=(y-cy2)/h;
+          sal[y*w+x] += Math.exp(-Math.sqrt(dx*dx+dy*dy)*2.5)*50;
+        }
+        const blurred = new Float32Array(w * h);
+        const ks=12, sigma=6;
+        for (let y=0;y<h;y++) for (let x=0;x<w;x++) {
+          let sum=0, wt=0;
+          for (let ky=-ks;ky<=ks;ky+=2) for (let kx=-ks;kx<=ks;kx+=2) {
+            const nx=Math.max(0,Math.min(w-1,x+kx)), ny=Math.max(0,Math.min(h-1,y+ky));
+            const ww=Math.exp(-(kx*kx+ky*ky)/(2*sigma*sigma));
+            sum+=sal[ny*w+nx]*ww; wt+=ww;
+          }
+          blurred[y*w+x]=sum/wt;
+        }
+        let mx2=0, mn2=Infinity;
+        for (let i=0;i<blurred.length;i++){if(blurred[i]>mx2)mx2=blurred[i];if(blurred[i]<mn2)mn2=blurred[i];}
+        const hc = document.createElement('canvas');
+        hc.width=img.width; hc.height=img.height;
+        const hctx = hc.getContext('2d')!;
+        hctx.drawImage(img,0,0);
+        hctx.globalAlpha=0.4; hctx.fillStyle='black'; hctx.fillRect(0,0,img.width,img.height); hctx.globalAlpha=1;
+        const tc = document.createElement('canvas');
+        tc.width=w; tc.height=h;
+        const tctx = tc.getContext('2d')!;
+        const hd = tctx.createImageData(w,h);
+        for (let i=0;i<blurred.length;i++) {
+          let n = (blurred[i]-mn2)/(mx2-mn2);
+          n = Math.pow(n, 0.65);
+          const intensity = Math.min(255, n*230+40);
+          let r2,g2,b2;
+          if(n<0.15){r2=0;g2=0;b2=255;}
+          else if(n<0.35){const t=(n-0.15)/0.2;r2=0;g2=255*t;b2=255;}
+          else if(n<0.55){const t=(n-0.35)/0.2;r2=0;g2=255;b2=255*(1-t);}
+          else if(n<0.70){const t=(n-0.55)/0.15;r2=255*t;g2=255;b2=0;}
+          else if(n<0.85){const t=(n-0.70)/0.15;r2=255;g2=255*(1-t*0.4);b2=0;}
+          else{const t=(n-0.85)/0.15;r2=255;g2=155*(1-t);b2=0;}
+          hd.data[i*4]=r2; hd.data[i*4+1]=g2; hd.data[i*4+2]=b2; hd.data[i*4+3]=intensity;
+        }
+        tctx.putImageData(hd,0,0);
+        hctx.drawImage(tc,0,0,img.width,img.height);
+        resolve(hc.toDataURL());
+      };
+      img.src = dataUrl;
+    });
+
+    const calcComposition = (dataUrl: string): Promise<{score: number; reason: string}> => new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d')!;
+        canvas.width = img.width; canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        let score = 70; const reasons: string[] = [];
+        const cx = canvas.width/2, cy = canvas.height/2, tx = canvas.width/3, ty = canvas.height/3;
+        const d = ctx.getImageData(0,0,canvas.width,canvas.height).data;
+        let total=0, center=0, cp=0;
+        for(let y=0;y<canvas.height;y++) for(let x=0;x<canvas.width;x++){
+          const i=(y*canvas.width+x)*4, b=(d[i]+d[i+1]+d[i+2])/3;
+          total+=b;
+          if(Math.abs(x-cx)<tx && Math.abs(y-cy)<ty){center+=b;cp++;}
+        }
+        if(center/cp > total/(canvas.width*canvas.height)*1.1){score+=15;reasons.push('Strong center focus draws viewer attention');}
+        else reasons.push('Subjects could be better centered for impact');
+        const ar=canvas.width/canvas.height;
+        if(ar>=1.5&&ar<=1.8){score+=10;reasons.push('Perfect 16:9 aspect ratio for YouTube');}
+        else reasons.push('Non-standard aspect ratio may crop on some devices');
+        resolve({score:Math.min(100,score), reason:reasons.join('. ')});
+      };
+      img.src=dataUrl;
+    });
+
+    const calcLighting = (dataUrl: string): Promise<{score: number; reason: string}> => new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d')!;
+        canvas.width=img.width; canvas.height=img.height;
+        ctx.drawImage(img,0,0);
+        const d=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+        let score=70, total=0, bright=0, dark=0;
+        const reasons:string[]=[];
+        for(let i=0;i<d.length;i+=4){
+          const b=(d[i]+d[i+1]+d[i+2])/3;
+          total+=b; if(b>200)bright++; if(b<50)dark++;
+        }
+        const avg=total/(d.length/4), tp=d.length/4;
+        if(avg>100&&avg<180){score+=15;reasons.push('Optimal brightness range for visibility');}
+        else if(avg<=100)reasons.push('Image appears too dark, may not stand out');
+        else reasons.push('Image may be too bright, reducing detail');
+        if(bright/tp<0.05&&dark/tp<0.05){score+=10;reasons.push('Good dynamic range without clipping');}
+        else if(bright/tp>0.2||dark/tp>0.2){score-=15;reasons.push('Too many overexposed or underexposed areas');}
+        let variance=0;
+        for(let i=0;i<d.length;i+=4){const b=(d[i]+d[i+1]+d[i+2])/3;variance+=Math.pow(b-avg,2);}
+        const std=Math.sqrt(variance/(d.length/4));
+        if(std>40&&std<70){score+=10;reasons.push('Excellent contrast for visual pop');}
+        else if(std<=40)reasons.push('Low contrast may appear flat');
+        else reasons.push('Very high contrast may be harsh');
+        resolve({score:Math.min(100,Math.max(0,score)), reason:reasons.join('. ')});
+      };
+      img.src=dataUrl;
+    });
+
+    const detectText = (dataUrl: string): Promise<{score: number; reason: string}> => new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d')!;
+        canvas.width=img.width; canvas.height=img.height;
+        ctx.drawImage(img,0,0);
+        const d=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+        let sharp=0, horiz=0, vert=0;
+        const sr=3;
+        for(let y=2;y<canvas.height-2;y+=sr) for(let x=2;x<canvas.width-2;x+=sr){
+          const cur=(d[(y*canvas.width+x)*4]+d[(y*canvas.width+x)*4+1]+d[(y*canvas.width+x)*4+2])/3;
+          const li=(y*canvas.width+(x-2))*4, ri=(y*canvas.width+(x+2))*4;
+          const ti=((y-2)*canvas.width+x)*4, bi=((y+2)*canvas.width+x)*4;
+          const hd2=Math.abs((d[li]+d[li+1]+d[li+2])/3-(d[ri]+d[ri+1]+d[ri+2])/3);
+          const vd=Math.abs((d[ti]+d[ti+1]+d[ti+2])/3-(d[bi]+d[bi+1]+d[bi+2])/3);
+          if(hd2>70){horiz++;sharp++;}
+          if(vd>70){vert++;sharp++;}
+        }
+        const total=((canvas.width/sr)*(canvas.height/sr));
+        const er=sharp/total, eb=Math.min(horiz,vert)/Math.max(horiz,vert,1);
+        if(er>0.025&&er<0.15&&eb>0.5){
+          const rs=Math.min(90,Math.round(eb*80+Math.min(er*500,30)));
+          resolve({score:rs, reason:'Text detected — good contrast and readability'});
+        } else {
+          resolve({score:50, reason:'No clear text overlay detected'});
+        }
+      };
+      img.src=dataUrl;
+    });
+
+    try {
+      const dataUrl = await loadImage(imageUrl);
+      const [heatmapUrl, comp, light, text] = await Promise.all([
+        generateHeatmap(dataUrl),
+        calcComposition(dataUrl),
+        calcLighting(dataUrl),
+        detectText(dataUrl),
+      ]);
+      const overall = Math.round((comp.score + light.score + text.score) / 3);
+      const insights: string[] = [];
+      if(comp.score > 85) insights.push('Excellent composition — strong visual hierarchy');
+      else if(comp.score < 65) insights.push('Composition needs work — center your subject more');
+      if(light.score > 85) insights.push('Great lighting with balanced exposure and contrast');
+      else if(light.score < 65) insights.push('Lighting needs improvement — check brightness and contrast');
+      if(text.score > 70) insights.push('Text overlay detected with good readability');
+      if(overall > 80) insights.push('Strong overall thumbnail — should perform well in feeds');
+
+      setThumbScores({
+        composition: comp.score, compositionReason: comp.reason,
+        lighting: light.score, lightingReason: light.reason,
+        textReadability: text.score, textReadabilityReason: text.reason,
+        overall, heatmapUrl, insights,
+      });
+    } catch(e) {
+      console.error('Thumbnail analysis failed', e);
+    }
+  };
+
   const handleSearch = () => {
     const extractedId = extractVideoId(videoUrl);
     if (extractedId) {
@@ -1113,10 +1131,8 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
 
     setIsLoading(true);
     setShowResults(false);
+    setApiError(null);
     setLoadingStage('Fetching video data...');
-
-    // Clear conversation history when analyzing new video
-    setConversationHistory([]);
 
     try {
       const video = await fetchVideoData(targetId);
@@ -1134,22 +1150,24 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
       setAnalysisResults(analysis);
       setShowResults(true);
 
+      // Trigger thumbnail analysis
+      const thumbUrl = video.snippet.thumbnails?.maxres?.url || video.snippet.thumbnails?.high?.url || video.snippet.thumbnails?.medium?.url;
+      if (thumbUrl) {
+        analyzeThumbnail(thumbUrl);
+      }
+
       // Track successful results
       trackResultsDisplayed('Video Analyzer', 1);
 
-      // Add welcome message to conversation
-      const welcomeMessage = {
-        type: 'assistant' as const,
-        content: `Hi! I've analyzed "${video.snippet.title}" and I'm ready to answer your analytics questions. What would you like to know about this video's performance?`,
-        timestamp: new Date()
-      };
-      setConversationHistory([welcomeMessage]);
-
     } catch (error) {
       console.error('Error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      alert(`An error occurred while analyzing the video: ${errorMessage}`);
-      trackError('Video Analyzer', 'api_error', errorMessage);
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      if (msg.toLowerCase().includes('quota')) {
+        setApiError('The Video Analyzer is on cooldown — try again tomorrow.');
+      } else {
+        setApiError(msg || 'An error occurred while analyzing the video. Please try again.');
+      }
+      trackError('Video Analyzer', 'api_error', msg);
     } finally {
       setIsLoading(false);
       setLoadingStage('');
@@ -1159,45 +1177,56 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
   const renderOverviewTab = () => {
     if (!analysisResults) return null;
 
+    const { channelMedianViews, outlierRatio, isOutlier, isUnderperformer } = analysisResults.channelMetrics;
+
     return (
       <S.TabContent>
-        <S.MetricsGrid>
-          <S.MetricCard>
-            <S.MetricIcon className="bx bx-show"></S.MetricIcon>
-            <S.MetricValue>{analysisResults.basicMetrics.views.toLocaleString()}</S.MetricValue>
-            <S.MetricLabel>Views</S.MetricLabel>
-            <S.MetricSubtext>
-              {analysisResults.channelMetrics.viewsComparison} channel average
-            </S.MetricSubtext>
-          </S.MetricCard>
+        {channelMedianViews > 0 && (
+          <S.OutlierBanner isOutlier={isOutlier} isUnderperformer={isUnderperformer}>
+            <S.OutlierBannerIcon isOutlier={isOutlier} isUnderperformer={isUnderperformer}>
+              <i className={isOutlier ? 'bx bx-rocket' : isUnderperformer ? 'bx bx-trending-down' : 'bx bx-bar-chart-alt-2'}></i>
+            </S.OutlierBannerIcon>
+            <S.OutlierBannerInfo>
+              <S.OutlierBannerLabel>Channel Performance</S.OutlierBannerLabel>
+              <S.OutlierBannerValue isOutlier={isOutlier} isUnderperformer={isUnderperformer}>
+                {isOutlier
+                  ? `Outlier — ${outlierRatio.toFixed(1)}× channel median`
+                  : isUnderperformer
+                  ? `Underperformer — ${outlierRatio.toFixed(1)}× channel median`
+                  : `${outlierRatio.toFixed(1)}× channel median`}
+              </S.OutlierBannerValue>
+              <S.OutlierBannerSub>
+                {isOutlier
+                  ? `Well above this channel's typical ${channelMedianViews.toLocaleString()} views`
+                  : isUnderperformer
+                  ? `Well below this channel's typical ${channelMedianViews.toLocaleString()} views`
+                  : `Channel recent median: ${channelMedianViews.toLocaleString()} views`}
+              </S.OutlierBannerSub>
+            </S.OutlierBannerInfo>
+          </S.OutlierBanner>
+        )}
 
-          <S.MetricCard>
-            <S.MetricIcon className="bx bx-like"></S.MetricIcon>
-            <S.MetricValue>{analysisResults.basicMetrics.likes.toLocaleString()}</S.MetricValue>
-            <S.MetricLabel>Likes</S.MetricLabel>
-            <S.MetricSubtext>
-              {(analysisResults.basicMetrics.likeToViewRatio * 100).toFixed(2)}% of views
-            </S.MetricSubtext>
-          </S.MetricCard>
-
-          <S.MetricCard>
-            <S.MetricIcon className="bx bx-comment"></S.MetricIcon>
-            <S.MetricValue>{analysisResults.basicMetrics.comments.toLocaleString()}</S.MetricValue>
-            <S.MetricLabel>Comments</S.MetricLabel>
-            <S.MetricSubtext>
-              {(analysisResults.basicMetrics.commentToViewRatio * 100).toFixed(3)}% of views
-            </S.MetricSubtext>
-          </S.MetricCard>
-
-          <S.MetricCard>
-            <S.MetricIcon className="bx bx-trending-up"></S.MetricIcon>
-            <S.MetricValue>{(analysisResults.basicMetrics.engagementRate * 100).toFixed(2)}%</S.MetricValue>
-            <S.MetricLabel>Engagement Rate</S.MetricLabel>
-            <S.MetricSubtext>
-              Likes + Comments / Views
-            </S.MetricSubtext>
-          </S.MetricCard>
-        </S.MetricsGrid>
+        <S.StatStrip>
+          <S.StatStripItem>
+            <S.StatStripValue>{analysisResults.basicMetrics.views.toLocaleString()}</S.StatStripValue>
+            <S.StatStripLabel>Views</S.StatStripLabel>
+          </S.StatStripItem>
+          <S.StatStripDivider />
+          <S.StatStripItem>
+            <S.StatStripValue>{analysisResults.basicMetrics.likes.toLocaleString()}</S.StatStripValue>
+            <S.StatStripLabel>Likes · {(analysisResults.basicMetrics.likeToViewRatio * 100).toFixed(2)}%</S.StatStripLabel>
+          </S.StatStripItem>
+          <S.StatStripDivider />
+          <S.StatStripItem>
+            <S.StatStripValue>{analysisResults.basicMetrics.comments.toLocaleString()}</S.StatStripValue>
+            <S.StatStripLabel>Comments · {(analysisResults.basicMetrics.commentToViewRatio * 100).toFixed(3)}%</S.StatStripLabel>
+          </S.StatStripItem>
+          <S.StatStripDivider />
+          <S.StatStripItem>
+            <S.StatStripValue>{(analysisResults.basicMetrics.engagementRate * 100).toFixed(2)}%</S.StatStripValue>
+            <S.StatStripLabel>Engagement Rate</S.StatStripLabel>
+          </S.StatStripItem>
+        </S.StatStrip>
 
         <S.ScoreGrid>
           <S.ScoreCard>
@@ -1426,6 +1455,73 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
           </S.ScoreCard>
         </S.ScoreGrid>
 
+        {/* Thumbnail Analyzer Section */}
+        {thumbScores && videoData && (
+          <S.ThumbSection>
+            <S.ThumbSectionHeader>
+              <S.ThumbSectionTitle>
+                <i className="bx bx-image-alt"></i>
+                Thumbnail Analysis
+              </S.ThumbSectionTitle>
+              <S.ThumbOverallBadge score={thumbScores.overall}>
+                {Math.round(thumbScores.overall)}/100
+              </S.ThumbOverallBadge>
+            </S.ThumbSectionHeader>
+
+            <S.ThumbComparison>
+              <S.ThumbImageWrapper>
+                <img
+                  src={videoData.snippet.thumbnails.maxres?.url || videoData.snippet.thumbnails.high.url}
+                  alt="Original thumbnail"
+                  style={{ width: '100%', display: 'block', borderRadius: '6px' }}
+                />
+                <S.ThumbImageLabel>Original</S.ThumbImageLabel>
+              </S.ThumbImageWrapper>
+              <S.ThumbImageWrapper>
+                <img
+                  src={thumbScores.heatmapUrl}
+                  alt="Attention heatmap"
+                  style={{ width: '100%', display: 'block', borderRadius: '6px' }}
+                />
+                <S.ThumbImageLabel>Attention Heatmap</S.ThumbImageLabel>
+              </S.ThumbImageWrapper>
+            </S.ThumbComparison>
+
+            <S.ThumbScoreList>
+              {([
+                { label: 'Composition', score: thumbScores.composition, reason: thumbScores.compositionReason },
+                { label: 'Lighting & Contrast', score: thumbScores.lighting, reason: thumbScores.lightingReason },
+                { label: 'Text Readability', score: thumbScores.textReadability, reason: thumbScores.textReadabilityReason },
+              ] as { label: string; score: number; reason: string }[]).map(({ label, score, reason }) => {
+                const color = score >= 80 ? '#10b981' : score >= 60 ? '#f59e0b' : '#ef4444';
+                return (
+                  <S.ThumbScoreRow key={label}>
+                    <S.ThumbScoreRowTop>
+                      <S.ThumbScoreLabel>{label}</S.ThumbScoreLabel>
+                      <S.ThumbScoreValue scoreColor={color}>{score}/100</S.ThumbScoreValue>
+                    </S.ThumbScoreRowTop>
+                    <S.ThumbScoreBar>
+                      <S.ThumbScoreBarFill width={score} scoreColor={color} />
+                    </S.ThumbScoreBar>
+                    <S.ThumbScoreReason>{reason}</S.ThumbScoreReason>
+                  </S.ThumbScoreRow>
+                );
+              })}
+            </S.ThumbScoreList>
+
+            {thumbScores.insights.length > 0 && (
+              <S.ThumbInsights>
+                {thumbScores.insights.map((insight, i) => (
+                  <S.ThumbInsightItem key={i}>
+                    <i className="bx bx-info-circle"></i>
+                    {insight}
+                  </S.ThumbInsightItem>
+                ))}
+              </S.ThumbInsights>
+            )}
+          </S.ThumbSection>
+        )}
+
         {analysisResults.contentAnalysis.tags.length > 0 && (
           <S.TagsContainer>
             <S.TagsHeader>
@@ -1433,13 +1529,19 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
                 <i className="bx bx-tag"></i>
                 Video Tags ({analysisResults.contentAnalysis.tags.length})
               </S.SectionTitle>
-              <S.CopyTagsButton onClick={() => {
-                navigator.clipboard.writeText(analysisResults.contentAnalysis.tags.join(', '));
-                alert('Tags copied to clipboard!');
-              }}>
-                <i className="bx bx-copy"></i>
-                Copy All
-              </S.CopyTagsButton>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <S.CopyTagsButton onClick={() => {
+                  navigator.clipboard.writeText(analysisResults.contentAnalysis.tags.join(', '));
+                  alert('Tags copied to clipboard!');
+                }}>
+                  <i className="bx bx-copy"></i>
+                  Copy All
+                </S.CopyTagsButton>
+                <S.AnalyzeAllTagsButton onClick={() => setTagModalOpen(true)}>
+                  <i className="bx bx-bar-chart-alt-2"></i>
+                  Analyze All
+                </S.AnalyzeAllTagsButton>
+              </div>
             </S.TagsHeader>
             <S.TagContainer>
               {analysisResults.contentAnalysis.tags.map((tag: string, index: number) => (
@@ -1455,47 +1557,203 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
           </S.TagsContainer>
         )}
 
-        {/* Key Insights Section - Dynamic based on performance */}
-        <S.InsightsGrid>
-          {/* Top strengths - show max 2 */}
-          {analysisResults.insights.strengths.slice(0, 2).map((strength, index) => (
-            <S.InsightCard key={`strength-${index}`} type="success">
-              <S.InsightCardIcon>
-                <i className="bx bx-check-circle"></i>
-              </S.InsightCardIcon>
-              <S.InsightCardContent>
-                <S.InsightCardTitle>Strength</S.InsightCardTitle>
-                <S.InsightCardText>{strength}</S.InsightCardText>
-              </S.InsightCardContent>
-            </S.InsightCard>
-          ))}
+        {/* Description Analysis Section */}
+        {videoData && (() => {
+          const description = videoData.snippet.description || '';
+          const { descriptionLength, descriptionLinkCount, hashtags } = analysisResults.contentAnalysis;
+          const socialDomains = ['instagram.com','twitter.com','x.com','facebook.com','tiktok.com','twitch.tv','snapchat.com','linkedin.com','discord.gg','discord.com','pinterest.com'];
+          const foundSocials = socialDomains.filter(d => description.toLowerCase().includes(d));
 
-          {/* Critical improvements - show max 2 */}
-          {analysisResults.insights.improvements.slice(0, 2).map((improvement, index) => (
-            <S.InsightCard key={`improvement-${index}`} type="warning">
-              <S.InsightCardIcon>
-                <i className="bx bx-error-circle"></i>
-              </S.InsightCardIcon>
-              <S.InsightCardContent>
-                <S.InsightCardTitle>Needs Attention</S.InsightCardTitle>
-                <S.InsightCardText>{improvement}</S.InsightCardText>
-              </S.InsightCardContent>
-            </S.InsightCard>
-          ))}
+          let lengthScore = 0, lengthReason = '';
+          if (descriptionLength >= 1000) { lengthScore = 35; lengthReason = `Excellent (${descriptionLength.toLocaleString()} chars) — strong SEO signal`; }
+          else if (descriptionLength >= 500) { lengthScore = 28; lengthReason = `Good (${descriptionLength} chars) — consider adding more detail`; }
+          else if (descriptionLength >= 250) { lengthScore = 20; lengthReason = `Adequate (${descriptionLength} chars) — expand for better SEO`; }
+          else if (descriptionLength >= 100) { lengthScore = 12; lengthReason = `Short (${descriptionLength} chars) — needs more content`; }
+          else { lengthScore = 5; lengthReason = `Very short (${descriptionLength} chars) — critical issue`; }
 
-          {/* Top recommendations - show max 2 */}
-          {analysisResults.insights.recommendations.slice(0, 2).map((rec, index) => (
-            <S.InsightCard key={`rec-${index}`} type="info">
-              <S.InsightCardIcon>
-                <i className="bx bx-bulb"></i>
-              </S.InsightCardIcon>
-              <S.InsightCardContent>
-                <S.InsightCardTitle>Quick Win</S.InsightCardTitle>
-                <S.InsightCardText>{rec}</S.InsightCardText>
-              </S.InsightCardContent>
-            </S.InsightCard>
-          ))}
-        </S.InsightsGrid>
+          let linksScore = 0, linksReason = '';
+          if (descriptionLinkCount >= 1 && descriptionLinkCount <= 5) { linksScore = 20; linksReason = `Good (${descriptionLinkCount} link${descriptionLinkCount > 1 ? 's' : ''}) — well balanced`; }
+          else if (descriptionLinkCount > 5 && descriptionLinkCount <= 10) { linksScore = 12; linksReason = `A few too many (${descriptionLinkCount} links) — consider trimming`; }
+          else if (descriptionLinkCount > 10) { linksScore = 5; linksReason = `Too many links (${descriptionLinkCount}) — may appear spammy`; }
+          else { linksScore = 8; linksReason = 'No links — add relevant links to drive traffic'; }
+
+          let socialScore = 0, socialReason = '';
+          if (foundSocials.length >= 2) { socialScore = 20; socialReason = `${foundSocials.length} social platforms linked — great for audience building`; }
+          else if (foundSocials.length === 1) { socialScore = 12; socialReason = '1 social platform linked — add more to grow your following'; }
+          else { socialScore = 0; socialReason = 'No social links — add Instagram, Twitter/X, TikTok, etc.'; }
+
+          let hashtagScore = 0, hashtagReason = '';
+          const hc = hashtags.length;
+          if (hc === 3) { hashtagScore = 25; hashtagReason = 'Perfect (3 hashtags) — optimal for discoverability'; }
+          else if (hc === 2 || hc === 4) { hashtagScore = 18; hashtagReason = `Good (${hc} hashtags) — 3 is the sweet spot`; }
+          else if (hc === 1) { hashtagScore = 10; hashtagReason = 'Only 1 hashtag — add 2 more for best results'; }
+          else if (hc === 5) { hashtagScore = 12; hashtagReason = '5 hashtags — slightly over optimal (3)'; }
+          else if (hc > 5) { hashtagScore = 5; hashtagReason = `Too many hashtags (${hc}) — YouTube only shows the first 3 above your title`; }
+          else { hashtagScore = 0; hashtagReason = 'No hashtags — add 3 to appear above your title on YouTube'; }
+
+          const totalScore = Math.min(100, lengthScore + linksScore + socialScore + hashtagScore);
+          const insights: string[] = [];
+          if (hc === 0) insights.push('Add exactly 3 hashtags — they display above the video title on YouTube');
+          else if (hc > 5) insights.push('Reduce to 3 hashtags — YouTube only shows the first 3 above the title');
+          if (foundSocials.length === 0) insights.push('Add social media links (Instagram, Twitter/X, TikTok) — builds audience beyond YouTube');
+          if (descriptionLength < 250) insights.push('Expand your description to 500+ chars — longer descriptions rank better in search');
+          if (descriptionLinkCount > 10) insights.push('Too many links signals spam — keep it to 5 or fewer high-value links');
+
+          const descScores = [
+            { label: 'Description Length', score: lengthScore, max: 35, reason: lengthReason },
+            { label: 'Links', score: linksScore, max: 20, reason: linksReason },
+            { label: 'Social Links', score: socialScore, max: 20, reason: socialReason },
+            { label: 'Hashtags', score: hashtagScore, max: 25, reason: hashtagReason },
+          ];
+
+          return (
+            <S.ThumbSection>
+              <S.ThumbSectionHeader>
+                <S.ThumbSectionTitle>
+                  <i className="bx bx-align-left"></i>
+                  Description Analysis
+                </S.ThumbSectionTitle>
+                <S.ThumbOverallBadge score={totalScore}>
+                  {totalScore}/100
+                </S.ThumbOverallBadge>
+              </S.ThumbSectionHeader>
+              <S.ThumbScoreList>
+                {descScores.map(({ label, score, max, reason }) => {
+                  const pct = Math.round((score / max) * 100);
+                  const color = pct >= 80 ? '#10b981' : pct >= 55 ? '#f59e0b' : '#ef4444';
+                  return (
+                    <S.ThumbScoreRow key={label}>
+                      <S.ThumbScoreRowTop>
+                        <S.ThumbScoreLabel>{label}</S.ThumbScoreLabel>
+                        <S.ThumbScoreValue scoreColor={color}>{score}/{max}</S.ThumbScoreValue>
+                      </S.ThumbScoreRowTop>
+                      <S.ThumbScoreBar>
+                        <S.ThumbScoreBarFill width={pct} scoreColor={color} />
+                      </S.ThumbScoreBar>
+                      <S.ThumbScoreReason>{reason}</S.ThumbScoreReason>
+                    </S.ThumbScoreRow>
+                  );
+                })}
+              </S.ThumbScoreList>
+              {insights.length > 0 && (
+                <S.ThumbInsights>
+                  {insights.map((insight, i) => (
+                    <S.ThumbInsightItem key={i}>
+                      <i className="bx bx-bulb"></i>
+                      {insight}
+                    </S.ThumbInsightItem>
+                  ))}
+                </S.ThumbInsights>
+              )}
+            </S.ThumbSection>
+          );
+        })()}
+
+        {/* Tag Analysis Modal */}
+        {tagModalOpen && (() => {
+          const tags = analysisResults.contentAnalysis.tags;
+          const STOP = new Set(['the','a','an','and','or','but','in','on','at','to','for','of','with','by','from','is','it','its','i','my','how','what','when','why','this','that','was','are','were','be','been','have','has','do','did','can','will','would','should','about','get','just','make','go','use','new','more','all','as','not','so','if','we','you','they','our','your','he','she','his','her','they','them','their']);
+          const titleWords = (videoData?.snippet?.title || '').toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter((w: string) => w.length > 2 && !STOP.has(w));
+
+          const analyzed = tags.map((tag: string) => {
+            const wc = tag.split(' ').filter(Boolean).length;
+            const cc = tag.length;
+            const type: 'Broad' | 'Mid-tail' | 'Long-tail' = wc === 1 ? 'Broad' : wc <= 3 ? 'Mid-tail' : 'Long-tail';
+
+            const tagWords = tag.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(Boolean);
+            const matchCount = tagWords.filter((w: string) => titleWords.some((tw: string) => tw === w || tw.includes(w) || w.includes(tw))).length;
+            const relevance = tagWords.length > 0 ? matchCount / tagWords.length : 0;
+            const isRelevant = relevance >= 0.5 || (tagWords.length === 1 && relevance > 0);
+
+            let score = 0;
+            if (wc >= 2 && wc <= 3) score += 40;
+            else if (wc === 1) score += 15;
+            else score += 30;
+            if (cc >= 5 && cc <= 30) score += 25;
+            else if (cc >= 3 && cc <= 40) score += 12;
+            else score += 5;
+            if (relevance >= 0.75) score += 35;
+            else if (relevance >= 0.5) score += 25;
+            else if (relevance > 0) score += 12;
+
+            score = Math.max(0, Math.min(100, score));
+            const quality: 'Strong' | 'OK' | 'Weak' = score >= 70 ? 'Strong' : score >= 45 ? 'OK' : 'Weak';
+            return { tag, wordCount: wc, charCount: cc, type, score, quality, isRelevant };
+          }).sort((a: any, b: any) => b.score - a.score);
+
+          const strong = analyzed.filter((t: any) => t.quality === 'Strong').length;
+          const ok = analyzed.filter((t: any) => t.quality === 'OK').length;
+          const weak = analyzed.filter((t: any) => t.quality === 'Weak').length;
+          const relevant = analyzed.filter((t: any) => t.isRelevant).length;
+          const broad = analyzed.filter((t: any) => t.type === 'Broad').length;
+          const midTail = analyzed.filter((t: any) => t.type === 'Mid-tail').length;
+          const longTail = analyzed.filter((t: any) => t.type === 'Long-tail').length;
+
+          return (
+            <S.TagModalOverlay onClick={() => setTagModalOpen(false)}>
+              <S.TagModal onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                <S.TagModalHeader>
+                  <S.TagModalTitle>Tag Analysis ({tags.length} tags)</S.TagModalTitle>
+                  <S.TagModalClose onClick={() => setTagModalOpen(false)}>
+                    <i className="bx bx-x"></i>
+                  </S.TagModalClose>
+                </S.TagModalHeader>
+                <S.TagModalSummary>
+                  <S.TagModalSummaryStat>
+                    <S.TagModalSummaryValue>{tags.length}</S.TagModalSummaryValue>
+                    <S.TagModalSummaryLabel>Total</S.TagModalSummaryLabel>
+                  </S.TagModalSummaryStat>
+                  <S.TagModalSummaryStat>
+                    <S.TagModalSummaryValue style={{ color: '#10b981' }}>{strong}</S.TagModalSummaryValue>
+                    <S.TagModalSummaryLabel>Strong</S.TagModalSummaryLabel>
+                  </S.TagModalSummaryStat>
+                  <S.TagModalSummaryStat>
+                    <S.TagModalSummaryValue style={{ color: '#f59e0b' }}>{ok}</S.TagModalSummaryValue>
+                    <S.TagModalSummaryLabel>OK</S.TagModalSummaryLabel>
+                  </S.TagModalSummaryStat>
+                  <S.TagModalSummaryStat>
+                    <S.TagModalSummaryValue style={{ color: '#ef4444' }}>{weak}</S.TagModalSummaryValue>
+                    <S.TagModalSummaryLabel>Weak</S.TagModalSummaryLabel>
+                  </S.TagModalSummaryStat>
+                  <S.TagModalSummaryStat>
+                    <S.TagModalSummaryValue style={{ color: '#a78bfa' }}>{relevant}</S.TagModalSummaryValue>
+                    <S.TagModalSummaryLabel>On-Topic</S.TagModalSummaryLabel>
+                  </S.TagModalSummaryStat>
+                  <S.TagModalSummaryStat>
+                    <S.TagModalSummaryValue>{broad}</S.TagModalSummaryValue>
+                    <S.TagModalSummaryLabel>Broad</S.TagModalSummaryLabel>
+                  </S.TagModalSummaryStat>
+                  <S.TagModalSummaryStat>
+                    <S.TagModalSummaryValue>{midTail}</S.TagModalSummaryValue>
+                    <S.TagModalSummaryLabel>Mid-tail</S.TagModalSummaryLabel>
+                  </S.TagModalSummaryStat>
+                  <S.TagModalSummaryStat>
+                    <S.TagModalSummaryValue>{longTail}</S.TagModalSummaryValue>
+                    <S.TagModalSummaryLabel>Long-tail</S.TagModalSummaryLabel>
+                  </S.TagModalSummaryStat>
+                </S.TagModalSummary>
+                <S.TagModalBody>
+                  {analyzed.map((item: any, index: number) => (
+                    <S.TagRow key={index}>
+                      <S.TagRowName title={item.tag}>{item.tag}</S.TagRowName>
+                      {item.isRelevant && <S.TagRelevantBadge>On-Topic</S.TagRelevantBadge>}
+                      <S.TagTypeBadge tagType={item.type}>{item.type}</S.TagTypeBadge>
+                      <div style={{ width: '60px', flexShrink: 0 }}>
+                        <S.PerfBar>
+                          <S.PerfBarFill
+                            width={item.score}
+                            color={item.quality === 'Strong' ? '#10b981' : item.quality === 'OK' ? '#f59e0b' : '#ef4444'}
+                          />
+                        </S.PerfBar>
+                      </div>
+                      <S.TagQualityLabel quality={item.quality}>{item.quality}</S.TagQualityLabel>
+                    </S.TagRow>
+                  ))}
+                </S.TagModalBody>
+              </S.TagModal>
+            </S.TagModalOverlay>
+          );
+        })()}
       </S.TabContent>
     );
   };
@@ -1599,6 +1857,69 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
             </S.DetailItem>
           </S.DetailGrid>
         </S.DetailSection>
+
+        <S.DetailSection>
+          <S.DetailTitle>
+            <i className="bx bx-analyse"></i>
+            Advanced Analytics
+          </S.DetailTitle>
+          <S.DetailGrid>
+            {(() => {
+              const daysSincePublished = videoData?.snippet?.publishedAt
+                ? Math.floor((Date.now() - new Date(videoData.snippet.publishedAt).getTime()) / (1000 * 60 * 60 * 24))
+                : 0;
+              const { outlierRatio, isOutlier, isUnderperformer } = analysisResults.channelMetrics;
+              return (
+                <>
+                  <S.DetailItem>
+                    <S.DetailLabel>Days Since Published</S.DetailLabel>
+                    <S.DetailValue>{daysSincePublished.toLocaleString()} days</S.DetailValue>
+                  </S.DetailItem>
+                  <S.DetailItem>
+                    <S.DetailLabel>Est. Views Per Day</S.DetailLabel>
+                    <S.DetailValue>{(analysisResults.basicMetrics.views / Math.max(1, daysSincePublished)).toFixed(0)}</S.DetailValue>
+                  </S.DetailItem>
+                  <S.DetailItem>
+                    <S.DetailLabel>Views Per Subscriber</S.DetailLabel>
+                    <S.DetailValue>{(analysisResults.basicMetrics.views / Math.max(1, analysisResults.basicMetrics.subscribers) * 100).toFixed(2)}%</S.DetailValue>
+                  </S.DetailItem>
+                  <S.DetailItem>
+                    <S.DetailLabel>Like/View Ratio</S.DetailLabel>
+                    <S.DetailValue>{(analysisResults.basicMetrics.likeToViewRatio * 100).toFixed(3)}%</S.DetailValue>
+                  </S.DetailItem>
+                  <S.DetailItem>
+                    <S.DetailLabel>Comment/View Ratio</S.DetailLabel>
+                    <S.DetailValue>{(analysisResults.basicMetrics.commentToViewRatio * 100).toFixed(4)}%</S.DetailValue>
+                  </S.DetailItem>
+                  <S.DetailItem>
+                    <S.DetailLabel>Total Engagement</S.DetailLabel>
+                    <S.DetailValue>{(analysisResults.basicMetrics.likes + analysisResults.basicMetrics.comments).toLocaleString()}</S.DetailValue>
+                  </S.DetailItem>
+                  <S.DetailItem>
+                    <S.DetailLabel>Video Type</S.DetailLabel>
+                    <S.DetailValue>
+                      {analysisResults.basicMetrics.isShort
+                        ? 'YouTube Short'
+                        : analysisResults.technicalDetails.duration > 600
+                        ? 'Long-form (10m+)'
+                        : 'Standard'}
+                    </S.DetailValue>
+                  </S.DetailItem>
+                  <S.DetailItem>
+                    <S.DetailLabel>Channel Performance</S.DetailLabel>
+                    <S.DetailValue>
+                      {isOutlier
+                        ? `Outlier (${outlierRatio.toFixed(1)}×)`
+                        : isUnderperformer
+                        ? `Underperformer (${outlierRatio.toFixed(1)}×)`
+                        : `On-pace (${outlierRatio.toFixed(1)}×)`}
+                    </S.DetailValue>
+                  </S.DetailItem>
+                </>
+              );
+            })()}
+          </S.DetailGrid>
+        </S.DetailSection>
       </S.TabContent>
     );
   };
@@ -1606,148 +1927,138 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
   const renderChannelTab = () => {
     if (!analysisResults || !channelData) return null;
 
+    const { channelMetrics, basicMetrics } = analysisResults;
+    const channelAge = channelMetrics.channelAge;
+    const ageText = Math.floor(channelAge / 365) > 0
+      ? `${Math.floor(channelAge / 365)}y ${Math.floor((channelAge % 365) / 30)}mo`
+      : `${Math.floor(channelAge / 30)} months`;
+
+    const compRows = [
+      { label: 'Views', video: basicMetrics.views, avg: Math.round(channelMetrics.avgViewsPerVideo) },
+      { label: 'Likes', video: basicMetrics.likes, avg: Math.round(channelMetrics.avgLikesPerVideo) },
+      { label: 'Comments', video: basicMetrics.comments, avg: Math.round(channelMetrics.avgCommentsPerVideo) },
+    ];
+
+    const trendIcon = channelMetrics.engagementTrend === 'improving' ? 'bx-trending-up'
+      : channelMetrics.engagementTrend === 'declining' ? 'bx-trending-down' : 'bx-minus';
+    const trendColor = channelMetrics.engagementTrend === 'improving' ? '#10b981'
+      : channelMetrics.engagementTrend === 'declining' ? '#ef4444' : '#f59e0b';
+
     return (
       <S.TabContent>
-        <S.DetailSection>
-          <S.DetailTitle>
-            <i className="bx bx-user-circle"></i>
-            Channel Overview
-          </S.DetailTitle>
-          <S.DetailGrid>
-            <S.DetailItem>
-              <S.DetailLabel>Subscribers</S.DetailLabel>
-              <S.DetailValue>{analysisResults.basicMetrics.subscribers.toLocaleString()}</S.DetailValue>
-            </S.DetailItem>
-            <S.DetailItem>
-              <S.DetailLabel>Total Videos</S.DetailLabel>
-              <S.DetailValue>{analysisResults.channelMetrics.totalVideos.toLocaleString()}</S.DetailValue>
-            </S.DetailItem>
-            <S.DetailItem>
-              <S.DetailLabel>Total Channel Views</S.DetailLabel>
-              <S.DetailValue>{analysisResults.channelMetrics.totalViews.toLocaleString()}</S.DetailValue>
-            </S.DetailItem>
-            <S.DetailItem>
-              <S.DetailLabel>Channel Age</S.DetailLabel>
-              <S.DetailValue>
-                {Math.floor(analysisResults.channelMetrics.channelAge / 365) > 0
-                  ? `${Math.floor(analysisResults.channelMetrics.channelAge / 365)} years, ${Math.floor((analysisResults.channelMetrics.channelAge % 365) / 30)} months`
-                  : `${Math.floor(analysisResults.channelMetrics.channelAge / 30)} months`}
-              </S.DetailValue>
-            </S.DetailItem>
-            <S.DetailItem>
-              <S.DetailLabel>Views Per Subscriber</S.DetailLabel>
-              <S.DetailValue>{analysisResults.channelMetrics.subscriberToViewRatio.toFixed(1)}x</S.DetailValue>
-            </S.DetailItem>
-            <S.DetailItem>
-              <S.DetailLabel>Upload Consistency</S.DetailLabel>
-              <S.DetailValue>{analysisResults.channelMetrics.uploadFrequency}</S.DetailValue>
-            </S.DetailItem>
-          </S.DetailGrid>
-        </S.DetailSection>
 
-        <S.DetailSection>
-          <S.DetailTitle>
-            <i className="bx bx-trending-up"></i>
-            Performance Metrics
-          </S.DetailTitle>
-          <S.DetailGrid>
-            <S.DetailItem>
-              <S.DetailLabel>Avg Views/Video</S.DetailLabel>
-              <S.DetailValue>{Math.round(analysisResults.channelMetrics.avgViewsPerVideo).toLocaleString()}</S.DetailValue>
-            </S.DetailItem>
-            <S.DetailItem>
-              <S.DetailLabel>Avg Likes/Video</S.DetailLabel>
-              <S.DetailValue>{Math.round(analysisResults.channelMetrics.avgLikesPerVideo).toLocaleString()}</S.DetailValue>
-            </S.DetailItem>
-            <S.DetailItem>
-              <S.DetailLabel>Avg Comments/Video</S.DetailLabel>
-              <S.DetailValue>{Math.round(analysisResults.channelMetrics.avgCommentsPerVideo).toLocaleString()}</S.DetailValue>
-            </S.DetailItem>
-            <S.DetailItem>
-              <S.DetailLabel>Current Video Performance</S.DetailLabel>
-              <S.DetailValue>
-                <S.PerformanceIndicator type={analysisResults.channelMetrics.viewsComparison}>
-                  {analysisResults.channelMetrics.viewsComparison === 'above' && <i className="bx bx-up-arrow-alt"></i>}
-                  {analysisResults.channelMetrics.viewsComparison === 'below' && <i className="bx bx-down-arrow-alt"></i>}
-                  {analysisResults.channelMetrics.viewsComparison === 'average' && <i className="bx bx-minus"></i>}
-                  {analysisResults.channelMetrics.viewsComparison} average
-                </S.PerformanceIndicator>
-              </S.DetailValue>
-            </S.DetailItem>
-            <S.DetailItem>
-              <S.DetailLabel>Engagement Trend</S.DetailLabel>
-              <S.DetailValue>
-                <S.TrendIndicator trend={analysisResults.channelMetrics.engagementTrend}>
-                  {analysisResults.channelMetrics.engagementTrend === 'improving' && <i className="bx bx-trending-up"></i>}
-                  {analysisResults.channelMetrics.engagementTrend === 'declining' && <i className="bx bx-trending-down"></i>}
-                  {analysisResults.channelMetrics.engagementTrend === 'stable' && <i className="bx bx-minus"></i>}
-                  {analysisResults.channelMetrics.engagementTrend}
-                </S.TrendIndicator>
-              </S.DetailValue>
-            </S.DetailItem>
-            <S.DetailItem>
-              <S.DetailLabel>Recent Activity</S.DetailLabel>
-              <S.DetailValue>{analysisResults.channelMetrics.recentUploadRate}</S.DetailValue>
-            </S.DetailItem>
-          </S.DetailGrid>
-        </S.DetailSection>
-
-        {analysisResults.channelMetrics.bestPerformingVideo && (
-          <S.DetailSection>
-            <S.DetailTitle>
-              <i className="bx bx-trophy"></i>
-              Best Performing Video ({analysisResults.channelMetrics.bestVideoTimeframe})
-            </S.DetailTitle>
-            <S.BestVideoCard>
-              <S.BestVideoTitle>{analysisResults.channelMetrics.bestPerformingVideo.title}</S.BestVideoTitle>
-              <S.BestVideoStats>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <span>
-                    <i className="bx bx-show"></i>
-                    {analysisResults.channelMetrics.bestPerformingVideo.views.toLocaleString()} views
-                  </span>
-                  <span style={{
-                    fontSize: '0.85rem',
-                    color: 'rgba(255,255,255,0.7)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}>
-                    <i className="bx bx-calendar"></i>
-                    {analysisResults.channelMetrics.bestPerformingVideo.daysAgo} days ago
-                  </span>
-                </div>
-                <S.WatchButton
-                  onClick={() => window.open(analysisResults.channelMetrics.bestPerformingVideo?.url, '_blank')}
-                >
-                  <i className="bx bx-play"></i>
-                  Watch Video
-                </S.WatchButton>
-              </S.BestVideoStats>
-            </S.BestVideoCard>
-          </S.DetailSection>
-        )}
-
-        <S.DetailSection>
-          <S.ChannelAnalyzerCTA onClick={() => {
-            const channelHandle = channelData.snippet.customUrl || `@${channelData.snippet.title.replace(/\s+/g, '')}`;
-            window.open(`/tools/channel-analyzer?channel=${encodeURIComponent(channelHandle)}`, '_blank');
+        {/* Channel Identity Card */}
+        <S.ChannelProfileCard>
+          <S.ChannelProfileAvatar
+            src={channelData.snippet.thumbnails.medium?.url || channelData.snippet.thumbnails.default.url}
+            alt={channelData.snippet.title}
+          />
+          <S.ChannelProfileInfo>
+            <S.ChannelProfileName>{channelData.snippet.title}</S.ChannelProfileName>
+            {channelData.snippet.customUrl && (
+              <S.ChannelProfileHandle>{channelData.snippet.customUrl}</S.ChannelProfileHandle>
+            )}
+            <S.ChannelProfileMeta>
+              <span><i className="bx bx-user"></i>{basicMetrics.subscribers.toLocaleString()} subs</span>
+              <span><i className="bx bx-video"></i>{channelMetrics.totalVideos.toLocaleString()} videos</span>
+              <span><i className="bx bx-calendar"></i>{ageText} old</span>
+            </S.ChannelProfileMeta>
+          </S.ChannelProfileInfo>
+          <S.ChannelProfileCTA onClick={() => {
+            const handle = channelData.snippet.customUrl || `@${channelData.snippet.title.replace(/\s+/g, '')}`;
+            window.open(`/tools/channel-analyzer?channel=${encodeURIComponent(handle)}`, '_blank');
           }}>
-            <S.CTAIcon>
-              <i className="bx bx-line-chart"></i>
-            </S.CTAIcon>
-            <S.CTATitle>Want Deeper Channel Insights?</S.CTATitle>
-            <S.CTADescription>
-              Get a comprehensive analysis of {channelData.snippet.title} including growth metrics,
-              content strategy analysis, audience engagement patterns, and actionable recommendations
-              for channel optimization.
-            </S.CTADescription>
-            <S.CTAButton>
-              <i className="bx bx-line-chart"></i>
-              Analyze This Channel
-            </S.CTAButton>
-          </S.ChannelAnalyzerCTA>
-        </S.DetailSection>
+            <i className="bx bx-line-chart"></i>
+            Analyze Channel
+          </S.ChannelProfileCTA>
+        </S.ChannelProfileCard>
+
+        {/* Stat Tiles */}
+        <S.ChannelStatGrid>
+          <S.ChannelStatTile>
+            <S.ChannelStatValue>{channelMetrics.totalViews.toLocaleString()}</S.ChannelStatValue>
+            <S.ChannelStatLabel>Total Views</S.ChannelStatLabel>
+          </S.ChannelStatTile>
+          <S.ChannelStatTile>
+            <S.ChannelStatValue>{Math.round(channelMetrics.avgViewsPerVideo).toLocaleString()}</S.ChannelStatValue>
+            <S.ChannelStatLabel>Avg Views / Video</S.ChannelStatLabel>
+          </S.ChannelStatTile>
+          <S.ChannelStatTile>
+            <S.ChannelStatValue>{channelMetrics.channelMedianViews.toLocaleString()}</S.ChannelStatValue>
+            <S.ChannelStatLabel>Recent Median Views</S.ChannelStatLabel>
+          </S.ChannelStatTile>
+          <S.ChannelStatTile>
+            <S.ChannelStatValue>{channelMetrics.subscriberToViewRatio.toFixed(1)}×</S.ChannelStatValue>
+            <S.ChannelStatLabel>Views per Subscriber</S.ChannelStatLabel>
+          </S.ChannelStatTile>
+          <S.ChannelStatTile>
+            <S.ChannelStatValue style={{ color: trendColor }}>
+              <i className={`bx ${trendIcon}`} style={{ fontSize: '1.25rem' }}></i>
+            </S.ChannelStatValue>
+            <S.ChannelStatLabel>Engagement Trend</S.ChannelStatLabel>
+          </S.ChannelStatTile>
+          <S.ChannelStatTile>
+            <S.ChannelStatValue style={{ fontSize: '1rem' }}>{channelMetrics.recentUploadRate}</S.ChannelStatValue>
+            <S.ChannelStatLabel>Upload Rate</S.ChannelStatLabel>
+          </S.ChannelStatTile>
+        </S.ChannelStatGrid>
+
+        {/* This Video vs Channel Average */}
+        <S.ThumbSection>
+          <S.ThumbSectionHeader>
+            <S.ThumbSectionTitle>
+              <i className="bx bx-bar-chart-alt-2"></i>
+              This Video vs Channel Average
+            </S.ThumbSectionTitle>
+            <S.ThumbOverallBadge score={channelMetrics.isOutlier ? 90 : channelMetrics.isUnderperformer ? 15 : 55}>
+              {channelMetrics.isOutlier
+                ? `Outlier ${channelMetrics.outlierRatio.toFixed(1)}×`
+                : channelMetrics.isUnderperformer
+                ? `Under ${channelMetrics.outlierRatio.toFixed(1)}×`
+                : `On-pace ${channelMetrics.outlierRatio.toFixed(1)}×`}
+            </S.ThumbOverallBadge>
+          </S.ThumbSectionHeader>
+
+          {compRows.map(({ label, video, avg }) => {
+            const max = Math.max(video, avg, 1) * 1.15;
+            const videoPct = Math.round((video / max) * 100);
+            const avgPct = Math.round((avg / max) * 100);
+            const videoColor = video >= avg ? '#10b981' : '#ef4444';
+            return (
+              <S.ChannelCompareRow key={label}>
+                <S.ChannelCompareLabel>{label}</S.ChannelCompareLabel>
+                <S.ChannelCompareBars>
+                  <S.ChannelCompareBarRow>
+                    <S.ChannelCompareBarTag>This video</S.ChannelCompareBarTag>
+                    <S.ChannelCompareBarTrack>
+                      <S.ChannelCompareBarFill width={videoPct} barColor={videoColor} />
+                    </S.ChannelCompareBarTrack>
+                    <S.ChannelCompareBarNum>{video.toLocaleString()}</S.ChannelCompareBarNum>
+                  </S.ChannelCompareBarRow>
+                  <S.ChannelCompareBarRow>
+                    <S.ChannelCompareBarTag>Channel avg</S.ChannelCompareBarTag>
+                    <S.ChannelCompareBarTrack>
+                      <S.ChannelCompareBarFill width={avgPct} barColor="rgba(255,255,255,0.2)" />
+                    </S.ChannelCompareBarTrack>
+                    <S.ChannelCompareBarNum>{avg.toLocaleString()}</S.ChannelCompareBarNum>
+                  </S.ChannelCompareBarRow>
+                </S.ChannelCompareBars>
+              </S.ChannelCompareRow>
+            );
+          })}
+
+          <S.ThumbInsights>
+            <S.ThumbInsightItem>
+              <i className="bx bx-time"></i>
+              Upload frequency: {channelMetrics.uploadFrequency}
+            </S.ThumbInsightItem>
+            <S.ThumbInsightItem>
+              <i className={`bx ${trendIcon}`} style={{ color: trendColor }}></i>
+              Engagement is {channelMetrics.engagementTrend} based on recent videos
+            </S.ThumbInsightItem>
+          </S.ThumbInsights>
+        </S.ThumbSection>
+
       </S.TabContent>
     );
   };
@@ -1801,300 +2112,6 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
             ))}
           </S.InsightSection>
         )}
-      </S.TabContent>
-    );
-  };
-
-  const renderAskTab = () => {
-    return (
-      <S.TabContent>
-        <S.AskSection>
-          <S.ChatbotContainer>
-            <S.ChatbotHeader>
-              <S.ChatbotAvatar>
-                <i className="bx bx-diamond"></i>
-              </S.ChatbotAvatar>
-              <S.ChatbotHeaderText>
-                <S.ChatbotTitle>Video Analytics Assistant</S.ChatbotTitle>
-                <S.ChatbotSubtitle>
-                  Ask me anything about this video's performance, channel metrics, or optimization opportunities
-                </S.ChatbotSubtitle>
-              </S.ChatbotHeaderText>
-              <S.VideoTypeToggle>
-                <S.VideoTypeOption
-                  isActive={askVideoType === 'long-form'}
-                  onClick={() => setAskVideoType('long-form')}
-                >
-                  <i className="bx bx-video"></i>
-                  Long-form
-                </S.VideoTypeOption>
-                <S.VideoTypeOption
-                  isActive={askVideoType === 'shorts'}
-                  onClick={() => setAskVideoType('shorts')}
-                >
-                  <i className="bx bx-mobile"></i>
-                  Shorts
-                </S.VideoTypeOption>
-              </S.VideoTypeToggle>
-            </S.ChatbotHeader>
-
-            <S.ConversationArea>
-              {conversationHistory.length === 0 ? (
-                <S.WelcomeMessage>
-                  <S.WelcomeIcon>
-                    <i className="bx bx-chat"></i>
-                  </S.WelcomeIcon>
-                  <S.WelcomeText>
-                    {videoData ? (
-                      <>
-                        <S.WelcomeTitle>Ready to analyze!</S.WelcomeTitle>
-                        <S.WelcomeDescription>
-                          I have all the data for "{videoData.snippet?.title}". Ask me anything about its performance,
-                          engagement, SEO, or optimization opportunities.
-                        </S.WelcomeDescription>
-                      </>
-                    ) : (
-                      <>
-                        <S.WelcomeTitle>Welcome to Analytics Assistant!</S.WelcomeTitle>
-                        <S.WelcomeDescription>
-                          First, analyze a video using the search bar above. Then come back here to ask detailed
-                          questions about performance, engagement metrics, and optimization strategies.
-                        </S.WelcomeDescription>
-                      </>
-                    )}
-                  </S.WelcomeText>
-                  {videoData && (
-                    <S.SuggestedQuestions>
-                      <S.SuggestedTitle>Try asking about:</S.SuggestedTitle>
-                      <S.SuggestedList>
-                        <S.SuggestedItem onClick={() => setChatQuery("average engagement rate")}>
-                          <i className="bx bx-heart"></i>
-                          Average engagement rate
-                        </S.SuggestedItem>
-                        <S.SuggestedItem onClick={() => setChatQuery("upload frequency")}>
-                          <i className="bx bx-calendar"></i>
-                          Upload frequency patterns
-                        </S.SuggestedItem>
-                        <S.SuggestedItem onClick={() => setChatQuery("video length performance")}>
-                          <i className="bx bx-time"></i>
-                          Video length analysis
-                        </S.SuggestedItem>
-                        <S.SuggestedItem onClick={() => setChatQuery("view milestones")}>
-                          <i className="bx bx-trophy"></i>
-                          View milestone performance
-                        </S.SuggestedItem>
-                      </S.SuggestedList>
-                    </S.SuggestedQuestions>
-                  )}
-                </S.WelcomeMessage>
-              ) : (
-                <S.MessagesContainer>
-                  {conversationHistory.map((message, index) => (
-                    <S.MessageGroup key={index} isUser={message.type === 'user'}>
-                      <S.MessageAvatar isUser={message.type === 'user'}>
-                        {message.type === 'user' ? (
-                          <i className="bx bx-user"></i>
-                        ) : (
-                          <i className="bx bx-diamond"></i>
-                        )}
-                      </S.MessageAvatar>
-                      <S.MessageBubble isUser={message.type === 'user'}>
-                        <S.MessageContent>{message.content}</S.MessageContent>
-                        {message.result && (
-                          <S.ResultPreview onClick={() => setSelectedResult(message.result!)}>
-                            <S.ResultPreviewIcon>
-                              <i className="bx bx-chart"></i>
-                            </S.ResultPreviewIcon>
-                            <S.ResultPreviewText>
-                              <S.ResultPreviewTitle>View detailed results</S.ResultPreviewTitle>
-                              <S.ResultPreviewSubtitle>
-                                {message.result.details.length} data points • {message.result.insights.length} insights
-                              </S.ResultPreviewSubtitle>
-                            </S.ResultPreviewText>
-                            <S.ResultPreviewArrow>
-                              <i className="bx bx-chevron-right"></i>
-                            </S.ResultPreviewArrow>
-                          </S.ResultPreview>
-                        )}
-                        <S.MessageTimestamp>
-                          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </S.MessageTimestamp>
-                      </S.MessageBubble>
-                    </S.MessageGroup>
-                  ))}
-                  {calculatingQuestion && (
-                    <S.MessageGroup isUser={false}>
-                      <S.MessageAvatar isUser={false}>
-                        <i className="bx bx-diamond"></i>
-                      </S.MessageAvatar>
-                      <S.MessageBubble isUser={false}>
-                        <S.TypingIndicator>
-                          <S.TypingDot style={{ animationDelay: '0ms' }} />
-                          <S.TypingDot style={{ animationDelay: '200ms' }} />
-                          <S.TypingDot style={{ animationDelay: '400ms' }} />
-                          Analyzing data...
-                        </S.TypingIndicator>
-                      </S.MessageBubble>
-                    </S.MessageGroup>
-                  )}
-                </S.MessagesContainer>
-              )}
-            </S.ConversationArea>
-
-            <S.ChatInputContainer>
-              <S.ChatInputWrapper>
-                <S.ChatInput
-                  type="text"
-                  value={chatQuery}
-                  onChange={(e) => {
-                    setChatQuery(e.target.value);
-                    setShowDropdown(e.target.value.length > 0);
-                    setSelectedDropdownIndex(-1);
-                  }}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleChatSubmit();
-                    }
-                  }}
-                  placeholder="Ask about video performance, engagement, optimization..."
-                  disabled={calculatingQuestion !== null}
-                />
-                <S.ChatSendButton
-                  onClick={handleChatSubmit}
-                  disabled={!chatQuery.trim() || calculatingQuestion !== null}
-                >
-                  {calculatingQuestion ? (
-                    <i className="bx bx-loader-alt bx-spin"></i>
-                  ) : (
-                    <i className="bx bx-send"></i>
-                  )}
-                </S.ChatSendButton>
-              </S.ChatInputWrapper>
-
-              {showDropdown && searchQuestions.length > 0 && (
-                <S.SuggestionsDropdown>
-                  <S.DropdownHeader>
-                    <i className="bx bx-lightbulb"></i>
-                    Suggested questions:
-                  </S.DropdownHeader>
-                  {searchQuestions.map((question, index) => (
-                    <S.DropdownItem
-                      key={question.id}
-                      isSelected={index === selectedDropdownIndex}
-                      onClick={() => handleQuestionSelect(question)}
-                    >
-                      <S.DropdownItemContent>
-                        <S.DropdownItemTitle>{question.question}</S.DropdownItemTitle>
-                        <S.DropdownItemMeta>
-                          <S.DropdownItemCategory>{question.category}</S.DropdownItemCategory>
-                          <S.DropdownItemComplexity complexity={question.complexity}>
-                            {question.complexity}
-                          </S.DropdownItemComplexity>
-                        </S.DropdownItemMeta>
-                      </S.DropdownItemContent>
-                      <S.DropdownItemIcon>
-                        <i className="bx bx-chevron-right"></i>
-                      </S.DropdownItemIcon>
-                    </S.DropdownItem>
-                  ))}
-                </S.SuggestionsDropdown>
-              )}
-            </S.ChatInputContainer>
-          </S.ChatbotContainer>
-
-          {selectedResult && (
-            <S.ResultsModal>
-              <S.ResultsModalBackdrop onClick={() => setSelectedResult(null)} />
-              <S.ResultsModalContent>
-                <S.ResultsHeader>
-                  <S.ResultsTitle>
-                    <i className="bx bx-chart"></i>
-                    Analytics Result
-                  </S.ResultsTitle>
-                  <S.ResultsCloseButton onClick={() => setSelectedResult(null)}>
-                    <i className="bx bx-x"></i>
-                  </S.ResultsCloseButton>
-                </S.ResultsHeader>
-
-                <S.ResultsBody>
-                  <S.QuestionDisplay>
-                    <S.QuestionLabel>Question</S.QuestionLabel>
-                    <S.QuestionText>{selectedResult.question}</S.QuestionText>
-                  </S.QuestionDisplay>
-
-                  <S.AnswerDisplay>
-                    <S.AnswerLabel>Answer</S.AnswerLabel>
-                    <S.AnswerValue>{selectedResult.answer}</S.AnswerValue>
-                  </S.AnswerDisplay>
-
-                  {selectedResult.details.length > 0 && (
-                    <S.DetailsSection>
-                      <S.DetailsTitle>
-                        <i className="bx bx-info-circle"></i>
-                        Details
-                      </S.DetailsTitle>
-                      <S.DetailsList>
-                        {selectedResult.details.map((detail, index) => (
-                          <S.DetailItem key={index}>
-                            <i className="bx bx-dot-circle"></i>
-                            {detail}
-                          </S.DetailItem>
-                        ))}
-                      </S.DetailsList>
-                    </S.DetailsSection>
-                  )}
-
-                  {selectedResult.insights.length > 0 && (
-                    <S.InsightsSection>
-                      <S.InsightsTitle>
-                        <i className="bx bx-bulb"></i>
-                        Insights & Recommendations
-                      </S.InsightsTitle>
-                      <S.InsightsList>
-                        {selectedResult.insights.map((insight, index) => (
-                          <S.ResultsInsightItem key={index}>
-                            <i className="bx bx-right-arrow-alt"></i>
-                            {insight}
-                          </S.ResultsInsightItem>
-                        ))}
-                      </S.InsightsList>
-                    </S.InsightsSection>
-                  )}
-
-                  {selectedResult.charts && (
-                    <S.ChartsSection>
-                      <S.ChartsTitle>
-                        <i className="bx bx-bar-chart-alt-2"></i>
-                        Visual Data
-                      </S.ChartsTitle>
-                      <S.SimpleChart>
-                        {selectedResult.charts.labels.map((label, index) => (
-                          <S.ChartItem key={index}>
-                            <S.ChartLabel>{label}</S.ChartLabel>
-                            <S.ChartBar>
-                              <S.ChartBarFill
-                                width={selectedResult.charts ? (selectedResult.charts.data[index] / Math.max(...selectedResult.charts.data)) * 100 : 0}
-                              />
-                            </S.ChartBar>
-                            <S.ChartValue>{selectedResult.charts?.data[index] || 0}</S.ChartValue>
-                          </S.ChartItem>
-                        ))}
-                      </S.SimpleChart>
-                    </S.ChartsSection>
-                  )}
-                </S.ResultsBody>
-
-                <S.ResultsFooter>
-                  <S.ResultsNote>
-                    <i className="bx bx-info-circle"></i>
-                    Results calculated from {channelVideos.length} most recent videos using YouTube API data
-                  </S.ResultsNote>
-                </S.ResultsFooter>
-              </S.ResultsModalContent>
-            </S.ResultsModal>
-          )}
-        </S.AskSection>
       </S.TabContent>
     );
   };
@@ -2161,6 +2178,13 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
 
         {/* Google Ad Spot */}
         <GoogleAd adSlot="1234567890" />
+
+        {apiError && (
+          <S.ErrorMessage>
+            <i className="bx bx-error"></i>
+            {apiError}
+          </S.ErrorMessage>
+        )}
 
         {/* Educational Content Section */}
         {!showResults && (
@@ -2331,13 +2355,13 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
           </S.EducationalSection>
         )}
 
-        <S.ResultsContainer className={showResults || activeTab === 'ask' ? 'visible' : ''}>
+        <S.ResultsContainer className={showResults ? 'visible' : ''}>
           {isLoading ? (
             <S.LoadingContainer>
               <i className='bx bx-loader-alt bx-spin'></i>
               <p>{loadingStage || 'Analyzing video...'}</p>
             </S.LoadingContainer>
-          ) : (activeTab === 'ask' || (videoData && channelData && analysisResults)) ? (
+          ) : (videoData && channelData && analysisResults) ? (
             <>
               {(videoData && channelData && analysisResults) && (
                 <S.VideoInfo>
@@ -2421,22 +2445,11 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
                   <i className="bx bx-user"></i>
                   <span>Channel</span>
                 </S.TabButton>
-                {/* Only show Ask tab after video analysis */}
-                {(videoData && channelData && analysisResults) && (
-                  <S.TabButton
-                    isActive={activeTab === 'ask'}
-                    onClick={() => setActiveTab('ask')}
-                  >
-                    <i className="bx bx-diamond"></i>
-                    <span>Ask</span>
-                  </S.TabButton>
-                )}
               </S.TabNavigation>
 
               {activeTab === 'overview' && renderOverviewTab()}
               {activeTab === 'details' && renderDetailsTab()}
               {activeTab === 'channel' && renderChannelTab()}
-              {activeTab === 'ask' && renderAskTab()}
 
             </>
           ) : null}

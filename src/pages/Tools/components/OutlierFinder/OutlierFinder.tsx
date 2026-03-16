@@ -1,32 +1,42 @@
 // src/pages/Tools/components/OutlierFinder/OutlierFinder.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SEO } from '../../../../components/SEO';
 import { GoogleAd } from '../../../../components/GoogleAd';
 import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
+const decodeHtml = (html: string): string => {
+  const txt = document.createElement('textarea');
+  txt.innerHTML = html;
+  return txt.value;
+};
+
 interface OutlierResult {
   video: any;
   channel: any;
-  ratio: number;
+  ratio: number;           // views / channel avg views (primary outlier signal)
+  viewsToSubRatio: number; // views / subscribers (secondary display metric)
   engagementRate: number;
   viralScore: number;
+  viewsPerDay: number;
+  channelAvgViews: number;
+  outlierExplanation: string;
 }
 
 interface FilterOptions {
   minViews: number;
-  maxAge: number; // days
+  maxAge: number;
   minSubscribers: number;
   maxSubscribers: number;
   sortBy: 'ratio' | 'views' | 'engagement' | 'viral';
   showOnlyRecent: boolean;
 }
 
-// Rate limit: max 5 queries per 2-minute window, stored per browser in localStorage
+// Rate limit: max 5 queries per 2-minute window
 const RATE_LIMIT_KEY = 'outlier-finder-rl';
 const RATE_LIMIT_MAX = 5;
-const RATE_LIMIT_WINDOW_MS = 2 * 60 * 1000; // 2 minutes
+const RATE_LIMIT_WINDOW_MS = 2 * 60 * 1000;
 
 function getRateLimitTimestamps(): number[] {
   try {
@@ -51,7 +61,7 @@ function checkAndRecordQuery(): { allowed: boolean; retryInMs: number } {
   try {
     localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(timestamps));
   } catch {
-    // localStorage full or unavailable — allow the query anyway
+    // ignore
   }
   return { allowed: true, retryInMs: 0 };
 }
@@ -63,22 +73,25 @@ export const OutlierFinder: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isShorts, setIsShorts] = useState(false);
   const [results, setResults] = useState<OutlierResult[]>([]);
+  const [rawVideos, setRawVideos] = useState<any[]>([]);
+  const [rawChannels, setRawChannels] = useState<any[]>([]);
+  const [rawRecentAvgMap, setRawRecentAvgMap] = useState<Record<string, number>>({});
   const [showResults, setShowResults] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [resultCount, setResultCount] = useState(10);
+  const [resultCount, setResultCount] = useState(25);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [rateLimitError, setRateLimitError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
-  // Tool configuration
   const toolConfig = {
     name: 'Outlier Finder',
     description: 'Discover high-performing videos that exceed typical view-to-subscriber ratios in any niche',
     image: 'https://64.media.tumblr.com/60109acd631995e9b43834a7f4358e78/0e01452f9f6dd974-f2/s2048x3072/3390c9b19607d957940ac9e1b8b23b6afbdc037f.jpg',
     icon: 'bx bx-trophy',
     features: [
-      'Viral content detection',
-      'Performance ratios',
-      'Trend analysis'
+      'Channel avg comparison',
+      'Views-per-day velocity',
+      'Multi-search precision'
     ]
   };
 
@@ -100,133 +113,153 @@ export const OutlierFinder: React.FC = () => {
       setIsShorts(type === 'shorts');
       handleAnalyze(decodedQuery, type === 'shorts');
     }
-
-    // Load search history from localStorage
     const history = localStorage.getItem('outlier_search_history');
-    if (history) {
-      setSearchHistory(JSON.parse(history));
-    }
+    if (history) setSearchHistory(JSON.parse(history));
   }, [searchQuery, type]);
 
-  const saveSearchHistory = (query: string) => {
-    const newHistory = [query, ...searchHistory.filter(h => h !== query)].slice(0, 5);
+  const saveSearchHistory = (q: string) => {
+    const newHistory = [q, ...searchHistory.filter(h => h !== q)].slice(0, 5);
     setSearchHistory(newHistory);
     localStorage.setItem('outlier_search_history', JSON.stringify(newHistory));
   };
 
   const handleSearch = () => {
-    if (!query.trim()) {
-      alert('Please enter a search query');
-      return;
-    }
-
+    if (!query.trim()) { alert('Please enter a search query'); return; }
     saveSearchHistory(query);
-    const encodedQuery = encodeURIComponent(query);
-    navigate(`/tools/outlier-finder/${encodedQuery}/${isShorts ? 'shorts' : 'videos'}`);
+    navigate(`/tools/outlier-finder/${encodeURIComponent(query)}/${isShorts ? 'shorts' : 'videos'}`);
   };
 
-  const handleAnalyze = async (searchQuery: string, isShorts: boolean) => {
-    if (!searchQuery.trim()) {
-      alert('Please enter a search query');
-      return;
-    }
+  // ─── API helpers ─────────────────────────────────────────────────────────────
 
-    // Client-side rate limit check
-    const { allowed, retryInMs } = checkAndRecordQuery();
-    if (!allowed) {
-      const seconds = Math.ceil(retryInMs / 1000);
-      setRateLimitError(
-        `You've made several searches in quick succession. Please wait ${seconds}s before trying again.`
+  // Run 3 parallel searches (relevance, viewCount, date) and deduplicate
+  const searchVideos = async (q: string): Promise<any[]> => {
+    const orders = ['relevance', 'viewCount', 'date'];
+    const settled = await Promise.allSettled(
+      orders.map(order =>
+        fetch(
+          `https://www.googleapis.com/youtube/v3/search?` +
+          `part=snippet&q=${encodeURIComponent(q)}&type=video&maxResults=50&key=${API_KEY}&order=${order}`
+        ).then(r => r.json())
+      )
+    );
+
+    const seen = new Set<string>();
+    const items: any[] = [];
+    for (const result of settled) {
+      if (result.status === 'fulfilled' && !result.value.error) {
+        for (const item of result.value.items || []) {
+          if (!seen.has(item.id.videoId)) {
+            seen.add(item.id.videoId);
+            items.push(item);
+          }
+        }
+      }
+    }
+    return items;
+  };
+
+  // Batched video details — only filters by duration (shorts vs regular)
+  const getVideoDetails = async (videos: any[], isShorts: boolean): Promise<any[]> => {
+    const allDetails: any[] = [];
+    for (let i = 0; i < videos.length; i += 50) {
+      const batch = videos.slice(i, i + 50);
+      const ids = batch.map((v: any) => v.id.videoId).join(',');
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?` +
+        `part=snippet,statistics,contentDetails&id=${ids}&key=${API_KEY}`
       );
-      setTimeout(() => setRateLimitError(null), retryInMs);
-      return;
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      allDetails.push(...(data.items || []));
     }
 
-    setRateLimitError(null);
-    setIsLoading(true);
-    setShowResults(false);
-
-    try {
-      const videos = await searchVideos(searchQuery);
-      const videoDetails = await getVideoDetails(videos, isShorts);
-      const channelDetails = await getChannelDetails(videos);
-      const outliers = calculateOutliers(videoDetails, channelDetails);
-      setResults(outliers);
-      setShowResults(true);
-    } catch (error) {
-      console.error('Error:', error);
-      alert('An error occurred while fetching results');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const searchVideos = async (searchQuery: string) => {
-    const response = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?` +
-      `part=snippet&q=${encodeURIComponent(searchQuery)}&` +
-      `type=video&maxResults=50&key=${API_KEY}&order=relevance`
-    );
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
-    return data.items || [];
-  };
-
-  const getVideoDetails = async (videos: any[], isShorts: boolean) => {
-    const videoIds = videos.map(video => video.id.videoId).join(',');
-    const response = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?` +
-      `part=snippet,statistics,contentDetails&` +
-      `id=${videoIds}&key=${API_KEY}`
-    );
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
-
-    return data.items.filter((video: any) => {
+    return allDetails.filter((video: any) => {
       const duration = parseDuration(video.contentDetails.duration);
-      const views = parseInt(video.statistics.viewCount) || 0;
-      const age = getVideoAgeInDays(video.snippet.publishedAt);
-
-      // Apply filters
-      if (views < filters.minViews) return false;
-      if (age > filters.maxAge) return false;
-      if (filters.showOnlyRecent && age > 30) return false;
-
-      // Shorts can now be up to 3 minutes (180 seconds)
       return isShorts ? duration <= 180 : duration > 180;
     });
   };
 
-  const getChannelDetails = async (videos: any[]) => {
+  // Batched channel details — includes contentDetails for uploads playlist ID
+  const getChannelDetails = async (videos: any[]): Promise<any[]> => {
     const channelIdsSet = new Set<string>();
-    videos.forEach(video => channelIdsSet.add(video.snippet.channelId));
-    const channelIds = Array.from(channelIdsSet).join(',');
+    videos.forEach(v => channelIdsSet.add(v.snippet.channelId));
+    const channelIds = Array.from(channelIdsSet);
 
-    const response = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?` +
-      `part=statistics,snippet&id=${channelIds}&key=${API_KEY}`
-    );
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
-    return data.items || [];
+    const allChannels: any[] = [];
+    for (let i = 0; i < channelIds.length; i += 50) {
+      const batch = channelIds.slice(i, i + 50);
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?` +
+        `part=statistics,snippet,contentDetails&id=${batch.join(',')}&key=${API_KEY}`
+      );
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+      allChannels.push(...(data.items || []));
+    }
+    return allChannels;
   };
 
-  const calculateViralScore = (video: any, channel: any): number => {
-    const views = parseInt(video.statistics.viewCount) || 0;
-    const likes = parseInt(video.statistics.likeCount) || 0;
-    const comments = parseInt(video.statistics.commentCount) || 0;
-    const subscribers = parseInt(channel.statistics.subscriberCount) || 1;
-    const age = getVideoAgeInDays(video.snippet.publishedAt);
+  // Fetch each channel's last 20 videos and compute median views as the baseline.
+  // This is far more accurate than all-time total / videoCount because one viral video
+  // from 3 years ago can't inflate the average and hide real outliers.
+  const getChannelRecentAvg = async (channels: any[]): Promise<Record<string, number>> => {
+    const recentAvgMap: Record<string, number> = {};
 
-    // Viral score considers multiple factors
-    const viewToSubRatio = views / subscribers;
-    const engagementRate = (likes + comments) / Math.max(views, 1);
-    const timeDecay = Math.max(0.1, 1 - (age / 365)); // Newer videos get higher score
+    // Process in batches of 10 to avoid hammering the API
+    for (let i = 0; i < channels.length; i += 10) {
+      const batch = channels.slice(i, i + 10);
+      await Promise.allSettled(batch.map(async (channel) => {
+        const uploadsPlaylistId = channel.contentDetails?.relatedPlaylists?.uploads;
+        if (!uploadsPlaylistId) return;
 
-    return (viewToSubRatio * engagementRate * timeDecay * 100);
+        try {
+          // Step 1: get last 20 video IDs from uploads playlist
+          const playlistRes = await fetch(
+            `https://www.googleapis.com/youtube/v3/playlistItems?` +
+            `part=contentDetails&playlistId=${uploadsPlaylistId}&maxResults=20&key=${API_KEY}`
+          );
+          const playlistData = await playlistRes.json();
+          if (playlistData.error || !playlistData.items?.length) return;
+
+          const videoIds = playlistData.items
+            .map((item: any) => item.contentDetails.videoId)
+            .join(',');
+
+          // Step 2: get view counts for those videos
+          const statsRes = await fetch(
+            `https://www.googleapis.com/youtube/v3/videos?` +
+            `part=statistics&id=${videoIds}&key=${API_KEY}`
+          );
+          const statsData = await statsRes.json();
+          if (statsData.error || !statsData.items?.length) return;
+
+          // Step 3: compute median (not mean) — immune to a single mega-viral outlier
+          const viewCounts = statsData.items
+            .map((v: any) => parseInt(v.statistics.viewCount) || 0)
+            .sort((a: number, b: number) => a - b);
+
+          const mid = Math.floor(viewCounts.length / 2);
+          const median = viewCounts.length % 2 !== 0
+            ? viewCounts[mid]
+            : (viewCounts[mid - 1] + viewCounts[mid]) / 2;
+
+          recentAvgMap[channel.id] = Math.max(median, 1);
+        } catch {
+          // fall back to all-time average (handled in calculateOutliers)
+        }
+      }));
+    }
+
+    return recentAvgMap;
   };
 
-  const calculateOutliers = (videos: any[], channels: any[]): OutlierResult[] => {
+  // ─── Scoring ─────────────────────────────────────────────────────────────────
+
+  const calculateOutliers = useCallback((
+    videos: any[],
+    channels: any[],
+    recentAvgMap: Record<string, number> = {}
+  ): OutlierResult[] => {
     const outliers = videos.map(video => {
       const channel = channels.find(c => c.id === video.snippet.channelId);
       if (!channel) return null;
@@ -235,136 +268,216 @@ export const OutlierFinder: React.FC = () => {
       const likes = parseInt(video.statistics.likeCount) || 0;
       const comments = parseInt(video.statistics.commentCount) || 0;
       const subscribers = parseInt(channel.statistics.subscriberCount) || 1;
+      const videoCount = parseInt(channel.statistics.videoCount) || 1;
+      const totalChannelViews = parseInt(channel.statistics.viewCount) || 1;
+      const age = getVideoAgeInDays(video.snippet.publishedAt);
 
-      // Apply subscriber filters
-      if (subscribers < filters.minSubscribers || subscribers > filters.maxSubscribers) {
-        return null;
-      }
+      // Apply all user filters
+      if (views < filters.minViews) return null;
+      if (age > filters.maxAge) return null;
+      if (filters.showOnlyRecent && age > 30) return null;
+      if (subscribers < filters.minSubscribers || subscribers > filters.maxSubscribers) return null;
 
-      const ratio = views / subscribers;
+      // Use recent median views if available, fall back to all-time average
+      const channelAvgViews = recentAvgMap[channel.id] ?? (totalChannelViews / videoCount);
 
-      // Filter out videos with ratio less than 2x (only show true outliers)
-      // This ensures we only show videos that got at least 2x their subscriber count in views
-      if (ratio < 2) {
-        return null;
-      }
+      // Primary outlier ratio: how far above the channel's own recent baseline is this video?
+      const ratio = views / Math.max(channelAvgViews, 1);
 
+      // Only show genuine outliers — require at least 2× the channel's recent average
+      if (ratio < 2) return null;
+
+      const viewsToSubRatio = views / subscribers;
       const engagementRate = (likes + comments) / Math.max(views, 1);
-      const viralScore = calculateViralScore(video, channel);
+      const viewsPerDay = Math.round(views / Math.max(age, 1));
 
-      return { video, channel, ratio, engagementRate, viralScore };
+      // Viral score: outlier magnitude weighted by engagement (no time decay)
+      const viralScore = ratio * (1 + engagementRate * 10);
+
+      const outlierExplanation = `${ratio.toFixed(1)}× this channel's recent avg`;
+
+      return {
+        video, channel, ratio, viewsToSubRatio,
+        engagementRate, viralScore, viewsPerDay,
+        channelAvgViews, outlierExplanation
+      };
     }).filter((item): item is OutlierResult => item !== null);
 
-    // Sort by ratio (best to worst) to prioritize true viral outliers
+    // Apply sort
     outliers.sort((a, b) => {
-      // For similar ratios, prefer channels with fewer subscribers (more impressive outliers)
-      const ratioDiff = b.ratio - a.ratio;
-      if (Math.abs(ratioDiff) < 1) {
-        const subA = parseInt(a.channel.statistics.subscriberCount);
-        const subB = parseInt(b.channel.statistics.subscriberCount);
-        return subA - subB; // Lower subscriber count = higher priority
+      switch (filters.sortBy) {
+        case 'views':      return parseInt(b.video.statistics.viewCount) - parseInt(a.video.statistics.viewCount);
+        case 'engagement': return b.engagementRate - a.engagementRate;
+        case 'viral':      return b.viralScore - a.viralScore;
+        default:           return b.ratio - a.ratio;
       }
-      return ratioDiff;
     });
 
-    return outliers.slice(0, resultCount);
+    // Diversity cap: max 2 results per channel so one channel doesn't dominate
+    const channelCount: Record<string, number> = {};
+    const diverse = outliers.filter(r => {
+      const id = r.channel.id;
+      channelCount[id] = (channelCount[id] || 0) + 1;
+      return channelCount[id] <= 2;
+    });
+
+    return diverse.slice(0, resultCount);
+  }, [filters, resultCount]);
+
+  // Re-filter from raw data whenever filters/count change (no new API calls)
+  useEffect(() => {
+    if (showResults && rawVideos.length > 0) {
+      setResults(calculateOutliers(rawVideos, rawChannels, rawRecentAvgMap));
+    }
+  }, [filters, resultCount, calculateOutliers, rawRecentAvgMap]);
+
+  // ─── Main search ─────────────────────────────────────────────────────────────
+
+  const handleAnalyze = async (searchQuery: string, isShorts: boolean) => {
+    if (!searchQuery.trim()) { alert('Please enter a search query'); return; }
+
+    const { allowed, retryInMs } = checkAndRecordQuery();
+    if (!allowed) {
+      const seconds = Math.ceil(retryInMs / 1000);
+      setRateLimitError(`You've made several searches in quick succession. Please wait ${seconds}s before trying again.`);
+      setTimeout(() => setRateLimitError(null), retryInMs);
+      return;
+    }
+
+    setRateLimitError(null);
+    setApiError(null);
+    setIsLoading(true);
+    setShowResults(false);
+
+    try {
+      const videos = await searchVideos(searchQuery);
+      const videoDetails = await getVideoDetails(videos, isShorts);
+      const channelDetails = await getChannelDetails(videoDetails);
+      const recentAvgMap = await getChannelRecentAvg(channelDetails);
+
+      // Store raw data so filter changes can recompute without re-fetching
+      setRawVideos(videoDetails);
+      setRawChannels(channelDetails);
+      setRawRecentAvgMap(recentAvgMap);
+
+      const outliers = calculateOutliers(videoDetails, channelDetails, recentAvgMap);
+      setResults(outliers);
+      setShowResults(true);
+    } catch (error) {
+      console.error('Error:', error);
+      const msg = error instanceof Error ? error.message : '';
+      if (msg.toLowerCase().includes('quota')) {
+        setApiError('The Outlier Finder is on cooldown — YouTube API quota exceeded. Try again tomorrow.');
+      } else {
+        setApiError(msg || 'An error occurred while fetching results. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  // ─── Utilities ───────────────────────────────────────────────────────────────
 
   const parseDuration = (duration: string): number => {
     const matches = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
     if (!matches) return 0;
     const [, hours, minutes, seconds] = matches;
-    return (parseInt(hours || '0') * 3600) +
-      (parseInt(minutes || '0') * 60) +
-      parseInt(seconds || '0');
+    return (parseInt(hours || '0') * 3600) + (parseInt(minutes || '0') * 60) + parseInt(seconds || '0');
   };
 
   const getVideoAgeInDays = (publishedAt: string): number => {
-    const publishDate = new Date(publishedAt);
-    const now = new Date();
-    return Math.floor((now.getTime() - publishDate.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.floor((Date.now() - new Date(publishedAt).getTime()) / (1000 * 60 * 60 * 24));
   };
 
-  const formatDate = (isoString: string): string => {
-    return new Date(isoString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
+  const formatDate = (isoString: string): string =>
+    new Date(isoString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
   const formatDuration = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    return h > 0
+      ? `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+      : `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  const exportResults = () => {
-    const exportData = results.map(result => ({
-      title: result.video.snippet.title,
-      channel: result.video.snippet.channelTitle,
-      views: parseInt(result.video.statistics.viewCount),
-      subscribers: parseInt(result.channel.statistics.subscriberCount),
-      ratio: result.ratio.toFixed(2),
-      engagement_rate: (result.engagementRate * 100).toFixed(2) + '%',
-      viral_score: result.viralScore.toFixed(2),
-      published_date: result.video.snippet.publishedAt,
-      url: `https://www.youtube.com/watch?v=${result.video.id}`
-    }));
-
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `outlier_analysis_${query.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleToggle = (shorts: boolean) => {
-    setIsShorts(shorts);
-    // Don't auto-search when toggling, user must click search button
-  };
-
-  const applyCurrentFilters = () => {
-    if (results.length > 0) {
-      const filtered = calculateOutliers(
-        results.map(r => r.video),
-        results.map(r => r.channel)
-      );
-      setResults(filtered);
-    }
-  };
-
-  // Trigger filter application when filters change
-  useEffect(() => {
-    if (showResults && results.length > 0) {
-      applyCurrentFilters();
-    }
-  }, [filters, resultCount]);
-
-  const getRatioColor = (ratio: number): string => {
-    if (ratio >= 100) return '#ff4444';
-    if (ratio >= 50) return '#ff6666';
-    if (ratio >= 20) return '#ff8888';
-    if (ratio >= 10) return '#ffaa88';
-    return '#cccccc';
+  const formatCompact = (n: number): string => {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+    return n.toLocaleString();
   };
 
   const getViralityLabel = (score: number): string => {
     if (score >= 50) return 'Extremely Viral';
     if (score >= 20) return 'Highly Viral';
     if (score >= 10) return 'Viral';
-    if (score >= 5) return 'Trending';
+    if (score >= 5)  return 'Trending';
     return 'Normal';
   };
+
+  // ─── Exports ─────────────────────────────────────────────────────────────────
+
+  const exportJSON = () => {
+    const data = results.map(r => ({
+      title: decodeHtml(r.video.snippet.title),
+      channel: decodeHtml(r.video.snippet.channelTitle),
+      views: parseInt(r.video.statistics.viewCount),
+      subscribers: parseInt(r.channel.statistics.subscriberCount),
+      channel_avg_views: Math.round(r.channelAvgViews),
+      outlier_ratio: parseFloat(r.ratio.toFixed(2)),
+      views_to_sub_ratio: parseFloat(r.viewsToSubRatio.toFixed(2)),
+      views_per_day: r.viewsPerDay,
+      engagement_rate: (r.engagementRate * 100).toFixed(2) + '%',
+      viral_score: r.viralScore.toFixed(2),
+      published_date: r.video.snippet.publishedAt,
+      url: `https://www.youtube.com/watch?v=${r.video.id}`
+    }));
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `outliers_${query.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportCSV = () => {
+    const headers = [
+      'Title', 'Channel', 'Views', 'Subscribers', 'Channel Avg Views',
+      'Outlier Ratio', 'Views/Sub Ratio', 'Views Per Day',
+      'Engagement Rate', 'Viral Score', 'Published Date', 'URL'
+    ];
+    const rows = results.map(r => [
+      `"${decodeHtml(r.video.snippet.title).replace(/"/g, '""')}"`,
+      `"${decodeHtml(r.video.snippet.channelTitle).replace(/"/g, '""')}"`,
+      parseInt(r.video.statistics.viewCount),
+      parseInt(r.channel.statistics.subscriberCount),
+      Math.round(r.channelAvgViews),
+      r.ratio.toFixed(2),
+      r.viewsToSubRatio.toFixed(2),
+      r.viewsPerDay,
+      (r.engagementRate * 100).toFixed(2) + '%',
+      r.viralScore.toFixed(2),
+      r.video.snippet.publishedAt,
+      `https://www.youtube.com/watch?v=${r.video.id}`
+    ]);
+
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `outliers_${query.replace(/[^a-zA-Z0-9]/g, '_')}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleToggle = (shorts: boolean) => setIsShorts(shorts);
 
   const seoConfig = toolsSEO['outlier-finder'];
   const schemaData = generateToolSchema('outlier-finder', seoConfig);
@@ -386,7 +499,6 @@ export const OutlierFinder: React.FC = () => {
           Back to Tools
         </S.BackButton>
 
-        {/* Enhanced Header Section */}
         <S.EnhancedHeader backgroundImage={toolConfig.image}>
           <S.HeaderOverlay />
           <S.HeaderContent>
@@ -407,7 +519,6 @@ export const OutlierFinder: React.FC = () => {
                 ))}
               </S.FeaturesList>
 
-              {/* Integrated Search Bar */}
               <S.HeaderSearchContainer>
                 <S.HeaderSearchBar>
                   <S.HeaderSearchInput
@@ -427,47 +538,36 @@ export const OutlierFinder: React.FC = () => {
                 </S.HeaderSearchBar>
               </S.HeaderSearchContainer>
 
-              {/* Rate limit warning */}
               {rateLimitError && (
                 <div style={{
-                  marginTop: '0.75rem',
-                  padding: '0.6rem 1rem',
-                  background: 'rgba(185, 28, 28, 0.15)',
-                  border: '1px solid rgba(185, 28, 28, 0.4)',
-                  borderRadius: '8px',
-                  color: '#fca5a5',
-                  fontSize: '0.875rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
+                  marginTop: '0.75rem', padding: '0.6rem 1rem',
+                  background: 'rgba(185, 28, 28, 0.15)', border: '1px solid rgba(185, 28, 28, 0.4)',
+                  borderRadius: '8px', color: '#fca5a5', fontSize: '0.875rem',
+                  display: 'flex', alignItems: 'center', gap: '0.5rem',
                 }}>
                   <i className="bx bx-time-five" style={{ flexShrink: 0 }}></i>
                   {rateLimitError}
                 </div>
               )}
 
-              {/* Toggle Buttons in Header */}
+              {apiError && (
+                <S.ErrorMessage>
+                  <i className="bx bx-error"></i>
+                  {apiError}
+                </S.ErrorMessage>
+              )}
+
               <S.ControlsContainer>
                 <S.ToggleContainer>
-                  <S.ToggleButton
-                    onClick={() => handleToggle(false)}
-                    className={!isShorts ? 'active' : ''}
-                  >
-                    <i className="bx bx-play"></i>
-                    Videos
+                  <S.ToggleButton onClick={() => handleToggle(false)} className={!isShorts ? 'active' : ''}>
+                    <i className="bx bx-play"></i>Videos
                   </S.ToggleButton>
-                  <S.ToggleButton
-                    onClick={() => handleToggle(true)}
-                    className={isShorts ? 'active' : ''}
-                  >
-                    <i className="bx bx-mobile"></i>
-                    Shorts
+                  <S.ToggleButton onClick={() => handleToggle(true)} className={isShorts ? 'active' : ''}>
+                    <i className="bx bx-mobile"></i>Shorts
                   </S.ToggleButton>
                 </S.ToggleContainer>
-
                 <S.FilterToggle onClick={() => setShowFilters(!showFilters)}>
-                  <i className="bx bx-filter"></i>
-                  Filters
+                  <i className="bx bx-filter"></i>Filters
                 </S.FilterToggle>
               </S.ControlsContainer>
             </S.HeaderTextContent>
@@ -492,7 +592,7 @@ export const OutlierFinder: React.FC = () => {
               </S.FilterGroup>
 
               <S.FilterGroup>
-                <S.FilterLabel>Video Age (days)</S.FilterLabel>
+                <S.FilterLabel>Video Age</S.FilterLabel>
                 <S.FilterSelect
                   value={filters.maxAge}
                   onChange={(e) => setFilters({ ...filters, maxAge: parseInt(e.target.value) })}
@@ -515,10 +615,10 @@ export const OutlierFinder: React.FC = () => {
                   }}
                 >
                   <option value="0-10000000">Any size</option>
-                  <option value="0-1000">Micro (0-1K)</option>
-                  <option value="1000-10000">Small (1K-10K)</option>
-                  <option value="10000-100000">Medium (10K-100K)</option>
-                  <option value="100000-1000000">Large (100K-1M)</option>
+                  <option value="0-1000">Micro (0–1K)</option>
+                  <option value="1000-10000">Small (1K–10K)</option>
+                  <option value="10000-100000">Medium (10K–100K)</option>
+                  <option value="100000-1000000">Large (100K–1M)</option>
                   <option value="1000000-10000000">Huge (1M+)</option>
                 </S.FilterSelect>
               </S.FilterGroup>
@@ -529,7 +629,7 @@ export const OutlierFinder: React.FC = () => {
                   value={filters.sortBy}
                   onChange={(e) => setFilters({ ...filters, sortBy: e.target.value as any })}
                 >
-                  <option value="ratio">View/Sub Ratio</option>
+                  <option value="ratio">Channel Avg Ratio</option>
                   <option value="views">Total Views</option>
                   <option value="engagement">Engagement Rate</option>
                   <option value="viral">Viral Score</option>
@@ -542,10 +642,10 @@ export const OutlierFinder: React.FC = () => {
                   value={resultCount}
                   onChange={(e) => setResultCount(parseInt(e.target.value))}
                 >
-                  <option value={5}>Top 5</option>
                   <option value={10}>Top 10</option>
-                  <option value={15}>Top 15</option>
-                  <option value={20}>Top 20</option>
+                  <option value={25}>Top 25</option>
+                  <option value={50}>Top 50</option>
+                  <option value={100}>Top 100</option>
                 </S.FilterSelect>
               </S.FilterGroup>
             </S.FilterGrid>
@@ -557,191 +657,133 @@ export const OutlierFinder: React.FC = () => {
             <S.HistoryLabel>Recent searches:</S.HistoryLabel>
             <S.HistoryTags>
               {searchHistory.map((term, index) => (
-                <S.HistoryTag key={index} onClick={() => setQuery(term)}>
-                  {term}
-                </S.HistoryTag>
+                <S.HistoryTag key={index} onClick={() => setQuery(term)}>{term}</S.HistoryTag>
               ))}
             </S.HistoryTags>
           </S.SearchHistory>
         )}
 
-        {/* Google Ad Spot */}
         <GoogleAd adSlot="1234567890" />
 
-        {/* Educational Content Section */}
         {!showResults && (
           <S.EducationalSection>
             <S.EducationalContent>
-              <S.SectionSubTitle>How to Use the Outlier Finder</S.SectionSubTitle>
-
+              <S.SectionSubTitle>How the Outlier Finder Works</S.SectionSubTitle>
               <S.EducationalText>
-                Our Outlier Finder identifies videos that significantly outperform typical view-to-subscriber ratios
-                in any topic or niche. This powerful tool helps you discover viral content patterns, successful
-                content strategies, and trending topics by analyzing performance metrics across YouTube.
+                Unlike basic tools that just rank by view count, this finder compares each video to its own channel's average performance. A video with 2M views from MrBeast isn't an outlier. A video with 2M views from a channel that normally gets 40K is a massive outlier — and that's exactly what this tool surfaces.
               </S.EducationalText>
-
               <S.StepByStep>
                 <S.StepItem>
                   <S.StepNumberCircle>1</S.StepNumberCircle>
                   <S.StepContent>
-                    <S.OutlierFinderStepTitle>Enter Search Query</S.OutlierFinderStepTitle>
-                    <S.EducationalText>
-                      Type any keyword, topic, or niche you want to analyze. Choose between regular videos
-                      or YouTube Shorts depending on the content format you're interested in studying.
-                      Our algorithm searches through thousands of videos to find the top performers.
-                    </S.EducationalText>
+                    <S.OutlierFinderStepTitle>Multi-Source Search</S.OutlierFinderStepTitle>
+                    <S.EducationalText>Runs three parallel searches (by relevance, view count, and upload date) and deduplicates the results for a much larger, more diverse pool of candidates.</S.EducationalText>
                   </S.StepContent>
                 </S.StepItem>
-
                 <S.StepItem>
                   <S.StepNumberCircle>2</S.StepNumberCircle>
                   <S.StepContent>
-                    <S.OutlierFinderStepTitle>Customize Filters</S.OutlierFinderStepTitle>
-                    <S.EducationalText>
-                      Apply advanced filters to narrow your search by minimum views, video age, channel size,
-                      and sorting preferences. Filter by channel subscriber count to find outliers from
-                      small creators or established channels. Sort results by view ratio, engagement, or viral score.
-                    </S.EducationalText>
+                    <S.OutlierFinderStepTitle>Channel Average Comparison</S.OutlierFinderStepTitle>
+                    <S.EducationalText>Fetches each channel's last 20 videos and computes the <strong>median</strong> views as the baseline — not a skewed all-time average. A viral video from 3 years ago won't hide today's real outliers.</S.EducationalText>
                   </S.StepContent>
                 </S.StepItem>
-
                 <S.StepItem>
                   <S.StepNumberCircle>3</S.StepNumberCircle>
                   <S.StepContent>
-                    <S.OutlierFinderStepTitle>Analyze Performance Data</S.OutlierFinderStepTitle>
-                    <S.EducationalText>
-                      Review detailed metrics including view-to-subscriber ratios, engagement rates, and viral
-                      scores for each outlier video. Use these insights to understand what makes content go viral
-                      and apply these patterns to your own content strategy.
-                    </S.EducationalText>
+                    <S.OutlierFinderStepTitle>Velocity + Engagement Scoring</S.OutlierFinderStepTitle>
+                    <S.EducationalText>Combines outlier ratio, views per day, and engagement rate into a viral score. No arbitrary time decay — a genuinely viral video from two years ago still ranks highly.</S.EducationalText>
                   </S.StepContent>
                 </S.StepItem>
               </S.StepByStep>
             </S.EducationalContent>
-
-            <S.EducationalContent>
-              <S.SectionSubTitle>Understanding Outlier Metrics</S.SectionSubTitle>
-
-              <S.FeatureList>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>View-to-Subscriber Ratio:</strong> Measures how many views a video gets relative to the creator's subscriber count</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Engagement Rate:</strong> Calculates the percentage of viewers who liked, commented, or interacted with the video</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Viral Score:</strong> Comprehensive metric combining view ratio, engagement, and time factors to identify viral content</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Channel Size Filtering:</strong> Discover outliers from micro-influencers, small creators, or established channels</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Content Format Analysis:</strong> Separate analysis for YouTube Shorts versus traditional long-form videos</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Trend Detection:</strong> Identify emerging trends and viral content patterns before they become mainstream</span>
-                </S.FeatureListItem>
-              </S.FeatureList>
-
-              <S.EducationalText>
-                Use outlier analysis to understand what content resonates with audiences, identify successful
-                content strategies, discover trending topics, and find inspiration for your own viral content.
-                This tool is invaluable for content creators, marketers, and researchers studying YouTube trends
-                and viral content patterns.
-              </S.EducationalText>
-            </S.EducationalContent>
           </S.EducationalSection>
         )}
-
-
 
         <S.ResultsContainer className={showResults ? 'visible' : ''}>
           {isLoading ? (
             <S.LoadingContainer>
               <i className='bx bx-loader-alt bx-spin'></i>
-              <p>Analyzing {isShorts ? 'YouTube Shorts' : 'videos'} for outliers...</p>
+              <p>Analyzing {isShorts ? 'YouTube Shorts' : 'videos'} — fetching channel baselines...</p>
             </S.LoadingContainer>
           ) : results.length > 0 ? (
             <>
               <S.ResultsHeader>
                 <S.ResultsTitle>
-                  Found {results.length} {isShorts ? 'Shorts' : 'video'} outliers for "{query}"
+                  {results.length} outlier{results.length !== 1 ? 's' : ''} found for "{query}"
                 </S.ResultsTitle>
-                <S.ExportButton onClick={exportResults}>
-                  <i className="bx bx-download"></i>
-                  Export Results
-                </S.ExportButton>
+                <S.ExportButtonsGroup>
+                  <S.ExportButton onClick={exportCSV}>
+                    <i className="bx bx-table"></i>
+                    Export CSV
+                  </S.ExportButton>
+                  <S.ExportButton onClick={exportJSON}>
+                    <i className="bx bx-download"></i>
+                    Export JSON
+                  </S.ExportButton>
+                </S.ExportButtonsGroup>
               </S.ResultsHeader>
 
               <S.ResultsList>
-                {results.map((result, index) => (
+                {results.map((result) => (
                   <S.ResultCard key={result.video.id}>
-                    <S.CardHeader>
-                      <S.RatioBadge ratio={result.ratio}>
-                        {result.ratio.toFixed(1)}x
-                      </S.RatioBadge>
-                    </S.CardHeader>
-
                     <S.ThumbnailContainer>
                       <S.Thumbnail
                         src={result.video.snippet.thumbnails.medium?.url || result.video.snippet.thumbnails.default.url}
-                        alt={result.video.snippet.title}
+                        alt={decodeHtml(result.video.snippet.title)}
                       />
                       <S.VideoDuration>
                         {formatDuration(parseDuration(result.video.contentDetails.duration))}
                       </S.VideoDuration>
+                      <S.RatioBadge ratio={result.ratio}>
+                        {result.ratio.toFixed(1)}×
+                      </S.RatioBadge>
                     </S.ThumbnailContainer>
 
                     <S.VideoInfo>
-                      <S.VideoTitle>{result.video.snippet.title}</S.VideoTitle>
+                      <S.VideoTitle>{decodeHtml(result.video.snippet.title)}</S.VideoTitle>
 
                       <S.ChannelInfo>
-                        <S.ChannelName>{result.video.snippet.channelTitle}</S.ChannelName>
+                        <S.ChannelNameGroup>
+                          {result.channel.snippet?.thumbnails?.default?.url && (
+                            <S.ChannelAvatar
+                              src={result.channel.snippet.thumbnails.default.url}
+                              alt={decodeHtml(result.video.snippet.channelTitle)}
+                            />
+                          )}
+                          <S.ChannelLink
+                            href={`https://youtube.com/channel/${result.channel.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {decodeHtml(result.video.snippet.channelTitle)}
+                          </S.ChannelLink>
+                        </S.ChannelNameGroup>
                         <S.VideoDate>{formatDate(result.video.snippet.publishedAt)}</S.VideoDate>
                       </S.ChannelInfo>
 
-                      <S.StatsGrid>
-                        <S.StatItem>
-                          <S.StatIcon className="bx bx-show"></S.StatIcon>
-                          <S.StatValue>{parseInt(result.video.statistics.viewCount).toLocaleString()}</S.StatValue>
-                          <S.StatLabel>views</S.StatLabel>
-                        </S.StatItem>
+                      <S.OutlierBadge>
+                        <i className="bx bx-trending-up"></i>
+                        {result.outlierExplanation}
+                      </S.OutlierBadge>
 
-                        <S.StatItem>
-                          <S.StatIcon className="bx bx-group"></S.StatIcon>
-                          <S.StatValue>{parseInt(result.channel.statistics.subscriberCount).toLocaleString()}</S.StatValue>
-                          <S.StatLabel>subs</S.StatLabel>
-                        </S.StatItem>
-
-                        <S.StatItem>
-                          <S.StatIcon className="bx bx-like"></S.StatIcon>
-                          <S.StatValue>{parseInt(result.video.statistics.likeCount || '0').toLocaleString()}</S.StatValue>
-                          <S.StatLabel>likes</S.StatLabel>
-                        </S.StatItem>
-
-                        <S.StatItem>
-                          <S.StatIcon className="bx bx-comment"></S.StatIcon>
-                          <S.StatValue>{parseInt(result.video.statistics.commentCount || '0').toLocaleString()}</S.StatValue>
-                          <S.StatLabel>comments</S.StatLabel>
-                        </S.StatItem>
-                      </S.StatsGrid>
-
-                      <S.MetricsRow>
-                        <S.Metric>
-                          <S.MetricLabel>Engagement:</S.MetricLabel>
-                          <S.MetricValue>{(result.engagementRate * 100).toFixed(2)}%</S.MetricValue>
-                        </S.Metric>
-                        <S.Metric>
-                          <S.MetricLabel>Viral Score:</S.MetricLabel>
-                          <S.MetricValue>{getViralityLabel(result.viralScore)}</S.MetricValue>
-                        </S.Metric>
-                      </S.MetricsRow>
+                      <S.StatsRow>
+                        <S.StatPill>
+                          <S.StatPillValue>{formatCompact(parseInt(result.video.statistics.viewCount))}</S.StatPillValue>
+                          <S.StatPillLabel>views</S.StatPillLabel>
+                        </S.StatPill>
+                        <S.StatPill>
+                          <S.StatPillValue>{formatCompact(parseInt(result.channel.statistics.subscriberCount))}</S.StatPillValue>
+                          <S.StatPillLabel>subs</S.StatPillLabel>
+                        </S.StatPill>
+                        <S.StatPill>
+                          <S.StatPillValue>{formatCompact(result.viewsPerDay)}</S.StatPillValue>
+                          <S.StatPillLabel>views/day</S.StatPillLabel>
+                        </S.StatPill>
+                        <S.StatPill>
+                          <S.StatPillValue>{(result.engagementRate * 100).toFixed(1)}%</S.StatPillValue>
+                          <S.StatPillLabel>engagement</S.StatPillLabel>
+                        </S.StatPill>
+                      </S.StatsRow>
 
                       <S.ActionButtons>
                         <S.VideoLink
@@ -750,11 +792,9 @@ export const OutlierFinder: React.FC = () => {
                           rel="noopener noreferrer"
                         >
                           <i className="bx bx-play"></i>
-                          Watch Video
+                          Watch
                         </S.VideoLink>
-                        <S.AnalyzeButton
-                          onClick={() => navigate(`/tools/video-analyzer/${result.video.id}`)}
-                        >
+                        <S.AnalyzeButton onClick={() => navigate(`/tools/video-analyzer/${result.video.id}`)}>
                           <i className="bx bx-line-chart"></i>
                           Analyze
                         </S.AnalyzeButton>

@@ -1,5 +1,5 @@
 // src/pages/Tools/components/CommentDownloader/CommentDownloader.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { SEO } from '../../../../components/SEO';
 import { GoogleAd } from '../../../../components/GoogleAd';
@@ -34,6 +34,20 @@ interface FilterOptions {
   keyword: string;
   minLikes: number;
 }
+
+const API_KEYS = [
+  process.env.REACT_APP_YOUTUBE_API_KEY_5,
+  process.env.REACT_APP_YOUTUBE_API_KEY_7,
+  process.env.REACT_APP_YOUTUBE_API_KEY_8,
+].filter(Boolean) as string[];
+
+const isQuotaError = (status: number, data: any): boolean => {
+  if (status === 403 || status === 429) {
+    const reason = data?.error?.errors?.[0]?.reason || '';
+    return reason === 'quotaExceeded' || reason === 'dailyLimitExceeded' || reason === 'rateLimitExceeded';
+  }
+  return false;
+};
 
 export const CommentDownloader: React.FC = () => {
   const { videoId } = useParams<{ videoId: string }>();
@@ -75,8 +89,31 @@ export const CommentDownloader: React.FC = () => {
     minLikes: 0
   });
 
-  const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_5;
+  const keyIndexRef = useRef(0);
   const MAX_RESULTS = 100;
+
+  const fetchWithFallback = async (buildUrl: (key: string) => string): Promise<any> => {
+    for (let attempt = 0; attempt < API_KEYS.length; attempt++) {
+      const idx = (keyIndexRef.current + attempt) % API_KEYS.length;
+      const key = API_KEYS[idx];
+      const response = await fetch(buildUrl(key));
+      const data = await response.json();
+
+      if (isQuotaError(response.status, data)) {
+        // This key is exhausted — advance and try the next one
+        keyIndexRef.current = (idx + 1) % API_KEYS.length;
+        continue;
+      }
+
+      if (!response.ok) {
+        throw new Error(`API Error (${response.status}): ${data.error?.message || 'Unknown error'}`);
+      }
+
+      keyIndexRef.current = idx; // remember which key succeeded
+      return data;
+    }
+    throw new Error('Comment Downloader is on cooldown — all API keys are exhausted. Try again tomorrow.');
+  };
   const MAX_PAGES = Math.ceil(filters.maxComments / MAX_RESULTS);
 
   // Helper function to decode HTML entities and clean comment text
@@ -140,11 +177,9 @@ export const CommentDownloader: React.FC = () => {
 
   const fetchVideoData = async (videoId: string) => {
     try {
-      const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/videos?` +
-        `part=snippet,statistics&id=${videoId}&key=${API_KEY}`
+      const data = await fetchWithFallback(key =>
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${key}`
       );
-      const data = await response.json();
       if (data.items?.[0]) {
         setVideoData(data.items[0]);
       }
@@ -155,12 +190,10 @@ export const CommentDownloader: React.FC = () => {
 
   const fetchReplies = async (commentId: string): Promise<Reply[]> => {
     try {
-      const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/comments?` +
-        `part=snippet&parentId=${commentId}&key=${API_KEY}&maxResults=100`
+      const data = await fetchWithFallback(key =>
+        `https://www.googleapis.com/youtube/v3/comments?part=snippet&parentId=${commentId}&key=${key}&maxResults=100`
       );
-      const data = await response.json();
-      
+
       return data.items?.map((item: any) => ({
         id: item.id,
         text: decodeCommentText(item.snippet.textDisplay),
@@ -238,18 +271,13 @@ export const CommentDownloader: React.FC = () => {
 
       let nextPageToken = '';
       for (let i = 0; i < MAX_PAGES; i++) {
-        const url = `https://www.googleapis.com/youtube/v3/commentThreads?` +
-                   `part=snippet,replies&videoId=${id}&key=${API_KEY}&` +
-                   `maxResults=${MAX_RESULTS}&pageToken=${nextPageToken}&order=${filters.sortBy}`;
-        
         setStatus(`Fetching comments... (Page ${i + 1}/${MAX_PAGES})`);
 
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (response.status !== 200) {
-          throw new Error(`API Error (${response.status}): ${data.error?.message || 'Unknown error'}`);
-        }
+        const data = await fetchWithFallback(key =>
+          `https://www.googleapis.com/youtube/v3/commentThreads?` +
+          `part=snippet,replies&videoId=${id}&key=${key}&` +
+          `maxResults=${MAX_RESULTS}&pageToken=${nextPageToken}&order=${filters.sortBy}`
+        );
 
         for (const item of data.items) {
           const comment: Comment = {
@@ -334,16 +362,11 @@ export const CommentDownloader: React.FC = () => {
           let nextPageToken = '';
           
           for (let j = 0; j < MAX_PAGES; j++) {
-            const url = `https://www.googleapis.com/youtube/v3/commentThreads?` +
-                       `part=snippet,replies&videoId=${videoId}&key=${API_KEY}&` +
-                       `maxResults=${MAX_RESULTS}&pageToken=${nextPageToken}&order=${filters.sortBy}`;
-
-            const response = await fetch(url);
-            const data = await response.json();
-
-            if (response.status !== 200) {
-              throw new Error(`API Error (${response.status}): ${data.error?.message || 'Unknown error'}`);
-            }
+            const data = await fetchWithFallback(key =>
+              `https://www.googleapis.com/youtube/v3/commentThreads?` +
+              `part=snippet,replies&videoId=${videoId}&key=${key}&` +
+              `maxResults=${MAX_RESULTS}&pageToken=${nextPageToken}&order=${filters.sortBy}`
+            );
 
             for (const item of data.items) {
               const comment: Comment = {
@@ -400,7 +423,7 @@ export const CommentDownloader: React.FC = () => {
     setIsLoading(false);
   };
 
-  const downloadComments = (format: 'txt' | 'json' | 'csv' | 'pdf' = 'txt') => {
+  const downloadComments = (format: 'txt' | 'json' | 'csv' | 'xml' | 'md' = 'txt') => {
     let content = '';
     let mimeType = 'text/plain';
     let filename = `youtube_comments.${format}`;
@@ -411,17 +434,62 @@ export const CommentDownloader: React.FC = () => {
         mimeType = 'application/json';
         break;
       case 'csv':
-        content = 'Author,Text,Published At,Likes,Type\n';
+        content = 'Author,Text,Published At,Likes,Type,Parent ID\n';
         comments.forEach(comment => {
-          content += `"${comment.author}","${comment.text.replace(/"/g, '""')}","${comment.publishedAt}","${comment.likeCount}","Comment"\n`;
+          content += `"${comment.author}","${comment.text.replace(/"/g, '""')}","${comment.publishedAt}","${comment.likeCount}","Comment",""\n`;
           if (comment.replies) {
             comment.replies.forEach(reply => {
-              content += `"${reply.author}","${reply.text.replace(/"/g, '""')}","${reply.publishedAt}","${reply.likeCount}","Reply"\n`;
+              content += `"${reply.author}","${reply.text.replace(/"/g, '""')}","${reply.publishedAt}","${reply.likeCount}","Reply","${comment.id}"\n`;
             });
           }
         });
         mimeType = 'text/csv';
         break;
+      case 'xml': {
+        const esc = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        const videoTitle = videoData?.snippet?.title || '';
+        content = `<?xml version="1.0" encoding="UTF-8"?>\n<comments video="${esc(videoTitle)}" count="${comments.length}">\n`;
+        comments.forEach(comment => {
+          content += `  <comment id="${comment.id}" author="${esc(comment.author)}" likes="${comment.likeCount}" published="${comment.publishedAt}">\n`;
+          content += `    <text>${esc(comment.text)}</text>\n`;
+          if (comment.replies && comment.replies.length > 0) {
+            content += `    <replies count="${comment.replies.length}">\n`;
+            comment.replies.forEach(reply => {
+              content += `      <reply id="${reply.id}" author="${esc(reply.author)}" likes="${reply.likeCount}" published="${reply.publishedAt}">\n`;
+              content += `        <text>${esc(reply.text)}</text>\n`;
+              content += `      </reply>\n`;
+            });
+            content += `    </replies>\n`;
+          }
+          content += `  </comment>\n`;
+        });
+        content += `</comments>`;
+        mimeType = 'application/xml';
+        filename = 'youtube_comments.xml';
+        break;
+      }
+      case 'md': {
+        const videoTitle = videoData?.snippet?.title || 'YouTube Video';
+        const channel = videoData?.snippet?.channelTitle || '';
+        content = `# YouTube Comments: ${videoTitle}\n`;
+        if (channel) content += `**Channel:** ${channel}\n`;
+        content += `**Total Comments:** ${comments.length}\n**Exported:** ${new Date().toLocaleDateString()}\n\n---\n\n`;
+        comments.forEach((comment, i) => {
+          content += `## ${i + 1}. ${comment.author} — ${comment.likeCount} likes\n`;
+          content += `*${new Date(comment.publishedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}*\n\n`;
+          content += `${comment.text}\n\n`;
+          if (comment.replies && comment.replies.length > 0) {
+            content += `**Replies:**\n\n`;
+            comment.replies.forEach(reply => {
+              content += `> **${reply.author}** (${reply.likeCount} likes): ${reply.text}\n\n`;
+            });
+          }
+          content += `---\n\n`;
+        });
+        mimeType = 'text/markdown';
+        filename = 'youtube_comments.md';
+        break;
+      }
       default:
         content = comments.map(comment => {
           let text = `Author: ${comment.author}\nPublished: ${new Date(comment.publishedAt).toLocaleString()}\nLikes: ${comment.likeCount}\n\n${comment.text}\n\n`;
@@ -446,6 +514,38 @@ export const CommentDownloader: React.FC = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const buildAIPrompt = () => {
+    const videoTitle = videoData?.snippet?.title || 'a YouTube video';
+    const channel = videoData?.snippet?.channelTitle || '';
+    let prompt = `Please analyze the following YouTube comments from "${videoTitle}"${channel ? ` by ${channel}` : ''}.\n\n`;
+    prompt += `Provide:\n`;
+    prompt += `1. Overall sentiment breakdown — what percentage of comments are positive, negative, or neutral\n`;
+    prompt += `2. Key themes and topics that viewers discuss most\n`;
+    prompt += `3. Notable praise and recurring criticism\n`;
+    prompt += `4. Common questions or requests from viewers\n`;
+    prompt += `5. Actionable takeaways for the creator based on this feedback\n\n`;
+    prompt += `--- COMMENTS (${comments.length} total) ---\n\n`;
+    comments.forEach((comment, i) => {
+      prompt += `[${i + 1}] ${comment.author} (${comment.likeCount} likes):\n${comment.text}\n`;
+      if (comment.replies && comment.replies.length > 0) {
+        comment.replies.forEach(reply => {
+          prompt += `  ↳ ${reply.author} (${reply.likeCount} likes): ${reply.text}\n`;
+        });
+      }
+      prompt += '\n';
+    });
+    return prompt;
+  };
+
+  const [clipboardToast, setClipboardToast] = useState(false);
+
+  const handleAIClick = (url: string) => {
+    navigator.clipboard.writeText(buildAIPrompt()).catch(() => {});
+    setClipboardToast(true);
+    setTimeout(() => setClipboardToast(false), 3500);
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const getTopComments = () => {
@@ -762,33 +862,51 @@ export const CommentDownloader: React.FC = () => {
             </S.LoadingContainer>
           ) : comments.length > 0 ? (
             <>
-              {/* Only show video info for single video downloads, not batch */}
-              {!isBatchMode && videoData && (
-                <S.VideoInfo>
-                  <S.ThumbnailContainer>
-                    <S.Thumbnail
-                      src={videoData.snippet.thumbnails.maxres?.url || videoData.snippet.thumbnails.high.url}
-                      alt={videoData.snippet.title}
-                    />
-                  </S.ThumbnailContainer>
-                  
-                  <S.VideoDetails>
-                    <S.VideoTitle>{videoData.snippet.title}</S.VideoTitle>
-                    <S.VideoMeta>
-                      <S.MetaItem>
-                        <i className="bx bx-user"></i>
-                        {videoData.snippet.channelTitle}
-                      </S.MetaItem>
-                      <S.MetaItem>
-                        <i className="bx bx-comment"></i>
-                        {comments.length} comments downloaded
-                      </S.MetaItem>
-                    </S.VideoMeta>
-                  </S.VideoDetails>
-                </S.VideoInfo>
-              )}
+              {/* Video header card (single mode only) */}
+              {!isBatchMode && videoData && (() => {
+                const avgLikes = comments.length > 0
+                  ? Math.round(comments.reduce((s, c) => s + c.likeCount, 0) / comments.length)
+                  : 0;
+                const dates = comments.map(c => new Date(c.publishedAt).getTime()).filter(Boolean);
+                const oldest = dates.length ? new Date(Math.min(...dates)).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—';
+                const newest = dates.length ? new Date(Math.max(...dates)).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—';
+                const dateRange = oldest === newest ? oldest : `${oldest} – ${newest}`;
+                return (
+                  <S.VideoInfo>
+                    <S.ThumbnailContainer>
+                      <S.Thumbnail
+                        src={videoData.snippet.thumbnails.maxres?.url || videoData.snippet.thumbnails.high.url}
+                        alt={videoData.snippet.title}
+                      />
+                    </S.ThumbnailContainer>
+                    <S.VideoDetails>
+                      <S.VideoTitle>{videoData.snippet.title}</S.VideoTitle>
+                      <S.VideoMeta>
+                        <S.MetaItem>
+                          <i className="bx bx-user"></i>
+                          {videoData.snippet.channelTitle}
+                        </S.MetaItem>
+                      </S.VideoMeta>
+                      <S.ResultsStatsStrip>
+                        <S.ResultsStatTile>
+                          <S.ResultsStatValue>{comments.length.toLocaleString()}</S.ResultsStatValue>
+                          <S.ResultsStatLabel>Comments</S.ResultsStatLabel>
+                        </S.ResultsStatTile>
+                        <S.ResultsStatTile>
+                          <S.ResultsStatValue>{avgLikes.toLocaleString()}</S.ResultsStatValue>
+                          <S.ResultsStatLabel>Avg Likes</S.ResultsStatLabel>
+                        </S.ResultsStatTile>
+                        <S.ResultsStatTile>
+                          <S.ResultsStatValue style={{ fontSize: '0.85rem' }}>{dateRange}</S.ResultsStatValue>
+                          <S.ResultsStatLabel>Date Range</S.ResultsStatLabel>
+                        </S.ResultsStatTile>
+                      </S.ResultsStatsStrip>
+                    </S.VideoDetails>
+                  </S.VideoInfo>
+                );
+              })()}
 
-              {/* Show batch results if in batch mode */}
+              {/* Batch results */}
               {isBatchMode && batchResults.length > 0 && (
                 <S.BatchResultsSection>
                   <S.SectionTitle>
@@ -819,27 +937,52 @@ export const CommentDownloader: React.FC = () => {
                 </S.BatchResultsSection>
               )}
 
+              {/* Download section */}
               <S.DownloadSection>
                 <S.SectionTitle>
                   <i className="bx bx-download"></i>
-                  Download Options
+                  Export Comments
                 </S.SectionTitle>
                 <S.DownloadGrid>
                   <S.DownloadButton onClick={() => downloadComments('txt')}>
                     <i className="bx bx-file-txt"></i>
-                    Download as TXT
+                    <S.DownloadButtonInner>
+                      <span>TXT</span>
+                      <S.DownloadButtonSub>Best for AI analysis</S.DownloadButtonSub>
+                    </S.DownloadButtonInner>
+                  </S.DownloadButton>
+                  <S.DownloadButton onClick={() => downloadComments('md')}>
+                    <i className="bx bx-hash"></i>
+                    <S.DownloadButtonInner>
+                      <span>Markdown</span>
+                      <S.DownloadButtonSub>Formatted &amp; readable</S.DownloadButtonSub>
+                    </S.DownloadButtonInner>
                   </S.DownloadButton>
                   <S.DownloadButton onClick={() => downloadComments('json')}>
-                    <i className="bx bx-file-json"></i>
-                    Download as JSON
+                    <i className="bx bxs-data"></i>
+                    <S.DownloadButtonInner>
+                      <span>JSON</span>
+                      <S.DownloadButtonSub>Structured data</S.DownloadButtonSub>
+                    </S.DownloadButtonInner>
                   </S.DownloadButton>
                   <S.DownloadButton onClick={() => downloadComments('csv')}>
                     <i className="bx bx-spreadsheet"></i>
-                    Download as CSV
+                    <S.DownloadButtonInner>
+                      <span>CSV</span>
+                      <S.DownloadButtonSub>Spreadsheet-ready</S.DownloadButtonSub>
+                    </S.DownloadButtonInner>
+                  </S.DownloadButton>
+                  <S.DownloadButton onClick={() => downloadComments('xml')}>
+                    <i className="bx bx-code-alt"></i>
+                    <S.DownloadButtonInner>
+                      <span>XML</span>
+                      <S.DownloadButtonSub>Developer-friendly</S.DownloadButtonSub>
+                    </S.DownloadButtonInner>
                   </S.DownloadButton>
                 </S.DownloadGrid>
               </S.DownloadSection>
 
+              {/* Top comments */}
               {getTopComments().length > 0 && (
                 <S.TopCommentsSection>
                   <S.SectionTitle>
@@ -849,44 +992,67 @@ export const CommentDownloader: React.FC = () => {
                   <S.CommentsList>
                     {getTopComments().slice(0, 5).map((comment, index) => (
                       <S.CommentItem key={comment.id}>
-                        <S.CommentHeader>
-                          <S.CommentAuthor>{comment.author}</S.CommentAuthor>
-                          <S.CommentLikes>
-                            <i className="bx bx-like"></i>
-                            {comment.likeCount}
-                          </S.CommentLikes>
-                        </S.CommentHeader>
-                        <S.CommentText>{comment.text}</S.CommentText>
-                        <S.CommentDate>
-                          {new Date(comment.publishedAt).toLocaleDateString()}
-                        </S.CommentDate>
+                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                          <S.CommentRank>#{index + 1}</S.CommentRank>
+                          <S.CommentAvatar initial={comment.author.charAt(0).toUpperCase()}>
+                            {comment.author.charAt(0).toUpperCase()}
+                          </S.CommentAvatar>
+                          <S.CommentBody>
+                            <S.CommentMeta>
+                              <S.CommentAuthor>{comment.author}</S.CommentAuthor>
+                              {comment.likeCount > 0 && (
+                                <S.CommentLikesPill>
+                                  <i className="bx bx-like"></i>
+                                  {comment.likeCount.toLocaleString()}
+                                </S.CommentLikesPill>
+                              )}
+                            </S.CommentMeta>
+                            <S.CommentText>{comment.text.length > 280 ? comment.text.slice(0, 280) + '…' : comment.text}</S.CommentText>
+                            <S.CommentDate>{new Date(comment.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</S.CommentDate>
+                          </S.CommentBody>
+                        </div>
                       </S.CommentItem>
                     ))}
                   </S.CommentsList>
                 </S.TopCommentsSection>
               )}
 
+              {/* AI links */}
               <S.AILinks>
-                <S.AILinkText>Analyze your comments with AI:</S.AILinkText>
+                <S.AILinkText>Analyze your comments with AI</S.AILinkText>
+                <p style={{ color: 'var(--text-secondary, #aaa)', fontSize: '0.875rem', margin: '0 0 1.25rem 0', lineHeight: 1.5 }}>
+                  Clicking any button below will copy a ready-to-paste prompt to your clipboard — it includes all {comments.length.toLocaleString()} comments plus instructions asking for sentiment analysis, key themes, viewer questions, and creator takeaways. Just paste it into the chat once it opens.
+                </p>
+                {clipboardToast && (
+                  <div style={{
+                    background: 'rgba(34,197,94,0.15)',
+                    border: '1px solid rgba(34,197,94,0.4)',
+                    borderRadius: '8px',
+                    color: '#4ade80',
+                    padding: '0.6rem 1rem',
+                    fontSize: '0.875rem',
+                    marginBottom: '1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}>
+                    <i className="bx bx-check-circle"></i>
+                    Prompt copied to clipboard! Paste it in the chat.
+                  </div>
+                )}
                 <S.AIButtonGrid>
-                  <a href="https://chat.openai.com/" target="_blank" rel="noopener noreferrer">
-                    <S.AIButton color="#10a37f">
-                      <i className="bx bx-bot"></i>
-                      ChatGPT
-                    </S.AIButton>
-                  </a>
-                  <a href="https://gemini.google.com/chat" target="_blank" rel="noopener noreferrer">
-                    <S.AIButton color="#4285f4">
-                      <i className="bx bx-diamond"></i>
-                      Gemini
-                    </S.AIButton>
-                  </a>
-                  <a href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">
-                    <S.AIButton color="#cc785c">
-                      <i className="bx bx-brain"></i>
-                      Claude
-                    </S.AIButton>
-                  </a>
+                  <S.AIButton color="#10a37f" onClick={() => handleAIClick('https://chat.openai.com/')}>
+                    <i className="bx bx-bot"></i>
+                    ChatGPT
+                  </S.AIButton>
+                  <S.AIButton color="#4285f4" onClick={() => handleAIClick('https://gemini.google.com/chat')}>
+                    <i className="bx bx-diamond"></i>
+                    Gemini
+                  </S.AIButton>
+                  <S.AIButton color="#cc785c" onClick={() => handleAIClick('https://claude.ai/new')}>
+                    <i className="bx bx-brain"></i>
+                    Claude
+                  </S.AIButton>
                 </S.AIButtonGrid>
               </S.AILinks>
             </>

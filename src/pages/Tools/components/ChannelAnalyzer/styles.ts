@@ -1597,3 +1597,269 @@ export const AnalyzeButton = styled.button`
     font-size: 0.85rem;
   }
 `;
+
+// Analytics Tab Components
+export const AnalyticsTabContent = styled.div`
+  padding: 1.5rem 0;
+`;
+
+export const AnalyticsHeader = styled.div`
+  margin-bottom: 2rem;
+`;
+
+export const AnalyticsTitle = styled.h2`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+
+  i {
+    color: ${({ theme }) => theme.colors.red5};
+    font-size: 1.5rem;
+  }
+`;
+
+export const AnalyticsSubtitle = styled.div`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+`;
+
+export const VideoTypeToggleRow = styled.div`
+  display: inline-flex;
+  background: ${({ theme }) => theme.colors.dark4};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  padding: 0.25rem;
+  gap: 0.25rem;
+`;
+
+export const VideoTypeOption = styled.button<{ isActive: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.875rem;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  transition: all 0.2s ease;
+  background: ${({ isActive, theme }) => isActive ? theme.colors.red4 : 'transparent'};
+  color: ${({ isActive, theme }) => isActive ? theme.colors.white : theme.colors.text.secondary};
+
+  i {
+    font-size: 1rem;
+  }
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.white};
+  }
+`;
+
+export const AnalyticsEmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 1rem;
+
+  i {
+    font-size: 3rem;
+    color: ${({ theme }) => theme.colors.dark5};
+  }
+`;
+
+export const AnalyticsCategorySection = styled.div`
+  margin-bottom: 2.5rem;
+`;
+
+export const AnalyticsCategoryHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+`;
+
+export const AnalyticsCategoryTitle = styled.h3`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+export const AnalyticsCategoryCount = styled.span`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.8rem;
+`;
+
+export const AnalyticsCardsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 0.75rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const AnalyticsCard = styled.div<{ hasResult: boolean; clickable: boolean }>`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ hasResult, theme }) => hasResult ? theme.colors.red3 : theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  padding: 1rem 1.25rem;
+  cursor: ${({ clickable }) => clickable ? 'pointer' : 'default'};
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:hover {
+    border-color: ${({ hasResult, clickable, theme }) =>
+      clickable ? theme.colors.red4 : hasResult ? theme.colors.red3 : theme.colors.dark5};
+    background: ${({ clickable, theme }) => clickable ? theme.colors.dark4 : theme.colors.dark3};
+    transform: ${({ clickable }) => clickable ? 'translateY(-1px)' : 'none'};
+  }
+`;
+
+export const AnalyticsCardTop = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+`;
+
+export const AnalyticsCardQuestion = styled.div`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.4;
+  flex: 1;
+`;
+
+export const AnalyticsComplexityBadge = styled.span<{ complexity: 'simple' | 'medium' | 'complex' }>`
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 99px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: ${({ complexity }) =>
+    complexity === 'simple' ? 'rgba(16, 185, 129, 0.15)' :
+    complexity === 'medium' ? 'rgba(245, 158, 11, 0.15)' :
+    'rgba(239, 68, 68, 0.15)'};
+  color: ${({ complexity }) =>
+    complexity === 'simple' ? 'rgb(16, 185, 129)' :
+    complexity === 'medium' ? 'rgb(245, 158, 11)' :
+    'rgb(239, 68, 68)'};
+`;
+
+export const AnalyticsCalculating = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.85rem;
+  padding: 0.5rem 0;
+
+  i {
+    color: ${({ theme }) => theme.colors.red5};
+  }
+`;
+
+export const AnalyticsCardCTA = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: ${({ theme }) => theme.colors.red5};
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  i {
+    font-size: 1rem;
+  }
+`;
+
+export const AnalyticsResult = styled.div`
+  border-top: 1px solid ${({ theme }) => theme.colors.dark5};
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  position: relative;
+`;
+
+export const AnalyticsResultAnswer = styled.div`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+  padding-right: 1.5rem;
+`;
+
+export const AnalyticsResultDetails = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+`;
+
+export const AnalyticsResultDetail = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.8rem;
+  line-height: 1.4;
+
+  i {
+    color: ${({ theme }) => theme.colors.red4};
+    font-size: 0.7rem;
+    margin-top: 0.2rem;
+    flex-shrink: 0;
+  }
+`;
+
+export const AnalyticsRecalculate = styled.button`
+  position: absolute;
+  top: 0.5rem;
+  right: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: ${({ theme }) => theme.colors.text.muted};
+  padding: 0.2rem;
+  line-height: 1;
+  transition: color 0.2s;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.red5};
+  }
+
+  i {
+    font-size: 0.9rem;
+  }
+`;
+export const ErrorMessage = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: ${({ theme }) => theme.colors.red1};
+  border: 1px solid ${({ theme }) => theme.colors.red3};
+  color: ${({ theme }) => theme.colors.red5};
+  padding: 1rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  margin-top: 1rem;
+  font-size: 0.9rem;
+
+  i {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+`;

@@ -380,6 +380,24 @@ export const SearchContainer = styled.div`
   margin: 0 auto 2rem auto;
 `;
 
+export const ErrorMessage = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: ${({ theme }) => theme.colors.error || '#f44336'}15;
+  border: 1px solid ${({ theme }) => theme.colors.error || '#f44336'}30;
+  color: ${({ theme }) => theme.colors.error || '#f44336'};
+  padding: 1rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  margin-top: 1rem;
+  font-size: 0.9rem;
+
+  i {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+`;
+
 export const ControlsContainer = styled.div`
   display: flex;
   gap: 0.5rem;

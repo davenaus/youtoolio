@@ -861,20 +861,20 @@ export const ScoreCard = styled.div`
 export const ScoreHeader = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin-bottom: 1rem;
 `;
 
 export const ScoreIcon = styled.i`
-  font-size: 1.5rem;
-  color: ${({ theme }) => theme.colors.red3};
+  font-size: 1rem;
+  color: ${({ theme }) => theme.colors.red5};
 `;
 
 export const ScoreTitle = styled.h3`
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: ${({ theme }) => theme.colors.text.primary};
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
 `;
 
 export const ScoreValue = styled.span`
@@ -1085,15 +1085,15 @@ export const TagsHeader = styled.div`
 export const SectionTitle = styled.h3`
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin: 0;
   color: ${({ theme }) => theme.colors.text.primary};
-  font-size: 1.25rem;
-  font-weight: 600;
-  
+  font-size: 0.95rem;
+  font-weight: 700;
+
   i {
-    color: ${({ theme }) => theme.colors.red3};
-    font-size: 1.5rem;
+    color: ${({ theme }) => theme.colors.red5};
+    font-size: 1rem;
   }
 `;
 
@@ -2775,4 +2775,907 @@ export const InsightCardText = styled.div`
   font-size: 0.9rem;
   line-height: 1.5;
   color: ${({ theme }) => theme.colors.text.primary};
+`;
+
+export const ErrorMessage = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: ${({ theme }) => theme.colors.error || '#f44336'}15;
+  border: 1px solid ${({ theme }) => theme.colors.error || '#f44336'}30;
+  color: ${({ theme }) => theme.colors.error || '#f44336'};
+  padding: 1rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  margin-top: 1rem;
+  font-size: 0.9rem;
+
+  i {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+`;
+
+export const OutlierBanner = styled.div<{ isOutlier: boolean; isUnderperformer: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  margin-bottom: 1.5rem;
+  background: ${({ isOutlier, isUnderperformer, theme }) =>
+    isOutlier
+      ? 'rgba(16, 185, 129, 0.08)'
+      : isUnderperformer
+      ? `linear-gradient(135deg, ${theme.colors.red2}, ${theme.colors.red3})`
+      : theme.colors.dark3};
+  border: 1px solid ${({ isOutlier, isUnderperformer, theme }) =>
+    isOutlier ? 'rgba(16, 185, 129, 0.35)' : isUnderperformer ? theme.colors.red4 : theme.colors.dark5};
+  animation: ${fadeIn} 0.4s ease-out;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+`;
+
+export const OutlierBannerIcon = styled.div<{ isOutlier: boolean; isUnderperformer: boolean }>`
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: ${({ isOutlier, isUnderperformer, theme }) =>
+    isOutlier
+      ? 'rgba(16, 185, 129, 0.2)'
+      : isUnderperformer
+      ? `linear-gradient(135deg, ${theme.colors.red4}, ${theme.colors.red5})`
+      : theme.colors.dark4};
+
+  i {
+    font-size: 1.4rem;
+    color: ${({ isOutlier }) => isOutlier ? 'rgb(16, 185, 129)' : 'white'};
+  }
+`;
+
+export const OutlierBannerInfo = styled.div`
+  flex: 1;
+`;
+
+export const OutlierBannerLabel = styled.div`
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  margin-bottom: 0.25rem;
+`;
+
+export const OutlierBannerValue = styled.div<{ isOutlier: boolean; isUnderperformer: boolean }>`
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: ${({ isOutlier, isUnderperformer, theme }) =>
+    isOutlier ? 'rgb(16, 185, 129)' : isUnderperformer ? theme.colors.white : theme.colors.text.primary};
+`;
+
+export const OutlierBannerSub = styled.div`
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  margin-top: 0.25rem;
+`;
+
+export const StatStrip = styled.div`
+  display: flex;
+  align-items: center;
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 0.875rem 1.5rem;
+  margin-bottom: 1.5rem;
+  gap: 0;
+  overflow-x: auto;
+
+  @media (max-width: 480px) {
+    padding: 0.75rem 1rem;
+  }
+`;
+
+export const StatStripItem = styled.div`
+  flex: 1;
+  text-align: center;
+  padding: 0.25rem 0.75rem;
+  min-width: 80px;
+`;
+
+export const StatStripValue = styled.div`
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text.primary};
+  line-height: 1.2;
+`;
+
+export const StatStripLabel = styled.div`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  margin-top: 0.2rem;
+  white-space: nowrap;
+`;
+
+export const StatStripDivider = styled.div`
+  width: 1px;
+  height: 2rem;
+  background: ${({ theme }) => theme.colors.dark5};
+  flex-shrink: 0;
+`;
+
+// Analytics Tab Components
+export const AnalyticsHeader = styled.div`
+  margin-bottom: 2rem;
+`;
+
+export const AnalyticsTitle = styled.h2`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+
+  i {
+    color: ${({ theme }) => theme.colors.red5};
+    font-size: 1.5rem;
+  }
+`;
+
+export const AnalyticsSubtitle = styled.div`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+`;
+
+export const VideoTypeToggleRow = styled.div`
+  display: inline-flex;
+  background: ${({ theme }) => theme.colors.dark4};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  padding: 0.25rem;
+  gap: 0.25rem;
+`;
+
+export const AnalyticsEmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 1rem;
+
+  i {
+    font-size: 3rem;
+    color: ${({ theme }) => theme.colors.dark5};
+  }
+`;
+
+export const AnalyticsCategorySection = styled.div`
+  margin-bottom: 2.5rem;
+`;
+
+export const AnalyticsCategoryHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+`;
+
+export const AnalyticsCategoryTitle = styled.h3`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+export const AnalyticsCategoryCount = styled.span`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.8rem;
+`;
+
+export const AnalyticsCardsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 0.75rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const AnalyticsCard = styled.div<{ hasResult: boolean; clickable: boolean }>`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ hasResult, theme }) => hasResult ? theme.colors.red3 : theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  padding: 1rem 1.25rem;
+  cursor: ${({ clickable }) => clickable ? 'pointer' : 'default'};
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:hover {
+    border-color: ${({ hasResult, clickable, theme }) =>
+      clickable ? theme.colors.red4 : hasResult ? theme.colors.red3 : theme.colors.dark5};
+    background: ${({ clickable, theme }) => clickable ? theme.colors.dark4 : theme.colors.dark3};
+    transform: ${({ clickable }) => clickable ? 'translateY(-1px)' : 'none'};
+  }
+`;
+
+export const AnalyticsCardTop = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+`;
+
+export const AnalyticsCardQuestion = styled.div`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.4;
+  flex: 1;
+`;
+
+export const AnalyticsComplexityBadge = styled.span<{ complexity: 'simple' | 'medium' | 'complex' }>`
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 99px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: ${({ complexity }) =>
+    complexity === 'simple' ? 'rgba(16, 185, 129, 0.15)' :
+    complexity === 'medium' ? 'rgba(245, 158, 11, 0.15)' :
+    'rgba(239, 68, 68, 0.15)'};
+  color: ${({ complexity }) =>
+    complexity === 'simple' ? 'rgb(16, 185, 129)' :
+    complexity === 'medium' ? 'rgb(245, 158, 11)' :
+    'rgb(239, 68, 68)'};
+`;
+
+export const AnalyticsCalculating = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.85rem;
+  padding: 0.5rem 0;
+
+  i {
+    color: ${({ theme }) => theme.colors.red5};
+  }
+`;
+
+export const AnalyticsCardCTA = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: ${({ theme }) => theme.colors.red5};
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  i {
+    font-size: 1rem;
+  }
+`;
+
+export const AnalyticsResult = styled.div`
+  border-top: 1px solid ${({ theme }) => theme.colors.dark5};
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  position: relative;
+`;
+
+export const AnalyticsResultAnswer = styled.div`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+  padding-right: 1.5rem;
+`;
+
+export const AnalyticsResultDetails = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+`;
+
+export const AnalyticsResultDetail = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.8rem;
+  line-height: 1.4;
+
+  i {
+    color: ${({ theme }) => theme.colors.red4};
+    font-size: 0.7rem;
+    margin-top: 0.2rem;
+    flex-shrink: 0;
+  }
+`;
+
+export const AnalyticsRecalculate = styled.button`
+  position: absolute;
+  top: 0.5rem;
+  right: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: ${({ theme }) => theme.colors.text.muted};
+  padding: 0.2rem;
+  line-height: 1;
+  transition: color 0.2s;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.red5};
+  }
+
+  i {
+    font-size: 0.9rem;
+  }
+`;
+
+// Performance Dashboard Components
+export const PerfDashboard = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+`;
+
+export const PerfDashboardTitle = styled.div`
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: ${({ theme }) => theme.colors.text.muted};
+  margin-bottom: 1.25rem;
+`;
+
+export const PerfRow = styled.div`
+  margin-bottom: 1rem;
+  &:last-child { margin-bottom: 0; }
+`;
+
+export const PerfRowTop = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.35rem;
+`;
+
+export const PerfLabel = styled.span`
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+`;
+
+export const PerfValue = styled.span`
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text.primary};
+`;
+
+export const PerfBar = styled.div`
+  height: 6px;
+  background: ${({ theme }) => theme.colors.dark5};
+  border-radius: 3px;
+  overflow: hidden;
+`;
+
+export const PerfBarFill = styled.div<{ width: number; color: string }>`
+  height: 100%;
+  width: ${({ width }) => Math.min(100, width)}%;
+  background: ${({ color }) => color};
+  border-radius: 3px;
+  transition: width 0.6s ease;
+`;
+
+export const PerfTipsSection = styled.div`
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid ${({ theme }) => theme.colors.dark5};
+`;
+
+export const PerfTip = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+  &:last-child { margin-bottom: 0; }
+  i { color: ${({ theme }) => theme.colors.red5}; font-size: 0.9rem; margin-top: 0.1rem; flex-shrink: 0; }
+`;
+
+export const AnalyzeAllTagsButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.875rem;
+  background: ${({ theme }) => theme.colors.red3};
+  color: white;
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  transition: all 0.2s ease;
+  &:hover { background: ${({ theme }) => theme.colors.red4}; }
+  i { font-size: 0.9rem; }
+`;
+
+export const TagModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  @media (min-width: 640px) {
+    align-items: center;
+    padding: 1rem;
+  }
+`;
+
+export const TagModal = styled.div`
+  background: ${({ theme }) => theme.colors.dark2};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.xl} ${({ theme }) => theme.borderRadius.xl} 0 0;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  @media (min-width: 640px) {
+    border-radius: ${({ theme }) => theme.borderRadius.xl};
+    max-width: 560px;
+    max-height: 80vh;
+  }
+`;
+
+export const TagModalHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+  flex-shrink: 0;
+`;
+
+export const TagModalTitle = styled.h3`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+`;
+
+export const TagModalClose = styled.button`
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.colors.text.muted};
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  font-size: 1.25rem;
+  &:hover { color: ${({ theme }) => theme.colors.text.primary}; }
+`;
+
+export const TagModalSummary = styled.div`
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.875rem 1.5rem;
+  background: ${({ theme }) => theme.colors.dark3};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+  flex-shrink: 0;
+  flex-wrap: wrap;
+`;
+
+export const TagModalSummaryStat = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+`;
+
+export const TagModalSummaryValue = styled.div`
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text.primary};
+`;
+
+export const TagModalSummaryLabel = styled.div`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+`;
+
+export const TagModalBody = styled.div`
+  overflow-y: auto;
+  padding: 1rem 1.5rem;
+  flex: 1;
+`;
+
+export const TagRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+  &:last-child { border-bottom: none; }
+`;
+
+export const TagRowName = styled.div`
+  flex: 1;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const TagTypeBadge = styled.span<{ tagType: 'Broad' | 'Mid-tail' | 'Long-tail' }>`
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 99px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: ${({ tagType, theme }) =>
+    tagType === 'Long-tail' ? theme.colors.red3 + '30' :
+    tagType === 'Mid-tail' ? theme.colors.red4 + '30' :
+    theme.colors.dark5};
+  color: ${({ tagType, theme }) =>
+    tagType === 'Long-tail' ? theme.colors.red5 :
+    tagType === 'Mid-tail' ? theme.colors.red4 :
+    theme.colors.text.muted};
+`;
+
+export const TagRelevantBadge = styled.span`
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 99px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: rgba(167, 139, 250, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(167, 139, 250, 0.3);
+`;
+
+export const TagQualityLabel = styled.span<{ quality: 'Strong' | 'OK' | 'Weak' }>`
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+  color: ${({ quality }) =>
+    quality === 'Strong' ? '#10b981' :
+    quality === 'OK' ? '#f59e0b' :
+    '#ef4444'};
+`;
+
+export const ThumbSection = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+`;
+
+export const ThumbSectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+`;
+
+export const ThumbSectionTitle = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text.primary};
+  i { color: ${({ theme }) => theme.colors.red5}; }
+`;
+
+export const ThumbOverallBadge = styled.div<{ score: number }>`
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.3rem 0.75rem;
+  border-radius: 99px;
+  color: ${({ score }) => score >= 80 ? '#10b981' : score >= 60 ? '#f59e0b' : '#ef4444'};
+  background: ${({ score }) =>
+    score >= 80 ? 'rgba(16,185,129,0.12)' :
+    score >= 60 ? 'rgba(245,158,11,0.12)' :
+    'rgba(239,68,68,0.12)'};
+  border: 1px solid ${({ score }) =>
+    score >= 80 ? 'rgba(16,185,129,0.3)' :
+    score >= 60 ? 'rgba(245,158,11,0.3)' :
+    'rgba(239,68,68,0.3)'};
+`;
+
+export const ThumbComparison = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const ThumbImageWrapper = styled.div`
+  position: relative;
+`;
+
+export const ThumbImageLabel = styled.div`
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text.muted};
+  text-align: center;
+  margin-top: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+`;
+
+export const ThumbScoreList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+`;
+
+export const ThumbScoreRow = styled.div``;
+
+export const ThumbScoreRowTop = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.3rem;
+`;
+
+export const ThumbScoreLabel = styled.span`
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+`;
+
+export const ThumbScoreValue = styled.span<{ scoreColor: string }>`
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: ${({ scoreColor }) => scoreColor};
+`;
+
+export const ThumbScoreBar = styled.div`
+  height: 5px;
+  background: ${({ theme }) => theme.colors.dark5};
+  border-radius: 3px;
+  overflow: hidden;
+`;
+
+export const ThumbScoreBarFill = styled.div<{ width: number; scoreColor: string }>`
+  height: 100%;
+  width: ${({ width }) => Math.min(100, width)}%;
+  background: ${({ scoreColor }) => scoreColor};
+  border-radius: 3px;
+  transition: width 0.6s ease;
+`;
+
+export const ThumbScoreReason = styled.div`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  margin-top: 0.3rem;
+  line-height: 1.4;
+`;
+
+export const ThumbInsights = styled.div`
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid ${({ theme }) => theme.colors.dark5};
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+export const ThumbInsightItem = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  line-height: 1.4;
+  i { color: ${({ theme }) => theme.colors.red5}; font-size: 0.9rem; margin-top: 0.1rem; flex-shrink: 0; }
+`;
+
+/* ── Channel Tab redesign ── */
+
+export const ChannelProfileCard = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  @media (max-width: 480px) { flex-direction: column; align-items: flex-start; }
+`;
+
+export const ChannelProfileAvatar = styled.img`
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid ${({ theme }) => theme.colors.dark5};
+`;
+
+export const ChannelProfileInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+`;
+
+export const ChannelProfileName = styled.div`
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text.primary};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const ChannelProfileHandle = styled.div`
+  font-size: 0.8rem;
+  color: ${({ theme }) => theme.colors.red5};
+`;
+
+export const ChannelProfileMeta = styled.div`
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+  span {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    color: ${({ theme }) => theme.colors.text.muted};
+    i { font-size: 0.85rem; }
+  }
+`;
+
+export const ChannelProfileCTA = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: ${({ theme }) => theme.colors.red3};
+  color: white;
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+  &:hover { background: ${({ theme }) => theme.colors.red4}; }
+  i { font-size: 0.9rem; }
+  @media (max-width: 480px) { width: 100%; justify-content: center; }
+`;
+
+export const ChannelStatGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  @media (max-width: 480px) { grid-template-columns: repeat(2, 1fr); }
+`;
+
+export const ChannelStatTile = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  padding: 1rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+`;
+
+export const ChannelStatValue = styled.div`
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text.primary};
+  line-height: 1;
+`;
+
+export const ChannelStatLabel = styled.div`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+`;
+
+export const ChannelCompareRow = styled.div`
+  margin-bottom: 1.1rem;
+  &:last-of-type { margin-bottom: 0; }
+`;
+
+export const ChannelCompareLabel = styled.div`
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 0.45rem;
+`;
+
+export const ChannelCompareBars = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+`;
+
+export const ChannelCompareBarRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+`;
+
+export const ChannelCompareBarTag = styled.span`
+  font-size: 0.72rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  width: 68px;
+  flex-shrink: 0;
+`;
+
+export const ChannelCompareBarTrack = styled.div`
+  flex: 1;
+  height: 7px;
+  background: ${({ theme }) => theme.colors.dark5};
+  border-radius: 4px;
+  overflow: hidden;
+`;
+
+export const ChannelCompareBarFill = styled.div<{ width: number; barColor: string }>`
+  height: 100%;
+  width: ${({ width }) => width}%;
+  background: ${({ barColor }) => barColor};
+  border-radius: 4px;
+  transition: width 0.5s ease;
+`;
+
+export const ChannelCompareBarNum = styled.span`
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  width: 60px;
+  text-align: right;
+  flex-shrink: 0;
 `;

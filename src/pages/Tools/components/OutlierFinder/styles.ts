@@ -454,47 +454,24 @@ export const CardHeader = styled.div`
 `;
 
 export const RatioBadge = styled.div<{ ratio: number }>`
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 2;
   background: ${({ ratio }) => {
-    if (ratio >= 50) return 'linear-gradient(135deg, #d32f2f, #b71c1c)';      // Deep Red - Epic!
-    if (ratio >= 20) return 'linear-gradient(135deg, #f57c00, #e65100)';      // Deep Orange - Amazing!
-    if (ratio >= 10) return 'linear-gradient(135deg, #ff9800, #f57700)';      // Orange - Great!
-    if (ratio >= 5) return 'linear-gradient(135deg, #ffb300, #ff8f00)';       // Amber - Good
-    return 'linear-gradient(135deg, #546e7a, #37474f)';                       // Blue Gray - Decent
+    if (ratio >= 20) return 'linear-gradient(135deg, #7D0000, #B91C1C)';
+    if (ratio >= 10) return 'linear-gradient(135deg, #B91C1C, #E54848)';
+    if (ratio >= 5)  return 'linear-gradient(135deg, #E54848, #f87171)';
+    return 'linear-gradient(135deg, #520101, #7D0000)';
   }};
-  color: ${({ theme }) => theme.colors.white};
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  font-weight: 800;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
-  position: relative;
-
-  /* Add pulsing animation for high ratios */
-  ${({ ratio }) => ratio >= 20 && `
-    animation: pulse 2s ease-in-out infinite;
-
-    @keyframes pulse {
-      0%, 100% {
-        box-shadow: 0 6px 20px rgba(229, 72, 72, 0.4);
-      }
-      50% {
-        box-shadow: 0 6px 30px rgba(229, 72, 72, 0.8);
-      }
-    }
-  `}
-
-  @media (max-width: 768px) {
-    width: 60px;
-    height: 60px;
-    font-size: 0.9rem;
-  }
+  color: white;
+  padding: 0.3rem 0.65rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
 `;
 
 export const ThumbnailContainer = styled.div`
@@ -1212,8 +1189,112 @@ export const OutlierFinderStepTitle = styled.h4`
 export const OutlierFinderBottomAdContainer = styled.div`
   margin: 2rem 0;
   text-align: center;
-  
+
   @media (min-width: 1401px) {
     display: none;
   }
+`;
+
+export const ChannelNameGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+export const ChannelAvatar = styled.img`
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+`;
+
+export const ChannelLink = styled.a`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.red4};
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+  }
+`;
+
+export const OutlierBadge = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(185, 28, 28, 0.15);
+  border: 1px solid rgba(185, 28, 28, 0.35);
+  color: ${({ theme }) => theme.colors.red4};
+  padding: 0.45rem 0.85rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  i {
+    font-size: 0.9rem;
+  }
+`;
+
+export const ErrorMessage = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: ${({ theme }) => theme.colors.error || '#f44336'}15;
+  border: 1px solid ${({ theme }) => theme.colors.error || '#f44336'}30;
+  color: ${({ theme }) => theme.colors.error || '#f44336'};
+  padding: 1rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  margin-top: 1rem;
+  font-size: 0.9rem;
+
+  i {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+`;
+
+export const ExportButtonsGroup = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+`;
+
+export const StatsRow = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+
+export const StatPill = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 0.25rem;
+  background: ${({ theme }) => theme.colors.dark4};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  min-width: 0;
+`;
+
+export const StatPillValue = styled.span`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+`;
+
+export const StatPillLabel = styled.span`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-top: 0.1rem;
 `;
