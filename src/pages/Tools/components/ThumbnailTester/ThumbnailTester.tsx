@@ -1,10 +1,19 @@
 // src/pages/Tools/components/ThumbnailTester/ThumbnailTester.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SEO } from '../../../../components/SEO';
 import { GoogleAd } from '../../../../components/GoogleAd';
 import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
+
+const TT_API_KEYS = [
+  process.env.REACT_APP_YOUTUBE_API_KEY_3,
+  process.env.REACT_APP_YOUTUBE_API_KEY_4,
+  process.env.REACT_APP_YOUTUBE_API_KEY_5,
+  process.env.REACT_APP_YOUTUBE_API_KEY_7,
+  process.env.REACT_APP_YOUTUBE_API_KEY_8,
+  process.env.REACT_APP_YOUTUBE_API_KEY,
+].filter(Boolean) as string[];
 
 interface PreviewScenario {
   name: string;
@@ -55,6 +64,7 @@ const previewScenarios: PreviewScenario[] = [
 
 export const ThumbnailTester: React.FC = () => {
   const navigate = useNavigate();
+  const keyIndexRef = useRef(0);
   const [title, setTitle] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [profileUrl, setProfileUrl] = useState<string | null>(null);
@@ -63,6 +73,18 @@ export const ThumbnailTester: React.FC = () => {
   const [showComparison, setShowComparison] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<'input' | 'preview' | 'compare'>('input');
+
+  const fetchWithKeyRotation = async (buildUrl: (key: string) => string): Promise<Response> => {
+    for (let attempt = 0; attempt < TT_API_KEYS.length; attempt++) {
+      const idx = (keyIndexRef.current + attempt) % TT_API_KEYS.length;
+      const response = await fetch(buildUrl(TT_API_KEYS[idx]));
+      if (response.status !== 403 && response.status !== 429) {
+        keyIndexRef.current = idx;
+        return response;
+      }
+    }
+    throw new Error('All API keys exhausted');
+  };
 
   // Tool configuration
   const toolConfig = {
@@ -242,16 +264,8 @@ export const ThumbnailTester: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY;
-      if (!API_KEY) {
-        throw new Error('YouTube API key not configured');
-      }
-
-      const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/videos?` +
-        `part=snippet&` +
-        `id=${videoId}&` +
-        `key=${API_KEY}`
+      const response = await fetchWithKeyRotation(key =>
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${key}`
       );
 
       if (!response.ok) {
@@ -286,19 +300,14 @@ export const ThumbnailTester: React.FC = () => {
   };
 
   const fetchTrendingVideos = async (): Promise<ChannelVideo[]> => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_3;
-
-    if (!API_KEY) {
+    if (!TT_API_KEYS.length) {
       throw new Error('YouTube API key not configured');
     }
 
     try {
-      const response = await fetch(
+      const response = await fetchWithKeyRotation(key =>
         `https://www.googleapis.com/youtube/v3/videos?` +
-        `part=snippet&` +
-        `chart=mostPopular&` +
-        `maxResults=15&` +
-        `key=${API_KEY}`
+        `part=snippet&chart=mostPopular&maxResults=15&key=${key}`
       );
 
       if (!response.ok) {
@@ -308,11 +317,8 @@ export const ThumbnailTester: React.FC = () => {
       const data = await response.json();
 
       const channelIds = data.items.map((item: any) => item.snippet.channelId).join(',');
-      const channelResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/channels?` +
-        `part=snippet&` +
-        `id=${channelIds}&` +
-        `key=${API_KEY}`
+      const channelResponse = await fetchWithKeyRotation(key =>
+        `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelIds}&key=${key}`
       );
 
       if (!channelResponse.ok) {
@@ -340,7 +346,6 @@ export const ThumbnailTester: React.FC = () => {
   };
 
   const fetchChannelVideos = async (channelUrl: string): Promise<ChannelVideo[]> => {
-    const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_3;
     const channelId = extractChannelId(channelUrl);
 
     if (!channelId) {
@@ -349,28 +354,22 @@ export const ThumbnailTester: React.FC = () => {
 
     try {
       // First try to get channel directly
-      let channelResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/channels?` +
-        `part=snippet,contentDetails&` +
-        `id=${channelId}&key=${API_KEY}`
+      let channelResponse = await fetchWithKeyRotation(key =>
+        `https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails&id=${channelId}&key=${key}`
       );
       let channelData = await channelResponse.json();
 
       // If not found, try searching by username for @handle channels
       if (!channelData.items?.length && channelUrl.includes('@')) {
-        const searchResponse = await fetch(
-          `https://www.googleapis.com/youtube/v3/search?` +
-          `part=snippet&type=channel&` +
-          `q=${channelId}&key=${API_KEY}`
+        const searchResponse = await fetchWithKeyRotation(key =>
+          `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${channelId}&key=${key}`
         );
         const searchData = await searchResponse.json();
 
         if (searchData.items?.length) {
           const foundChannelId = searchData.items[0].id.channelId;
-          channelResponse = await fetch(
-            `https://www.googleapis.com/youtube/v3/channels?` +
-            `part=snippet,contentDetails&` +
-            `id=${foundChannelId}&key=${API_KEY}`
+          channelResponse = await fetchWithKeyRotation(key =>
+            `https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails&id=${foundChannelId}&key=${key}`
           );
           channelData = await channelResponse.json();
         }
@@ -385,10 +384,8 @@ export const ThumbnailTester: React.FC = () => {
       const uploadsPlaylistId = channelData.items[0].contentDetails.relatedPlaylists.uploads;
 
       // Get videos from uploads playlist (fetch more to account for filtering)
-      const videosResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/playlistItems?` +
-        `part=snippet&playlistId=${uploadsPlaylistId}&` +
-        `maxResults=50&key=${API_KEY}`
+      const videosResponse = await fetchWithKeyRotation(key =>
+        `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=50&key=${key}`
       );
 
       if (!videosResponse.ok) {
@@ -405,11 +402,8 @@ export const ThumbnailTester: React.FC = () => {
       const videoIds = videosData.items.map((item: any) => item.snippet.resourceId.videoId).join(',');
 
       // Fetch video details including duration and contentDetails
-      const videoDetailsResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/videos?` +
-        `part=snippet,contentDetails&` +
-        `id=${videoIds}&` +
-        `key=${API_KEY}`
+      const videoDetailsResponse = await fetchWithKeyRotation(key =>
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoIds}&key=${key}`
       );
 
       if (!videoDetailsResponse.ok) {
