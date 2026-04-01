@@ -1,9 +1,7 @@
 // src/pages/Tools/components/KeywordAnalyzer/KeywordAnalyzer.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { SEO } from '../../../../components/SEO';
-import { GoogleAd } from '../../../../components/GoogleAd';
-import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
+import { SEO } from '../../../../components/SEO';import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 const KW_API_KEYS = [
@@ -1032,10 +1030,6 @@ export const KeywordAnalyzer: React.FC = () => {
             </S.HeaderTextContent>
           </S.HeaderContent>
         </S.EnhancedHeader>
-
-        {/* Google Ad Spot */}
-        <GoogleAd adSlot="1234567890" />
-
         {error && (
           <S.ErrorMessage>
             <i className="bx bx-error"></i>

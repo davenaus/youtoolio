@@ -2,9 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ToolPageWrapper } from '../../../../components/ToolPageWrapper';
-import { SEO } from '../../../../components/SEO';
-import { GoogleAd } from '../../../../components/GoogleAd';
-import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
+import { SEO } from '../../../../components/SEO';import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 import moment from 'moment';
 import { trackToolUsage, trackResultsDisplayed, trackError, trackToolPageView, useTimeTracking } from '../../../../utils/googleAnalytics';
@@ -2175,10 +2173,6 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
             </S.HeaderTextContent>
           </S.HeaderContent>
         </S.EnhancedHeader>
-
-        {/* Google Ad Spot */}
-        <GoogleAd adSlot="1234567890" />
-
         {apiError && (
           <S.ErrorMessage>
             <i className="bx bx-error"></i>

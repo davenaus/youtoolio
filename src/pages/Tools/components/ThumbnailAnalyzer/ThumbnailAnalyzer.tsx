@@ -2,9 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ToolPageWrapper } from '../../../../components/ToolPageWrapper';
-import { SEO } from '../../../../components/SEO';
-import { GoogleAd } from '../../../../components/GoogleAd';
-import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
+import { SEO } from '../../../../components/SEO';import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 interface AnalysisResult {
@@ -848,10 +846,6 @@ export const ThumbnailAnalyzer: React.FC = () => {
                 )}
 
               </S.UploadSection>
-
-              {/* Google Ad Spot */}
-              <GoogleAd adSlot="1234567890" />
-
               {/* Educational Content */}
               <S.EducationalSection>
                   <S.SectionTitle>What This Tool Analyzes</S.SectionTitle>

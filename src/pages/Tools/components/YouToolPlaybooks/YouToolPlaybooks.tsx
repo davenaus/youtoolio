@@ -1,7 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { GoogleAd } from '../../../../components/GoogleAd';
-import { playbooks, Playbook } from './playbooks';
+import { useNavigate } from 'react-router-dom';import { playbooks, Playbook } from './playbooks';
 import PlaybookCard from './components/PlaybookCard';
 import PlaybookModal from './components/PlaybookModal';
 import {
@@ -143,10 +141,6 @@ const YouToolPlaybooks: React.FC = () => {
           </FilterButton>
         </EmptyState>
       )}
-
-      {/* Google Ad Spot */}
-      <GoogleAd adSlot="1234567890" />
-
       {/* Educational Content */}
       <EducationalSection>
 

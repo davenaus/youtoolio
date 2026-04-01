@@ -2,9 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ToolPageWrapper } from '../../../../components/ToolPageWrapper';
-import { SEO } from '../../../../components/SEO';
-import { GoogleAd } from '../../../../components/GoogleAd';
-import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
+import { SEO } from '../../../../components/SEO';import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 interface ThumbnailData {
@@ -473,10 +471,6 @@ export const ThumbnailDownloader: React.FC = () => {
               )}
             </S.InputSection>
           )}
-
-          {/* Google Ad Spot */}
-          <GoogleAd adSlot="1234567890" />
-
           {/* Educational Content Section */}
           {currentStep === 'input' && (
             <S.EducationalSection>

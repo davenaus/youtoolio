@@ -1,9 +1,7 @@
 // src/pages/Tools/components/ThumbnailTester/ThumbnailTester.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SEO } from '../../../../components/SEO';
-import { GoogleAd } from '../../../../components/GoogleAd';
-import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
+import { SEO } from '../../../../components/SEO';import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 const TT_API_KEYS = [
@@ -809,10 +807,6 @@ export const ThumbnailTester: React.FC = () => {
             )}
           </S.InputSection>
         )}
-
-                {/* Google Ad Spot */}
-        <GoogleAd adSlot="1234567890" />
-
         {/* Educational Content - shown below input */}
         {currentStep === 'input' && (
           <S.EducationalSection>

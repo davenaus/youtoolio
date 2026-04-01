@@ -1,9 +1,7 @@
 // src/pages/Tools/components/YouTubeCalculator/YouTubeCalculator.tsx
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SEO } from '../../../../components/SEO';
-import { GoogleAd } from '../../../../components/GoogleAd';
-import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
+import { SEO } from '../../../../components/SEO';import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 interface CategoryRates {
@@ -664,10 +662,6 @@ export const YouTubeCalculator: React.FC = () => {
             )}
           </S.InputSection>
         )}
-
-        {/* Google Ad Spot */}
-        <GoogleAd adSlot="1234567890" />
-
         {/* Educational Content */}
         {currentStep === 'input' && (
           <S.EducationalSection>

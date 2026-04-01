@@ -1,9 +1,7 @@
 // src/pages/Tools/components/QRCodeGenerator/QRCodeGenerator.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SEO } from '../../../../components/SEO';
-import { GoogleAd } from '../../../../components/GoogleAd';
-import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
+import { SEO } from '../../../../components/SEO';import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 interface QRConfig {
@@ -693,10 +691,6 @@ export const QRCodeGenerator: React.FC = () => {
             </S.ResultGrid>
           </S.ResultSection>
         )}
-
-                {/* Google Ad Spot */}
-        <GoogleAd adSlot="1234567890" />
-
         {/* Educational Content - shown below input */}
         {currentStep === 'input' && (
           <S.EducationalSection>

@@ -1,9 +1,7 @@
 // src/pages/Tools/components/OutlierFinder/OutlierFinder.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { SEO } from '../../../../components/SEO';
-import { GoogleAd } from '../../../../components/GoogleAd';
-import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
+import { SEO } from '../../../../components/SEO';import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 const decodeHtml = (html: string): string => {
@@ -662,8 +660,6 @@ export const OutlierFinder: React.FC = () => {
             </S.HistoryTags>
           </S.SearchHistory>
         )}
-
-        <GoogleAd adSlot="1234567890" />
 
         {!showResults && (
           <S.EducationalSection>

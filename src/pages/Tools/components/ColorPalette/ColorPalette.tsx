@@ -1,8 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SEO } from '../../../../components/SEO';
-import { GoogleAd } from '../../../../components/GoogleAd';
-import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
+import { SEO } from '../../../../components/SEO';import { toolsSEO, generateToolSchema } from '../../../../config/toolsSEO';
 import * as S from './styles';
 
 
@@ -657,10 +655,6 @@ const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
             </S.ExportCard>
           </S.ResultsSection>
         )}
-
-                {/* Google Ad Spot */}
-        <GoogleAd adSlot="1234567890" />
-
         {/* Educational Content */}
         {!imagePreview && (
           <S.EducationalSection>
