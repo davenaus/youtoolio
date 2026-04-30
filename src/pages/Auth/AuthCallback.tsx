@@ -32,7 +32,10 @@ export const AuthCallback: React.FC = () => {
         avatar_url: user.user_metadata?.avatar_url ?? null,
       }, { onConflict: 'user_id' });
 
-      navigate('/account');
+      // If the user came from the extension auth flow, send them back there
+      const next = sessionStorage.getItem('youtool_auth_next');
+      sessionStorage.removeItem('youtool_auth_next');
+      navigate(next || '/account');
     });
   }, [navigate]);
 

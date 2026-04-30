@@ -56,6 +56,7 @@ export const ExtensionAuthStart: React.FC = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState('Verifying your session…');
   const [error, setError] = useState('');
+  const [done, setDone] = useState(false);
 
   const params = new URLSearchParams(window.location.search);
   const redirectUri = params.get('redirect_uri') ?? '';
@@ -65,9 +66,10 @@ export const ExtensionAuthStart: React.FC = () => {
   useEffect(() => {
     if (loading) return;
 
-    // Not logged in — send to login, return here after
+    // Not logged in — save this URL and send to login
     if (!user || !session) {
-      navigate(`/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+      sessionStorage.setItem('youtool_auth_next', window.location.pathname + window.location.search);
+      navigate('/login');
       return;
     }
 
@@ -90,11 +92,24 @@ export const ExtensionAuthStart: React.FC = () => {
       .then(res => res.json())
       .then(data => {
         if (data.error) { setError(data.error); return; }
-        // Hand control back to the extension
+        setDone(true);
+        // Hand control back to the extension — popup closes automatically
         window.location.href = data.redirect;
       })
       .catch(() => setError('Something went wrong. Please try again.'));
   }, [loading, user, session, redirectUri, extensionId, state, navigate]);
+
+  if (done) {
+    return (
+      <Container>
+        <Card>
+          <Logo src="/logo512_transparent.png" alt="YouTool" />
+          <Heading>You're all set!</Heading>
+          <Sub>Your account is linked to the extension. You can close this window.</Sub>
+        </Card>
+      </Container>
+    );
+  }
 
   return (
     <Container>
