@@ -1,5 +1,5 @@
 // src/pages/Tools/styles.ts
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 
 export const Container = styled.div`
   padding: 0;
@@ -715,6 +715,229 @@ export const EducationalCardBenefits = styled.p`
 
   strong {
     color: ${({ theme }) => theme.colors.text.primary};
+  }
+`;
+
+// YouTool Studio Sign-in Card — "Channel Bars"
+export const PromoCard = styled.div`
+  display: none;
+  grid-column: span 2;
+  position: relative;
+  border-radius: 20px;
+  background: #141416;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+
+  @media (max-width: 768px) {
+    grid-column: span 1;
+  }
+`;
+
+export const PromoCardGlow = styled.div`
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  right: -80px;
+  top: -40px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.20), transparent 60%);
+  pointer-events: none;
+`;
+
+export const PromoCardInner = styled.div`
+  padding: clamp(20px, 2.8vw, 28px);
+  padding-right: clamp(120px, 16vw, 200px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 2vw, 20px);
+  position: relative;
+  z-index: 1;
+
+  @media (max-width: 600px) {
+    padding-right: clamp(20px, 2.8vw, 28px);
+  }
+`;
+
+export const PromoTopRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+export const PromoBrandLockup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: clamp(7px, 0.8vw, 9px);
+`;
+
+export const PromoIcon = styled.div`
+  width: clamp(34px, 3.2vw, 38px);
+  height: clamp(34px, 3.2vw, 38px);
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+`;
+
+export const PromoWordmark = styled.span`
+  font-size: clamp(14px, 1.4vw, 15px);
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+`;
+
+export const PromoMeta = styled.span`
+  font-size: clamp(9px, 0.9vw, 10px);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+
+  @media (max-width: 480px) {
+    display: none;
+  }
+`;
+
+export const PromoMiddleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2vw, 20px);
+`;
+
+export const PromoHeadline = styled.h3`
+  flex: 1;
+  margin: 0;
+  font-size: clamp(20px, 2.4vw, 26px);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.028em;
+  line-height: 1.15;
+
+  .accent {
+    color: #ff5662;
+    font-style: italic;
+  }
+`;
+
+export const PromoToolbox = styled.div`
+  position: absolute;
+  right: clamp(-80px, -8vw, -40px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: clamp(240px, 26vw, 320px);
+  height: clamp(240px, 26vw, 320px);
+  overflow: visible;
+  z-index: 2;
+`;
+
+export const PromoToolboxLid = styled.img`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 3;
+  pointer-events: none;
+  user-select: none;
+`;
+
+export const PromoToolboxDrawer = styled.img`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+`;
+
+const scrollUp = keyframes`
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+`;
+
+export const PromoFeatureScroller = styled.div`
+  position: absolute;
+  z-index: 2;
+  top: 42%;
+  left: 15%;
+  width: 72%;
+  height: 46%;
+  overflow: hidden;
+  background: rgba(8, 8, 8, 0.38);
+  box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.7), inset 0 -2px 6px rgba(0, 0, 0, 0.5);
+
+  @media (max-width: 480px) {
+    display: none;
+  }
+`;
+
+export const PromoFeatureList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  animation: ${scrollUp} 14s linear infinite;
+`;
+
+export const PromoFeatureItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 0.6vw, 8px);
+  font-size: clamp(11px, 1.1vw, 14px);
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  line-height: 1;
+
+  i {
+    color: #ef4444;
+    font-size: clamp(12px, 1.15vw, 15px);
+    flex-shrink: 0;
+  }
+`;
+
+export const PromoButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(7px, 0.7vw, 8px);
+  height: clamp(26px, 2.6vw, 28px);
+  padding: 0 clamp(10px, 1.2vw, 12px);
+  margin-top: auto;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.96);
+  color: #1a1a1a;
+  font-size: clamp(12px, 1.2vw, 13px);
+  font-weight: 600;
+  font-family: ${({ theme }) => theme.fonts.primary};
+  cursor: pointer;
+  align-self: flex-start;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+
+  i {
+    font-size: clamp(13px, 1.3vw, 15px);
+  }
+
+  &:hover {
+    background: #ffffff;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 `;
 

@@ -21,13 +21,13 @@ const tools: Tool[] = [
   { id: 'channel-analyzer', name: 'Channel Analyzer', description: 'Comprehensive channel analytics with growth tracking, competitor analysis, and optimization recommendations.', icon: 'bx bx-line-chart', category: 'SEO', tags: ['Channel', 'Growth', 'Insights', 'Analytics', 'Competition'], url: '/tools/channel-analyzer', image: '/images/tools/channel-analyzer.jpg' },
   { id: 'video-analyzer', name: 'Video Analyzer', description: 'Deep-dive analytics for your YouTube videos. Track performance metrics, engagement rates, and viewer retention patterns.', icon: 'bx bx-chart', category: 'SEO', tags: ['YouTube', 'Analytics', 'Metrics', 'Performance', 'Engagement'], url: '/tools/video-analyzer', image: '/images/tools/video-analyzer.jpg' },
   { id: 'keyword-analyzer', name: 'Keyword Analyzer', description: 'Discover search volume, competition, and optimization opportunities for YouTube keywords with detailed insights.', icon: 'bx bx-search-alt', category: 'SEO', tags: ['Keywords', 'Search', 'SEO', 'Research', 'Optimization'], url: '/tools/keyword-analyzer', image: '/images/tools/keyword-analyzer.jpg' },
-  { id: 'thumbnail-analyzer', name: 'Thumbnail Analyzer', description: 'AI-powered thumbnail analysis with attention heatmaps, composition scoring, and optimization insights.', icon: 'bx bx-image-alt', category: 'SEO', tags: ['Thumbnails', 'Analysis', 'AI', 'Heatmap', 'Optimization'], url: '/tools/thumbnail-analyzer', image: '/images/tools/thumbnail-analyzer.jpg' },
+  { id: 'thumbnail-analyzer', name: 'Thumbnail Analyzer', description: 'AI-powered thumbnail analysis with attention heatmaps, composition scoring, and optimization insights.', icon: 'bx bx-image-alt', category: 'Utilities', tags: ['Thumbnails', 'Analysis', 'AI', 'Heatmap', 'Optimization'], url: '/tools/thumbnail-analyzer', image: '/images/tools/thumbnail-analyzer.jpg' },
   { id: 'thumbnail-downloader', name: 'Thumbnail Downloader', description: 'Download high-quality thumbnails from any YouTube video with a single click.', icon: 'bx bx-photo-album', category: 'Utilities', tags: ['Download', 'Images', 'Thumbnails', 'Export'], url: '/tools/thumbnail-downloader', image: '/images/tools/thumbnail-downloader.jpg' },
   { id: 'tag-generator', name: 'Tag Generator', description: 'Generate optimized tags for your videos using AI and trend analysis to improve discoverability.', icon: 'bx bx-purchase-tag-alt', category: 'SEO', tags: ['SEO', 'Tags', 'Keywords', 'AI', 'Optimization'], url: '/tools/tag-generator', isBeta: true, image: '/images/tools/tag-generator.jpg' },
   { id: 'qr-code-generator', name: 'QR Code Generator', description: 'Generate custom QR codes with optional logo overlay for your content.', icon: 'bx bx-qr-scan', category: 'Utilities', tags: ['QR Code', 'Generator', 'Links', 'Marketing'], url: '/tools/qr-code-generator', image: '/images/tools/qr-code-generator.jpg' },
   { id: 'channel-id-finder', name: 'Channel ID Finder', description: 'Find any YouTube channel\'s ID, statistics, and detailed information from URLs, names, or handles.', icon: 'bx bx-search-alt-2', category: 'Utilities', tags: ['Channel ID', 'Search', 'API', 'Information'], url: '/tools/channel-id-finder', image: '/images/tools/channel-id-finder.jpg' },
   { id: 'playlist-analyzer', name: 'Playlist Analyzer', description: 'Analyze any YouTube playlist for detailed insights on views, engagement, and channel distribution.', icon: 'bx bx-list-ul', category: 'SEO', tags: ['Playlist', 'Analytics', 'Insights', 'Engagement'], url: '/tools/playlist-analyzer', image: '/images/tools/playlist-analyzer.jpg' },
-    { id: 'thumbnail-tester', name: 'Thumbnail Tester', description: 'Preview how your thumbnails will look across different YouTube layouts and compare with trending videos.', icon: 'bx bx-book-content', category: 'SEO', tags: ['Thumbnails', 'Preview', 'Testing', 'Design', 'CTR'], url: '/tools/thumbnail-tester', image: '/images/tools/thumbnail-tester.jpg' },
+    { id: 'thumbnail-tester', name: 'Thumbnail Tester', description: 'Preview how your thumbnails will look across different YouTube layouts and compare with trending videos.', icon: 'bx bx-book-content', category: 'Utilities', tags: ['Thumbnails', 'Preview', 'Testing', 'Design', 'CTR'], url: '/tools/thumbnail-tester', image: '/images/tools/thumbnail-tester.jpg' },
   { id: 'outlier-finder', name: 'Outlier Finder', description: 'Discover high-performing videos that exceed typical view-to-subscriber ratios in any niche.', icon: 'bx bx-trophy', category: 'SEO', tags: ['Views', 'Analysis', 'Discovery', 'Viral', 'Trends'], url: '/tools/outlier-finder', isNew: true, image: '/images/tools/outlier-finder.jpg' },
   { id: 'comment-downloader', name: 'Comment Downloader', description: 'Download all comments from any YouTube video for analysis and insights.', icon: 'bx bx-download', category: 'Utilities', tags: ['Comments', 'Analysis', 'Data', 'Export', 'Download'], url: '/tools/comment-downloader', image: '/images/tools/comment-downloader.jpg' },
   { id: 'channel-consultant', name: 'Channel Consultant', description: 'Create a custom AI bot trained on your channel to help with content creation and strategy.', icon: 'bx bx-user-circle', category: 'SEO', tags: ['AI', 'Assistant', 'Strategy', 'Automation'], url: '/tools/channel-consultant', image: '/images/tools/channel-consultant.jpg' },
@@ -44,6 +44,19 @@ const tools: Tool[] = [
 ];
 
 const categories = Array.from(new Set(tools.map(tool => tool.category)));
+
+const extensionFeatures = [
+  { icon: 'bx bx-camera',      label: 'Screenshot Capture' },
+  { icon: 'bx bx-copy',        label: 'Copy Transcript' },
+  { icon: 'bx bx-dislike',     label: 'Show Dislike Count' },
+  { icon: 'bx bx-dollar',      label: 'Monetization Checker' },
+  { icon: 'bx bx-palette',     label: 'Deep Dark Themes' },
+  { icon: 'bx bx-low-vision',  label: 'Streamer Mode' },
+  { icon: 'bx bx-tachometer',  label: 'Playback Speed Control' },
+  { icon: 'bx bx-time',        label: 'More Analytics Timelines' },
+  { icon: 'bx bx-repeat',      label: 'Loop Button' },
+  { icon: 'bx bx-hide',        label: 'Hide Shorts & Ads' },
+];
 
 export const Tools: React.FC = () => {
   const navigate = useNavigate();
@@ -236,6 +249,44 @@ export const Tools: React.FC = () => {
             <S.CategoryTitle>{category}</S.CategoryTitle>
 
             <S.ToolsGrid>
+              {category === 'SEO' && (
+                <S.PromoCard>
+                  <S.PromoCardGlow />
+                  <S.PromoToolbox>
+                    <S.PromoToolboxLid src="/images/toolbox/ToolboxLid.png" alt="" />
+                    <S.PromoFeatureScroller aria-hidden="true">
+                      <S.PromoFeatureList>
+                        {[...extensionFeatures, ...extensionFeatures].map((f, i) => (
+                          <S.PromoFeatureItem key={i}>
+                            <i className={f.icon}></i>
+                            {f.label}
+                          </S.PromoFeatureItem>
+                        ))}
+                      </S.PromoFeatureList>
+                    </S.PromoFeatureScroller>
+                    <S.PromoToolboxDrawer src="/images/toolbox/ToolboxDrawer.png" alt="" />
+                  </S.PromoToolbox>
+                  <S.PromoCardInner>
+                    <S.PromoTopRow>
+                      <S.PromoBrandLockup>
+                        <S.PromoIcon>
+                          <img src="/logo512_transparent.png" alt="YouTool" />
+                        </S.PromoIcon>
+                        <S.PromoWordmark>YouTool.io Extension</S.PromoWordmark>
+                      </S.PromoBrandLockup>
+                    </S.PromoTopRow>
+
+                    <S.PromoHeadline>
+                      More tools, built<br />for <span className="accent">your</span>{'  '}channel.
+                    </S.PromoHeadline>
+
+                    <S.PromoButton>
+                      <i className="bx bx-extension"></i>
+                      Get the Extension
+                    </S.PromoButton>
+                  </S.PromoCardInner>
+                </S.PromoCard>
+              )}
               {tools.filter(t => t.category === category).map(tool => (
                 <S.ToolCard key={tool.id}>
                   <S.FavoriteIconButton

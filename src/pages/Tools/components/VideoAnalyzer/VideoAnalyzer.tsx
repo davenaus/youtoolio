@@ -2187,10 +2187,10 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
             <S.EducationalContent>
               <S.SectionSubTitle>What This Tool Does</S.SectionSubTitle>
               <S.EducationalText>
-                The YouTube Video Analyzer fetches comprehensive metadata for any public YouTube video using the YouTube Data API v3 and calculates a set of performance and quality scores on top of that raw data. In a single analysis you get engagement metrics, an SEO score, technical specifications, upload timing data, and tag analysis — all in one place, without needing access to YouTube Studio.
+                The YouTube Video Analyzer fetches comprehensive metadata for any public YouTube video using the YouTube Data API v3 and calculates performance and quality scores on top of that raw data. In a single analysis you get engagement metrics, an SEO score, technical specifications, upload timing data, and tag analysis — all without needing access to YouTube Studio.
               </S.EducationalText>
               <S.EducationalText>
-                This tool is designed for creators researching competitors, editors evaluating their own videos before and after optimization, and marketers building data-driven content strategies. Because it works on any public video, you can analyze your own content and your competitors' content with the same level of depth.
+                Works on any public video, so you can analyze your own content and competitors' content with the same depth. Designed for creators researching niches, editors auditing their uploads, and marketers building data-driven strategies.
               </S.EducationalText>
             </S.EducationalContent>
 
@@ -2202,7 +2202,7 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
                   <S.StepContent>
                     <S.StepTitle>Paste Any YouTube Video URL</S.StepTitle>
                     <S.EducationalText>
-                      Copy the video URL from your browser or YouTube's share button and paste it into the search bar. Supported formats include youtube.com/watch?v=VIDEO_ID, youtu.be/VIDEO_ID, youtube.com/shorts/VIDEO_ID, and bare 11-character video IDs. The tool works with standard uploads, Shorts, and livestream replays.
+                      Paste the video URL into the search bar above. Supported formats: youtube.com/watch?v=VIDEO_ID, youtu.be/VIDEO_ID, youtube.com/shorts/VIDEO_ID, and bare 11-character video IDs. Works with standard uploads, Shorts, and livestream replays.
                     </S.EducationalText>
                   </S.StepContent>
                 </S.StepItem>
@@ -2211,16 +2211,16 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
                   <S.StepContent>
                     <S.StepTitle>Review the Overview Tab</S.StepTitle>
                     <S.EducationalText>
-                      The Overview tab shows the headline numbers: view count, likes, comments, engagement rate, SEO score, and the upload date. This is where you quickly assess whether a video is performing well or needs attention. The engagement rate and SEO score are calculated metrics — not raw numbers from YouTube — which means they give you a normalized way to compare videos across different channels and sizes.
+                      The Overview tab shows headline numbers: view count, likes, comments, engagement rate, SEO score, and upload date. Engagement rate and SEO score are calculated metrics — not raw YouTube numbers — giving you a normalized way to compare videos across different channels and sizes.
                     </S.EducationalText>
                   </S.StepContent>
                 </S.StepItem>
                 <S.StepItem>
                   <S.StepNumberCircle>3</S.StepNumberCircle>
                   <S.StepContent>
-                    <S.StepTitle>Explore the Details and Recommendations</S.StepTitle>
+                    <S.StepTitle>Explore Details and Recommendations</S.StepTitle>
                     <S.EducationalText>
-                      Navigate through the tabs to see tag analysis, description quality, technical metadata, and channel context. The Recommendations tab summarizes the most actionable findings — things like missing tags, short descriptions, or sub-optimal upload timing that you can act on immediately.
+                      Navigate through the tabs to see tag analysis, description quality, technical metadata, and channel context. The Recommendations tab surfaces the most actionable findings — missing tags, sparse descriptions, or sub-optimal upload timing you can act on immediately.
                     </S.EducationalText>
                   </S.StepContent>
                 </S.StepItem>
@@ -2229,121 +2229,133 @@ const scores = calculateScores(videoData, contentAnalysis, isShort);
 
             <S.EducationalContent>
               <S.SectionSubTitle>How to Interpret the Results</S.SectionSubTitle>
-              <S.FeatureList>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Engagement Rate:</strong> Calculated as (likes + comments) ÷ views × 100. A rate above 4% is strong for most niches. Rates below 1% may indicate the video reached a large non-subscribed audience (common for viral videos) or that the content did not resonate deeply with viewers. Compare this metric against the channel's own average rather than an absolute benchmark.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>SEO Score:</strong> A composite score based on title length and keyword density, description length and richness, number of tags used, and whether key terms appear consistently across all three fields. Scores above 70 indicate solid optimization. Below 40 usually means the title is too short, the description is sparse, or tags are missing entirely.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Tag Analysis:</strong> Shows how many tags the video uses and flags whether they appear to be optimized. YouTube allows up to 500 characters of tags. Videos using fewer than 5 tags or over 30 tags often have lower discoverability than those using 10–20 well-chosen tags that match the title and description keywords.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Upload Timing:</strong> Shows the day of week and time the video was published. While YouTube's algorithm distributes content over time, videos published when your audience is most active tend to accumulate early engagement signals faster, which can boost algorithmic distribution in the first 24–48 hours.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Channel Context:</strong> Subscriber count, total channel views, and video count give you a baseline to judge the video's performance relative to the channel's overall size. A video with 50,000 views from a 500-subscriber channel is extraordinary; the same number from a 5-million-subscriber channel may indicate underperformance.</span>
-                </S.FeatureListItem>
-              </S.FeatureList>
+              <S.MetricCardsGrid>
+                <S.MetricInfoCard>
+                  <S.MetricInfoHeader>
+                    <i className="bx bx-heart"></i>
+                    <S.MetricInfoTitle>Engagement Rate</S.MetricInfoTitle>
+                  </S.MetricInfoHeader>
+                  <S.MetricInfoText>
+                    (likes + comments) ÷ views × 100. Above 4% is strong for most niches. Below 1% may indicate broad reach or weak resonance — compare against the channel's own average, not an absolute benchmark.
+                  </S.MetricInfoText>
+                </S.MetricInfoCard>
+                <S.MetricInfoCard>
+                  <S.MetricInfoHeader>
+                    <i className="bx bx-search-alt"></i>
+                    <S.MetricInfoTitle>SEO Score</S.MetricInfoTitle>
+                  </S.MetricInfoHeader>
+                  <S.MetricInfoText>
+                    Composite score based on title length, description richness, and tag coverage. Above 70 is solid. Below 40 usually means a short title, sparse description, or missing tags. Not a YouTube-internal signal — a useful proxy.
+                  </S.MetricInfoText>
+                </S.MetricInfoCard>
+                <S.MetricInfoCard>
+                  <S.MetricInfoHeader>
+                    <i className="bx bx-purchase-tag-alt"></i>
+                    <S.MetricInfoTitle>Tag Analysis</S.MetricInfoTitle>
+                  </S.MetricInfoHeader>
+                  <S.MetricInfoText>
+                    YouTube allows up to 500 characters of tags. Videos with fewer than 5 or more than 30 tags often underperform. The sweet spot is 10–20 tags that echo the title and description keywords.
+                  </S.MetricInfoText>
+                </S.MetricInfoCard>
+                <S.MetricInfoCard>
+                  <S.MetricInfoHeader>
+                    <i className="bx bx-time-five"></i>
+                    <S.MetricInfoTitle>Upload Timing</S.MetricInfoTitle>
+                  </S.MetricInfoHeader>
+                  <S.MetricInfoText>
+                    Shows publish day and time. Videos posted when your audience is most active accumulate early engagement signals faster, which can boost algorithmic distribution in the first 24–48 hours.
+                  </S.MetricInfoText>
+                </S.MetricInfoCard>
+                <S.MetricInfoCard>
+                  <S.MetricInfoHeader>
+                    <i className="bx bx-bar-chart-alt-2"></i>
+                    <S.MetricInfoTitle>Channel Context</S.MetricInfoTitle>
+                  </S.MetricInfoHeader>
+                  <S.MetricInfoText>
+                    Subscriber count, total views, and video count give you a baseline to judge relative performance. 50k views from a 500-sub channel is extraordinary; the same from a 5M-sub channel may signal underperformance.
+                  </S.MetricInfoText>
+                </S.MetricInfoCard>
+              </S.MetricCardsGrid>
             </S.EducationalContent>
 
             <S.EducationalContent>
               <S.SectionSubTitle>Common Use Cases</S.SectionSubTitle>
-              <S.FeatureList>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Competitor Research:</strong> Analyze the top 5–10 videos in your niche to understand what titles, tag strategies, and description structures are earning high engagement. Look for patterns in videos with above-average engagement rates and reverse-engineer their approach.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Pre-Publish Audit:</strong> Before publishing a new video, analyze a comparable top-performing video in your niche. Use its SEO score, tag count, and description length as a benchmark to ensure your own upload meets the same quality bar before it goes live.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Optimization of Existing Videos:</strong> Analyze your own older videos that are not getting views. A low SEO score combined with a sparse description often means the video simply was not properly optimized at upload. Updating the title, description, and tags of an existing video can meaningfully improve its search ranking.</span>
-                </S.FeatureListItem>
-              </S.FeatureList>
+              <S.UseCaseGrid>
+                <S.UseCaseCard>
+                  <S.UseCaseTitle>Competitor Research</S.UseCaseTitle>
+                  <S.UseCaseText>
+                    Analyze the top 5–10 videos in your niche to understand what titles, tag strategies, and description structures are earning high engagement. Reverse-engineer what works.
+                  </S.UseCaseText>
+                </S.UseCaseCard>
+                <S.UseCaseCard>
+                  <S.UseCaseTitle>Pre-Publish Audit</S.UseCaseTitle>
+                  <S.UseCaseText>
+                    Before uploading, analyze a comparable top-performing video. Use its SEO score, tag count, and description length as a benchmark to ensure your video meets the same quality bar.
+                  </S.UseCaseText>
+                </S.UseCaseCard>
+                <S.UseCaseCard>
+                  <S.UseCaseTitle>Optimize Existing Videos</S.UseCaseTitle>
+                  <S.UseCaseText>
+                    Analyze older videos that aren't getting views. A low SEO score with a sparse description often means they weren't properly optimized at upload. Updating titles, descriptions, and tags can still move the needle.
+                  </S.UseCaseText>
+                </S.UseCaseCard>
+              </S.UseCaseGrid>
             </S.EducationalContent>
 
             <S.EducationalContent>
               <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
-              <S.FeatureList>
-                <S.FeatureListItem>
-                  <i className="bx bx-help-circle"></i>
-                  <span><strong>Can I analyze private or unlisted videos?</strong> Private videos cannot be accessed via the YouTube Data API. Unlisted videos can be analyzed if you have the direct video URL, since the API returns data for any video accessible with a valid link.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-help-circle"></i>
-                  <span><strong>Is the SEO score the same as YouTube's internal ranking signal?</strong> No. The SEO score is our own calculated metric based on publicly observable signals — title, description, and tags. YouTube's actual search ranking involves many additional factors including watch time, click-through rate, and viewer satisfaction that are not publicly accessible. The score is a useful proxy, not a definitive measure.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-help-circle"></i>
-                  <span><strong>How current is the data?</strong> Data is fetched live from the YouTube Data API each time you analyze a video. View counts, like counts, and comment counts reflect the current state at the moment of analysis.</span>
-                </S.FeatureListItem>
-              </S.FeatureList>
+              <S.FAQList>
+                <S.FAQItem>
+                  <S.FAQQuestion>What data does the Video Analyzer pull?</S.FAQQuestion>
+                  <S.FAQAnswer>Video title, description, tags, view count, like count, comment count, duration, publish date, and thumbnail URLs via the YouTube Data API v3. No private data — only publicly available information.</S.FAQAnswer>
+                </S.FAQItem>
+                <S.FAQItem>
+                  <S.FAQQuestion>Can I analyze private or unlisted videos?</S.FAQQuestion>
+                  <S.FAQAnswer>Private videos are inaccessible via the API. Unlisted videos can be analyzed if you have the direct URL, since the API returns data for any video accessible with a valid link.</S.FAQAnswer>
+                </S.FAQItem>
+                <S.FAQItem>
+                  <S.FAQQuestion>Can I analyze competitor videos?</S.FAQQuestion>
+                  <S.FAQAnswer>Yes. Paste any public YouTube video URL or ID. The tool works on any public video regardless of channel ownership — that's what makes it useful for competitive research.</S.FAQAnswer>
+                </S.FAQItem>
+                <S.FAQItem>
+                  <S.FAQQuestion>Is the SEO score the same as YouTube's ranking signal?</S.FAQQuestion>
+                  <S.FAQAnswer>No. It's our own metric based on publicly observable signals — title, description, and tags. YouTube's actual ranking involves watch time, CTR, and viewer satisfaction that aren't publicly accessible. Treat it as a useful proxy.</S.FAQAnswer>
+                </S.FAQItem>
+                <S.FAQItem>
+                  <S.FAQQuestion>Does this tool require a YouTube account?</S.FAQQuestion>
+                  <S.FAQAnswer>No. The Video Analyzer works entirely through the public YouTube Data API. No login or channel connection required.</S.FAQAnswer>
+                </S.FAQItem>
+              </S.FAQList>
             </S.EducationalContent>
 
             <S.EducationalContent>
               <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
-              <S.FeatureList>
-                <S.FeatureListItem>
-                  <i className="bx bx-link"></i>
-                  <span><a href="/tools/channel-analyzer"><strong>Channel Analyzer</strong></a> — Analyze the full channel behind the video for a broader performance picture.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-link"></i>
-                  <span><a href="/tools/tag-generator"><strong>Tag Generator</strong></a> — Generate an optimized tag set for your next video based on your title.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-link"></i>
-                  <span><a href="/tools/outlier-finder"><strong>Outlier Finder</strong></a> — Find videos in any niche that significantly outperformed their channel average.</span>
-                </S.FeatureListItem>
-              </S.FeatureList>
-            </S.EducationalContent>
-
-            <S.EducationalContent>
-              <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
-              <S.FeatureList>
-                <S.FeatureListItem>
-                  <strong>Q: What data does the Video Analyzer pull?</strong> The tool uses the YouTube Data API v3 to fetch video title, description, tags, view count, like count, comment count, duration, publish date, and thumbnail URLs. No private data is accessed — only publicly available information.
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <strong>Q: Can I analyze competitor videos?</strong> Yes. Paste any public YouTube video URL or video ID. The tool works on any public video regardless of which channel owns it, making it useful for competitive research.
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <strong>Q: Does this tool require a YouTube account?</strong> No. The Video Analyzer works entirely through the public YouTube Data API. You do not need to log in or connect your YouTube account.
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <strong>Q: What does the SEO score measure?</strong> The SEO score evaluates factors like title length, description completeness, tag count and relevance, and thumbnail presence. Higher scores correlate with better discoverability in YouTube search.
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <strong>Q: How often is the data updated?</strong> Data is pulled live from the YouTube API each time you analyze a video. View counts and engagement metrics reflect the current state of the video at the time of analysis.
-                </S.FeatureListItem>
-              </S.FeatureList>
-            </S.EducationalContent>
-
-            <S.EducationalContent>
-              <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
-              <S.FeatureList>
-                <S.FeatureListItem>
-                  <strong><a href="/tools/channel-analyzer">Channel Analyzer</a></strong> — Analyze an entire channel's performance, not just a single video.
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <strong><a href="/tools/tag-generator">Tag Generator</a></strong> — Generate optimized tag sets based on your video topic and niche.
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <strong><a href="/tools/outlier-finder">Outlier Finder</a></strong> — Identify which videos in a channel are dramatically outperforming their baseline.
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <strong><a href="/tools/thumbnail-tester">Thumbnail Tester</a></strong> — A/B test your thumbnails to see which performs better before publishing.
-                </S.FeatureListItem>
-              </S.FeatureList>
+              <S.RelatedToolsGrid>
+                <S.RelatedToolCard onClick={() => navigate('/tools/channel-analyzer')}>
+                  <S.RelatedToolIconWrap><i className="bx bx-bar-chart-alt-2"></i></S.RelatedToolIconWrap>
+                  <S.RelatedToolName>Channel Analyzer</S.RelatedToolName>
+                  <S.RelatedToolDesc>Analyze the full channel behind any video for a broader performance picture.</S.RelatedToolDesc>
+                  <S.RelatedToolLaunchBtn><i className="bx bx-rocket"></i>Launch Tool</S.RelatedToolLaunchBtn>
+                </S.RelatedToolCard>
+                <S.RelatedToolCard onClick={() => navigate('/tools/tag-generator')}>
+                  <S.RelatedToolIconWrap><i className="bx bx-purchase-tag-alt"></i></S.RelatedToolIconWrap>
+                  <S.RelatedToolName>Tag Generator</S.RelatedToolName>
+                  <S.RelatedToolDesc>Generate an optimized tag set for your next video based on your title and niche.</S.RelatedToolDesc>
+                  <S.RelatedToolLaunchBtn><i className="bx bx-rocket"></i>Launch Tool</S.RelatedToolLaunchBtn>
+                </S.RelatedToolCard>
+                <S.RelatedToolCard onClick={() => navigate('/tools/outlier-finder')}>
+                  <S.RelatedToolIconWrap><i className="bx bx-trending-up"></i></S.RelatedToolIconWrap>
+                  <S.RelatedToolName>Outlier Finder</S.RelatedToolName>
+                  <S.RelatedToolDesc>Find videos in any niche that significantly outperformed their channel average.</S.RelatedToolDesc>
+                  <S.RelatedToolLaunchBtn><i className="bx bx-rocket"></i>Launch Tool</S.RelatedToolLaunchBtn>
+                </S.RelatedToolCard>
+                <S.RelatedToolCard onClick={() => navigate('/tools/thumbnail-tester')}>
+                  <S.RelatedToolIconWrap><i className="bx bx-image-alt"></i></S.RelatedToolIconWrap>
+                  <S.RelatedToolName>Thumbnail Tester</S.RelatedToolName>
+                  <S.RelatedToolDesc>A/B test your thumbnails against competitors to see which performs better before publishing.</S.RelatedToolDesc>
+                  <S.RelatedToolLaunchBtn><i className="bx bx-rocket"></i>Launch Tool</S.RelatedToolLaunchBtn>
+                </S.RelatedToolCard>
+              </S.RelatedToolsGrid>
             </S.EducationalContent>
 
           </S.EducationalSection>

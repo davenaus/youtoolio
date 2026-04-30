@@ -11,16 +11,19 @@ import { AppRoutes } from './routes/AppRoutes';
 import { Footer } from './components/Footer/Footer';
 import { CookieConsentBanner } from './components/CookieConsent/CookieConsentBanner';
 import { ScrollToTop } from './components/ScrollToTop';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <GlobalStyles />
       <Router>
-        <ScrollToTop />
-        <AppRoutes />
-        <Footer />
-        <CookieConsentBanner />
+        <AuthProvider>
+          <ScrollToTop />
+          <AppRoutes />
+          <Footer />
+          <CookieConsentBanner />
+        </AuthProvider>
       </Router>
       <Analytics />
       <SpeedInsights />

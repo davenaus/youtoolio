@@ -3679,3 +3679,216 @@ export const ChannelCompareBarNum = styled.span`
   text-align: right;
   flex-shrink: 0;
 `;
+
+// ─── Educational Section: Metric Cards ───────────────────────────────────────
+export const MetricCardsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const MetricInfoCard = styled.div`
+  background: ${({ theme }) => theme.colors.dark4};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-left: 3px solid ${({ theme }) => theme.colors.red4};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  padding: 1.25rem 1.5rem;
+`;
+
+export const MetricInfoHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+
+  i {
+    color: ${({ theme }) => theme.colors.red5};
+    font-size: 1.15rem;
+  }
+`;
+
+export const MetricInfoTitle = styled.div`
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.9rem;
+`;
+
+export const MetricInfoText = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.82rem;
+  line-height: 1.55;
+`;
+
+// ─── Educational Section: Use Case Cards ─────────────────────────────────────
+export const UseCaseGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const UseCaseCard = styled.div`
+  background: ${({ theme }) => theme.colors.dark4};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red5});
+  }
+`;
+
+export const UseCaseTitle = styled.div`
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.92rem;
+  margin-bottom: 0.55rem;
+`;
+
+export const UseCaseText = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.82rem;
+  line-height: 1.55;
+`;
+
+// ─── Educational Section: FAQ ─────────────────────────────────────────────────
+export const FAQList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+`;
+
+export const FAQItem = styled.div`
+  background: ${({ theme }) => theme.colors.dark4};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  padding: 1.25rem 1.5rem;
+`;
+
+export const FAQQuestion = styled.div`
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.88rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+
+  &::before {
+    content: 'Q';
+    background: ${({ theme }) => theme.colors.red4};
+    color: white;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+`;
+
+export const FAQAnswer = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.84rem;
+  line-height: 1.6;
+  padding-left: 1.75rem;
+`;
+
+// ─── Educational Section: Related Tools ──────────────────────────────────────
+export const RelatedToolsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+`;
+
+export const RelatedToolCard = styled.div`
+  background: ${({ theme }) => theme.colors.dark4};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.red4};
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(185, 28, 28, 0.15);
+  }
+`;
+
+export const RelatedToolIconWrap = styled.div`
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+
+  i {
+    font-size: 1.35rem;
+    color: white;
+  }
+`;
+
+export const RelatedToolName = styled.div`
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.92rem;
+`;
+
+export const RelatedToolDesc = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.8rem;
+  line-height: 1.5;
+  flex: 1;
+`;
+
+export const RelatedToolLaunchBtn = styled.button`
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
+  color: white;
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  padding: 0.45rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: opacity 0.2s ease;
+  align-self: flex-start;
+  margin-top: 0.25rem;
+  letter-spacing: 0.01em;
+
+  &:hover {
+    opacity: 0.85;
+  }
+
+  i {
+    font-size: 0.85rem;
+  }
+`;

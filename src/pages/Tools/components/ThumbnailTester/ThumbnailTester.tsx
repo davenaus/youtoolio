@@ -814,10 +814,10 @@ export const ThumbnailTester: React.FC = () => {
             <S.EducationalContent>
               <S.SectionSubTitle>What This Tool Does</S.SectionSubTitle>
               <S.EducationalText>
-                The Thumbnail Tester lets you upload a YouTube thumbnail and compare it side-by-side against thumbnails from trending YouTube videos or from any specific channel. The goal is to answer a simple question before you publish: does your thumbnail look click-worthy and distinctive next to what's already performing well on the platform?
+                The Thumbnail Tester lets you upload a YouTube thumbnail and compare it side-by-side against thumbnails from trending videos or any specific channel. The goal is to answer one question before you publish: does your thumbnail look click-worthy and distinctive next to what's already performing well?
               </S.EducationalText>
               <S.EducationalText>
-                Thumbnails are one of the highest-leverage variables in YouTube performance. A compelling thumbnail can double your click-through rate, while a weak one will cause your video to be skipped even if the content is excellent. Testing before you publish costs nothing and can save weeks of effort.
+                Thumbnails are one of the highest-leverage variables in YouTube performance. A compelling thumbnail can double your click-through rate, while a weak one causes your video to be skipped regardless of content quality. Testing before you publish costs nothing and can save weeks of effort.
               </S.EducationalText>
             </S.EducationalContent>
 
@@ -829,7 +829,7 @@ export const ThumbnailTester: React.FC = () => {
                   <S.EduStepContent>
                     <S.EduStepTitle>Upload Your Thumbnail</S.EduStepTitle>
                     <S.EducationalText>
-                      Click the upload area or drag and drop your thumbnail image. The tool accepts PNG, JPG, and WebP files. Your thumbnail will be previewed exactly as it appears on YouTube — 1280×720 pixels at a 16:9 aspect ratio.
+                      Click the upload area or drag and drop your thumbnail. Accepts PNG, JPG, and WebP. Your thumbnail will be previewed at YouTube's standard 16:9 aspect ratio.
                     </S.EducationalText>
                   </S.EduStepContent>
                 </S.EduStepItem>
@@ -838,7 +838,7 @@ export const ThumbnailTester: React.FC = () => {
                   <S.EduStepContent>
                     <S.EduStepTitle>Choose Your Comparison Mode</S.EduStepTitle>
                     <S.EducationalText>
-                      Select "Compare with Trending" to see how your thumbnail looks next to YouTube's current trending videos — this is the most competitive benchmark. Select "Compare with Channel" to enter any YouTube channel URL and compare against that channel's top-performing videos, which is useful for competitive research within your niche.
+                      "Compare with Trending" benchmarks against YouTube's current trending videos — the most competitive bar. "Compare with Channel" lets you enter any channel URL and compare against their top-performing thumbnails, ideal for niche research.
                     </S.EducationalText>
                   </S.EduStepContent>
                 </S.EduStepItem>
@@ -847,7 +847,7 @@ export const ThumbnailTester: React.FC = () => {
                   <S.EduStepContent>
                     <S.EduStepTitle>Evaluate and Iterate</S.EduStepTitle>
                     <S.EducationalText>
-                      Review how your thumbnail fits into the comparison grid. Ask yourself: does it stand out visually? Is the text readable at small sizes? Does the color palette contrast with adjacent thumbnails? Use these observations to iterate on your design before publishing.
+                      Review how your thumbnail holds up in the grid. Does it stand out? Is the text readable at small sizes? Does the color palette contrast with adjacent thumbnails? Iterate on your design before publishing.
                     </S.EducationalText>
                   </S.EduStepContent>
                 </S.EduStepItem>
@@ -856,60 +856,114 @@ export const ThumbnailTester: React.FC = () => {
 
             <S.EducationalContent>
               <S.SectionSubTitle>What Makes a Strong YouTube Thumbnail</S.SectionSubTitle>
-              <S.FeatureList>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>High contrast and bold colors:</strong> Thumbnails that use vibrant, high-contrast color combinations draw the eye faster than muted palettes. Red, yellow, and orange are consistently among the highest-performing colors on YouTube because they create urgency and stand out in dark-themed interfaces.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Readable text at small sizes:</strong> YouTube displays thumbnails as small as 168×94 pixels on mobile. If you include text on your thumbnail, use large, bold fonts with strong contrast against the background. Limit text to 3–5 words maximum — the thumbnail title is not the video title.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>A clear focal point:</strong> Strong thumbnails typically have one dominant subject — often a face with a strong expression, or a product/outcome the video delivers on. Thumbnails that try to show too much end up showing nothing memorable.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Visual consistency across your channel:</strong> Once you find a thumbnail style that works, stick to it. Consistent styling (similar fonts, colors, layout) helps viewers recognize your content instantly in their subscriptions feed, which increases click-through rates from your existing audience.</span>
-                </S.FeatureListItem>
-              </S.FeatureList>
+              <S.MetricCardsGrid>
+                <S.MetricInfoCard>
+                  <S.MetricInfoHeader>
+                    <i className="bx bx-palette"></i>
+                    <S.MetricInfoTitle>High Contrast and Bold Colors</S.MetricInfoTitle>
+                  </S.MetricInfoHeader>
+                  <S.MetricInfoText>
+                    Vibrant, high-contrast combinations draw the eye faster than muted palettes. Red, yellow, and orange consistently perform well on YouTube — they signal urgency and pop against dark-themed interfaces.
+                  </S.MetricInfoText>
+                </S.MetricInfoCard>
+                <S.MetricInfoCard>
+                  <S.MetricInfoHeader>
+                    <i className="bx bx-text"></i>
+                    <S.MetricInfoTitle>Readable Text at Small Sizes</S.MetricInfoTitle>
+                  </S.MetricInfoHeader>
+                  <S.MetricInfoText>
+                    YouTube shows thumbnails as small as 168×94px on mobile. Use large, bold fonts with strong contrast. Limit text to 3–5 words max — the thumbnail is not the video title.
+                  </S.MetricInfoText>
+                </S.MetricInfoCard>
+                <S.MetricInfoCard>
+                  <S.MetricInfoHeader>
+                    <i className="bx bx-crosshair"></i>
+                    <S.MetricInfoTitle>One Clear Focal Point</S.MetricInfoTitle>
+                  </S.MetricInfoHeader>
+                  <S.MetricInfoText>
+                    Strong thumbnails lead with one dominant subject — a face with a strong expression, or the key outcome the video delivers. Thumbnails that try to show too much end up showing nothing memorable.
+                  </S.MetricInfoText>
+                </S.MetricInfoCard>
+                <S.MetricInfoCard>
+                  <S.MetricInfoHeader>
+                    <i className="bx bx-layer"></i>
+                    <S.MetricInfoTitle>Consistent Channel Style</S.MetricInfoTitle>
+                  </S.MetricInfoHeader>
+                  <S.MetricInfoText>
+                    Once you find a thumbnail style that works, stick to it. Consistent fonts, colors, and layout help subscribers recognize your content instantly in their feed, boosting CTR from your existing audience.
+                  </S.MetricInfoText>
+                </S.MetricInfoCard>
+              </S.MetricCardsGrid>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Common Use Cases</S.SectionSubTitle>
+              <S.UseCaseGrid>
+                <S.UseCaseCard>
+                  <S.UseCaseTitle>Pre-Publish CTR Check</S.UseCaseTitle>
+                  <S.UseCaseText>
+                    Before going live, upload your thumbnail and run it against trending content. If it blends in, iterate. A quick test before publishing can meaningfully change your video's early performance.
+                  </S.UseCaseText>
+                </S.UseCaseCard>
+                <S.UseCaseCard>
+                  <S.UseCaseTitle>Niche Competitor Analysis</S.UseCaseTitle>
+                  <S.UseCaseText>
+                    Compare your thumbnail against a top channel in your niche to see how your visual style holds up. Identify gaps in color, composition, or text usage that your competitors are exploiting.
+                  </S.UseCaseText>
+                </S.UseCaseCard>
+                <S.UseCaseCard>
+                  <S.UseCaseTitle>Thumbnail Redesign Validation</S.UseCaseTitle>
+                  <S.UseCaseText>
+                    Testing a new thumbnail style for your channel? Run both versions through the tester side-by-side against the same comparison set to objectively evaluate which stands out more.
+                  </S.UseCaseText>
+                </S.UseCaseCard>
+              </S.UseCaseGrid>
             </S.EducationalContent>
 
             <S.EducationalContent>
               <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
-              <S.FeatureList>
-                <S.FeatureListItem>
-                  <i className="bx bx-help-circle"></i>
-                  <span><strong>Does the tool upload my thumbnail anywhere?</strong> No. Your thumbnail is processed locally in your browser and is never uploaded to any server. The comparison images are fetched from YouTube's CDN using publicly available thumbnail URLs.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-help-circle"></i>
-                  <span><strong>How many comparison thumbnails will I see?</strong> The comparison grid shows your thumbnail alongside 8–12 thumbnails from the selected comparison source (trending or channel). This replicates the density of thumbnails a viewer would see on YouTube's homepage or search results page.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-help-circle"></i>
-                  <span><strong>What thumbnail dimensions should I use?</strong> YouTube recommends 1280×720 pixels (HD) with a 16:9 aspect ratio and a file size under 2MB. PNG format generally provides the best image quality. The minimum acceptable size is 640×360 pixels.</span>
-                </S.FeatureListItem>
-              </S.FeatureList>
+              <S.FAQList>
+                <S.FAQItem>
+                  <S.FAQQuestion>Does the tool upload my thumbnail anywhere?</S.FAQQuestion>
+                  <S.FAQAnswer>No. Your thumbnail is processed locally in your browser and never sent to any server. Comparison images are fetched from YouTube's CDN using publicly available thumbnail URLs.</S.FAQAnswer>
+                </S.FAQItem>
+                <S.FAQItem>
+                  <S.FAQQuestion>How many comparison thumbnails will I see?</S.FAQQuestion>
+                  <S.FAQAnswer>The comparison grid shows your thumbnail alongside 8–12 thumbnails from the selected source (trending or channel) — replicating the density a viewer sees on YouTube's homepage or search results.</S.FAQAnswer>
+                </S.FAQItem>
+                <S.FAQItem>
+                  <S.FAQQuestion>What thumbnail dimensions should I use?</S.FAQQuestion>
+                  <S.FAQAnswer>YouTube recommends 1280×720px (HD) at a 16:9 aspect ratio, under 2MB. PNG gives the best quality. The minimum acceptable size is 640×360px.</S.FAQAnswer>
+                </S.FAQItem>
+                <S.FAQItem>
+                  <S.FAQQuestion>Can I test thumbnails for existing videos?</S.FAQQuestion>
+                  <S.FAQAnswer>Yes. Download your existing thumbnail from YouTube Studio or use the Thumbnail Downloader tool, then upload it here to see how it compares against current competition in your niche.</S.FAQAnswer>
+                </S.FAQItem>
+              </S.FAQList>
             </S.EducationalContent>
 
             <S.EducationalContent>
               <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
-              <S.FeatureList>
-                <S.FeatureListItem>
-                  <i className="bx bx-link"></i>
-                  <span><a href="/tools/thumbnail-analyzer"><strong>Thumbnail Analyzer</strong></a> — Get a detailed AI-powered analysis of your thumbnail's composition, lighting, and readability score.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-link"></i>
-                  <span><a href="/tools/thumbnail-downloader"><strong>Thumbnail Downloader</strong></a> — Download thumbnails from any YouTube video for competitive research and inspiration.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-link"></i>
-                  <span><a href="/tools/outlier-finder"><strong>Outlier Finder</strong></a> — Find the highest-performing videos in any niche to study what thumbnail styles are driving breakout views.</span>
-                </S.FeatureListItem>
-              </S.FeatureList>
+              <S.RelatedToolsGrid>
+                <S.RelatedToolCard onClick={() => navigate('/tools/thumbnail-analyzer')}>
+                  <S.RelatedToolIconWrap><i className="bx bx-analyse"></i></S.RelatedToolIconWrap>
+                  <S.RelatedToolName>Thumbnail Analyzer</S.RelatedToolName>
+                  <S.RelatedToolDesc>Get a detailed AI-powered analysis of your thumbnail's composition, contrast, and readability score.</S.RelatedToolDesc>
+                  <S.RelatedToolLaunchBtn><i className="bx bx-rocket"></i>Launch Tool</S.RelatedToolLaunchBtn>
+                </S.RelatedToolCard>
+                <S.RelatedToolCard onClick={() => navigate('/tools/thumbnail-downloader')}>
+                  <S.RelatedToolIconWrap><i className="bx bx-download"></i></S.RelatedToolIconWrap>
+                  <S.RelatedToolName>Thumbnail Downloader</S.RelatedToolName>
+                  <S.RelatedToolDesc>Download thumbnails from any YouTube video for competitive research and design inspiration.</S.RelatedToolDesc>
+                  <S.RelatedToolLaunchBtn><i className="bx bx-rocket"></i>Launch Tool</S.RelatedToolLaunchBtn>
+                </S.RelatedToolCard>
+                <S.RelatedToolCard onClick={() => navigate('/tools/outlier-finder')}>
+                  <S.RelatedToolIconWrap><i className="bx bx-trending-up"></i></S.RelatedToolIconWrap>
+                  <S.RelatedToolName>Outlier Finder</S.RelatedToolName>
+                  <S.RelatedToolDesc>Find the highest-performing videos in any niche to study what thumbnail styles are driving breakout views.</S.RelatedToolDesc>
+                  <S.RelatedToolLaunchBtn><i className="bx bx-rocket"></i>Launch Tool</S.RelatedToolLaunchBtn>
+                </S.RelatedToolCard>
+              </S.RelatedToolsGrid>
             </S.EducationalContent>
 
           </S.EducationalSection>

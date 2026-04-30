@@ -715,10 +715,10 @@ export const TagGenerator: React.FC = () => {
             <S.EducationalContent>
               <S.SectionSubTitle>What This Tool Does</S.SectionSubTitle>
               <S.EducationalText>
-                The YouTube Tag Generator takes your video title or topic and produces an optimized set of tags designed to improve your video's discoverability in YouTube search. It works by analyzing your input phrase, expanding it into related keyword variations, broad category terms, and long-tail phrases, then scoring them by relevance and estimated search value. The output is a ready-to-use tag set you can paste directly into YouTube Studio.
+                The YouTube Tag Generator takes your video title or topic and produces an optimized set of tags designed to improve discoverability in YouTube search. It analyzes your input phrase, expands it into related keyword variations, broad category terms, and long-tail phrases, then balances them by relevance and estimated search value. The output is a ready-to-use tag set you can paste directly into YouTube Studio.
               </S.EducationalText>
               <S.EducationalText>
-                YouTube allows up to 500 characters of tags per video. This tool generates a balanced mix of broad tags (high search volume, high competition), mid-tail tags (moderate volume, moderate competition), and long-tail tags (lower volume, lower competition but higher relevance) — the combination that typically produces the best discoverability outcomes.
+                YouTube allows up to 500 characters of tags per video. This tool generates a balanced mix of broad tags (high volume, high competition), mid-tail tags (moderate volume and competition), and long-tail tags (lower volume, higher relevance) — the combination that typically produces the best discoverability outcomes.
               </S.EducationalText>
             </S.EducationalContent>
 
@@ -730,7 +730,7 @@ export const TagGenerator: React.FC = () => {
                   <S.StepContent>
                     <S.StepTitle>Enter Your Video Title or Topic</S.StepTitle>
                     <S.EducationalText>
-                      Type or paste your planned video title or main topic into the search bar. The more specific your input, the more relevant the generated tags will be. "Beginner guitar lessons" produces more targeted results than just "guitar". You can also paste an existing video title to generate tags for a video you have already uploaded.
+                      Type or paste your planned video title or main topic. The more specific, the better — "beginner guitar lessons" produces more targeted results than just "guitar". You can also paste an existing title to generate tags for a video you've already uploaded.
                     </S.EducationalText>
                   </S.StepContent>
                 </S.StepItem>
@@ -739,7 +739,7 @@ export const TagGenerator: React.FC = () => {
                   <S.StepContent>
                     <S.StepTitle>Review and Select Your Tags</S.StepTitle>
                     <S.EducationalText>
-                      The generator returns a set of tags organized by type. Review them and remove any that are not relevant to your specific video. Irrelevant tags can confuse YouTube's classification system and may result in your video being shown to the wrong audience. Keep only tags that a viewer searching for your video would reasonably type.
+                      The generator returns tags organized by type. Remove any that aren't relevant to your specific video — irrelevant tags can confuse YouTube's classification and push your video to the wrong audience. Keep only tags a viewer would reasonably search.
                     </S.EducationalText>
                   </S.StepContent>
                 </S.StepItem>
@@ -748,7 +748,7 @@ export const TagGenerator: React.FC = () => {
                   <S.StepContent>
                     <S.StepTitle>Copy and Paste into YouTube Studio</S.StepTitle>
                     <S.EducationalText>
-                      Click "Copy All Tags" to copy the complete tag set to your clipboard, then paste them into the Tags field in YouTube Studio. Tags are comma-separated. You do not need to add quotes around multi-word tags — paste them as-is.
+                      Click "Copy All Tags" to copy the complete set to your clipboard, then paste into the Tags field in YouTube Studio. Tags are comma-separated — no quotes needed around multi-word tags.
                     </S.EducationalText>
                   </S.StepContent>
                 </S.StepItem>
@@ -757,92 +757,118 @@ export const TagGenerator: React.FC = () => {
 
             <S.EducationalContent>
               <S.SectionSubTitle>Tag Best Practices</S.SectionSubTitle>
-              <S.FeatureList>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Put your most important keyword first:</strong> YouTube weights the first tag more heavily than subsequent ones. Lead with your primary target keyword every time.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Use 10–20 tags for most videos:</strong> There is no benefit to using all 500 characters with irrelevant padding. Quality and relevance matter more than volume. Videos with 10–20 carefully chosen tags typically outperform those with 30+ loosely related tags.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Match tags to your title and description:</strong> Tags that repeat keywords already in your title and description reinforce those signals. Tags for topics not mentioned elsewhere in the metadata are weaker discovery signals.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-check-circle"></i>
-                  <span><strong>Include your channel name as a tag:</strong> Adding your channel name as one of your tags helps your other videos surface as recommendations when viewers are watching any of your content.</span>
-                </S.FeatureListItem>
-              </S.FeatureList>
+              <S.MetricCardsGrid>
+                <S.MetricInfoCard>
+                  <S.MetricInfoHeader>
+                    <i className="bx bx-first-page"></i>
+                    <S.MetricInfoTitle>Lead with Your Best Keyword</S.MetricInfoTitle>
+                  </S.MetricInfoHeader>
+                  <S.MetricInfoText>
+                    YouTube weights the first tag more heavily than the rest. Always lead with your primary target keyword — the exact phrase a viewer would type to find your video.
+                  </S.MetricInfoText>
+                </S.MetricInfoCard>
+                <S.MetricInfoCard>
+                  <S.MetricInfoHeader>
+                    <i className="bx bx-slider-alt"></i>
+                    <S.MetricInfoTitle>Use 10–20 Tags</S.MetricInfoTitle>
+                  </S.MetricInfoHeader>
+                  <S.MetricInfoText>
+                    Quality beats volume. Videos with 10–20 well-chosen tags typically outperform those with 30+ loosely related ones. There's no benefit to padding with irrelevant terms.
+                  </S.MetricInfoText>
+                </S.MetricInfoCard>
+                <S.MetricInfoCard>
+                  <S.MetricInfoHeader>
+                    <i className="bx bx-link-alt"></i>
+                    <S.MetricInfoTitle>Mirror Your Title and Description</S.MetricInfoTitle>
+                  </S.MetricInfoHeader>
+                  <S.MetricInfoText>
+                    Tags that repeat keywords from your title and description reinforce those signals. Tags for topics not mentioned elsewhere in your metadata are weaker discovery signals.
+                  </S.MetricInfoText>
+                </S.MetricInfoCard>
+                <S.MetricInfoCard>
+                  <S.MetricInfoHeader>
+                    <i className="bx bx-user-check"></i>
+                    <S.MetricInfoTitle>Include Your Channel Name</S.MetricInfoTitle>
+                  </S.MetricInfoHeader>
+                  <S.MetricInfoText>
+                    Adding your channel name as a tag helps your other videos surface as recommendations when viewers are watching any of your content.
+                  </S.MetricInfoText>
+                </S.MetricInfoCard>
+              </S.MetricCardsGrid>
+            </S.EducationalContent>
+
+            <S.EducationalContent>
+              <S.SectionSubTitle>Common Use Cases</S.SectionSubTitle>
+              <S.UseCaseGrid>
+                <S.UseCaseCard>
+                  <S.UseCaseTitle>New Video Upload</S.UseCaseTitle>
+                  <S.UseCaseText>
+                    Generate a full tag set before publishing. Input your planned title to get broad, mid-tail, and long-tail tags you can paste directly into YouTube Studio without any additional research.
+                  </S.UseCaseText>
+                </S.UseCaseCard>
+                <S.UseCaseCard>
+                  <S.UseCaseTitle>Re-optimize Old Videos</S.UseCaseTitle>
+                  <S.UseCaseText>
+                    Paste the title of an underperforming video to generate a fresh, optimized tag set. Updating tags on existing videos can still improve search ranking and recommendation targeting.
+                  </S.UseCaseText>
+                </S.UseCaseCard>
+                <S.UseCaseCard>
+                  <S.UseCaseTitle>Competitor Tag Research</S.UseCaseTitle>
+                  <S.UseCaseText>
+                    Enter a competitor's video title to see what tag angles they might be targeting. Use the Video Analyzer alongside this tool to compare your tag coverage against theirs.
+                  </S.UseCaseText>
+                </S.UseCaseCard>
+              </S.UseCaseGrid>
             </S.EducationalContent>
 
             <S.EducationalContent>
               <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
-              <S.FeatureList>
-                <S.FeatureListItem>
-                  <i className="bx bx-help-circle"></i>
-                  <span><strong>Do YouTube tags still matter in 2025?</strong> Yes, though their role has evolved. Tags help YouTube confirm what your video is about and improve recommendation targeting accuracy. They are less important than your title and description for search ranking, but still worth optimizing — especially the first tag, which carries the most weight.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-help-circle"></i>
-                  <span><strong>Should I use broad or specific tags?</strong> Both. A balanced tag set includes 2–3 broad terms (e.g., "guitar"), 5–8 mid-tail terms (e.g., "guitar lessons for beginners"), and 5–8 long-tail terms (e.g., "how to play guitar for complete beginners at home"). This covers both broad discovery and specific search queries.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-help-circle"></i>
-                  <span><strong>Can I use the same tags on every video?</strong> Only for tags that genuinely apply to every video — like your channel name or core niche category. Using identical tags across all videos does not help each individual video rank for its specific topic.</span>
-                </S.FeatureListItem>
-              </S.FeatureList>
+              <S.FAQList>
+                <S.FAQItem>
+                  <S.FAQQuestion>Do YouTube tags still matter in 2025?</S.FAQQuestion>
+                  <S.FAQAnswer>Yes, though their role has evolved. Tags help YouTube confirm what your video is about and improve recommendation targeting. They're less important than title and description for search ranking, but the first tag carries meaningful weight and the full set is worth optimizing.</S.FAQAnswer>
+                </S.FAQItem>
+                <S.FAQItem>
+                  <S.FAQQuestion>Should I use broad or specific tags?</S.FAQQuestion>
+                  <S.FAQAnswer>Both. A balanced set includes 2–3 broad terms (e.g. "guitar"), 5–8 mid-tail terms (e.g. "guitar lessons for beginners"), and 5–8 long-tail terms (e.g. "how to play guitar for complete beginners at home"). This covers both broad discovery and specific search queries.</S.FAQAnswer>
+                </S.FAQItem>
+                <S.FAQItem>
+                  <S.FAQQuestion>Can I use the same tags on every video?</S.FAQQuestion>
+                  <S.FAQAnswer>Only for tags that genuinely apply to every video — like your channel name or core niche category. Using identical tags across all uploads doesn't help individual videos rank for their specific topics.</S.FAQAnswer>
+                </S.FAQItem>
+                <S.FAQItem>
+                  <S.FAQQuestion>Can I copy the tags directly into YouTube Studio?</S.FAQQuestion>
+                  <S.FAQAnswer>Yes. Click the copy button to get a comma-separated list that pastes directly into the Tags field in YouTube Studio's video details editor — no formatting adjustments needed.</S.FAQAnswer>
+                </S.FAQItem>
+                <S.FAQItem>
+                  <S.FAQQuestion>Are these tags guaranteed to improve views?</S.FAQQuestion>
+                  <S.FAQAnswer>Tags are one signal among many. They help YouTube understand your topic but are less influential than title, description, and click-through rate. Use the Tag Generator alongside the Video Analyzer for a complete SEO approach.</S.FAQAnswer>
+                </S.FAQItem>
+              </S.FAQList>
             </S.EducationalContent>
 
             <S.EducationalContent>
               <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
-              <S.FeatureList>
-                <S.FeatureListItem>
-                  <i className="bx bx-link"></i>
-                  <span><a href="/tools/keyword-analyzer"><strong>Keyword Analyzer</strong></a> — Research individual keywords for competition level before choosing your primary target keyword.</span>
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <i className="bx bx-link"></i>
-                  <span><a href="/tools/video-analyzer"><strong>Video Analyzer</strong></a> — Analyze a competitor's video to see what tags they are using and how their SEO score compares.</span>
-                </S.FeatureListItem>
-              </S.FeatureList>
-            </S.EducationalContent>
-
-            <S.EducationalContent>
-              <S.SectionSubTitle>Frequently Asked Questions</S.SectionSubTitle>
-              <S.FeatureList>
-                <S.FeatureListItem>
-                  <strong>Q: How does the Tag Generator create tags?</strong> The tool analyzes your video topic, niche, and any seed keywords you provide, then generates a set of relevant, high-specificity tags optimized for YouTube search discoverability.
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <strong>Q: How many tags should I use on a YouTube video?</strong> YouTube allows up to 500 characters of tags. Most high-performing videos use 10–20 well-chosen tags that mix broad category terms with specific long-tail phrases. The generator creates a balanced set within this range.
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <strong>Q: Should I use the same tags on every video?</strong> No. Tags should be video-specific. Repeating identical tags across all videos provides little SEO benefit. Use your channel name and broad niche tags consistently, but vary the topic-specific tags for each upload.
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <strong>Q: Can I copy the tags directly into YouTube Studio?</strong> Yes. Click the copy button to copy all generated tags as a comma-separated list that pastes directly into the Tags field in YouTube Studio's video details editor.
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <strong>Q: Are these tags guaranteed to improve views?</strong> Tags are one ranking signal among many. They help YouTube understand the topic of your video but are less influential than title, description, and click-through rate. Use the Tag Generator alongside the Video Analyzer to build a complete SEO strategy.
-                </S.FeatureListItem>
-              </S.FeatureList>
-            </S.EducationalContent>
-
-            <S.EducationalContent>
-              <S.SectionSubTitle>Related Tools</S.SectionSubTitle>
-              <S.FeatureList>
-                <S.FeatureListItem>
-                  <strong><a href="/tools/video-analyzer">Video Analyzer</a></strong> — Analyze how your current tags are performing alongside other video SEO metrics.
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <strong><a href="/tools/keyword-analyzer">Keyword Analyzer</a></strong> — Research search volume and competition for keywords before choosing your tags.
-                </S.FeatureListItem>
-                <S.FeatureListItem>
-                  <strong><a href="/tools/channel-analyzer">Channel Analyzer</a></strong> — See what tags and topics are driving the most views on any channel.
-                </S.FeatureListItem>
-              </S.FeatureList>
+              <S.RelatedToolsGrid>
+                <S.RelatedToolCard onClick={() => navigate('/tools/keyword-analyzer')}>
+                  <S.RelatedToolIconWrap><i className="bx bx-search-alt"></i></S.RelatedToolIconWrap>
+                  <S.RelatedToolName>Keyword Analyzer</S.RelatedToolName>
+                  <S.RelatedToolDesc>Research individual keywords for competition and search volume before choosing your primary tag.</S.RelatedToolDesc>
+                  <S.RelatedToolLaunchBtn><i className="bx bx-rocket"></i>Launch Tool</S.RelatedToolLaunchBtn>
+                </S.RelatedToolCard>
+                <S.RelatedToolCard onClick={() => navigate('/tools/video-analyzer')}>
+                  <S.RelatedToolIconWrap><i className="bx bx-film"></i></S.RelatedToolIconWrap>
+                  <S.RelatedToolName>Video Analyzer</S.RelatedToolName>
+                  <S.RelatedToolDesc>Analyze a competitor's video to see what tags they're using and how their SEO score compares to yours.</S.RelatedToolDesc>
+                  <S.RelatedToolLaunchBtn><i className="bx bx-rocket"></i>Launch Tool</S.RelatedToolLaunchBtn>
+                </S.RelatedToolCard>
+                <S.RelatedToolCard onClick={() => navigate('/tools/channel-analyzer')}>
+                  <S.RelatedToolIconWrap><i className="bx bx-bar-chart-alt-2"></i></S.RelatedToolIconWrap>
+                  <S.RelatedToolName>Channel Analyzer</S.RelatedToolName>
+                  <S.RelatedToolDesc>See what tags and topics are driving the most views on any channel in your niche.</S.RelatedToolDesc>
+                  <S.RelatedToolLaunchBtn><i className="bx bx-rocket"></i>Launch Tool</S.RelatedToolLaunchBtn>
+                </S.RelatedToolCard>
+              </S.RelatedToolsGrid>
             </S.EducationalContent>
 
           </S.EducationalSection>

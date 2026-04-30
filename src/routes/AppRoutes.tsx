@@ -67,6 +67,11 @@ const YouToolPlaybooks = lazy(() => import('../pages/Tools/components/YouToolPla
 const BannerDownloader = lazy(() => import('../pages/Tools/components/BannerDownloader/BannerDownloader').then(m => ({ default: m.BannerDownloader })));
 const ProfilePictureDownloader = lazy(() => import('../pages/Tools/components/ProfilePictureDownloader/ProfilePictureDownloader').then(m => ({ default: m.ProfilePictureDownloader })));
 
+const Login = lazy(() => import('../pages/Login/Login'));
+const AuthCallback = lazy(() => import('../pages/Auth/AuthCallback'));
+const Account = lazy(() => import('../pages/Account/Account'));
+const ExtensionAuthStart = lazy(() => import('../pages/Account/ExtensionAuth/ExtensionAuthStart'));
+
 // Loading fallback component
 const LoadingFallback = () => (
   <div style={{
@@ -161,6 +166,12 @@ export const AppRoutes: React.FC = () => {
         <Route path="/tools/banner-downloader/:channelId" element={<BannerDownloader />} />
         <Route path="/tools/profile-picture-downloader" element={<ProfilePictureDownloader />} />
         <Route path="/tools/profile-picture-downloader/:channelId" element={<ProfilePictureDownloader />} />
+
+        {/* Auth Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/account" element={<Account />} />
+        <Route path="/account/extension-auth/start" element={<ExtensionAuthStart />} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>
