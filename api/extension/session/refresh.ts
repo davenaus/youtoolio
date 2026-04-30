@@ -2,14 +2,13 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { createHash, randomBytes } from 'crypto';
 
-const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 const ACCESS_TOKEN_TTL_MS = 15 * 60 * 1000;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const supabase = createClient(
+    process.env.REACT_APP_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
   if (req.method !== 'POST') return res.status(405).end();
 
   const { grant_type, refresh_token, extension_id } = req.body as {
