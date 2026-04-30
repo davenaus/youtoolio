@@ -89,14 +89,18 @@ export const ExtensionAuthStart: React.FC = () => {
       },
       body: JSON.stringify({ redirect_uri: redirectUri, state, extension_id: extensionId }),
     })
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) { setError(data.error); return; }
-        setDone(true);
-        // Hand control back to the extension — popup closes automatically
-        window.location.href = data.redirect;
+      .then(async res => {
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          if (data.error) { setError(`API error: ${data.error}`); return; }
+          setDone(true);
+          window.location.href = data.redirect;
+        } catch {
+          setError(`Bad response (${res.status}): ${text.slice(0, 200)}`);
+        }
       })
-      .catch(() => setError('Something went wrong. Please try again.'));
+      .catch(err => setError(`Network error: ${err.message}`));
   }, [loading, user, session, redirectUri, extensionId, state, navigate]);
 
   if (done) {
