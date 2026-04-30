@@ -1,14 +1,7 @@
 {
   "buildCommand": "DISABLE_ESLINT_PLUGIN=true TSC_COMPILE_ON_ERROR=true react-scripts build && cp public/sitemap.xml build/",
   "outputDirectory": "build",
-  "redirects": [
-    {
-      "source": "/(.*)",
-      "has": [{ "type": "host", "value": "www.youtool.io" }],
-      "destination": "https://youtool.io/$1",
-      "permanent": true
-    }
-  ],
+  "redirects": [],
   "rewrites": [
     { "source": "/((?!.*\\.).*)", "destination": "/index.html" }
   ],
