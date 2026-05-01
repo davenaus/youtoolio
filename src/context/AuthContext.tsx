@@ -36,7 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `https://youtool.io/auth/callback`,
+        redirectTo: `https://www.youtool.io/auth/callback`,
         scopes: 'openid email profile',
       },
     });

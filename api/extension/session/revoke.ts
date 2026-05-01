@@ -1,23 +1,30 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createClient } from '@supabase/supabase-js';
-import { createHash } from 'crypto';
+// @ts-nocheck
+const { createClient } = require('@supabase/supabase-js');
+const { createHash } = require('crypto');
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const supabase = createClient(
-    process.env.REACT_APP_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+const handler = async (req: any, res: any) => {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { refresh_token } = req.body as { refresh_token: string };
-  if (!refresh_token) return res.status(400).json({ error: 'invalid_request' });
+  try {
+    const supabase = createClient(
+      process.env.REACT_APP_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
 
-  const refreshHash = createHash('sha256').update(refresh_token).digest('hex');
+    const { refresh_token } = req.body;
+    if (!refresh_token) return res.status(400).json({ error: 'invalid_request' });
 
-  await supabase
-    .from('extension_sessions')
-    .update({ revoked_at: new Date().toISOString() })
-    .eq('refresh_token_hash', refreshHash);
+    const refreshHash = createHash('sha256').update(refresh_token).digest('hex');
 
-  return res.status(200).json({ ok: true });
-}
+    await supabase
+      .from('extension_sessions')
+      .update({ revoked_at: new Date().toISOString() })
+      .eq('refresh_token_hash', refreshHash);
+
+    return res.status(200).json({ ok: true });
+  } catch (err: any) {
+    return res.status(500).json({ error: `Unexpected error: ${err?.message ?? String(err)}` });
+  }
+};
+
+module.exports = handler;

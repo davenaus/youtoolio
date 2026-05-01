@@ -71,6 +71,7 @@ const Login = lazy(() => import('../pages/Login/Login'));
 const AuthCallback = lazy(() => import('../pages/Auth/AuthCallback'));
 const Account = lazy(() => import('../pages/Account/Account'));
 const ExtensionAuthStart = lazy(() => import('../pages/Account/ExtensionAuth/ExtensionAuthStart'));
+const YouTubeCallback = lazy(() => import('../pages/Account/YouTubeConnect/YouTubeCallback'));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -172,6 +173,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/account" element={<Account />} />
         <Route path="/account/extension-auth/start" element={<ExtensionAuthStart />} />
+        <Route path="/account/extension-youtube-connect/callback" element={<YouTubeCallback />} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>

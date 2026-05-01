@@ -17,26 +17,33 @@ export const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) {
-        navigate('/login');
-        return;
+    // Use onAuthStateChange so we wait for Supabase to finish exchanging
+    // the PKCE code before checking the session. getSession() races and
+    // returns null if called before the exchange completes.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          subscription.unsubscribe();
+
+          const { user } = session;
+          await supabase.from('profiles').upsert({
+            user_id: user.id,
+            email: user.email,
+            display_name: user.user_metadata?.full_name ?? null,
+            avatar_url: user.user_metadata?.avatar_url ?? null,
+          }, { onConflict: 'user_id' });
+
+          const next = sessionStorage.getItem('youtool_auth_next');
+          sessionStorage.removeItem('youtool_auth_next');
+          navigate(next || '/account');
+        } else if (event === 'INITIAL_SESSION' && !session) {
+          subscription.unsubscribe();
+          navigate('/login');
+        }
       }
+    );
 
-      // Upsert profile row
-      const { user } = session;
-      await supabase.from('profiles').upsert({
-        user_id: user.id,
-        email: user.email,
-        display_name: user.user_metadata?.full_name ?? null,
-        avatar_url: user.user_metadata?.avatar_url ?? null,
-      }, { onConflict: 'user_id' });
-
-      // If the user came from the extension auth flow, send them back there
-      const next = sessionStorage.getItem('youtool_auth_next');
-      sessionStorage.removeItem('youtool_auth_next');
-      navigate(next || '/account');
-    });
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   return <Container>Signing you in…</Container>;

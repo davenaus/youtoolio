@@ -296,6 +296,7 @@ const ComingSoon = styled.span`
 const SignOutLink = styled.button`
   background: none;
   border: none;
+  min-height: 0;
   font-size: 0.8rem;
   font-family: ${({ theme }) => theme.fonts.primary};
   color: ${({ theme }) => theme.colors.text.muted};
@@ -323,11 +324,15 @@ export const Account: React.FC = () => {
   const navigate = useNavigate();
   const [extensionConnected, setExtensionConnected] = useState<boolean | null>(null);
   const [lastUsed, setLastUsed] = useState<string | null>(null);
+  const [ytChannel, setYtChannel] = useState<{ title: string; thumbnail: string | null } | null>(null);
+  const [ytConnecting, setYtConnecting] = useState(false);
+  const [ytDisconnecting, setYtDisconnecting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) return;
+
       fetch('/api/extension/session/status', {
         headers: { Authorization: `Bearer ${session.access_token}` },
       })
@@ -337,6 +342,16 @@ export const Account: React.FC = () => {
           setLastUsed(last_used_at);
         })
         .catch(() => setExtensionConnected(false));
+
+      // Check YouTube connection via Supabase directly
+      supabase
+        .from('youtube_connections')
+        .select('channel_title, channel_thumbnail_url')
+        .is('disconnected_at', null)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setYtChannel({ title: data.channel_title, thumbnail: data.channel_thumbnail_url });
+        });
     });
   }, [user]);
 
@@ -347,6 +362,31 @@ export const Account: React.FC = () => {
   const avatar = user.user_metadata?.avatar_url as string | undefined;
 
   const handleSignOut = async () => { await signOut(); navigate('/'); };
+
+  const handleDisconnectYouTube = async () => {
+    if (!window.confirm('Disconnect your YouTube channel from YouTool?')) return;
+    setYtDisconnecting(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { setYtDisconnecting(false); return; }
+    await fetch('/api/youtube/disconnect', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    setYtChannel(null);
+    setYtDisconnecting(false);
+  };
+
+  const handleConnectYouTube = async () => {
+    setYtConnecting(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { navigate('/login'); return; }
+    const res = await fetch('/api/youtube/connect', {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    const { url, error } = await res.json();
+    if (error || !url) { setYtConnecting(false); return; }
+    window.location.href = url;
+  };
 
   const formatLastUsed = (iso: string | null) => {
     if (!iso) return null;
@@ -406,14 +446,23 @@ export const Account: React.FC = () => {
             <StatusLeft>
               <StatusIcon><i className="bx bxl-youtube"></i></StatusIcon>
               <div>
-                <StatusLabel>YouTube account</StatusLabel>
-                <StatusSub>Connect after signing in to the extension</StatusSub>
+                <StatusLabel>YouTube channel</StatusLabel>
+                <StatusSub>
+                  {ytChannel
+                    ? <>Connected · {ytChannel.title} · <SignOutLink onClick={handleDisconnectYouTube} disabled={ytDisconnecting}>{ytDisconnecting ? 'Disconnecting…' : 'Disconnect'}</SignOutLink></>
+                    : 'Not connected — link your channel to unlock analytics'}
+                </StatusSub>
               </div>
             </StatusLeft>
-            <Dot />
+            {ytChannel
+              ? <Dot $connected />
+              : <Button variant="secondary" size="sm" onClick={handleConnectYouTube} disabled={ytConnecting}>
+                  {ytConnecting ? 'Redirecting…' : 'Connect'}
+                </Button>
+            }
           </StatusRow>
 
-          <InstructionBox>
+          {extensionConnected !== true && <InstructionBox>
             <InstructionTitle>Don't have the extension yet?</InstructionTitle>
             <InstructionStep>
               <StepNum>1</StepNum>
@@ -441,7 +490,7 @@ export const Account: React.FC = () => {
                 Get the Extension
               </Button>
             </div>
-          </InstructionBox>
+          </InstructionBox>}
         </Card>
 
         {/* Subscription */}

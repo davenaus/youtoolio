@@ -1,17 +1,17 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createClient } from '@supabase/supabase-js';
-import { createHash, randomBytes } from 'crypto';
+// @ts-nocheck
+const { createClient } = require('@supabase/supabase-js');
+const { createHash, randomBytes } = require('crypto');
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+const handler = async (req: any, res: any) => {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const supabase = createClient(
-    process.env.REACT_APP_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
   try {
-    const authHeader = req.headers.authorization ?? '';
+    const supabase = createClient(
+      process.env.REACT_APP_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    const authHeader: string = req.headers.authorization ?? '';
     const accessToken = authHeader.replace('Bearer ', '');
     if (!accessToken) return res.status(401).json({ error: 'Unauthorized' });
 
@@ -19,11 +19,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const user = data?.user;
     if (userError || !user) return res.status(401).json({ error: 'Invalid session' });
 
-    const { redirect_uri, state, extension_id } = req.body as {
-      redirect_uri: string;
-      state: string;
-      extension_id: string;
-    };
+    const { redirect_uri, state, extension_id } = req.body;
 
     if (!redirect_uri || !extension_id) {
       return res.status(400).json({ error: 'Missing redirect_uri or extension_id' });
@@ -52,4 +48,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: any) {
     return res.status(500).json({ error: `Unexpected error: ${err?.message ?? String(err)}` });
   }
-}
+};
+
+module.exports = handler;
