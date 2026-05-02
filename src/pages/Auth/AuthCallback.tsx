@@ -17,33 +17,31 @@ export const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Use onAuthStateChange so we wait for Supabase to finish exchanging
-    // the PKCE code before checking the session. getSession() races and
-    // returns null if called before the exchange completes.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          subscription.unsubscribe();
+    // If Supabase returned an error in the URL, bail immediately
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error')) {
+      navigate('/login');
+      return;
+    }
 
-          const { user } = session;
-          await supabase.from('profiles').upsert({
-            user_id: user.id,
-            email: user.email,
-            display_name: user.user_metadata?.full_name ?? null,
-            avatar_url: user.user_metadata?.avatar_url ?? null,
-          }, { onConflict: 'user_id' });
-
-          const next = sessionStorage.getItem('youtool_auth_next');
-          sessionStorage.removeItem('youtool_auth_next');
-          navigate(next || '/account');
-        } else if (event === 'INITIAL_SESSION' && !session) {
-          subscription.unsubscribe();
-          navigate('/login');
-        }
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) {
+        navigate('/login');
+        return;
       }
-    );
 
-    return () => subscription.unsubscribe();
+      const { user } = session;
+      await supabase.from('profiles').upsert({
+        user_id: user.id,
+        email: user.email,
+        display_name: user.user_metadata?.full_name ?? null,
+        avatar_url: user.user_metadata?.avatar_url ?? null,
+      }, { onConflict: 'user_id' });
+
+      const next = sessionStorage.getItem('youtool_auth_next');
+      sessionStorage.removeItem('youtool_auth_next');
+      navigate(next || '/account');
+    });
   }, [navigate]);
 
   return <Container>Signing you in…</Container>;

@@ -1,277 +1,484 @@
+// src/pages/Company/Changelog.tsx
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
-const Page = styled.div`
+const Container = styled.div`
   min-height: 100vh;
-  padding: 3rem 2rem 6rem;
-  background: linear-gradient(135deg,
-    ${({ theme }) => theme.colors.dark1} 0%,
-    ${({ theme }) => theme.colors.dark2} 50%,
-    ${({ theme }) => theme.colors.dark3} 100%);
+  background: ${({ theme }) => theme.colors.dark2};
+  color: ${({ theme }) => theme.colors.text.primary};
+  padding: 2rem 0;
 `;
 
-const Inner = styled.div`
-  max-width: 760px;
+const ContentWrapper = styled.div`
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 0 2rem;
 `;
 
-const BackLink = styled(Link)`
-  display: inline-flex;
+const BackButton = styled.button`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  padding: 0.75rem 1.5rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  cursor: pointer;
+  display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.colors.text.muted};
-  text-decoration: none;
-  margin-bottom: 2.5rem;
-  transition: color 0.2s;
-  &:hover { color: ${({ theme }) => theme.colors.text.primary}; }
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.dark4};
+    color: ${({ theme }) => theme.colors.text.primary};
+  }
+
+  i {
+    font-size: 1.2rem;
+  }
 `;
 
-const PageHeader = styled.div`
+const Header = styled.div`
+  text-align: center;
   margin-bottom: 3rem;
 `;
 
-const PageTitle = styled.h1`
-  font-size: 2.25rem;
+const Title = styled.h1`
+  font-size: 3rem;
   font-weight: 700;
   color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0 0 0.5rem;
+  margin-bottom: 1rem;
+
+  @media (max-width: 768px) {
+    font-size: 2rem;
+  }
 `;
 
-const PageSub = styled.p`
-  font-size: 1rem;
+const Subtitle = styled.p`
+  font-size: 1.2rem;
   color: ${({ theme }) => theme.colors.text.muted};
-  margin: 0;
+  line-height: 1.6;
+  margin-bottom: 2rem;
 `;
 
-const SectionLabel = styled.div`
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: ${({ theme }) => theme.colors.text.muted};
-  margin: 2.5rem 0 1.25rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+const Timeline = styled.div`
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 2rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: ${({ theme }) => theme.colors.dark5};
+
+    @media (max-width: 768px) {
+      left: 1rem;
+    }
+  }
 `;
 
-const Entry = styled.div`
+const ChangelogEntry = styled.div`
+  position: relative;
+  margin-bottom: 3rem;
+  padding-left: 5rem;
+
+  @media (max-width: 768px) {
+    padding-left: 3rem;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 1.5rem;
+    top: 0.75rem;
+    width: 12px;
+    height: 12px;
+    background: ${({ theme }) => theme.colors.red4};
+    border-radius: 50%;
+    border: 3px solid ${({ theme }) => theme.colors.dark2};
+
+    @media (max-width: 768px) {
+      left: 0.5rem;
+    }
+  }
+`;
+
+const EntryCard = styled.div`
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 2rem;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: ${({ theme }) => theme.colors.red4};
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+`;
+
+const EntryHeader = styled.div`
   display: flex;
-  gap: 1.5rem;
-  padding: 1.5rem 0;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
-  &:last-child { border-bottom: none; }
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
 
-  @media (max-width: 560px) { flex-direction: column; gap: 0.75rem; }
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 `;
 
-const EntryMeta = styled.div`
-  flex-shrink: 0;
-  width: 110px;
-  padding-top: 2px;
+const VersionTag = styled.div`
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  i {
+    font-size: 1rem;
+  }
 `;
 
 const EntryDate = styled.div`
-  font-size: 0.8rem;
-  font-weight: 600;
   color: ${({ theme }) => theme.colors.text.muted};
-  white-space: nowrap;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  i {
+    font-size: 1rem;
+  }
 `;
 
-const EntryVersion = styled.div`
-  font-size: 0.72rem;
-  color: ${({ theme }) => theme.colors.text.muted};
-  opacity: 0.6;
-  margin-top: 0.2rem;
-  font-family: monospace;
-`;
-
-const EntryBody = styled.div`
-  flex: 1;
-  min-width: 0;
-`;
-
-const EntryTitle = styled.h3`
-  font-size: 1rem;
-  font-weight: 600;
+const EntryTitle = styled.h2`
   color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
 `;
 
-const EntryItems = styled.ul`
-  margin: 0;
-  padding: 0 0 0 1.1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-`;
-
-const EntryItem = styled.li`
-  font-size: 0.875rem;
+const EntryDescription = styled.p`
   color: ${({ theme }) => theme.colors.text.secondary};
-  line-height: 1.5;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
 `;
 
-const TagRow = styled.div`
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  margin-top: 0.75rem;
+const ChangesList = styled.div`
+  display: grid;
+  gap: 1rem;
 `;
 
-const Tag = styled.span<{ $color?: 'green' | 'blue' | 'purple' | 'default' }>`
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  padding: 0.15rem 0.5rem;
-  border-radius: 999px;
-  ${({ $color }) => {
-    switch ($color) {
-      case 'green':  return 'background: rgba(74,222,128,0.1); color: #4ade80; border: 1px solid rgba(74,222,128,0.2);';
-      case 'blue':   return 'background: rgba(96,165,250,0.1); color: #60a5fa; border: 1px solid rgba(96,165,250,0.2);';
-      case 'purple': return 'background: rgba(192,132,252,0.1); color: #c084fc; border: 1px solid rgba(192,132,252,0.2);';
-      default:       return 'background: rgba(255,255,255,0.06); color: #9ca3af; border: 1px solid rgba(255,255,255,0.1);';
+const ChangeCategory = styled.div<{ type: 'new' | 'improved' | 'fixed' }>`
+  h4 {
+    color: ${({ type, theme }) =>
+      type === 'new' ? theme.colors.success :
+      type === 'improved' ? theme.colors.red6 :
+      theme.colors.red3
+    };
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    i {
+      font-size: 1rem;
     }
-  }}
+  }
+
+  ul {
+    color: ${({ theme }) => theme.colors.text.secondary};
+    margin: 0;
+    padding-left: 1.5rem;
+
+    li {
+      margin-bottom: 0.25rem;
+      line-height: 1.5;
+    }
+  }
 `;
 
 export const Changelog: React.FC = () => {
+  const navigate = useNavigate();
+
+  const changelogEntries = [
+    {
+      version: "Extension v1.0.0",
+      title: "Chrome Extension Launch",
+      date: "April 2026",
+      description: "The YouTool Chrome Extension is officially live. Packed with creator tools that work directly inside YouTube and YouTube Studio.",
+      changes: {
+        new: [
+          "In-player screenshot capture with one click on any YouTube video",
+          "Copy Transcript button on watch pages for quick transcript extraction",
+          "Estimated dislike counts via Return YouTube Dislike integration",
+          "Monetization checker on videos, Shorts, and channel pages",
+          "YouTube Studio enhancements: more analytics timelines, additional content page columns, real-time engaged view swapper",
+          "Streamer Mode — redacts Studio stats, revenue, and channel identity during screen shares",
+          "Playback speed controls including forced speed and unlock-any-speed buttons",
+          "Deep Dark theme engine with presets and full custom color support",
+          "Watch page tweaks: theater mode, loop button, hide Shorts/ads/chat/end cards, URL cleaner",
+          "Sign in with your YouTool.io account to sync settings and unlock creator features",
+          "7-day subscriber and view count stats shown in a pill next to the account icon when YouTube is connected",
+          "Channel profile picture replaces the default account icon when YouTube is connected"
+        ],
+        improved: [],
+        fixed: []
+      }
+    },
+    {
+      version: "v1.3.0",
+      title: "Site-Wide Polish & Content Improvements",
+      date: "March 2026",
+      description: "A focused polish update improving consistency across the site — better tool layouts, unified navigation, and updated blog content.",
+      changes: {
+        new: [],
+        improved: [
+          "All Tools - Educational content and related resources now consistently appear below the tool interface across every tool page for a more natural use flow",
+          "All Tools - Google Ad placement standardised — now appears between the tool UI and educational content on every tool page",
+          "Site-Wide - All contact and support links throughout the site now navigate to the Contact page instead of opening an email client",
+          "Help Center, Changelog, Press Kit, Partnerships - Support buttons all route to the Contact page",
+          "About Page - 'Get in Touch' and 'Contact Austin' buttons now go to the Contact page",
+          "Blog: YouTube Monetization 2025 - CPM and sponsorship figures now clearly labelled as industry estimates with context on how widely actual results can vary",
+          "Blog: YouTube Growth Hacks - Intro and summary updated to reflect that results depend on niche, consistency, and starting point"
+        ],
+        fixed: [
+          "Moderation Checker - Header text was incorrectly centre-aligned; now left-aligned to match all other tool pages",
+          "Moderation Checker - Analysis container and educational section max-width restored after a styling regression",
+          "Legal Pages (Privacy Policy, Terms of Service, Cookie Policy, Data Usage) - Contact information section now links to the Contact page"
+        ]
+      }
+    },
+    {
+      version: "v1.2.0",
+      title: "Enhanced User Experience & Tool Improvements",
+      date: "January 2026",
+      description: "Major improvements to existing tools with enhanced UI organization, updated file size limits, and better mobile responsiveness. Focus on user experience and consistency across the platform.",
+      changes: {
+        new: [
+          "Channel Analyzer - New tab-based navigation system with Overview, Details, and Performance sections for better organization",
+          "Thumbnail Analyzer - Now featured as the newest tool with 'New' badge on tools page"
+        ],
+        improved: [
+          "Thumbnail Tester - Increased image upload limit from 10MB to 50MB (matching YouTube's updated requirements)",
+          "Thumbnail Tester - Added drag-and-drop support for both thumbnail and profile picture uploads",
+          "Thumbnail Tester - Enlarged profile upload circle from 100px to 140px for better visibility with new text",
+          "Thumbnail Analyzer - Increased image upload limit from 10MB to 50MB for consistency",
+          "Tag Generator - Moved Advanced Settings button into enhanced header for cleaner interface",
+          "Comment Picker - Moved advanced controls into enhanced header matching other tools",
+          "Comment Picker - Simplified multiple winners interface by removing toggle and always showing 'Number of Winners' in Advanced Filters",
+          "Playlist Analyzer - Moved Advanced Filters button into enhanced header",
+          "Channel Analyzer - Organized content into three intuitive tabs (Overview, Details, Performance)",
+          "Channel Analyzer - Fixed profile picture loading with proper fallback handling and error recovery",
+          "All Tools - Removed 'New' badges from older tools, keeping only Thumbnail Analyzer marked as new",
+          "Consistent UI patterns across all tools with advanced settings in headers"
+        ],
+        fixed: [
+          "Channel Analyzer - Fixed channel profile picture not displaying due to missing optional chaining",
+          "Channel Analyzer - Added fallback placeholder image for failed thumbnail loads",
+          "Channel Consultant - Improved channel profile picture loading with better error handling",
+          "Google Ads - Temporarily hidden all ad slots while building traffic for AdSense approval",
+          "File upload validation across all tools with proper size limit enforcement"
+        ]
+      }
+    },
+    {
+      version: "v1.1.0",
+      title: "New Tools & Major UX Improvements",
+      date: "December 2025",
+      description: "Major update featuring new AI-powered tools, enhanced UI consistency across all tools, and improved user experience with modern design patterns.",
+      changes: {
+        new: [
+          "YouTool Playbooks - Pre-built AI prompt generators for viral content, growth strategy, and audience analysis with CRT terminal effect",
+          "Color Picker From Image - Extract exact hex, RGB, and HSL values from any image with pixel-perfect precision",
+          "Channel ID Finder - Find any YouTube channel's ID from URLs, names, or handles",
+          "Content Moderation Checker - Analyze content for policy violations and safety before publishing"
+        ],
+        improved: [
+          "Channel Consultant - Now features loading modal with 2.5 second generation animation, enhanced with top 5 video view counts in generated prompts for better AI context",
+          "Channel Consultant - Streamlined UX with hidden prompt display, showing only copy button for cleaner interface",
+          "Channel Consultant - Enhanced data collection including recent videos, popular videos, and engagement metrics for comprehensive AI training",
+          "YouTube Calculator - Added dual input mode: paste video link for instant calculation OR manual input for custom scenarios",
+          "YouTube Calculator - Auto-detection of video category from YouTube API with automatic earnings calculation",
+          "YouTube Calculator - Simplified from 4 steps to 2 steps with 50% fewer inputs for faster results",
+          "YouTube Calculator - Widened revenue estimate range to ±50% for more realistic projections",
+          "YouTube Calculator - Removed yearly projection display, focusing on per-video earnings",
+          "Enhanced header design with background images and glowing icons across all major tools",
+          "Full-width upload zones in Color Picker tool for better visual consistency",
+          "Faster typing animation in YouTool Playbooks (8ms interval for snappier experience)",
+          "Improved mobile responsiveness with centered layouts on small screens",
+          "Updated tool icons and descriptions for better discoverability",
+          "Consistent styling patterns across Video Analyzer, Channel Analyzer, and new tools",
+          "Professional gradient overlays and red theme accents throughout the platform"
+        ],
+        fixed: [
+          "Channel Consultant - Fixed typing animation by replacing with smooth loading modal",
+          "Channel Consultant - API key now properly uses environment variable instead of hardcoded value",
+          "Channel Consultant - Now supports all channel URL formats (handles, IDs, custom URLs)",
+          "YouTube Calculator - Fixed API connection issue for video link feature",
+          "YouTube Calculator - Verified all YouTube category IDs (1-29, 43) for accurate CPM calculations",
+          "Color Picker From Image now properly listed in tools directory",
+          "Tool card styling inconsistencies resolved",
+          "Mobile layout improvements for step indicators",
+          "CRT terminal keyframe animation issues in styled-components v4+"
+        ]
+      }
+    },
+    {
+      version: "v1.0.0",
+      title: "Initial Launch - YouTool Goes Live!",
+      date: "July 2025",
+      description: "We're excited to announce the official launch of YouTool! After months of development and testing, we're ready to help creators analyze and optimize their YouTube content.",
+      changes: {
+        new: [
+          "Video Analyzer - Comprehensive video performance analysis",
+          "Channel Analyzer - Complete channel insights and metrics",
+          "Keyword Analyzer - YouTube SEO keyword research tool",
+          "Tag Generator - Smart tag suggestions for better discoverability",
+          "Thumbnail Tester - A/B test your thumbnail designs",
+          "Comment Downloader - Export and analyze video comments",
+          "Playlist Analyzer - Analyze playlist performance and optimization",
+          "YouTube Calculator - Estimate earnings and engagement metrics",
+          "QR Code Generator - Create QR codes for your videos and channels",
+          "Color Palette Generator - Extract colors from thumbnails",
+          "Outlier Finder - Discover viral content opportunities",
+          "Channel Comparer - Compare multiple channels side-by-side",
+          "Comment Picker - Randomly select comments from videos",
+          "Subscribe Link Generator - Create custom subscribe links",
+          "YouTube Transcript Downloader - Extract video transcripts and captions"
+        ],
+        improved: [
+          "Mobile-responsive design for all tools",
+          "Fast, real-time data fetching from YouTube API",
+          "Clean, professional interface with dark theme",
+          "Comprehensive analytics with actionable insights"
+        ],
+        fixed: [
+          "Initial bugs and performance optimizations",
+          "Cross-browser compatibility improvements",
+          "Error handling for API rate limits"
+        ]
+      }
+    }
+  ];
+
   return (
-    <Page>
-      <Inner>
-        <BackLink to="/"><i className="bx bx-arrow-back" /> Back to home</BackLink>
+    <Container>
+      <ContentWrapper>
+        <BackButton onClick={() => navigate('/')}>
+          <i className="bx bx-arrow-back"></i>
+          Back to Home
+        </BackButton>
 
-        <PageHeader>
-          <PageTitle>Changelog</PageTitle>
-          <PageSub>Updates to the YouTool website and Chrome extension.</PageSub>
-        </PageHeader>
+        <Header>
+          <Title>Changelog</Title>
+          <Subtitle>
+            Track all updates, new features, and improvements to YouTool.
+            We're constantly working to make our tools better for creators.
+          </Subtitle>
+        </Header>
 
-        {/* ── Website ────────────────────────────────────────────── */}
-        <SectionLabel>Website — youtool.io</SectionLabel>
+        <Timeline>
+          {changelogEntries.map((entry, index) => (
+            <ChangelogEntry key={index}>
+              <EntryCard>
+                <EntryHeader>
+                  <VersionTag>
+                    <i className="bx bx-rocket"></i>
+                    {entry.version}
+                  </VersionTag>
+                  <EntryDate>
+                    <i className="bx bx-calendar"></i>
+                    {entry.date}
+                  </EntryDate>
+                </EntryHeader>
 
-        <Entry>
-          <EntryMeta>
-            <EntryDate>Apr 2025</EntryDate>
-          </EntryMeta>
-          <EntryBody>
-            <EntryTitle>YouTube account connection &amp; channel analytics</EntryTitle>
-            <EntryItems>
-              <EntryItem>Connect your YouTube channel directly from your account page via Google OAuth</EntryItem>
-              <EntryItem>Disconnect at any time from the same page</EntryItem>
-              <EntryItem>Connected channel details (name, thumbnail) displayed on your account</EntryItem>
-            </EntryItems>
-            <TagRow>
-              <Tag $color="green">New</Tag>
-              <Tag $color="blue">Account</Tag>
-            </TagRow>
-          </EntryBody>
-        </Entry>
+                <EntryTitle>{entry.title}</EntryTitle>
+                <EntryDescription>{entry.description}</EntryDescription>
 
-        <Entry>
-          <EntryMeta>
-            <EntryDate>Apr 2025</EntryDate>
-          </EntryMeta>
-          <EntryBody>
-            <EntryTitle>Account page redesign</EntryTitle>
-            <EntryItems>
-              <EntryItem>New account page showing extension connection status and YouTube channel status</EntryItem>
-              <EntryItem>Extension connection instructions shown only when the extension isn't linked</EntryItem>
-              <EntryItem>Last-used date shown for connected extension sessions</EntryItem>
-            </EntryItems>
-            <TagRow>
-              <Tag $color="blue">Account</Tag>
-            </TagRow>
-          </EntryBody>
-        </Entry>
+                <ChangesList>
+                  {entry.changes.new && entry.changes.new.length > 0 && (
+                    <ChangeCategory type="new">
+                      <h4>
+                        <i className="bx bx-plus-circle"></i>
+                        New Features
+                      </h4>
+                      <ul>
+                        {entry.changes.new.map((item, itemIndex) => (
+                          <li key={itemIndex}>{item}</li>
+                        ))}
+                      </ul>
+                    </ChangeCategory>
+                  )}
 
-        <Entry>
-          <EntryMeta>
-            <EntryDate>Mar 2025</EntryDate>
-          </EntryMeta>
-          <EntryBody>
-            <EntryTitle>Tools expansion</EntryTitle>
-            <EntryItems>
-              <EntryItem>Added Banner Downloader and Profile Picture Downloader</EntryItem>
-              <EntryItem>Added Moderation Checker and Channel ID Finder</EntryItem>
-              <EntryItem>Added YouTool Playbooks — guided strategy resources for creators</EntryItem>
-              <EntryItem>Keyword Analyzer improvements and deep-link support</EntryItem>
-            </EntryItems>
-            <TagRow>
-              <Tag $color="green">New</Tag>
-              <Tag>Tools</Tag>
-            </TagRow>
-          </EntryBody>
-        </Entry>
+                  {entry.changes.improved && entry.changes.improved.length > 0 && (
+                    <ChangeCategory type="improved">
+                      <h4>
+                        <i className="bx bx-trending-up"></i>
+                        Improvements
+                      </h4>
+                      <ul>
+                        {entry.changes.improved.map((item, itemIndex) => (
+                          <li key={itemIndex}>{item}</li>
+                        ))}
+                      </ul>
+                    </ChangeCategory>
+                  )}
 
-        <Entry>
-          <EntryMeta>
-            <EntryDate>Feb 2025</EntryDate>
-          </EntryMeta>
-          <EntryBody>
-            <EntryTitle>Performance &amp; infrastructure</EntryTitle>
-            <EntryItems>
-              <EntryItem>All tool pages lazy-loaded for significantly faster initial page load</EntryItem>
-              <EntryItem>Serverless API layer migrated to Vercel with Node.js 22</EntryItem>
-              <EntryItem>Google sign-in and extension auth flow stabilized</EntryItem>
-            </EntryItems>
-            <TagRow>
-              <Tag $color="purple">Infra</Tag>
-            </TagRow>
-          </EntryBody>
-        </Entry>
+                  {entry.changes.fixed && entry.changes.fixed.length > 0 && (
+                    <ChangeCategory type="fixed">
+                      <h4>
+                        <i className="bx bx-check-circle"></i>
+                        Bug Fixes
+                      </h4>
+                      <ul>
+                        {entry.changes.fixed.map((item, itemIndex) => (
+                          <li key={itemIndex}>{item}</li>
+                        ))}
+                      </ul>
+                    </ChangeCategory>
+                  )}
+                </ChangesList>
+              </EntryCard>
+            </ChangelogEntry>
+          ))}
+        </Timeline>
 
-        {/* ── Chrome Extension ───────────────────────────────────── */}
-        <SectionLabel>Chrome Extension</SectionLabel>
-
-        <Entry>
-          <EntryMeta>
-            <EntryDate>Apr 2025</EntryDate>
-            <EntryVersion>v1.0.0</EntryVersion>
-          </EntryMeta>
-          <EntryBody>
-            <EntryTitle>Channel analytics in the popup</EntryTitle>
-            <EntryItems>
-              <EntryItem>7-day subscriber gain and view count shown in a pill next to the account icon</EntryItem>
-              <EntryItem>Channel profile picture replaces the default account icon when YouTube is connected</EntryItem>
-              <EntryItem>Stats bar only appears when a YouTube channel is connected</EntryItem>
-              <EntryItem>Account menu now includes an Account link alongside Sign out</EntryItem>
-            </EntryItems>
-            <TagRow>
-              <Tag $color="green">New</Tag>
-              <Tag $color="blue">Analytics</Tag>
-            </TagRow>
-          </EntryBody>
-        </Entry>
-
-        <Entry>
-          <EntryMeta>
-            <EntryDate>Mar 2025</EntryDate>
-            <EntryVersion>v0.1.0</EntryVersion>
-          </EntryMeta>
-          <EntryBody>
-            <EntryTitle>Initial release</EntryTitle>
-            <EntryItems>
-              <EntryItem>In-player screenshot capture with one click</EntryItem>
-              <EntryItem>Copy Transcript button on watch pages</EntryItem>
-              <EntryItem>Show estimated dislike counts via Return YouTube Dislike</EntryItem>
-              <EntryItem>Monetization checker on videos, Shorts, and channels</EntryItem>
-              <EntryItem>YouTube Studio enhancements: more analytics timelines, additional content page columns, real-time engaged view swapper</EntryItem>
-              <EntryItem>Streamer Mode — redact Studio stats, revenue, and channel identity during screen shares</EntryItem>
-              <EntryItem>Playback speed controls including forced speed and unlock-any-speed buttons</EntryItem>
-              <EntryItem>Deep Dark theme engine with presets and full custom color support</EntryItem>
-              <EntryItem>Watch page tweaks: theater mode, loop button, hide Shorts/ads/chat/end cards, URL cleaner</EntryItem>
-              <EntryItem>Sign in with YouTool.io account to sync settings and unlock creator features</EntryItem>
-            </EntryItems>
-            <TagRow>
-              <Tag $color="green">Launch</Tag>
-            </TagRow>
-          </EntryBody>
-        </Entry>
-
-      </Inner>
-    </Page>
+        <div style={{ textAlign: 'center', marginTop: '3rem', padding: '2rem', background: '#1A1A1D', borderRadius: '12px' }}>
+          <h3 style={{ color: '#F3F4F6', marginBottom: '1rem' }}>What's Coming Next?</h3>
+          <p style={{ color: '#9CA3AF', marginBottom: '1.5rem' }}>
+            We're constantly working on new features based on creator feedback. Have an idea for a tool
+            or feature? Let us know!
+          </p>
+          <button
+            style={{
+              background: 'linear-gradient(135deg, #DC2626, #B91C1C)',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontWeight: '600'
+            }}
+            onClick={() => navigate('/contact')}
+          >
+            <i className="bx bx-bulb" style={{ marginRight: '0.5rem' }}></i>
+            Suggest a Feature
+          </button>
+        </div>
+      </ContentWrapper>
+    </Container>
   );
 };
 

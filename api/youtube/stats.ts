@@ -2,6 +2,24 @@
 const { createClient } = require('@supabase/supabase-js');
 const { createHash } = require('crypto');
 
+const ALLOWED_DAY_RANGES = new Set([1, 7, 30]);
+const DEFAULT_DAY_RANGE = 7;
+const DAY_MS = 86400000;
+
+function resolveDayRange(value: any): number | null {
+  const rawValue = Array.isArray(value) ? value[0] : value;
+  if (rawValue === undefined || rawValue === null || rawValue === '') {
+    return DEFAULT_DAY_RANGE;
+  }
+
+  const days = Number(rawValue);
+  if (!Number.isInteger(days) || !ALLOWED_DAY_RANGES.has(days)) {
+    return null;
+  }
+
+  return days;
+}
+
 async function resolveUserId(supabase: any, token: string): Promise<string | null> {
   // Try extension session token first
   const tokenHash = createHash('sha256').update(token).digest('hex');
@@ -80,6 +98,9 @@ const handler = async (req: any, res: any) => {
     const accessToken = await getValidAccessToken(supabase, connection);
     if (!accessToken) return res.status(401).json({ error: 'youtube_token_expired' });
 
+    const days = resolveDayRange(req.query?.days);
+    if (!days) return res.status(400).json({ error: 'invalid_days' });
+
     // Total subscriber count from YouTube Data API (live)
     const channelRes = await fetch(
       'https://www.googleapis.com/youtube/v3/channels?part=statistics&mine=true',
@@ -88,11 +109,11 @@ const handler = async (req: any, res: any) => {
     const channelData = await channelRes.json();
     const statistics = channelData.items?.[0]?.statistics;
 
-    // Weekly views + subscriber gain/loss from YouTube Analytics API (last 7 days, aggregated)
+    // Views + subscriber gain/loss from YouTube Analytics API for the selected range.
     const today = new Date().toISOString().split('T')[0];
-    const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+    const startDate = new Date(Date.now() - days * DAY_MS).toISOString().split('T')[0];
     const analyticsRes = await fetch(
-      `https://youtubeanalytics.googleapis.com/v2/reports?ids=channel==MINE&startDate=${sevenDaysAgo}&endDate=${today}&metrics=views,subscribersGained,subscribersLost`,
+      `https://youtubeanalytics.googleapis.com/v2/reports?ids=channel==MINE&startDate=${startDate}&endDate=${today}&metrics=views,subscribersGained,subscribersLost`,
       { headers: { Authorization: `Bearer ${accessToken}` } }
     );
     const analyticsData = await analyticsRes.json();
@@ -100,7 +121,11 @@ const handler = async (req: any, res: any) => {
     const row: [number, number, number] | null = analyticsData.rows?.[0] ?? null;
 
     return res.status(200).json({
+      days,
       subscriberCount: statistics?.subscriberCount ? Number(statistics.subscriberCount) : null,
+      periodViews: row ? row[0] : null,
+      periodSubsGained: row ? row[1] : null,
+      periodSubsLost: row ? row[2] : null,
       weeklyViews: row ? row[0] : null,
       weeklySubsGained: row ? row[1] : null,
       weeklySubsLost: row ? row[2] : null,

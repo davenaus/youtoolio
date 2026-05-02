@@ -248,6 +248,44 @@ const faqData = [
     ]
   },
     {
+      category: 'Chrome Extension',
+      icon: 'bx-extension',
+      questions: [
+        {
+          question: 'How do I install the YouTool Chrome Extension?',
+          answer: 'Search for "YouTool.io" in the Chrome Web Store and click "Add to Chrome". Once installed, the YouTool icon will appear in your browser toolbar. Click it to open the popup anytime you\'re on YouTube or YouTube Studio.'
+        },
+        {
+          question: 'How do I sign in to the extension with my YouTool account?',
+          answer: 'Open the extension popup and click "Sign in with Google". This uses the same account you use on YouTool.io — signing in once links your extension to your account so your settings sync across devices.'
+        },
+        {
+          question: 'How do I connect my YouTube channel to the extension?',
+          answer: 'Sign in to your YouTool.io account first, then go to your Account page on the website and click "Connect YouTube Channel". Once connected, your channel profile picture will appear in the extension popup and your 7-day subscriber and view stats will show in the stats bar at the top.'
+        },
+        {
+          question: 'What does the 7D stats pill in the extension show?',
+          answer: 'When your YouTube channel is connected, a stats pill appears at the top of the popup showing your net subscriber change and total views over the last 7 days. The "7D" label indicates this is a 7-day rolling total, not lifetime stats.'
+        },
+        {
+          question: 'What YouTube Studio features does the extension add?',
+          answer: 'The extension enhances YouTube Studio with additional analytics timeline options, extra columns on the content page, a real-time engaged view swapper, and Streamer Mode. Streamer Mode redacts your revenue, stats, and channel identity so you can screen-share without exposing sensitive numbers.'
+        },
+        {
+          question: 'What watch page features does the extension include?',
+          answer: 'On standard YouTube watch pages the extension adds a one-click screenshot capture, a Copy Transcript button, estimated dislike counts via Return YouTube Dislike, a monetization checker, theater mode toggle, loop button, playback speed controls (including unlock-any-speed), and options to hide Shorts, ads, chat, and end cards. There\'s also a URL cleaner that strips tracking parameters.'
+        },
+        {
+          question: 'What is the Deep Dark theme engine?',
+          answer: 'The Deep Dark theme engine lets you apply a custom dark theme to YouTube with presets and full color customization. You can choose from built-in presets or set your own accent colors to match your personal style.'
+        },
+        {
+          question: 'What are YouTool Tools in the extension popup?',
+          answer: 'YouTool Tools is a section in the extension popup that will offer channel-connected tools directly inside the extension. This feature is currently coming soon — it is not yet available but is actively being developed.'
+        }
+      ]
+    },
+    {
       category: 'Tools & Features',
       icon: 'bx-wrench',
       questions: [
