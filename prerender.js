@@ -4,10 +4,33 @@
 
 const { run } = require('react-snap');
 const fs = require('fs');
+const net = require('net');
 const { execSync } = require('child_process');
 
 const LOCAL_CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const hasLocalChrome = fs.existsSync(LOCAL_CHROME);
+
+function getAvailablePort() {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+
+    server.unref();
+    server.on('error', reject);
+    server.listen(0, () => {
+      const address = server.address();
+      const port = typeof address === 'object' && address ? address.port : null;
+
+      server.close(() => {
+        if (!port) {
+          reject(new Error('Could not find an available prerender port.'));
+          return;
+        }
+
+        resolve(port);
+      });
+    });
+  });
+}
 
 // On Linux CI (Vercel), install missing Chromium system dependencies
 if (!hasLocalChrome && process.platform === 'linux') {
@@ -96,7 +119,13 @@ if (hasLocalChrome) {
   console.log('Using puppeteer bundled Chromium for prerendering');
 }
 
-run(baseConfig).catch((err) => {
+async function main() {
+  baseConfig.port = await getAvailablePort();
+  console.log(`Using port ${baseConfig.port} for prerendering`);
+  await run(baseConfig);
+}
+
+main().catch((err) => {
   console.error('react-snap failed:', err);
   // Don't fail the whole build if prerendering fails
   // The site will still work as a standard SPA
