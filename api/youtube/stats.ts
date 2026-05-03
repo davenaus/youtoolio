@@ -30,10 +30,10 @@ function resolveAnalyticsDateRange(days: number): { startDate: string; endDate: 
   const todayStartMs = todayStart.getTime();
 
   if (days === 1) {
-    const yesterday = formatApiDate(todayStartMs - DAY_MS);
+    const twoDaysAgo = formatApiDate(todayStartMs - (2 * DAY_MS));
     return {
-      startDate: yesterday,
-      endDate: yesterday,
+      startDate: twoDaysAgo,
+      endDate: twoDaysAgo,
     };
   }
 
