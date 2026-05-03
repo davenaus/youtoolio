@@ -20,6 +20,29 @@ function resolveDayRange(value: any): number | null {
   return days;
 }
 
+function formatApiDate(timestamp: number): string {
+  return new Date(timestamp).toISOString().split('T')[0];
+}
+
+function resolveAnalyticsDateRange(days: number): { startDate: string; endDate: string } {
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+  const todayStartMs = todayStart.getTime();
+
+  if (days === 1) {
+    const yesterday = formatApiDate(todayStartMs - DAY_MS);
+    return {
+      startDate: yesterday,
+      endDate: yesterday,
+    };
+  }
+
+  return {
+    startDate: formatApiDate(todayStartMs - days * DAY_MS),
+    endDate: formatApiDate(todayStartMs),
+  };
+}
+
 async function resolveUserId(supabase: any, token: string): Promise<string | null> {
   // Try extension session token first
   const tokenHash = createHash('sha256').update(token).digest('hex');
@@ -110,10 +133,9 @@ const handler = async (req: any, res: any) => {
     const statistics = channelData.items?.[0]?.statistics;
 
     // Views + subscriber gain/loss from YouTube Analytics API for the selected range.
-    const today = new Date().toISOString().split('T')[0];
-    const startDate = new Date(Date.now() - days * DAY_MS).toISOString().split('T')[0];
+    const { startDate, endDate } = resolveAnalyticsDateRange(days);
     const analyticsRes = await fetch(
-      `https://youtubeanalytics.googleapis.com/v2/reports?ids=channel==MINE&startDate=${startDate}&endDate=${today}&metrics=views,subscribersGained,subscribersLost`,
+      `https://youtubeanalytics.googleapis.com/v2/reports?ids=channel==MINE&startDate=${startDate}&endDate=${endDate}&metrics=views,subscribersGained,subscribersLost`,
       { headers: { Authorization: `Bearer ${accessToken}` } }
     );
     const analyticsData = await analyticsRes.json();
@@ -122,6 +144,8 @@ const handler = async (req: any, res: any) => {
 
     return res.status(200).json({
       days,
+      startDate,
+      endDate,
       subscriberCount: statistics?.subscriberCount ? Number(statistics.subscriberCount) : null,
       periodViews: row ? row[0] : null,
       periodSubsGained: row ? row[1] : null,
