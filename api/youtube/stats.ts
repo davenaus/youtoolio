@@ -24,6 +24,12 @@ function formatApiDate(timestamp: number): string {
   return new Date(timestamp).toISOString().split('T')[0];
 }
 
+function shiftApiDate(date: string, days: number): string | null {
+  const timestamp = Date.parse(`${date}T00:00:00.000Z`);
+  if (Number.isNaN(timestamp)) return null;
+  return formatApiDate(timestamp + days * DAY_MS);
+}
+
 function resolveAnalyticsDateRange(days: number): {
   startDate: string;
   endDate: string;
@@ -123,7 +129,10 @@ function resolveTrendDays(days: number, analyticsData: any, reportedDate: string
   });
 
   if (days === 1) {
-    return rows.filter((row: any) => row.date === reportedDate);
+    const previousDate = reportedDate ? shiftApiDate(reportedDate, -1) : null;
+    return rows.filter((row: any) => {
+      return row.date === previousDate || row.date === reportedDate;
+    });
   }
 
   return rows;
