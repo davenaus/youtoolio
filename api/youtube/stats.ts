@@ -52,6 +52,8 @@ function resolveAnalyticsDateRange(days: number): {
   return {
     startDate: formatApiDate(todayStartMs - days * DAY_MS),
     endDate: formatApiDate(todayStartMs),
+    dimensions: 'day',
+    sort: 'day',
   };
 }
 
@@ -77,23 +79,54 @@ function resolveAnalyticsRow(days: number, analyticsData: any): {
   row: [number, number, number] | null;
   reportedDate: string | null;
 } {
-  if (days !== 1) {
+  const rows = normalizeDailyRows(analyticsData);
+
+  if (days === 1) {
+    const latestNonZeroRow = rows.find((row: any) => {
+      return row.views > 0 || row.subscribersGained > 0 || row.subscribersLost > 0;
+    });
+    const selectedRow = latestNonZeroRow || rows[0] || null;
+
     return {
-      row: analyticsData.rows?.[0] ?? null,
-      reportedDate: null,
+      row: selectedRow ? [selectedRow.views, selectedRow.subscribersGained, selectedRow.subscribersLost] : null,
+      reportedDate: selectedRow?.date || null,
     };
   }
 
-  const rows = Array.isArray(analyticsData.rows) ? analyticsData.rows : [];
-  const latestNonZeroRow = rows.find((row: any[]) => {
-    return Number(row?.[1] || 0) > 0 || Number(row?.[2] || 0) > 0 || Number(row?.[3] || 0) > 0;
-  });
-  const selectedRow = latestNonZeroRow || rows[0] || null;
+  const aggregate = rows.reduce((total: [number, number, number], row: any) => {
+    total[0] += row.views;
+    total[1] += row.subscribersGained;
+    total[2] += row.subscribersLost;
+    return total;
+  }, [0, 0, 0]);
 
   return {
-    row: selectedRow ? [Number(selectedRow[1] || 0), Number(selectedRow[2] || 0), Number(selectedRow[3] || 0)] : null,
-    reportedDate: selectedRow?.[0] || null,
+    row: rows.length ? aggregate : null,
+    reportedDate: null,
   };
+}
+
+function normalizeDailyRows(analyticsData: any) {
+  return (Array.isArray(analyticsData.rows) ? analyticsData.rows : [])
+    .map((row: any[]) => ({
+      date: String(row?.[0] || ''),
+      views: Number(row?.[1] || 0),
+      subscribersGained: Number(row?.[2] || 0),
+      subscribersLost: Number(row?.[3] || 0),
+    }))
+    .filter((row: any) => /^\d{4}-\d{2}-\d{2}$/.test(row.date));
+}
+
+function resolveTrendDays(days: number, analyticsData: any, reportedDate: string | null) {
+  const rows = normalizeDailyRows(analyticsData).sort((left: any, right: any) => {
+    return left.date.localeCompare(right.date);
+  });
+
+  if (days === 1) {
+    return rows.filter((row: any) => row.date === reportedDate);
+  }
+
+  return rows;
 }
 
 async function resolveUserId(supabase: any, token: string): Promise<string | null> {
@@ -197,11 +230,11 @@ const handler = async (req: any, res: any) => {
         message: analyticsData.error?.message || 'Could not load YouTube Analytics data.',
       });
     }
-    // Without dimensions=day, returns a single aggregate row: [views, subscribersGained, subscribersLost].
-    // With dimensions=day for 1D, rows are [day, views, subscribersGained, subscribersLost].
+    // With dimensions=day, rows are [day, views, subscribersGained, subscribersLost].
     const { row, reportedDate } = resolveAnalyticsRow(days, analyticsData);
     const startDate = reportedDate || range.startDate;
     const endDate = reportedDate || range.endDate;
+    const trendDays = resolveTrendDays(days, analyticsData, reportedDate);
 
     return res.status(200).json({
       days,
@@ -209,6 +242,7 @@ const handler = async (req: any, res: any) => {
       endDate,
       requestedStartDate: range.requestedStartDate,
       requestedEndDate: range.requestedEndDate,
+      trendDays,
       subscriberCount: statistics?.subscriberCount ? Number(statistics.subscriberCount) : null,
       periodViews: row ? row[0] : null,
       periodSubsGained: row ? row[1] : null,
