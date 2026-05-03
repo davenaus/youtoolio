@@ -24,22 +24,75 @@ function formatApiDate(timestamp: number): string {
   return new Date(timestamp).toISOString().split('T')[0];
 }
 
-function resolveAnalyticsDateRange(days: number): { startDate: string; endDate: string } {
+function resolveAnalyticsDateRange(days: number): {
+  startDate: string;
+  endDate: string;
+  requestedStartDate?: string;
+  requestedEndDate?: string;
+  dimensions?: string;
+  sort?: string;
+} {
   const todayStart = new Date();
   todayStart.setUTCHours(0, 0, 0, 0);
   const todayStartMs = todayStart.getTime();
 
   if (days === 1) {
-    const twoDaysAgo = formatApiDate(todayStartMs - (2 * DAY_MS));
+    const requestedStartDate = formatApiDate(todayStartMs - (14 * DAY_MS));
+    const requestedEndDate = formatApiDate(todayStartMs - (2 * DAY_MS));
     return {
-      startDate: twoDaysAgo,
-      endDate: twoDaysAgo,
+      startDate: requestedEndDate,
+      endDate: requestedEndDate,
+      requestedStartDate,
+      requestedEndDate,
+      dimensions: 'day',
+      sort: '-day',
     };
   }
 
   return {
     startDate: formatApiDate(todayStartMs - days * DAY_MS),
     endDate: formatApiDate(todayStartMs),
+  };
+}
+
+function buildAnalyticsUrl(range: ReturnType<typeof resolveAnalyticsDateRange>): string {
+  const url = new URL('https://youtubeanalytics.googleapis.com/v2/reports');
+  url.searchParams.set('ids', 'channel==MINE');
+  url.searchParams.set('startDate', range.requestedStartDate || range.startDate);
+  url.searchParams.set('endDate', range.requestedEndDate || range.endDate);
+  url.searchParams.set('metrics', 'views,subscribersGained,subscribersLost');
+
+  if (range.dimensions) {
+    url.searchParams.set('dimensions', range.dimensions);
+  }
+
+  if (range.sort) {
+    url.searchParams.set('sort', range.sort);
+  }
+
+  return url.toString();
+}
+
+function resolveAnalyticsRow(days: number, analyticsData: any): {
+  row: [number, number, number] | null;
+  reportedDate: string | null;
+} {
+  if (days !== 1) {
+    return {
+      row: analyticsData.rows?.[0] ?? null,
+      reportedDate: null,
+    };
+  }
+
+  const rows = Array.isArray(analyticsData.rows) ? analyticsData.rows : [];
+  const latestNonZeroRow = rows.find((row: any[]) => {
+    return Number(row?.[1] || 0) > 0 || Number(row?.[2] || 0) > 0 || Number(row?.[3] || 0) > 0;
+  });
+  const selectedRow = latestNonZeroRow || rows[0] || null;
+
+  return {
+    row: selectedRow ? [Number(selectedRow[1] || 0), Number(selectedRow[2] || 0), Number(selectedRow[3] || 0)] : null,
+    reportedDate: selectedRow?.[0] || null,
   };
 }
 
@@ -133,19 +186,29 @@ const handler = async (req: any, res: any) => {
     const statistics = channelData.items?.[0]?.statistics;
 
     // Views + subscriber gain/loss from YouTube Analytics API for the selected range.
-    const { startDate, endDate } = resolveAnalyticsDateRange(days);
-    const analyticsRes = await fetch(
-      `https://youtubeanalytics.googleapis.com/v2/reports?ids=channel==MINE&startDate=${startDate}&endDate=${endDate}&metrics=views,subscribersGained,subscribersLost`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    );
+    const range = resolveAnalyticsDateRange(days);
+    const analyticsRes = await fetch(buildAnalyticsUrl(range), {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
     const analyticsData = await analyticsRes.json();
-    // Without dimensions=day, returns a single aggregate row: [views, subscribersGained, subscribersLost]
-    const row: [number, number, number] | null = analyticsData.rows?.[0] ?? null;
+    if (!analyticsRes.ok || analyticsData.error) {
+      return res.status(502).json({
+        error: 'youtube_analytics_error',
+        message: analyticsData.error?.message || 'Could not load YouTube Analytics data.',
+      });
+    }
+    // Without dimensions=day, returns a single aggregate row: [views, subscribersGained, subscribersLost].
+    // With dimensions=day for 1D, rows are [day, views, subscribersGained, subscribersLost].
+    const { row, reportedDate } = resolveAnalyticsRow(days, analyticsData);
+    const startDate = reportedDate || range.startDate;
+    const endDate = reportedDate || range.endDate;
 
     return res.status(200).json({
       days,
       startDate,
       endDate,
+      requestedStartDate: range.requestedStartDate,
+      requestedEndDate: range.requestedEndDate,
       subscriberCount: statistics?.subscriberCount ? Number(statistics.subscriberCount) : null,
       periodViews: row ? row[0] : null,
       periodSubsGained: row ? row[1] : null,
