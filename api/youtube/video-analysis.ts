@@ -1,7 +1,7 @@
 // @ts-nocheck
 const { createClient } = require('@supabase/supabase-js');
 const { createHash } = require('crypto');
-const { buildVideoResearchEnhancements } = require('./research-utils');
+const { buildVideoResearchEnhancements } = require('../../lib/youtube-research-utils');
 
 const VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';

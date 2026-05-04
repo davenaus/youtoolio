@@ -1,7 +1,7 @@
 // @ts-nocheck
 const { createClient } = require('@supabase/supabase-js');
 const { createHash } = require('crypto');
-const { buildChannelResearchEnhancements } = require('./research-utils');
+const { buildChannelResearchEnhancements } = require('../../lib/youtube-research-utils');
 
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
 const AUTH_HEADER_PREFIX = 'Bearer ';
