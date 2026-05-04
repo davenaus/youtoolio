@@ -367,7 +367,205 @@ function analyzeChannelData(channelData: any, playlistData: any[], channelVideos
     consistencyBreakdown: consistency.breakdown,
     brandingBreakdown: branding.breakdown,
     recentVideoCount,
-    topVideos
+    topVideos,
+    research: buildChannelResearch(channelData, playlistData, channelVideos, {
+      overallScore,
+      seoScore: seo.score,
+      engagementScore: engagement.score,
+      consistencyScore: consistency.score,
+      brandingScore: branding.score,
+      achievements,
+      drawbacks,
+      topVideos,
+      recentVideoCount,
+      differenceInWeeks
+    })
+  };
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, Math.round(Number(value) || 0)));
+}
+
+function median(values: number[]): number {
+  const sorted = values.filter((value) => Number.isFinite(value)).sort((left, right) => left - right);
+  if (!sorted.length) return 0;
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function uniqueStrings(values: string[], limit = 8): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  values.forEach((value) => {
+    const normalized = String(value || '').replace(/\s+/g, ' ').trim();
+    const key = normalized.toLowerCase();
+    if (!normalized || seen.has(key)) return;
+    seen.add(key);
+    result.push(normalized);
+  });
+
+  return result.slice(0, limit);
+}
+
+function keywordTerms(value: string): string[] {
+  const stopWords = new Set([
+    'the', 'and', 'for', 'with', 'from', 'this', 'that', 'you', 'your', 'how', 'why', 'what',
+    'when', 'where', 'into', 'over', 'under', 'about', 'after', 'before', 'video', 'youtube',
+    'official', 'full', 'new', 'best', 'most', 'more', 'less', 'can', 'will', 'are', 'was'
+  ]);
+
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/\s+/)
+    .map((word) => word.trim())
+    .filter((word) => word.length > 2 && !stopWords.has(word));
+}
+
+function topTermsFromVideos(videos: any[], limit = 8): string[] {
+  const counts = new Map<string, number>();
+
+  videos.forEach((video) => {
+    const terms = [
+      ...keywordTerms(video.title),
+      ...(Array.isArray(video.tags) ? video.tags.flatMap((tag: string) => keywordTerms(tag)) : [])
+    ];
+
+    terms.forEach((term) => counts.set(term, (counts.get(term) || 0) + 1));
+  });
+
+  return [...counts.entries()]
+    .sort((left, right) => right[1] - left[1])
+    .map(([term]) => term)
+    .slice(0, limit);
+}
+
+function inferFormatFromTitle(title: string, durationSeconds = 0): string {
+  const normalized = String(title || '').toLowerCase();
+
+  if (durationSeconds > 0 && durationSeconds < 60) return 'short-form hook';
+  if (/\bhow to\b|\btutorial\b|\bguide\b|\bwalkthrough\b/.test(normalized)) return 'how-to guides';
+  if (/\breview\b|\btested\b|\btest\b|\bvs\b|\bcomparison\b/.test(normalized)) return 'reviews/comparisons';
+  if (/\bmistakes?\b|\bavoid\b|\bwrong\b/.test(normalized)) return 'mistake-focused videos';
+  if (/\bsecret\b|\btruth\b|\bhidden\b|\brevealed\b/.test(normalized)) return 'curiosity reveals';
+  if (/\btop\b|\bbest\b|\bworst\b|\branked\b/.test(normalized)) return 'ranked/list videos';
+  if (/\bday\b|\bweek\b|\bmonth\b|\bjourney\b|\bchallenge\b/.test(normalized)) return 'challenge/story videos';
+  return durationSeconds >= 480 ? 'deep-dive explainers' : 'focused topic videos';
+}
+
+function getOutlierVideos(channelVideos: any[], count = 6) {
+  const viewMedian = median(channelVideos.map((video) => Number(video.viewCount) || 0));
+  if (!viewMedian) return [];
+
+  return [...channelVideos]
+    .map((video) => ({
+      id: video.id,
+      title: video.title,
+      thumbnail: video.thumbnail,
+      views: video.viewCount,
+      outlierRatio: video.viewCount / viewMedian,
+      publishedAt: video.publishedAt,
+      format: inferFormatFromTitle(video.title, video.duration),
+      url: `https://www.youtube.com/watch?v=${video.id}`
+    }))
+    .filter((video) => video.outlierRatio >= 1.25)
+    .sort((left, right) => right.outlierRatio - left.outlierRatio)
+    .slice(0, count);
+}
+
+function getWinningFormats(outlierVideos: any[], topVideos: any[]): string[] {
+  const candidates = (outlierVideos.length ? outlierVideos : topVideos).map((video) => {
+    const format = video.format || inferFormatFromTitle(video.title, video.duration);
+    return `${format}: "${video.title}"`;
+  });
+
+  return uniqueStrings(candidates, 5);
+}
+
+function buildChannelIdeas(channelTitle: string, topicTerms: string[], formats: string[]): string[] {
+  const primary = topicTerms[0] || channelTitle || 'this niche';
+  const secondary = topicTerms[1] || 'a related audience problem';
+  const format = formats[0]?.split(':')[0] || 'focused topic video';
+
+  return uniqueStrings([
+    `Make a ${format} around "${primary}" for a narrower audience segment.`,
+    `Create a "mistakes to avoid" video around "${secondary}" and compare it to this channel's best performers.`,
+    `Turn the top recurring topic into a beginner version, advanced version, and short-form hook.`,
+    `Look for a recent outlier and make the opposite angle: myth vs truth, cheap vs expensive, fast vs deep.`,
+    `Build a series from the channel's strongest pattern, but swap in your own proof, personality, or niche example.`
+  ], 5);
+}
+
+function buildChannelResearch(channelData: any, playlistData: any[], channelVideos: any[], seed: any) {
+  const channelTitle = decodeHtmlEntities(channelData.snippet?.title || '');
+  const subscriberCount = toInt(channelData.statistics?.subscriberCount);
+  const videoCount = toInt(channelData.statistics?.videoCount);
+  const viewCount = toInt(channelData.statistics?.viewCount);
+  const avgViewsPerVideo = viewCount / Math.max(1, videoCount);
+  const recentUploads = Number(seed.recentVideoCount || 0);
+  const topVideos = Array.isArray(seed.topVideos) ? seed.topVideos : [];
+  const bestOutliers = getOutlierVideos(channelVideos, 6);
+  const topicTerms = topTermsFromVideos(bestOutliers.length ? bestOutliers : channelVideos, 10);
+  const winningFormats = getWinningFormats(bestOutliers, topVideos);
+  const outlierBoost = bestOutliers[0]?.outlierRatio >= 4 ? 26 : bestOutliers[0]?.outlierRatio >= 2 ? 18 : bestOutliers.length ? 10 : 0;
+  const momentumBoost = recentUploads >= 12 ? 14 : recentUploads >= 5 ? 9 : seed.differenceInWeeks <= 2 ? 5 : -6;
+  const engagementBoost = Number(seed.engagementScore || 0) >= 75 ? 16 : Number(seed.engagementScore || 0) >= 55 ? 10 : 4;
+  const consistencyBoost = Number(seed.consistencyScore || 0) >= 70 ? 10 : Number(seed.consistencyScore || 0) >= 45 ? 4 : -4;
+  const opportunityScore = clamp(38 + outlierBoost + momentumBoost + engagementBoost + consistencyBoost, 0, 100);
+  const competitorLevel = opportunityScore >= 78
+    ? 'Track closely'
+    : opportunityScore >= 62
+      ? 'Worth benchmarking'
+      : opportunityScore >= 45
+        ? 'Use as a reference'
+        : 'Low-priority competitor';
+  const nicheSignal = topicTerms.length
+    ? `Recurring topic signals: ${topicTerms.slice(0, 6).join(', ')}.`
+    : 'No strong repeated topic signal emerged from the sampled uploads.';
+
+  const whatToStudy = uniqueStrings([
+    bestOutliers[0]
+      ? `Start with "${bestOutliers[0].title}" because it is ${bestOutliers[0].outlierRatio.toFixed(1)}x above the sampled channel median.`
+      : topVideos[0]
+        ? `Start with "${topVideos[0].title}" because it is the strongest sampled performer.`
+        : '',
+    winningFormats[0] ? `Look for the repeatable structure behind ${winningFormats[0]}.` : '',
+    recentUploads >= 8
+      ? `The channel is active with ${recentUploads} recent uploads, so its patterns are fresh.`
+      : `The channel has only ${recentUploads} recent uploads, so gaps may exist for a more consistent creator.`,
+    avgViewsPerVideo > subscriberCount
+      ? 'Average views per video are strong relative to subscribers, which can signal discoverable topics beyond the core audience.'
+      : 'Compare their best videos against average uploads to avoid overvaluing one-off spikes.'
+  ], 5);
+
+  const contentGaps = uniqueStrings([
+    playlistData.length < 3 ? 'Playlist organization is thin, so a clearer series structure could compete well.' : '',
+    seed.seoScore < 65 ? 'SEO and metadata are not fully optimized, leaving room for cleaner titles, descriptions, and tags.' : '',
+    seed.consistencyScore < 55 ? 'Upload consistency is a weakness; a steadier creator could own the same lane.' : '',
+    topicTerms[0] ? `Make narrower versions of "${topicTerms[0]}" for specific viewer types or skill levels.` : '',
+    bestOutliers.length >= 3 ? 'Several outliers suggest a real content cluster, not just one lucky upload.' : ''
+  ], 5);
+
+  return {
+    opportunityScore,
+    competitorLevel,
+    nicheSignal,
+    whatToStudy,
+    winningFormats,
+    contentGaps,
+    ideaPrompts: buildChannelIdeas(channelTitle, topicTerms, winningFormats),
+    bestOutliers,
+    trackingNotes: uniqueStrings([
+      competitorLevel === 'Track closely'
+        ? 'Check this channel weekly for repeated topics and title patterns.'
+        : 'Use this channel as a comparison set when validating future video ideas.',
+      'Save the top outliers and compare thumbnails, title promises, upload timing, and comment language.',
+      subscriberCount < 100000 && bestOutliers.length
+        ? 'Smaller channel with visible outliers: useful for finding ideas that do not require massive authority.'
+        : ''
+    ], 4)
   };
 }
 

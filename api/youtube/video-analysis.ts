@@ -601,6 +601,204 @@ function generateInsights(videoData: any, contentAnalysis: any, scores: any, cha
   };
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, Math.round(Number(value) || 0)));
+}
+
+function median(values: number[]): number {
+  const sorted = values.filter((value) => Number.isFinite(value)).sort((left, right) => left - right);
+  if (!sorted.length) return 0;
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+function uniqueStrings(values: string[], limit = 8): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  values.forEach((value) => {
+    const normalized = String(value || '').replace(/\s+/g, ' ').trim();
+    const key = normalized.toLowerCase();
+    if (!normalized || seen.has(key)) return;
+    seen.add(key);
+    result.push(normalized);
+  });
+
+  return result.slice(0, limit);
+}
+
+function titleWords(title: string): string[] {
+  const stopWords = new Set([
+    'the', 'and', 'for', 'with', 'from', 'this', 'that', 'you', 'your', 'how', 'why', 'what',
+    'when', 'where', 'into', 'over', 'under', 'about', 'after', 'before', 'video', 'youtube',
+    'official', 'full', 'new', 'best', 'most', 'more', 'less', 'can', 'will', 'are', 'was'
+  ]);
+
+  return String(title || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/\s+/)
+    .map((word) => word.trim())
+    .filter((word) => word.length > 2 && !stopWords.has(word));
+}
+
+function extractTopicTerms(videoData: any, contentAnalysis: any): string[] {
+  const title = videoData.snippet?.title || '';
+  const tags = Array.isArray(contentAnalysis.tags) ? contentAnalysis.tags : [];
+  const titleTerms = titleWords(title);
+  const tagTerms = tags
+    .map((tag: string) => String(tag || '').trim())
+    .filter((tag: string) => tag.length > 2);
+
+  return uniqueStrings([...tagTerms, ...titleTerms], 10);
+}
+
+function inferFormat(title: string, durationSeconds: number): string {
+  const normalized = String(title || '').toLowerCase();
+
+  if (durationSeconds > 0 && durationSeconds < 60) return 'short-form hook';
+  if (/\bhow to\b|\btutorial\b|\bguide\b|\bwalkthrough\b/.test(normalized)) return 'how-to guide';
+  if (/\breview\b|\btested\b|\btest\b|\bvs\b|\bcomparison\b/.test(normalized)) return 'review/comparison';
+  if (/\bmistakes?\b|\bavoid\b|\bwrong\b/.test(normalized)) return 'mistake-avoidance angle';
+  if (/\bsecret\b|\btruth\b|\bhidden\b|\brevealed\b/.test(normalized)) return 'curiosity reveal';
+  if (/\btop\b|\bbest\b|\bworst\b|\branked\b/.test(normalized)) return 'ranked/list format';
+  if (/\bday\b|\bweek\b|\bmonth\b|\bjourney\b|\bchallenge\b/.test(normalized)) return 'challenge/story format';
+  return durationSeconds >= 480 ? 'deep-dive explainer' : 'focused topic video';
+}
+
+function describeTitlePattern(title: string, formatSignal: string): string {
+  const cleanTitle = String(title || '').replace(/\s+/g, ' ').trim();
+
+  if (/\?/.test(cleanTitle)) {
+    return `Question-led ${formatSignal}: it creates an open loop that invites viewers to resolve the curiosity.`;
+  }
+
+  if (/\d/.test(cleanTitle)) {
+    return `Numbered ${formatSignal}: it makes the promise feel specific and easy to evaluate.`;
+  }
+
+  if (/\bhow to\b/i.test(cleanTitle)) {
+    return `Outcome-led ${formatSignal}: it sells a clear transformation the viewer can use.`;
+  }
+
+  if (/\bwhy\b|\bsecret\b|\btruth\b|\bhidden\b/i.test(cleanTitle)) {
+    return `Curiosity-led ${formatSignal}: it frames the video around a knowledge gap.`;
+  }
+
+  return `Topic-led ${formatSignal}: it is direct enough to adapt into nearby niches or creator styles.`;
+}
+
+function buildIdeaPrompts(title: string, topicTerms: string[], formatSignal: string, isOutlier: boolean): string[] {
+  const primary = topicTerms[0] || 'this topic';
+  const secondary = topicTerms[1] || 'a related pain point';
+  const titleBase = String(title || '').replace(/\s+/g, ' ').trim();
+  const strength = isOutlier ? 'because this video already beat the channel baseline' : 'because the topic has visible demand';
+
+  return uniqueStrings([
+    `Make a ${formatSignal} for your audience around "${primary}" ${strength}.`,
+    `Turn "${secondary}" into a beginner-friendly version, an advanced version, and a mistake-focused version.`,
+    `Create a follow-up title that starts with "I tried..." or "I tested..." and keeps the same core promise.`,
+    `Reframe the idea for a narrower viewer: "for beginners", "for creators", "for small channels", or "in 2026".`,
+    titleBase ? `Study the title structure of "${titleBase}" and swap in a problem your audience already talks about.` : ''
+  ], 5);
+}
+
+function buildChannelOutliers(channelVideos: any[], currentVideoId: string) {
+  const comparable = channelVideos.filter((video) => video.id !== currentVideoId && Number(video.viewCount) > 0);
+  const channelMedian = median(comparable.map((video) => Number(video.viewCount) || 0));
+
+  if (!channelMedian) return [];
+
+  return comparable
+    .map((video) => ({
+      id: video.id,
+      title: video.title,
+      views: video.viewCount,
+      outlierRatio: video.viewCount / channelMedian,
+      publishedAt: video.publishedAt,
+      url: `https://youtube.com/watch?v=${video.id}`
+    }))
+    .filter((video) => video.outlierRatio >= 1.25)
+    .sort((left, right) => right.outlierRatio - left.outlierRatio)
+    .slice(0, 5);
+}
+
+function buildVideoResearch(videoData: any, channelData: any, channelVideos: any[], analysisSeed: any) {
+  const title = decodeHtmlEntities(videoData.snippet?.title || '');
+  const contentAnalysis = analysisSeed.contentAnalysis || {};
+  const channelMetrics = analysisSeed.channelMetrics || {};
+  const scores = analysisSeed.performanceScores || {};
+  const metrics = analysisSeed.basicMetrics || {};
+  const durationSeconds = analysisSeed.technicalDetails?.duration || parseDuration(videoData.contentDetails?.duration || '');
+  const topicTerms = extractTopicTerms(videoData, contentAnalysis);
+  const formatSignal = inferFormat(title, durationSeconds);
+  const outlierRatio = Number(channelMetrics.outlierRatio || 0);
+  const engagementRate = Number(metrics.engagementRate || 0);
+  const isOutlier = Boolean(channelMetrics.isOutlier);
+  const isUnderperformer = Boolean(channelMetrics.isUnderperformer);
+  const velocityBoost = channelMetrics.viewsComparison === 'above' ? 15 : channelMetrics.viewsComparison === 'below' ? -8 : 4;
+  const outlierBoost = outlierRatio >= 3 ? 30 : outlierRatio >= 2 ? 24 : outlierRatio >= 1.25 ? 12 : isUnderperformer ? -10 : 4;
+  const engagementBoost = engagementRate >= 0.06 ? 22 : engagementRate >= 0.04 ? 16 : engagementRate >= 0.02 ? 9 : 2;
+  const seoBoost = Number(scores.seoScore || 0) >= 65 ? 8 : 2;
+  const opportunityScore = clamp(42 + outlierBoost + engagementBoost + velocityBoost + seoBoost, 0, 100);
+  const opportunityLabel = opportunityScore >= 80
+    ? 'High-signal idea'
+    : opportunityScore >= 62
+      ? 'Worth studying'
+      : opportunityScore >= 45
+        ? 'Mixed signal'
+        : 'Weak opportunity';
+  const channelOutliers = buildChannelOutliers(channelVideos, videoData.id);
+  const studyReason = isOutlier
+    ? `This video is ${outlierRatio.toFixed(1)}x above the channel median, so the topic or packaging likely exposed demand beyond the usual audience.`
+    : isUnderperformer
+      ? `This video underperformed at ${outlierRatio.toFixed(1)}x the channel median, making it useful as a cautionary comparison.`
+      : channelMetrics.viewsComparison === 'above'
+        ? 'View velocity is above similar recent uploads, which can signal a timely topic or stronger packaging.'
+        : 'The video gives a useful baseline for what this channel can earn with this topic and format.';
+
+  const packagingNotes = uniqueStrings([
+    describeTitlePattern(title, formatSignal),
+    contentAnalysis.titleLength
+      ? `Title length is ${contentAnalysis.titleLength} characters, which helps judge whether the promise is tight or crowded.`
+      : '',
+    contentAnalysis.tagCount
+      ? `${contentAnalysis.tagCount} tags reveal search/context signals worth mining for adjacent ideas.`
+      : 'Few or no visible tags: the concept may be winning more from browse/packaging than metadata.',
+    channelMetrics.bestPerformingVideo?.title
+      ? `Compare against the channel's best recent performer: "${channelMetrics.bestPerformingVideo.title}".`
+      : ''
+  ], 5);
+
+  return {
+    opportunityScore,
+    opportunityLabel,
+    studyReason,
+    repeatablePattern: describeTitlePattern(title, formatSignal),
+    competitorSignal: opportunityScore >= 70
+      ? 'Track this creator or topic cluster. The signal is strong enough to watch for repeat uploads.'
+      : 'Use this as a reference point, but confirm with more videos before treating it as a competitor trend.',
+    nicheSignal: topicTerms.length
+      ? `Likely niche signals: ${topicTerms.slice(0, 5).join(', ')}.`
+      : 'No clear niche terms surfaced from the title/tags, so study the thumbnail and comments for context.',
+    packagingNotes,
+    ideaPrompts: buildIdeaPrompts(title, topicTerms, formatSignal, isOutlier),
+    anglesToTest: uniqueStrings([
+      `A beginner version of ${topicTerms[0] || 'this idea'}`,
+      `A contrarian version that challenges the main assumption`,
+      `A "mistakes to avoid" version for the same audience`,
+      `A faster short-form hook that leads into a longer companion video`
+    ], 4),
+    relatedTopics: topicTerms.slice(0, 8),
+    channelOutliers,
+    riskNotes: uniqueStrings([
+      isUnderperformer ? 'Do not copy the topic blindly; this upload may show weak demand or weak packaging.' : '',
+      engagementRate < 0.02 ? 'Engagement is light, so views may not equal durable audience interest.' : '',
+      channelVideos.length < 8 ? 'Small comparison sample. Treat the outlier call as directional.' : ''
+    ], 3)
+  };
+}
+
 async function performAnalysis(videoData: any, channelData: any, channelVideos: any[], apiKey: string) {
   const contentAnalysis = analyzeContent(videoData);
   const durationSeconds = parseDuration(videoData.contentDetails?.duration || '');
@@ -711,8 +909,7 @@ async function performAnalysis(videoData: any, channelData: any, channelVideos: 
   };
   const categoryName = await fetchCategoryName(videoData.snippet?.categoryId || '', apiKey);
   const insights = generateInsights(videoData, contentAnalysis, scores, channelMetrics);
-
-  return {
+  const analysisSeed = {
     basicMetrics: {
       views: currentViews,
       likes: toInt(videoData.statistics?.likeCount),
@@ -741,6 +938,11 @@ async function performAnalysis(videoData: any, channelData: any, channelVideos: 
     channelMetrics,
     performanceScores: scores,
     insights
+  };
+
+  return {
+    ...analysisSeed,
+    research: buildVideoResearch(videoData, channelData, channelVideos, analysisSeed)
   };
 }
 
