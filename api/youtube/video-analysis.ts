@@ -1,6 +1,7 @@
 // @ts-nocheck
 const { createClient } = require('@supabase/supabase-js');
 const { createHash } = require('crypto');
+const { buildVideoResearchEnhancements } = require('./research-utils');
 
 const VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
@@ -166,11 +167,13 @@ async function fetchChannelVideos(channelId: string, apiKey: string, maxResults 
     return (videosData.items || []).map((video: any) => ({
       id: video.id,
       title: decodeHtmlEntities(video.snippet?.title || ''),
+      description: decodeHtmlEntities(video.snippet?.description || ''),
       publishedAt: video.snippet?.publishedAt || '',
       viewCount: toInt(video.statistics?.viewCount),
       likeCount: toInt(video.statistics?.likeCount),
       commentCount: toInt(video.statistics?.commentCount),
       thumbnails: video.snippet?.thumbnails || {},
+      tags: video.snippet?.tags || [],
       duration: parseDuration(video.contentDetails?.duration || '')
     }));
   } catch (error) {
@@ -741,6 +744,15 @@ function buildVideoResearch(videoData: any, channelData: any, channelVideos: any
   const engagementBoost = engagementRate >= 0.06 ? 22 : engagementRate >= 0.04 ? 16 : engagementRate >= 0.02 ? 9 : 2;
   const seoBoost = Number(scores.seoScore || 0) >= 65 ? 8 : 2;
   const opportunityScore = clamp(42 + outlierBoost + engagementBoost + velocityBoost + seoBoost, 0, 100);
+  const enhancements = buildVideoResearchEnhancements({
+    videoData,
+    channelData,
+    channelVideos,
+    analysisSeed,
+    topicTerms,
+    formatSignal,
+    opportunityScore
+  });
   const opportunityLabel = opportunityScore >= 80
     ? 'High-signal idea'
     : opportunityScore >= 62
@@ -769,6 +781,9 @@ function buildVideoResearch(videoData: any, channelData: any, channelVideos: any
       ? `Compare against the channel's best recent performer: "${channelMetrics.bestPerformingVideo.title}".`
       : ''
   ], 5);
+  const dynamicPrompts = Array.isArray(enhancements.dynamicRecommendations)
+    ? enhancements.dynamicRecommendations
+    : [];
 
   return {
     opportunityScore,
@@ -781,8 +796,12 @@ function buildVideoResearch(videoData: any, channelData: any, channelVideos: any
     nicheSignal: topicTerms.length
       ? `Likely niche signals: ${topicTerms.slice(0, 5).join(', ')}.`
       : 'No clear niche terms surfaced from the title/tags, so study the thumbnail and comments for context.',
+    ...enhancements,
     packagingNotes,
-    ideaPrompts: buildIdeaPrompts(title, topicTerms, formatSignal, isOutlier),
+    ideaPrompts: uniqueStrings([
+      ...dynamicPrompts,
+      ...buildIdeaPrompts(title, topicTerms, formatSignal, isOutlier)
+    ], 6),
     anglesToTest: uniqueStrings([
       `A beginner version of ${topicTerms[0] || 'this idea'}`,
       `A contrarian version that challenges the main assumption`,

@@ -1,6 +1,7 @@
 // @ts-nocheck
 const { createClient } = require('@supabase/supabase-js');
 const { createHash } = require('crypto');
+const { buildChannelResearchEnhancements } = require('./research-utils');
 
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
 const AUTH_HEADER_PREFIX = 'Bearer ';
@@ -524,6 +525,12 @@ function buildChannelResearch(channelData: any, playlistData: any[], channelVide
   const nicheSignal = topicTerms.length
     ? `Recurring topic signals: ${topicTerms.slice(0, 6).join(', ')}.`
     : 'No strong repeated topic signal emerged from the sampled uploads.';
+  const enhancements = buildChannelResearchEnhancements({
+    channelData,
+    playlistData,
+    channelVideos,
+    seed
+  });
 
   const whatToStudy = uniqueStrings([
     bestOutliers[0]
@@ -552,10 +559,14 @@ function buildChannelResearch(channelData: any, playlistData: any[], channelVide
     opportunityScore,
     competitorLevel,
     nicheSignal,
+    ...enhancements,
     whatToStudy,
     winningFormats,
     contentGaps,
-    ideaPrompts: buildChannelIdeas(channelTitle, topicTerms, winningFormats),
+    ideaPrompts: uniqueStrings([
+      ...(Array.isArray(enhancements.dynamicRecommendations) ? enhancements.dynamicRecommendations : []),
+      ...buildChannelIdeas(channelTitle, topicTerms, winningFormats)
+    ], 7),
     bestOutliers,
     trackingNotes: uniqueStrings([
       competitorLevel === 'Track closely'
