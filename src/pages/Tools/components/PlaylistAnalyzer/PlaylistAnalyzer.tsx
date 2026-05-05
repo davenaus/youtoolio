@@ -79,8 +79,6 @@ interface PlaylistAnalysis {
   videosWithTags: number;
   tagCoverage: number;
 
-  // Recommendations
-  recommendations: string[];
   insights: string[];
 }
 
@@ -393,7 +391,7 @@ export const PlaylistAnalyzer: React.FC = () => {
     const dominantChannelShare = dominantChannelVideoCount / filteredVideos.length;
     const viewSpreadRatio = mostViewedVideo.views / Math.max(avgViewsPerVideo, 1);
 
-    // Generate insights and recommendations
+    // Generate insights
     const insights = generateInsights(filteredVideos, channels, {
       avgViewsPerVideo,
       medianViewsPerVideo,
@@ -403,14 +401,6 @@ export const PlaylistAnalyzer: React.FC = () => {
       dominantChannelShare,
       tagCoverage,
       viewSpreadRatio
-    });
-
-    const recommendations = generateRecommendations(filteredVideos, {
-      engagementRate,
-      tagCoverage,
-      viewSpreadRatio,
-      dominantChannelShare,
-      totalChannels: channels.size
     });
 
     return {
@@ -448,7 +438,6 @@ export const PlaylistAnalyzer: React.FC = () => {
       uploadPattern,
       videosWithTags,
       tagCoverage,
-      recommendations,
       insights
     };
   };
@@ -484,37 +473,6 @@ export const PlaylistAnalyzer: React.FC = () => {
     }
 
     return insights;
-  };
-
-  const generateRecommendations = (videos: VideoData[], metrics: any): string[] => {
-    const recommendations: string[] = [];
-
-    if (metrics.viewSpreadRatio >= 3) {
-      recommendations.push(`Use the most-viewed video as the benchmark: it is ${metrics.viewSpreadRatio.toFixed(1)}x above the playlist average.`);
-    }
-
-    if (metrics.tagCoverage < 0.5) {
-      recommendations.push(`Only ${(metrics.tagCoverage * 100).toFixed(0)}% of videos include public tags, so compare title wording and description structure when looking for patterns.`);
-    }
-
-    if (metrics.totalChannels > 1 && metrics.dominantChannelShare > 0.6) {
-      recommendations.push(`The dominant channel makes up ${(metrics.dominantChannelShare * 100).toFixed(0)}% of the playlist; compare its videos against the rest before drawing category-wide conclusions.`);
-    }
-
-    if (metrics.engagementRate < 0.02) {
-      recommendations.push("Use comments and likes as secondary signals here because engagement is low relative to total views.");
-    }
-
-    const shortVideos = videos.filter(v => convertDurationToSeconds(v.duration) < 60).length;
-    const longVideos = videos.filter(v => convertDurationToSeconds(v.duration) > 600).length;
-
-    if (shortVideos > longVideos * 2) {
-      recommendations.push("Consider adding some longer-form content for better watch time");
-    } else if (longVideos > shortVideos * 2) {
-      recommendations.push("Mix in some shorter videos for better audience retention");
-    }
-
-    return recommendations;
   };
 
   const handleSearch = () => {
@@ -594,7 +552,6 @@ export const PlaylistAnalyzer: React.FC = () => {
         mostCommented: analysis.mostCommentedVideo.title
       },
       insights: analysis.insights,
-      recommendations: analysis.recommendations,
       exportedAt: new Date().toISOString()
     };
 
@@ -783,7 +740,7 @@ export const PlaylistAnalyzer: React.FC = () => {
             <S.EducationalText>
               Our Playlist Analyzer provides comprehensive insights into any YouTube playlist's performance,
               content distribution, and audience engagement patterns. Discover trends, identify top performers,
-              and understand what makes playlists successful with detailed analytics and actionable recommendations.
+              and understand what makes playlists successful with detailed analytics and clear data context.
             </S.EducationalText>
 
             <S.StepByStep>
@@ -814,10 +771,10 @@ export const PlaylistAnalyzer: React.FC = () => {
               <S.StepItem>
                 <S.StepNumberCircle>3</S.StepNumberCircle>
                 <S.StepContent>
-                  <S.PlaylistAnalyzerStepTitle>Review Insights & Recommendations</S.PlaylistAnalyzerStepTitle>
+                  <S.PlaylistAnalyzerStepTitle>Review Data Insights</S.PlaylistAnalyzerStepTitle>
                   <S.EducationalText>
                     Examine playlist totals, averages, outliers, channel distribution, and content
-                    patterns. Use the insights and recommendations to optimize playlist organization,
+                    patterns. Use the insights to optimize playlist organization,
                     identify content gaps, and improve overall playlist performance.
                   </S.EducationalText>
                 </S.StepContent>
@@ -1072,23 +1029,6 @@ export const PlaylistAnalyzer: React.FC = () => {
                   ))}
                 </S.InsightsList>
               </S.InsightsSection>
-            )}
-
-            {analysis.recommendations.length > 0 && (
-              <S.RecommendationsSection>
-                <S.SectionTitle>
-                  <i className="bx bx-star"></i>
-                  Recommendations
-                </S.SectionTitle>
-                <S.RecommendationsList>
-                  {analysis.recommendations.map((recommendation, index) => (
-                    <S.RecommendationItem key={index}>
-                      <i className="bx bx-right-arrow-alt"></i>
-                      {recommendation}
-                    </S.RecommendationItem>
-                  ))}
-                </S.RecommendationsList>
-              </S.RecommendationsSection>
             )}
 
             <S.VideoSection>

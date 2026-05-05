@@ -853,37 +853,6 @@ export const InsightItem = styled.div`
   }
 `;
 
-export const RecommendationsSection = styled.div`
-  background: ${({ theme }) => theme.colors.dark3};
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-`;
-
-export const RecommendationsList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`;
-
-export const RecommendationItem = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: ${({ theme }) => theme.colors.dark4};
-  border-radius: ${({ theme }) => theme.borderRadius.lg};
-  border-left: 3px solid ${({ theme }) => theme.colors.warning || '#ff9800'};
-  
-  i {
-    color: ${({ theme }) => theme.colors.warning || '#ff9800'};
-    font-size: 1.25rem;
-    margin-top: 0.1rem;
-    flex-shrink: 0;
-  }
-`;
-
 export const VideoSection = styled.div`
   background: ${({ theme }) => theme.colors.dark3};
   border: 1px solid ${({ theme }) => theme.colors.dark5};
