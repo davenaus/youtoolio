@@ -2,7 +2,7 @@ import styled from 'styled-components';
 
 export const Card = styled.div`
   position: relative;
-  background: ${({ theme }) => theme.colors.dark3};
+  background: linear-gradient(180deg, ${({ theme }) => theme.colors.dark3}, ${({ theme }) => theme.colors.dark4});
   border: 1px solid ${({ theme }) => theme.colors.dark5};
   border-radius: 16px;
   padding: ${({ theme }) => theme.spacing.lg};
@@ -27,17 +27,17 @@ export const CategoryBadge = styled.div<{ color: string }>`
   border-radius: 999px;
   font-size: 0.7rem;
   font-weight: 600;
-  background: ${props => `${props.color}20`};
+  background: ${props => `${props.color}18`};
   color: ${props => props.color};
-  border: 1px solid ${props => `${props.color}40`};
+  border: 1px solid ${props => `${props.color}35`};
 `;
 
 export const IconBox = styled.div<{ color: string }>`
   width: 50px;
   height: 50px;
   border-radius: 12px;
-  background: linear-gradient(135deg, ${props => props.color}30, ${props => props.color}10);
-  border: 1px solid ${props => `${props.color}40`};
+  background: linear-gradient(135deg, ${props => props.color}26, rgba(125, 0, 0, 0.12));
+  border: 1px solid ${props => `${props.color}35`};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -45,6 +45,7 @@ export const IconBox = styled.div<{ color: string }>`
   i {
     font-size: 1.5rem;
     color: ${props => props.color};
+    text-shadow: 0 0 18px ${props => `${props.color}45`};
   }
 `;
 

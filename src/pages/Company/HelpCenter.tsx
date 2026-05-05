@@ -261,27 +261,43 @@ const faqData = [
         },
         {
           question: 'How do I connect my YouTube channel to the extension?',
-          answer: 'Sign in to your YouTool.io account first, then go to your Account page on the website and click "Connect YouTube Channel". Once connected, your channel profile picture will appear in the extension popup and your 7-day subscriber and view stats will show in the stats bar at the top.'
+          answer: 'Sign in to your YouTool.io account first, then open the extension popup and use the Connect YouTube button in the YouTool Tools section, or go to your Account page on the website and click "Connect YouTube Channel". Once connected, your channel profile picture appears in the popup, the stats bar unlocks, and the YouTool Tools toggles become available.'
         },
         {
-          question: 'What does the 7D stats pill in the extension show?',
-          answer: 'When your YouTube channel is connected, a stats pill appears at the top of the popup showing your net subscriber change and total views over the last 7 days. The "7D" label indicates this is a 7-day rolling total, not lifetime stats.'
+          question: 'What do the 1D, 7D, and 30D stats in the extension show?',
+          answer: 'When your YouTube channel is connected, the popup shows net subscriber change and views for the selected range. Click the range pill to switch between 1D, 7D, and 30D. The popup remembers your selected range and caches each range locally once per day so stats load quickly after the first fetch.'
+        },
+        {
+          question: 'How does the channel trend graph work?',
+          answer: 'After your channel stats load, click the small arrow attached to the stats pill to expand the trend graph. It shows subscribers and views for the selected 1D, 7D, or 30D range, and hover points reveal the date and values. If you change the range while the graph is open, it stays open and redraws with the new data.'
         },
         {
           question: 'What YouTube Studio features does the extension add?',
-          answer: 'The extension enhances YouTube Studio with additional analytics timeline options, extra columns on the content page, a real-time engaged view swapper, and Streamer Mode. Streamer Mode redacts your revenue, stats, and channel identity so you can screen-share without exposing sensitive numbers.'
+          answer: 'The extension enhances YouTube Studio with dashboard customization, extra analytics timeline options, extra content-page columns, a real-time engaged views option, and Streamer Mode. Streamer Mode redacts thumbnails, titles, channel identity, revenue, stats, and audience panels so you can screen-share more safely.'
         },
         {
           question: 'What watch page features does the extension include?',
-          answer: 'On standard YouTube watch pages the extension adds a one-click screenshot capture, a Copy Transcript button, estimated dislike counts via Return YouTube Dislike, a monetization checker, theater mode toggle, loop button, playback speed controls (including unlock-any-speed), and options to hide Shorts, ads, chat, and end cards. There\'s also a URL cleaner that strips tracking parameters.'
-        },
-        {
-          question: 'What is the Deep Dark theme engine?',
-          answer: 'The Deep Dark theme engine lets you apply a custom dark theme to YouTube with presets and full color customization. You can choose from built-in presets or set your own accent colors to match your personal style.'
+          answer: 'On YouTube watch pages the extension can add screenshot capture, one-click transcript copying, copy description, copy tags, thumbnail download, video analyzer, channel analyzer, estimated dislikes via Return YouTube Dislike, monetization checks, loop controls, theater mode, speed controls, and URL cleanup. Most of these can be toggled on or off from the popup.'
         },
         {
           question: 'What are YouTool Tools in the extension popup?',
-          answer: 'YouTool Tools is a section in the extension popup that will offer channel-connected tools directly inside the extension. This feature is currently coming soon — it is not yet available but is actively being developed.'
+          answer: 'YouTool Tools controls the YouTool actions added inside YouTube. You can enable Thumbnail Downloader, Video Analyzer, and Channel Analyzer buttons. These tools appear in the YouTool floating menu on watch pages after the feature is enabled, and channel-connected tools require your YouTube channel to be connected.'
+        },
+        {
+          question: 'How does Copy Transcript work?',
+          answer: 'Enable Copy Transcript in the popup, then use the YouTool menu on a YouTube video. The extension opens the transcript when needed, copies the transcript text automatically, and cleans the copied text so timestamps and repeated transcript UI labels are easier to read.'
+        },
+        {
+          question: 'What can the extension hide on YouTube?',
+          answer: 'The popup includes hide controls for Shorts areas, home page ads, live chat, end screen cards, watch page comments, home news popups, YouTube Playables promos, and watch page recommendations. These settings are designed to make YouTube cleaner when you are researching, screen-sharing, or trying to focus.'
+        },
+        {
+          question: 'What playback controls are available?',
+          answer: 'The Playback section includes a dedicated loop button, automatic theater mode, forced playback speed, unlock-any-speed player buttons, Shorts speed control, and Shorts auto scroll. You can also set the exact player speed and the step size used by the speed buttons.'
+        },
+        {
+          question: 'What is the Custom Theme feature?',
+          answer: 'Custom Theme applies a YouTube theme override. You can choose YouTube Dark, Enhancer for YouTube, YouTube Deep Dark, or YouTube Deep Dark Custom, then pick a variant or set your own accent, background, hover, text, and shadow colors.'
         }
       ]
     },
@@ -309,11 +325,11 @@ const faqData = [
       questions: [
         {
           question: 'Do you store my YouTube data?',
-          answer: 'We don\'t permanently store your YouTube data. When you analyze content, we fetch the data in real-time from YouTube\'s API and display it to you immediately. Only your search history is saved locally in your browser for your convenience. Read our Privacy Policy for complete details.'
+          answer: 'We don\'t permanently store your YouTube analytics data for the extension. When the popup needs your connected-channel stats, it calls the YouTool.io API, which pulls the data from YouTube for your signed-in account. The extension then caches the returned 1D, 7D, or 30D stats locally in Chrome once per day so the popup loads quickly without calling the API every time.'
         },
         {
           question: 'Is my data safe and secure?',
-          answer: 'Absolutely! We only access publicly available YouTube data through official APIs. We never ask for your YouTube login credentials or access private information. All data transmission is encrypted via HTTPS, and we follow strict privacy practices outlined in our Privacy Policy.'
+          answer: 'Absolutely. We use Google sign-in and YouTube\'s official APIs, and we never ask for your YouTube password. Website and extension requests use HTTPS. Extension settings, selected stats range, and daily stats cache are stored in Chrome storage so your preferences persist between popup opens.'
         },
         {
           question: 'Can I delete my search history?',

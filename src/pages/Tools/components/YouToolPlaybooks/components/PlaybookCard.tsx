@@ -17,14 +17,14 @@ interface PlaybookCardProps {
 const PlaybookCard: React.FC<PlaybookCardProps> = ({ playbook, onGenerate }) => {
   const getCategoryColor = (category: string): string => {
     const colorMap: Record<string, string> = {
-      'Content Creation': '#3B82F6',
-      'Strategy & Planning': '#10B981',
-      'Competitive & Trend Analysis': '#F59E0B',
-      'Audience & Community': '#8B5CF6',
-      'Technical Optimization': '#EF4444',
-      'Website Building': '#06B6D4'
+      'Content Creation': '#E54848',
+      'Strategy & Planning': '#B91C1C',
+      'Competitive & Trend Analysis': '#FF8A8A',
+      'Audience & Community': '#D1D5DB',
+      'Technical Optimization': '#7D0000',
+      'Website Building': '#ADB5BD'
     };
-    return colorMap[category] || '#6B7280';
+    return colorMap[category] || '#E54848';
   };
 
   return (

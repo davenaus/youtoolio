@@ -280,7 +280,7 @@ export const SuccessHeader = styled.div`
   gap: ${({ theme }) => theme.spacing.sm};
   font-size: 1.1rem;
   font-weight: 600;
-  color: ${({ theme }) => theme.colors.success};
+  color: ${({ theme }) => theme.colors.red5};
   margin-bottom: ${({ theme }) => theme.spacing.lg};
 
   i {
@@ -289,8 +289,8 @@ export const SuccessHeader = styled.div`
 `;
 
 export const PromptDisplay = styled.div`
-  background: #0a0a0a;
-  border: 2px solid #00ff00;
+  background: #0d0707;
+  border: 2px solid ${({ theme }) => theme.colors.red4};
   border-radius: 8px;
   padding: ${({ theme }) => theme.spacing.lg};
   max-height: 400px;
@@ -308,7 +308,7 @@ export const PromptDisplay = styled.div`
     background: linear-gradient(
       to bottom,
       transparent 50%,
-      rgba(0, 255, 0, 0.03) 50%
+      rgba(229, 72, 72, 0.04) 50%
     );
     background-size: 100% 4px;
     pointer-events: none;
@@ -326,7 +326,7 @@ export const PromptDisplay = styled.div`
     background: linear-gradient(
       to bottom,
       transparent,
-      rgba(0, 255, 0, 0.1),
+      rgba(229, 72, 72, 0.14),
       transparent
     );
     pointer-events: none;
@@ -340,29 +340,29 @@ export const PromptDisplay = styled.div`
   }
 
   &::-webkit-scrollbar-track {
-    background: #0a0a0a;
+    background: #0d0707;
     border-radius: 4px;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #00ff00;
+    background: ${({ theme }) => theme.colors.red4};
     border-radius: 4px;
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: #00cc00;
+    background: ${({ theme }) => theme.colors.red5};
   }
 `;
 
 export const TerminalText = styled.pre<{ isGenerating?: boolean }>`
   font-family: 'Courier New', monospace;
   font-size: 0.85rem;
-  color: #00ff00;
+  color: ${({ theme }) => theme.colors.red6};
   line-height: 1.6;
   white-space: pre-wrap;
   word-wrap: break-word;
   margin: 0;
-  text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+  text-shadow: 0 0 8px rgba(229, 72, 72, 0.45);
   position: relative;
   z-index: 3;
 
@@ -370,7 +370,7 @@ export const TerminalText = styled.pre<{ isGenerating?: boolean }>`
     &::after {
       content: '▋';
       animation: ${cursorBlink} 1s step-end infinite;
-      color: #00ff00;
+      color: ${({ theme }) => theme.colors.red5};
     }
   `}
 `;

@@ -60,7 +60,7 @@ export const EduFeatureListItem = styled.li`
   font-size: 0.9rem;
 
   i {
-    color: #10b981;
+    color: #e54848;
     font-size: 1.1rem;
     margin-top: 0.1rem;
     flex-shrink: 0;
