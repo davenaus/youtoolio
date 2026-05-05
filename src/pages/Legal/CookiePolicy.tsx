@@ -246,6 +246,7 @@ export const CookiePolicy: React.FC = () => {
           </p>
           <ul>
             <li><strong>Essential Functionality:</strong> To provide core features and maintain your session</li>
+            <li><strong>Authentication:</strong> To keep you signed in to your YouTool.io account and complete extension connection flows</li>
             <li><strong>Analytics:</strong> To understand how users interact with our tools</li>
             <li><strong>Preferences:</strong> To remember your settings and search history</li>
             <li><strong>Performance:</strong> To optimize loading times and user experience</li>
@@ -259,11 +260,11 @@ export const CookiePolicy: React.FC = () => {
               <CookieStatus status="required">Required</CookieStatus>
             </CookieHeader>
             <CookieDescription>
-              These cookies are necessary for the website to function properly. They enable basic features like page navigation and security.
+              These cookies and browser storage entries are necessary for the website to function properly. They enable basic features like page navigation, security, account sign-in, and extension connection flows.
             </CookieDescription>
             <CookieDetails>
-              <DetailRow><strong>Purpose:</strong> <span>Session management, security, basic functionality</span></DetailRow>
-              <DetailRow><strong>Duration:</strong> <span>Session or until browser is closed</span></DetailRow>
+              <DetailRow><strong>Purpose:</strong> <span>Session management, account authentication, security, basic functionality</span></DetailRow>
+              <DetailRow><strong>Duration:</strong> <span>Session, until browser is closed, or until sign-out/token expiration depending on the auth flow</span></DetailRow>
               <DetailRow><strong>Can be disabled:</strong> <span>No - required for site operation</span></DetailRow>
             </CookieDetails>
           </CookieCard>
@@ -306,8 +307,20 @@ export const CookiePolicy: React.FC = () => {
           <ul>
             <li><strong>Search History:</strong> Your recent searches for convenience</li>
             <li><strong>Tool Preferences:</strong> Settings and filters you've applied</li>
+            <li><strong>Account and Auth Flow State:</strong> Temporary sign-in redirects, Supabase session state, and extension connection return paths</li>
             <li><strong>Session Data:</strong> Temporary data during your visit</li>
             <li><strong>Cache:</strong> Temporary storage to improve performance</li>
+          </ul>
+
+          <h2>Chrome Extension Storage</h2>
+          <p>
+            The YouTool.io Chrome extension uses Chrome storage, which is separate from website cookies, to remember extension settings and speed up the popup experience.
+          </p>
+          <ul>
+            <li><strong>Feature Settings:</strong> Enabled tools, hide controls, playback settings, and theme choices</li>
+            <li><strong>Extension Auth State:</strong> Tokens used to keep the extension linked to your YouTool.io account</li>
+            <li><strong>Stats Preferences:</strong> Selected 1D, 7D, or 30D stats range</li>
+            <li><strong>Daily Stats Cache:</strong> Connected-channel stats cached locally once per day for faster loading</li>
           </ul>
 
           <h2>Third-Party Cookies</h2>
@@ -315,7 +328,10 @@ export const CookiePolicy: React.FC = () => {
             Some cookies on our site are set by third-party services:
           </p>
           <ul>
+            <li><strong>Supabase:</strong> For account authentication and session handling</li>
+            <li><strong>Google OAuth:</strong> For Google sign-in and YouTube channel authorization</li>
             <li><strong>Google Analytics:</strong> For website analytics and usage tracking</li>
+            <li><strong>Google AdSense:</strong> For advertising where ads are displayed</li>
             <li><strong>Vercel Analytics:</strong> For performance monitoring</li>
             <li><strong>YouTube API:</strong> For accessing video and channel data</li>
           </ul>
@@ -343,7 +359,7 @@ export const CookiePolicy: React.FC = () => {
             <div style={{ background: '#242428', padding: '1rem', borderRadius: '8px', margin: '1rem 0' }}>
               <p><strong>Clear Stored Data:</strong></p>
               <p style={{ fontSize: '0.9rem', color: '#9CA3AF' }}>
-                This will remove all locally stored data including search history, preferences, and cached information.
+                This will remove website data stored in this browser, including search history, preferences, and cached information. It does not delete server-side account records or Chrome extension storage.
               </p>
               <button
                 onClick={clearAllCookies}

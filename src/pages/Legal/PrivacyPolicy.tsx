@@ -153,7 +153,7 @@ export const PrivacyPolicy: React.FC = () => {
         <Content>
           <h2>Introduction</h2>
           <p>
-            Welcome to YouTool.io ("we," "our," or "us"). This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our YouTube analytics tools. We are committed to protecting your privacy and ensuring transparency about our data practices.
+            Welcome to YouTool.io ("we," "our," or "us"). This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website, use our YouTube analytics tools, sign in to your account, connect a YouTube channel, or use the YouTool.io Chrome extension. We are committed to protecting your privacy and ensuring transparency about our data practices.
           </p>
 
           <h2>Information We Collect</h2>
@@ -163,6 +163,7 @@ export const PrivacyPolicy: React.FC = () => {
             <li><strong>YouTube URLs and IDs:</strong> When you use our tools, you provide YouTube video URLs, channel URLs, or IDs for analysis</li>
             <li><strong>Search Queries:</strong> Keywords and search terms you enter into our tools</li>
             <li><strong>Tool Usage Data:</strong> Information about which tools you use and how you interact with them</li>
+            <li><strong>Contact Information:</strong> Name, email address, topic, and message content you submit through our contact form</li>
           </ul>
 
           <h3>Information Collected Automatically</h3>
@@ -173,9 +174,19 @@ export const PrivacyPolicy: React.FC = () => {
             <li><strong>Cookies and Local Storage:</strong> Preferences, session data, and analytics information</li>
           </ul>
 
+          <h3>Account, Extension, and Connected Channel Information</h3>
+          <ul>
+            <li><strong>Account Profile:</strong> If you sign in with Google, we receive basic profile information such as your name, email address, avatar, and Google account identifier through Supabase authentication</li>
+            <li><strong>Extension Session Data:</strong> When you link the Chrome extension to your YouTool.io account, we create extension session records, token hashes, expiration dates, revocation status, user agent, and last-used timestamps</li>
+            <li><strong>Connected YouTube Channel:</strong> If you choose to connect your YouTube channel, we store your channel ID, channel title, thumbnail URL, authorized scopes, token expiration time, and OAuth tokens needed to refresh your connection</li>
+            <li><strong>Extension Settings:</strong> The extension stores enabled features, theme choices, selected stats range, and daily stats cache locally in Chrome storage on your device</li>
+          </ul>
+
           <h3>Third-Party Data</h3>
           <ul>
-            <li><strong>YouTube API Data:</strong> Public information retrieved from YouTube's API including video metadata, channel statistics, and public comments</li>
+            <li><strong>YouTube API Data:</strong> Public information retrieved from YouTube's API including video metadata, channel statistics, playlist data, thumbnails, tags, descriptions, and public comments</li>
+            <li><strong>YouTube Analytics Data:</strong> If you connect your own channel, we use your authorization to retrieve read-only channel analytics such as views and subscriber changes for selected date ranges</li>
+            <li><strong>YouTube Page Content:</strong> The extension may read the current YouTube page URL, video ID, channel ID, title, transcript, description, tags, thumbnail, or visible page signals when you enable or use related features</li>
             <li><strong>Analytics Services:</strong> Data from Google Analytics, Vercel Analytics, and other measurement tools</li>
           </ul>
 
@@ -186,7 +197,8 @@ export const PrivacyPolicy: React.FC = () => {
             <li>Analyze YouTube videos, channels, and playlists you request</li>
             <li>Generate SEO insights, tags, and optimization recommendations</li>
             <li>Provide analytics and performance metrics</li>
-            <li>Save your search history for convenience (stored locally)</li>
+            <li>Power connected-channel stats, channel trend graphs, video analysis, channel analysis, transcript copying, screenshots, thumbnail downloads, and YouTube customization features</li>
+            <li>Save your search history, preferences, and extension settings for convenience where applicable</li>
           </ul>
 
           <h3>Service Improvement</h3>
@@ -202,6 +214,7 @@ export const PrivacyPolicy: React.FC = () => {
             <li>Respond to user inquiries and support requests</li>
             <li>Send important service updates and announcements</li>
             <li>Provide technical support and troubleshooting</li>
+            <li>Authenticate your website account and linked extension sessions</li>
           </ul>
 
           <h2>Data Sharing and Disclosure</h2>
@@ -210,9 +223,11 @@ export const PrivacyPolicy: React.FC = () => {
 
           <h3>Service Providers</h3>
           <ul>
-            <li><strong>YouTube API:</strong> We use YouTube's API to retrieve public data for analysis</li>
+            <li><strong>Supabase:</strong> We use Supabase for authentication, account profiles, extension session records, and connected YouTube channel connection records</li>
+            <li><strong>Google OAuth and YouTube APIs:</strong> We use Google sign-in, YouTube Data API, and YouTube Analytics API to authenticate users and provide requested creator tools</li>
             <li><strong>Analytics Providers:</strong> Google Analytics, Vercel Analytics for usage statistics</li>
             <li><strong>Hosting Services:</strong> Vercel for website hosting and performance</li>
+            <li><strong>Return YouTube Dislike:</strong> If you enable dislike estimates, the extension requests dislike data for the current YouTube video from Return YouTube Dislike</li>
           </ul>
 
           <h3>Legal Requirements</h3>
@@ -221,8 +236,12 @@ export const PrivacyPolicy: React.FC = () => {
           <h2>Data Retention</h2>
           <ul>
             <li><strong>Search History:</strong> Stored locally in your browser and can be cleared at any time</li>
+            <li><strong>Account Profile:</strong> Stored while your YouTool.io account remains active or until deletion is requested</li>
+            <li><strong>Extension Sessions:</strong> Stored while the extension is linked to your account and may be revoked when you sign out or disconnect the extension</li>
+            <li><strong>YouTube Connection Records:</strong> Stored while your channel remains connected. Disconnecting your channel marks the connection as disconnected and stops use of the stored tokens for new requests</li>
+            <li><strong>Extension Stats Cache:</strong> Stored locally in Chrome storage once per day for the selected 1D, 7D, or 30D range so the popup can load quickly</li>
             <li><strong>Analytics Data:</strong> Aggregated usage data retained for service improvement</li>
-            <li><strong>YouTube API Data:</strong> Not permanently stored; retrieved in real-time for analysis</li>
+            <li><strong>Tool Results:</strong> Video analysis, channel analysis, and connected-channel stats are generally retrieved and returned in real time. We do not use those results to build a permanent database of your analytics history unless a feature clearly states otherwise</li>
             <li><strong>Session Data:</strong> Cleared when you close your browser or end your session</li>
           </ul>
 
@@ -233,6 +252,8 @@ export const PrivacyPolicy: React.FC = () => {
             <li>Clear your local search history through browser settings</li>
             <li>Disable cookies through your browser preferences</li>
             <li>Opt out of analytics tracking using browser extensions</li>
+            <li>Disconnect your YouTube channel from your account page</li>
+            <li>Sign out of or uninstall the Chrome extension to stop extension-side collection</li>
             <li>Contact us to request information about data we may have collected</li>
           </ul>
 
@@ -247,7 +268,8 @@ export const PrivacyPolicy: React.FC = () => {
             <li>Secure hosting infrastructure with Vercel</li>
             <li>Regular security updates and monitoring</li>
             <li>Limited data collection and retention practices</li>
-            <li>No storage of sensitive personal information</li>
+            <li>No collection of YouTube passwords</li>
+            <li>Restricted access to authentication and YouTube connection records used to provide account and extension features</li>
           </ul>
 
           <h2>Third-Party Services</h2>
@@ -255,7 +277,12 @@ export const PrivacyPolicy: React.FC = () => {
           <h3>YouTube API Services</h3>
           <p>
             Our use of YouTube API Services is governed by the <a href="https://developers.google.com/youtube/terms/api-services-terms-of-service" target="_blank" rel="noopener noreferrer">YouTube API Services Terms of Service</a>. 
-            We only access publicly available data and do not store personal information from YouTube.
+            Public tools access public YouTube data. If you connect your own channel, we use your authorization to access read-only YouTube channel and analytics data needed to show your connected-channel stats and related creator tools.
+          </p>
+
+          <h3>Chrome Web Store Limited Use</h3>
+          <p>
+            The use of information received from Google APIs will adhere to the Chrome Web Store User Data Policy, including the Limited Use requirements. We use Google API data only to provide and improve YouTool.io creator tools, do not sell that data, do not use it for personalized advertising, and do not use it to determine creditworthiness or for lending purposes.
           </p>
 
           <h3>Google Services</h3>

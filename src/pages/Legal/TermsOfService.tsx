@@ -186,6 +186,8 @@ export const TermsOfService: React.FC = () => {
             <li>SEO research and keyword analysis</li>
             <li>Content optimization recommendations</li>
             <li>Performance tracking and insights</li>
+            <li>Account-based YouTube channel connection and read-only channel analytics features</li>
+            <li>Chrome extension tools for YouTube and YouTube Studio workflows</li>
             <li>Educational resources for content creators</li>
           </ul>
 
@@ -218,6 +220,7 @@ export const TermsOfService: React.FC = () => {
             <li>Only access publicly available information</li>
             <li>Respect content creators' rights and privacy</li>
             <li>Use data responsibly and ethically</li>
+            <li>Authorize YouTool.io only for channels and Google accounts you have the right to connect</li>
           </ul>
 
           <h2>User Responsibilities</h2>
@@ -225,6 +228,7 @@ export const TermsOfService: React.FC = () => {
           <h3>Account Security</h3>
           <ul>
             <li>You are responsible for maintaining the security of your access to our service</li>
+            <li>You are responsible for activity that occurs through your signed-in account or linked extension session</li>
             <li>Report any unauthorized use immediately</li>
             <li>Keep your browser and security software updated</li>
           </ul>
@@ -243,7 +247,8 @@ export const TermsOfService: React.FC = () => {
           </p>
           <ul>
             <li>We only collect data necessary for service functionality</li>
-            <li>We do not store personal YouTube account information</li>
+            <li>If you sign in or connect a YouTube channel, we store account, extension session, and YouTube connection records needed to provide those features</li>
+            <li>We do not collect your YouTube password</li>
             <li>Search history is stored locally in your browser</li>
             <li>We use analytics to improve our service</li>
           </ul>

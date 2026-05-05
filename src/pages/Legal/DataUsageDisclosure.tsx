@@ -254,7 +254,7 @@ export const DataUsageDisclosure: React.FC = () => {
                 <td>YouTube URLs/IDs</td>
                 <td>User Input</td>
                 <td>Tool Functionality</td>
-                <td>Not Stored</td>
+                <td>Processed for requested tools; some history may be stored locally in your browser</td>
               </tr>
               <tr>
                 <td>Search Queries</td>
@@ -278,18 +278,42 @@ export const DataUsageDisclosure: React.FC = () => {
                 <td>Public YouTube Data</td>
                 <td>YouTube API</td>
                 <td>Analysis</td>
-                <td>Real-time Only</td>
+                <td>Returned for requested analyses; not used to build a permanent analytics-history database</td>
+              </tr>
+              <tr>
+                <td>Account Profile</td>
+                <td>Google Sign-In / Supabase</td>
+                <td>Account and Extension Authentication</td>
+                <td>While account is active or until deletion is requested</td>
+              </tr>
+              <tr>
+                <td>Extension Session Records</td>
+                <td>Chrome Extension / Supabase</td>
+                <td>Keep the extension linked to your account</td>
+                <td>Until revoked, expired, or no longer needed</td>
+              </tr>
+              <tr>
+                <td>Connected Channel Records</td>
+                <td>Google OAuth / YouTube APIs</td>
+                <td>Connected-channel stats and creator tools</td>
+                <td>Until you disconnect your YouTube channel or request deletion</td>
+              </tr>
+              <tr>
+                <td>Extension Settings and Cache</td>
+                <td>Chrome Storage</td>
+                <td>Remember settings and load stats faster</td>
+                <td>Local to your browser until cleared or extension is removed</td>
               </tr>
             </tbody>
           </DataTable>
 
           <h3>What We Don't Collect</h3>
           <ul>
-            <li><strong>Personal YouTube Account Data:</strong> We never access your private YouTube information</li>
-            <li><strong>Login Credentials:</strong> No passwords or authentication tokens are stored</li>
+            <li><strong>YouTube Passwords:</strong> We never ask for or collect your YouTube password</li>
+            <li><strong>Payment Details:</strong> We do not collect credit card, banking, or payment account details through the extension</li>
             <li><strong>Private Videos:</strong> Only publicly available content is analyzed</li>
             <li><strong>Personal Communications:</strong> No emails, messages, or private data</li>
-            <li><strong>Financial Information:</strong> No payment or banking details</li>
+            <li><strong>Credit Decisions:</strong> We do not use data to determine creditworthiness or for lending purposes</li>
             <li><strong>Location Tracking:</strong> No precise geolocation data</li>
           </ul>
 
@@ -301,7 +325,7 @@ export const DataUsageDisclosure: React.FC = () => {
             <FlowStep>
               <StepNumber>1</StepNumber>
               <StepDescription>
-                <strong>Input:</strong> You provide a YouTube URL or search query through our interface
+                <strong>Input:</strong> You provide a YouTube URL/search query, or the extension reads the current YouTube page when you use an enabled feature
               </StepDescription>
             </FlowStep>
             
@@ -315,7 +339,7 @@ export const DataUsageDisclosure: React.FC = () => {
             <FlowStep>
               <StepNumber>3</StepNumber>
               <StepDescription>
-                <strong>API Request:</strong> We query YouTube's public API for the requested data
+                <strong>API Request:</strong> We query YouTube's public API for public content or, for connected-channel features, use your read-only authorization to request your channel analytics
               </StepDescription>
             </FlowStep>
             
@@ -336,10 +360,32 @@ export const DataUsageDisclosure: React.FC = () => {
             <FlowStep>
               <StepNumber>6</StepNumber>
               <StepDescription>
-                <strong>Storage:</strong> Only your search history is saved locally in your browser
+                <strong>Storage:</strong> Public tool inputs are generally handled for the requested result. Account profiles, extension session records, YouTube connection records, local preferences, and local extension stats cache may be stored as described in this disclosure.
               </StepDescription>
             </FlowStep>
           </DataFlowCard>
+
+          <h2>Account and Extension Data</h2>
+          <p>
+            Some newer YouTool.io features are account-based and use server-side infrastructure. These features are optional, but they require account and connection records to function.
+          </p>
+          <ul>
+            <li><strong>Google Sign-In:</strong> Supabase authentication receives basic Google profile information such as your name, email address, avatar, and account identifier</li>
+            <li><strong>Profiles:</strong> We store basic account profile fields so your account page and extension connection can identify your account</li>
+            <li><strong>Extension Sessions:</strong> We store hashed extension tokens, expiration dates, revocation status, extension ID, user agent, and last-used timestamps so the extension can stay linked without asking you to sign in every time</li>
+            <li><strong>Chrome Storage:</strong> The extension stores feature toggles, theme settings, selected stats range, authentication state, and a once-daily local stats cache on your device</li>
+          </ul>
+
+          <h2>Connected YouTube Channel Data</h2>
+          <p>
+            If you choose to connect your YouTube channel, YouTool.io uses Google OAuth with read-only YouTube and YouTube Analytics scopes. We store the connection record so you do not need to reconnect on every visit.
+          </p>
+          <ul>
+            <li><strong>Stored Connection Fields:</strong> Google subject ID, YouTube channel ID, channel title, channel thumbnail URL, authorized scopes, access token, refresh token, token expiration time, update time, and disconnect status</li>
+            <li><strong>Stats Requests:</strong> When the extension popup loads connected-channel stats, our API requests channel subscriber count plus YouTube Analytics metrics such as views, subscribers gained, and subscribers lost for the selected 1D, 7D, or 30D range</li>
+            <li><strong>Analysis Requests:</strong> Video and channel analyzer features request public YouTube metadata and statistics for the video or channel you ask to analyze</li>
+            <li><strong>Disconnection:</strong> You can disconnect your YouTube channel from the Account page. After disconnection, the connection is marked inactive and not used for new stats requests</li>
+          </ul>
 
           <h2>YouTube API Data Usage</h2>
           
@@ -348,11 +394,12 @@ export const DataUsageDisclosure: React.FC = () => {
             Our use of YouTube data is strictly governed by the <a href="https://developers.google.com/youtube/terms/api-services-terms-of-service" target="_blank" rel="noopener noreferrer">YouTube API Services Terms of Service</a>:
           </p>
           <ul>
-            <li>We only access publicly available information</li>
-            <li>No private or restricted content is accessed</li>
+            <li>Public website tools access publicly available information</li>
+            <li>Connected-channel features access read-only data you authorize through Google OAuth</li>
             <li>Data is used solely for analytics and insights</li>
             <li>We comply with all YouTube API quotas and rate limits</li>
-            <li>No data is cached beyond the session duration</li>
+            <li>Extension stats may be cached locally in Chrome storage once per day for faster loading</li>
+            <li>We do not sell YouTube API data or use it for personalized advertising</li>
           </ul>
 
           <h3>Types of YouTube Data Accessed</h3>
@@ -362,7 +409,13 @@ export const DataUsageDisclosure: React.FC = () => {
             <li><strong>Channel Information:</strong> Names, subscriber counts, creation dates</li>
             <li><strong>Public Comments:</strong> Text content of publicly visible comments</li>
             <li><strong>Playlist Data:</strong> Public playlist contents and metadata</li>
+            <li><strong>Connected Channel Analytics:</strong> Views and subscriber gain/loss metrics for your own connected channel when you authorize that access</li>
           </ul>
+
+          <h3>Chrome Web Store Limited Use</h3>
+          <p>
+            The use of information received from Google APIs will adhere to the Chrome Web Store User Data Policy, including the Limited Use requirements. We use this data only to provide and improve YouTool.io creator tools, do not sell it, do not use it for personalized advertising, and do not use it to determine creditworthiness or for lending purposes.
+          </p>
 
           <h2>Analytics and Tracking</h2>
           
@@ -393,13 +446,14 @@ export const DataUsageDisclosure: React.FC = () => {
           
           <h3>Browser Storage</h3>
           <p>
-            We use your browser's local storage for:
+            We use your browser's local storage and Chrome extension storage for:
           </p>
           <ul>
             <li><strong>Search History:</strong> Your recent searches for quick access</li>
             <li><strong>Tool Preferences:</strong> Filter settings and display options</li>
             <li><strong>Session Data:</strong> Temporary data during your visit</li>
             <li><strong>Performance Cache:</strong> Improved loading times</li>
+            <li><strong>Extension Settings:</strong> Enabled tools, custom theme, playback settings, hide controls, selected stats range, and local daily stats cache</li>
           </ul>
 
           <h3>Control Over Local Data</h3>
@@ -436,8 +490,9 @@ export const DataUsageDisclosure: React.FC = () => {
           <ul>
             <li><strong>HTTPS Encryption:</strong> All data transmission is encrypted</li>
             <li><strong>Secure Hosting:</strong> Infrastructure provided by Vercel with enterprise security</li>
-            <li><strong>API Security:</strong> YouTube API keys are properly secured</li>
-            <li><strong>No Database:</strong> We don't maintain a database of user information</li>
+            <li><strong>Database Provider:</strong> Account, extension session, and YouTube connection records are stored in Supabase</li>
+            <li><strong>Token Handling:</strong> Extension session tokens are stored server-side as hashes; YouTube OAuth tokens are used only to provide connected-channel features</li>
+            <li><strong>API Security:</strong> YouTube API keys and service credentials are stored server-side</li>
           </ul>
 
           <h3>Access Controls</h3>
@@ -455,6 +510,7 @@ export const DataUsageDisclosure: React.FC = () => {
             <li><strong>Transparency:</strong> This disclosure provides complete visibility</li>
             <li><strong>Local Access:</strong> You can view all locally stored data through browser tools</li>
             <li><strong>Limited Collection:</strong> We minimize data collection to essential functions</li>
+            <li><strong>Disconnect Controls:</strong> You can disconnect your YouTube channel from your Account page and sign out of the extension from the extension popup</li>
           </ul>
 
           <h3>Control Options</h3>
@@ -472,13 +528,16 @@ export const DataUsageDisclosure: React.FC = () => {
             <li><strong>Analytics Data:</strong> Aggregated usage statistics for service improvement</li>
             <li><strong>Error Logs:</strong> Technical logs for debugging and performance monitoring</li>
             <li><strong>Security Logs:</strong> Access logs for security monitoring</li>
+            <li><strong>Account Records:</strong> Basic profile records for signed-in users</li>
+            <li><strong>Extension Session Records:</strong> Session hashes, expiration, revocation, and last-used timestamps</li>
+            <li><strong>YouTube Connection Records:</strong> Connected-channel metadata and OAuth tokens while your channel remains connected</li>
           </ul>
 
           <h3>What We Delete</h3>
           <ul>
-            <li><strong>Individual Requests:</strong> Not stored beyond the session</li>
-            <li><strong>Personal Identifiers:</strong> No permanent storage of personal data</li>
-            <li><strong>YouTube Data:</strong> Retrieved in real-time, not cached</li>
+            <li><strong>Individual Public Tool Results:</strong> Generally returned in real time and not used to build a permanent history of every analysis result</li>
+            <li><strong>Disconnected Channel Use:</strong> Once disconnected, the stored connection is marked inactive and is not used for new YouTube API requests</li>
+            <li><strong>Local Extension Cache:</strong> Can be cleared by clearing extension storage or removing the extension</li>
           </ul>
 
           <h2>International Data Transfers</h2>
