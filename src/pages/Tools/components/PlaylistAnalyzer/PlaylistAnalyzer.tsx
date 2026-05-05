@@ -923,11 +923,6 @@ export const PlaylistAnalyzer: React.FC = () => {
                 <S.DataSummaryNote>{analysis.dominantChannelVideoCount} videos from {analysis.dominantChannel.title}</S.DataSummaryNote>
               </S.DataSummaryCard>
               <S.DataSummaryCard>
-                <S.DataSummaryLabel>Tag Coverage</S.DataSummaryLabel>
-                <S.DataSummaryValue>{(analysis.tagCoverage * 100).toFixed(0)}%</S.DataSummaryValue>
-                <S.DataSummaryNote>{analysis.videosWithTags} of {analysis.totalVideos} videos expose tags</S.DataSummaryNote>
-              </S.DataSummaryCard>
-              <S.DataSummaryCard>
                 <S.DataSummaryLabel>Upload Cadence</S.DataSummaryLabel>
                 <S.DataSummaryValue>{analysis.avgUploadFrequency.toFixed(1)}/mo</S.DataSummaryValue>
                 <S.DataSummaryNote>Average videos per month in this set</S.DataSummaryNote>
