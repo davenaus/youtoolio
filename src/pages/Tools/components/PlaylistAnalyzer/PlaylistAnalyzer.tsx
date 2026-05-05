@@ -51,8 +51,10 @@ interface PlaylistAnalysis {
   avgViewsPerVideo: number;
   avgLikesPerVideo: number;
   avgCommentsPerVideo: number;
+  avgDurationPerVideo: number;
+  medianViewsPerVideo: number;
   engagementRate: number;
-  performanceScore: number;
+  viewSpreadRatio: number;
 
   // Content Analysis
   mostViewedVideo: VideoData;
@@ -65,6 +67,8 @@ interface PlaylistAnalysis {
   // Channel Analysis
   channels: Map<string, ChannelInfo>;
   dominantChannel: ChannelInfo;
+  dominantChannelVideoCount: number;
+  dominantChannelShare: number;
   channelDiversity: number;
 
   // Content Distribution
@@ -72,11 +76,8 @@ interface PlaylistAnalysis {
   categories: [string, number][];
   languages: [string, number][];
   uploadPattern: { [key: string]: number };
-
-  // Quality Metrics
-  qualityScore: number;
-  consistencyScore: number;
-  discoverabilityScore: number;
+  videosWithTags: number;
+  tagCoverage: number;
 
   // Recommendations
   recommendations: string[];
@@ -196,6 +197,9 @@ export const PlaylistAnalyzer: React.FC = () => {
     }
     return `${minutes}m ${remainingSeconds}s`;
   };
+
+  const formatDate = (date: Date): string =>
+    date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   const fetchPlaylistInfo = async (playlistId: string) => {
     const response = await fetch(
@@ -335,6 +339,14 @@ export const PlaylistAnalyzer: React.FC = () => {
 
     // Performance metrics
     const avgViewsPerVideo = totalViews / filteredVideos.length;
+    const avgLikesPerVideo = totalLikes / filteredVideos.length;
+    const avgCommentsPerVideo = totalComments / filteredVideos.length;
+    const avgDurationPerVideo = totalDuration / filteredVideos.length;
+    const sortedViews = filteredVideos.map(v => v.views).sort((a, b) => a - b);
+    const medianIndex = Math.floor(sortedViews.length / 2);
+    const medianViewsPerVideo = sortedViews.length % 2 === 0
+      ? (sortedViews[medianIndex - 1] + sortedViews[medianIndex]) / 2
+      : sortedViews[medianIndex];
     const engagementRate = (totalLikes + totalComments) / Math.max(totalViews, 1);
 
     // Find extremes
@@ -365,6 +377,9 @@ export const PlaylistAnalyzer: React.FC = () => {
       uploadPattern[month] = (uploadPattern[month] || 0) + 1;
     });
 
+    const videosWithTags = filteredVideos.filter(video => video.tags.length > 0).length;
+    const tagCoverage = videosWithTags / filteredVideos.length;
+
     // Channel analysis
     const channelVideoCount: { [key: string]: number } = {};
     filteredVideos.forEach(video => {
@@ -374,25 +389,28 @@ export const PlaylistAnalyzer: React.FC = () => {
     const dominantChannelId = Object.entries(channelVideoCount)
       .reduce((max, [id, count]) => count > max[1] ? [id, count] : max, ['', 0])[0];
     const dominantChannel = channels.get(dominantChannelId);
-
-    // Quality scores
-    const qualityScore = Math.min(100, (avgViewsPerVideo / 10000) * 50 + (engagementRate * 1000) * 50);
-    const consistencyScore = Math.min(100, (1 - (Math.abs(avgViewsPerVideo - mostViewedVideo.views) / avgViewsPerVideo)) * 100);
-    const discoverabilityScore = Math.min(100, Object.keys(tagCount).length * 2);
+    const dominantChannelVideoCount = channelVideoCount[dominantChannelId] || 0;
+    const dominantChannelShare = dominantChannelVideoCount / filteredVideos.length;
+    const viewSpreadRatio = mostViewedVideo.views / Math.max(avgViewsPerVideo, 1);
 
     // Generate insights and recommendations
     const insights = generateInsights(filteredVideos, channels, {
       avgViewsPerVideo,
+      medianViewsPerVideo,
       engagementRate,
       timeSpan,
-      channelDiversity: channels.size / filteredVideos.length
+      channelDiversity: channels.size / filteredVideos.length,
+      dominantChannelShare,
+      tagCoverage,
+      viewSpreadRatio
     });
 
     const recommendations = generateRecommendations(filteredVideos, {
-      qualityScore,
-      consistencyScore,
-      discoverabilityScore,
-      engagementRate
+      engagementRate,
+      tagCoverage,
+      viewSpreadRatio,
+      dominantChannelShare,
+      totalChannels: channels.size
     });
 
     return {
@@ -407,10 +425,12 @@ export const PlaylistAnalyzer: React.FC = () => {
       timeSpan,
       avgUploadFrequency: (filteredVideos.length / Math.max(timeSpan / 30, 1)),
       avgViewsPerVideo,
-      avgLikesPerVideo: totalLikes / filteredVideos.length,
-      avgCommentsPerVideo: totalComments / filteredVideos.length,
+      avgLikesPerVideo,
+      avgCommentsPerVideo,
+      avgDurationPerVideo,
+      medianViewsPerVideo,
       engagementRate,
-      performanceScore: (qualityScore + consistencyScore + discoverabilityScore) / 3,
+      viewSpreadRatio,
       mostViewedVideo,
       leastViewedVideo,
       mostLikedVideo,
@@ -419,14 +439,15 @@ export const PlaylistAnalyzer: React.FC = () => {
       shortestVideo,
       channels,
       dominantChannel: dominantChannel!,
+      dominantChannelVideoCount,
+      dominantChannelShare,
       channelDiversity: channels.size / filteredVideos.length,
       topTags: Object.entries(tagCount).sort((a, b) => b[1] - a[1]).slice(0, 10),
       categories: Object.entries(categoryCount).sort((a, b) => b[1] - a[1]),
       languages: Object.entries(languageCount).sort((a, b) => b[1] - a[1]),
       uploadPattern,
-      qualityScore,
-      consistencyScore,
-      discoverabilityScore,
+      videosWithTags,
+      tagCoverage,
       recommendations,
       insights
     };
@@ -436,48 +457,52 @@ export const PlaylistAnalyzer: React.FC = () => {
     const insights: string[] = [];
 
     if (metrics.engagementRate > 0.05) {
-      insights.push("High engagement rate indicates quality content that resonates with viewers");
+      insights.push(`Likes and comments equal ${(metrics.engagementRate * 100).toFixed(2)}% of total views, which points to unusually active viewer response.`);
     } else if (metrics.engagementRate < 0.01) {
-      insights.push("Low engagement rate suggests content may need optimization for audience connection");
+      insights.push(`Likes and comments equal ${(metrics.engagementRate * 100).toFixed(2)}% of total views, so view volume is carrying more of the playlist's performance than interaction.`);
     }
 
     if (metrics.channelDiversity > 0.1) {
-      insights.push("Good channel diversity provides varied perspectives and content styles");
+      insights.push(`${channels.size} channels contribute to this playlist, giving it a wider source mix than a single-channel collection.`);
     } else {
-      insights.push("Content is dominated by few channels - consider diversifying sources");
+      insights.push(`One channel supplies ${(metrics.dominantChannelShare * 100).toFixed(0)}% of the videos, so the playlist is concentrated around a small source set.`);
     }
 
     if (metrics.timeSpan > 365) {
-      insights.push("Long timespan shows historical content evolution and trends");
+      insights.push(`The playlist spans ${(metrics.timeSpan / 365).toFixed(1)} years, which makes older-vs-newer video comparison useful.`);
     }
 
     const viewVariance = videos.reduce((sum, v) => sum + Math.pow(v.views - metrics.avgViewsPerVideo, 2), 0) / videos.length;
     if (viewVariance < metrics.avgViewsPerVideo * 0.5) {
-      insights.push("Consistent view performance across videos indicates stable audience interest");
+      insights.push("Views are distributed fairly evenly across the playlist instead of relying on one breakout video.");
     } else {
-      insights.push("High view variance suggests some viral hits alongside regular content");
+      insights.push(`The top video has ${metrics.viewSpreadRatio.toFixed(1)}x the average playlist views, making it the clearest outlier to study first.`);
+    }
+
+    if (metrics.tagCoverage < 0.5) {
+      insights.push(`Only ${(metrics.tagCoverage * 100).toFixed(0)}% of videos expose tags, so titles, descriptions, and categories carry more of the analysis.`);
     }
 
     return insights;
   };
 
-  const generateRecommendations = (videos: VideoData[], scores: any): string[] => {
+  const generateRecommendations = (videos: VideoData[], metrics: any): string[] => {
     const recommendations: string[] = [];
 
-    if (scores.qualityScore < 50) {
-      recommendations.push("Focus on higher-quality content to improve view performance");
+    if (metrics.viewSpreadRatio >= 3) {
+      recommendations.push(`Use the most-viewed video as the benchmark: it is ${metrics.viewSpreadRatio.toFixed(1)}x above the playlist average.`);
     }
 
-    if (scores.consistencyScore < 60) {
-      recommendations.push("Work on maintaining consistent performance across all videos");
+    if (metrics.tagCoverage < 0.5) {
+      recommendations.push(`Only ${(metrics.tagCoverage * 100).toFixed(0)}% of videos include public tags, so compare title wording and description structure when looking for patterns.`);
     }
 
-    if (scores.discoverabilityScore < 40) {
-      recommendations.push("Improve SEO with better tags and descriptions");
+    if (metrics.totalChannels > 1 && metrics.dominantChannelShare > 0.6) {
+      recommendations.push(`The dominant channel makes up ${(metrics.dominantChannelShare * 100).toFixed(0)}% of the playlist; compare its videos against the rest before drawing category-wide conclusions.`);
     }
 
-    if (scores.engagementRate < 0.02) {
-      recommendations.push("Encourage more likes and comments to boost engagement");
+    if (metrics.engagementRate < 0.02) {
+      recommendations.push("Use comments and likes as secondary signals here because engagement is low relative to total views.");
     }
 
     const shortVideos = videos.filter(v => convertDurationToSeconds(v.duration) < 60).length;
@@ -547,8 +572,21 @@ export const PlaylistAnalyzer: React.FC = () => {
         totalVideos: analysis.totalVideos,
         totalViews: analysis.totalViews,
         totalDuration: formatDuration(analysis.totalDuration),
-        performanceScore: analysis.performanceScore.toFixed(1),
-        engagementRate: (analysis.engagementRate * 100).toFixed(2) + '%'
+        avgViewsPerVideo: Math.round(analysis.avgViewsPerVideo),
+        medianViewsPerVideo: Math.round(analysis.medianViewsPerVideo),
+        avgDurationPerVideo: formatDuration(Math.round(analysis.avgDurationPerVideo)),
+        engagementRate: (analysis.engagementRate * 100).toFixed(2) + '%',
+        dateRange: {
+          oldestVideo: analysis.oldestVideo.toISOString(),
+          newestVideo: analysis.newestVideo.toISOString(),
+          days: analysis.timeSpan
+        },
+        tagCoverage: (analysis.tagCoverage * 100).toFixed(0) + '%',
+        dominantChannel: {
+          title: analysis.dominantChannel.title,
+          videos: analysis.dominantChannelVideoCount,
+          share: (analysis.dominantChannelShare * 100).toFixed(0) + '%'
+        }
       },
       topPerformers: {
         mostViewed: analysis.mostViewedVideo.title,
@@ -778,7 +816,7 @@ export const PlaylistAnalyzer: React.FC = () => {
                 <S.StepContent>
                   <S.PlaylistAnalyzerStepTitle>Review Insights & Recommendations</S.PlaylistAnalyzerStepTitle>
                   <S.EducationalText>
-                    Examine detailed performance scores, top performers, channel distribution, and content
+                    Examine playlist totals, averages, outliers, channel distribution, and content
                     patterns. Use the insights and recommendations to optimize playlist organization,
                     identify content gaps, and improve overall playlist performance.
                   </S.EducationalText>
@@ -793,7 +831,7 @@ export const PlaylistAnalyzer: React.FC = () => {
             <S.FeatureList>
               <S.FeatureListItem>
                 <i className="bx bx-check-circle"></i>
-                <span><strong>Performance Scoring:</strong> Quality, consistency, and discoverability scores based on comprehensive metrics</span>
+                <span><strong>Performance Data:</strong> Views, engagement, date range, averages, medians, and outlier benchmarks</span>
               </S.FeatureListItem>
               <S.FeatureListItem>
                 <i className="bx bx-check-circle"></i>
@@ -863,28 +901,38 @@ export const PlaylistAnalyzer: React.FC = () => {
               </S.PlaylistActions>
             </S.PlaylistHeader>
 
-            <S.ScoreSection>
-              <S.ScoreCard>
-                <S.ScoreTitle>Quality Score</S.ScoreTitle>
-                <S.ScoreValue score={analysis.qualityScore}>{analysis.qualityScore.toFixed(1)}</S.ScoreValue>
-                <S.ScoreDescription>Based on views and engagement</S.ScoreDescription>
-              </S.ScoreCard>
-              <S.ScoreCard>
-                <S.ScoreTitle>Consistency Score</S.ScoreTitle>
-                <S.ScoreValue score={analysis.consistencyScore}>{analysis.consistencyScore.toFixed(1)}</S.ScoreValue>
-                <S.ScoreDescription>Performance stability</S.ScoreDescription>
-              </S.ScoreCard>
-              <S.ScoreCard>
-                <S.ScoreTitle>Discoverability Score</S.ScoreTitle>
-                <S.ScoreValue score={analysis.discoverabilityScore}>{analysis.discoverabilityScore.toFixed(1)}</S.ScoreValue>
-                <S.ScoreDescription>SEO and tagging quality</S.ScoreDescription>
-              </S.ScoreCard>
-              <S.ScoreCard>
-                <S.ScoreTitle>Overall Score</S.ScoreTitle>
-                <S.ScoreValue score={analysis.performanceScore}>{analysis.performanceScore.toFixed(1)}</S.ScoreValue>
-                <S.ScoreDescription>Combined performance</S.ScoreDescription>
-              </S.ScoreCard>
-            </S.ScoreSection>
+            <S.DataSummarySection>
+              <S.DataSummaryCard>
+                <S.DataSummaryLabel>Date Range</S.DataSummaryLabel>
+                <S.DataSummaryValue>{formatDate(analysis.oldestVideo)} - {formatDate(analysis.newestVideo)}</S.DataSummaryValue>
+                <S.DataSummaryNote>{analysis.timeSpan.toLocaleString()} days of upload history</S.DataSummaryNote>
+              </S.DataSummaryCard>
+              <S.DataSummaryCard>
+                <S.DataSummaryLabel>Average Video</S.DataSummaryLabel>
+                <S.DataSummaryValue>{Math.round(analysis.avgViewsPerVideo).toLocaleString()} views</S.DataSummaryValue>
+                <S.DataSummaryNote>{formatDuration(Math.round(analysis.avgDurationPerVideo))} average length</S.DataSummaryNote>
+              </S.DataSummaryCard>
+              <S.DataSummaryCard>
+                <S.DataSummaryLabel>Median Views</S.DataSummaryLabel>
+                <S.DataSummaryValue>{Math.round(analysis.medianViewsPerVideo).toLocaleString()}</S.DataSummaryValue>
+                <S.DataSummaryNote>Top video is {analysis.viewSpreadRatio.toFixed(1)}x the average</S.DataSummaryNote>
+              </S.DataSummaryCard>
+              <S.DataSummaryCard>
+                <S.DataSummaryLabel>Top Channel Share</S.DataSummaryLabel>
+                <S.DataSummaryValue>{(analysis.dominantChannelShare * 100).toFixed(0)}%</S.DataSummaryValue>
+                <S.DataSummaryNote>{analysis.dominantChannelVideoCount} videos from {analysis.dominantChannel.title}</S.DataSummaryNote>
+              </S.DataSummaryCard>
+              <S.DataSummaryCard>
+                <S.DataSummaryLabel>Tag Coverage</S.DataSummaryLabel>
+                <S.DataSummaryValue>{(analysis.tagCoverage * 100).toFixed(0)}%</S.DataSummaryValue>
+                <S.DataSummaryNote>{analysis.videosWithTags} of {analysis.totalVideos} videos expose tags</S.DataSummaryNote>
+              </S.DataSummaryCard>
+              <S.DataSummaryCard>
+                <S.DataSummaryLabel>Upload Cadence</S.DataSummaryLabel>
+                <S.DataSummaryValue>{analysis.avgUploadFrequency.toFixed(1)}/mo</S.DataSummaryValue>
+                <S.DataSummaryNote>Average videos per month in this set</S.DataSummaryNote>
+              </S.DataSummaryCard>
+            </S.DataSummarySection>
 
             <S.StatsGrid>
               <S.StatCard>

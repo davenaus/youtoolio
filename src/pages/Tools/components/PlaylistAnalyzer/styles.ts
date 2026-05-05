@@ -576,50 +576,48 @@ export const ActionButton = styled.button`
   }
 `;
 
-export const ScoreSection = styled.div`
+export const DataSummarySection = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
 `;
 
-export const ScoreCard = styled.div`
+export const DataSummaryCard = styled.div`
   background: ${({ theme }) => theme.colors.dark3};
   border: 1px solid ${({ theme }) => theme.colors.dark5};
   border-radius: ${({ theme }) => theme.borderRadius.xl};
-  padding: 1.5rem;
-  text-align: center;
+  padding: 1.25rem;
   transition: all 0.3s ease;
   
   &:hover {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
     border-color: ${({ theme }) => theme.colors.red3};
     box-shadow: ${({ theme }) => theme.shadows.lg};
   }
 `;
 
-export const ScoreTitle = styled.h3`
-  color: ${({ theme }) => theme.colors.text.primary};
-  font-size: 1rem;
+export const DataSummaryLabel = styled.div`
+  color: ${({ theme }) => theme.colors.red3};
+  font-size: 0.8rem;
   font-weight: 600;
-  margin: 0 0 0.5rem 0;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
-export const ScoreValue = styled.div<{ score: number }>`
-  font-size: 2.5rem;
+export const DataSummaryValue = styled.div`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1.35rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  color: ${({ score, theme }) => {
-    if (score >= 80) return theme.colors.success || '#4caf50';
-    if (score >= 60) return theme.colors.warning || '#ff9800';
-    if (score >= 40) return theme.colors.red3;
-    return theme.colors.error || '#f44336';
-  }};
+  line-height: 1.25;
 `;
 
-export const ScoreDescription = styled.p`
+export const DataSummaryNote = styled.div`
   color: ${({ theme }) => theme.colors.text.muted};
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  line-height: 1.35;
   margin: 0;
 `;
 
