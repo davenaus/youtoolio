@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Navigate, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/Button/Button';
@@ -356,7 +356,7 @@ export const Account: React.FC = () => {
   }, [user]);
 
   if (loading) return null;
-  if (!user) { navigate('/login'); return null; }
+  if (!user) return <Navigate to="/login" replace />;
 
   const name  = user.user_metadata?.full_name ?? 'YouTool User';
   const avatar = user.user_metadata?.avatar_url as string | undefined;
