@@ -92,21 +92,47 @@ export const ChannelComparer: React.FC = () => {
   };
 
   const getChannelId = async (url: string): Promise<string> => {
+    const input = url.trim();
+
     // Check if it's a direct channel ID
-    if (/^UC[\w-]{22}$/.test(url)) {
-      return url;
+    if (/^UC[\w-]{22}$/.test(input)) {
+      return input;
+    }
+
+    // Match Channel Analyzer behavior: accept raw handles like @creator or creator.
+    if (/^@?[\w.-]+$/.test(input) && !input.includes('youtube.com')) {
+      const API_KEY = process.env.REACT_APP_YOUTUBE_API_KEY_2;
+      const handle = input.startsWith('@') ? input.substring(1) : input;
+
+      let response = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${handle}&key=${API_KEY}`
+      );
+      let data = await response.json();
+      if (data.items?.[0]) {
+        return data.items[0].id;
+      }
+
+      response = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(handle)}&type=channel&maxResults=1&key=${API_KEY}`
+      );
+      data = await response.json();
+      if (data.items?.[0]) {
+        return data.items[0].id.channelId;
+      }
+
+      throw new Error(`Channel not found for handle: ${input}`);
     }
 
     const patterns = {
       channel: /youtube\.com\/channel\/(UC[\w-]{22})/,
       user: /youtube\.com\/user\/(\w+)/,
-      handle: /youtube\.com\/@([\w-]+)/,
+      handle: /youtube\.com\/@([\w.-]+)/,
       handleWithoutAt: /youtube\.com\/([^/?]+)$/,  // Matches youtube.com/moneyguyshow
-      customUrl: /youtube\.com\/(c\/)?(\w+)/
+      customUrl: /youtube\.com\/(c\/)?([\w.-]+)/
     };
 
     for (const [type, pattern] of Object.entries(patterns)) {
-      const match = url.match(pattern);
+      const match = input.match(pattern);
       if (match) {
         if (type === 'channel') {
           return match[1];

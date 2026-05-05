@@ -262,6 +262,114 @@ export const UploadSection = styled.div`
   animation: ${fadeIn} 0.5s ease;
 `;
 
+export const VideoUrlForm = styled.form`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  max-width: 900px;
+  margin: 0 auto 1.5rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const VideoUrlInputWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: ${({ theme }) => theme.colors.dark3};
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 0 1rem;
+  min-height: 54px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &:focus-within {
+    border-color: ${({ theme }) => theme.colors.red3};
+    background: ${({ theme }) => theme.colors.dark4};
+  }
+
+  i {
+    color: ${({ theme }) => theme.colors.red4};
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+`;
+
+export const VideoUrlInput = styled.input`
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 0.95rem;
+
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.text.muted};
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+`;
+
+export const VideoUrlButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-height: 54px;
+  padding: 0 1.35rem;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  color: ${({ theme }) => theme.colors.white};
+  border: 0;
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: ${({ theme }) => theme.shadows.md};
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  i {
+    font-size: 1.1rem;
+  }
+`;
+
+export const UploadDivider = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: 800px;
+  margin: 0 auto 1.5rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: ${({ theme }) => theme.colors.dark5};
+  }
+`;
+
 export const DropZone = styled.div<{ hasImage: boolean }>`
   position: relative;
   background: ${({ theme, hasImage }) => hasImage ? 'transparent' : theme.colors.dark3};

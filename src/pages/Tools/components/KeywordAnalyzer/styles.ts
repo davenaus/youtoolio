@@ -1651,27 +1651,54 @@ export const VideoAction = styled.a`
   }
 `;
 
-export const RecommendationsSection = styled.div`
-  background: ${({ theme }) => theme.colors.dark3};
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  padding: 2rem;
+const getRecommendationAccent = (rating: string) => {
+  switch (rating) {
+    case 'excellent': return '#10B981';
+    case 'good': return '#F59E0B';
+    case 'fair': return '#E54848';
+    case 'poor': return '#EF4444';
+    default: return '#9CA3AF';
+  }
+};
+
+export const RecommendationsSection = styled.section`
   margin-bottom: 3rem;
 
   @media (max-width: 768px) {
-    padding: 1.25rem 1rem;
     margin-bottom: 2rem;
+  }
+`;
+
+export const RecommendationsHeader = styled.div`
+  margin-bottom: 1.25rem;
+
+  ${SectionTitle} {
+    justify-content: flex-start;
+    margin-bottom: 0.5rem;
+    text-align: left;
+  }
+`;
+
+export const RecommendationsIntro = styled.p`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.95rem;
+  line-height: 1.6;
+  max-width: 760px;
+  margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
   }
 `;
 
 export const RecommendationsList = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    gap: 0.5rem;
+    gap: 0.75rem;
   }
 `;
 
@@ -1723,104 +1750,153 @@ export const Recommendation = styled.div<{ type: 'success' | 'info' | 'warning' 
 `;
 
 export const RecommendationCard = styled.div<{ rating: string }>`
-  background: ${({ theme }) => theme.colors.dark4};
-  border: 2px solid ${({ theme, rating }) => {
-    switch (rating) {
-      case 'excellent': return '#4caf50';
-      case 'good': return '#ffc107';
-      case 'fair': return '#ff9800';
-      case 'poor': return '#f44336';
-      default: return theme.colors.dark5;
-    }
-  }};
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: linear-gradient(180deg, ${({ theme }) => theme.colors.dark3}, ${({ theme }) => theme.colors.dark4});
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
   border-radius: ${({ theme }) => theme.borderRadius.lg};
-  padding: 1.5rem;
-  transition: all 0.3s ease;
+  padding: 1.15rem;
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: ${({ rating }) => getRecommendationAccent(rating)};
+  }
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border-color: ${({ rating }) => getRecommendationAccent(rating)};
+    box-shadow: ${({ theme }) => theme.shadows.md};
   }
 
   @media (max-width: 768px) {
-    padding: 0.75rem 0.875rem;
+    padding: 1rem;
   }
+`;
+
+export const RecommendationTopRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+`;
+
+export const RecommendationIcon = styled.div<{ rating: string }>`
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  background: ${({ rating }) => `${getRecommendationAccent(rating)}18`};
+  border: 1px solid ${({ rating }) => `${getRecommendationAccent(rating)}40`};
+  color: ${({ rating }) => getRecommendationAccent(rating)};
+  flex-shrink: 0;
+
+  i {
+    font-size: 1.2rem;
+  }
+`;
+
+export const RecommendationContent = styled.div`
+  flex: 1;
+  min-width: 0;
 `;
 
 export const RecommendationHeader = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.75rem;
-  gap: 1rem;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.7rem;
 
   @media (max-width: 768px) {
-    margin-bottom: 0.4rem;
     gap: 0.5rem;
-    align-items: center;
   }
 `;
 
 export const RecommendationMetric = styled.h4`
   color: ${({ theme }) => theme.colors.text.primary};
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   margin: 0;
+  line-height: 1.3;
 
   @media (max-width: 768px) {
-    font-size: 0.875rem;
+    font-size: 0.9rem;
   }
 `;
 
 export const RecommendationRating = styled.span<{ rating: string }>`
-  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  padding: 0.25rem 0.75rem;
+  padding: 0.25rem 0.6rem;
   border-radius: 999px;
   white-space: nowrap;
   flex-shrink: 0;
-  background: ${({ rating }) => {
-    switch (rating) {
-      case 'excellent': return '#4caf5020';
-      case 'good': return '#ffc10720';
-      case 'fair': return '#ff980020';
-      case 'poor': return '#f4433620';
-      default: return '#2196f320';
-    }
-  }};
-  color: ${({ rating }) => {
-    switch (rating) {
-      case 'excellent': return '#4caf50';
-      case 'good': return '#ffc107';
-      case 'fair': return '#ff9800';
-      case 'poor': return '#f44336';
-      default: return '#2196f3';
-    }
-  }};
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: ${({ rating }) => `${getRecommendationAccent(rating)}18`};
+  color: ${({ rating }) => getRecommendationAccent(rating)};
+
+  &::before {
+    content: '';
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 999px;
+    background: currentColor;
+  }
 
   @media (max-width: 768px) {
-    font-size: 0.72rem;
-    padding: 0.15rem 0.5rem;
+    font-size: 0.68rem;
+    padding: 0.2rem 0.5rem;
   }
+`;
+
+export const RecommendationValueLabel = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
 `;
 
 export const RecommendationValue = styled.div`
   color: ${({ theme }) => theme.colors.text.primary};
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  line-height: 1.25;
 
   @media (max-width: 768px) {
-    font-size: 0.9rem;
-    margin-bottom: 0.3rem;
+    font-size: 1rem;
   }
 `;
 
-export const RecommendationAction = styled.p`
+export const RecommendationAction = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
   color: ${({ theme }) => theme.colors.text.secondary};
   font-size: 0.9rem;
   line-height: 1.5;
   margin: 0;
+  padding-top: 0.85rem;
+  border-top: 1px solid ${({ theme }) => theme.colors.dark5};
+
+  i {
+    color: ${({ theme }) => theme.colors.red5};
+    font-size: 1rem;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+  }
 
   @media (max-width: 768px) {
     font-size: 0.8rem;

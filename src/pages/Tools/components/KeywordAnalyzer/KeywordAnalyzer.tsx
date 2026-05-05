@@ -108,6 +108,27 @@ export const KeywordAnalyzer: React.FC = () => {
     ]
   };
 
+  const getRecommendationIcon = (metric: string): string => {
+    if (metric.includes('Tag')) return 'bx bx-purchase-tag-alt';
+    if (metric.includes('Search')) return 'bx bx-search-alt';
+    if (metric.includes('Competition')) return 'bx bx-shield-quarter';
+    if (metric.includes('Engagement')) return 'bx bx-like';
+    if (metric.includes('Title')) return 'bx bx-text';
+    if (metric.includes('Upload')) return 'bx bx-time-five';
+    if (metric.includes('Length')) return 'bx bx-video';
+    return 'bx bx-bulb';
+  };
+
+  const getRecommendationRatingLabel = (rating: Recommendation['rating']): string => {
+    switch (rating) {
+      case 'excellent': return 'Excellent';
+      case 'good': return 'Good';
+      case 'fair': return 'Fair';
+      case 'poor': return 'Needs Work';
+      default: return 'Info';
+    }
+  };
+
   // Load search history from localStorage
   useEffect(() => {
     const history = localStorage.getItem('keyword_history');
@@ -1379,25 +1400,38 @@ export const KeywordAnalyzer: React.FC = () => {
 
             {/* Recommendations */}
             <S.RecommendationsSection>
-              <S.SectionTitle>
-                <i className="bx bx-lightbulb"></i>
-                Optimization Recommendations
-              </S.SectionTitle>
+              <S.RecommendationsHeader>
+                <S.SectionTitle>
+                  <i className="bx bx-lightbulb"></i>
+                  Optimization Recommendations
+                </S.SectionTitle>
+                <S.RecommendationsIntro>
+                  Quick read on where this keyword is strongest, where it is crowded, and what to adjust before publishing.
+                </S.RecommendationsIntro>
+              </S.RecommendationsHeader>
 
               <S.RecommendationsList>
                 {results.recommendations.map((recommendation, index) => (
                   <S.RecommendationCard key={index} rating={recommendation.rating}>
-                    <S.RecommendationHeader>
-                      <S.RecommendationMetric>{recommendation.metric}</S.RecommendationMetric>
-                      <S.RecommendationRating rating={recommendation.rating}>
-                        {recommendation.rating === 'excellent' ? '🟢 Excellent' :
-                         recommendation.rating === 'good' ? '🟡 Good' :
-                         recommendation.rating === 'fair' ? '🟠 Fair' :
-                         recommendation.rating === 'poor' ? '🔴 Poor' : 'ℹ️ Info'}
-                      </S.RecommendationRating>
-                    </S.RecommendationHeader>
-                    <S.RecommendationValue>{recommendation.value}</S.RecommendationValue>
-                    <S.RecommendationAction>{recommendation.action}</S.RecommendationAction>
+                    <S.RecommendationTopRow>
+                      <S.RecommendationIcon rating={recommendation.rating}>
+                        <i className={getRecommendationIcon(recommendation.metric)}></i>
+                      </S.RecommendationIcon>
+                      <S.RecommendationContent>
+                        <S.RecommendationHeader>
+                          <S.RecommendationMetric>{recommendation.metric}</S.RecommendationMetric>
+                          <S.RecommendationRating rating={recommendation.rating}>
+                            {getRecommendationRatingLabel(recommendation.rating)}
+                          </S.RecommendationRating>
+                        </S.RecommendationHeader>
+                        <S.RecommendationValueLabel>Current Signal</S.RecommendationValueLabel>
+                        <S.RecommendationValue>{recommendation.value}</S.RecommendationValue>
+                      </S.RecommendationContent>
+                    </S.RecommendationTopRow>
+                    <S.RecommendationAction>
+                      <i className="bx bx-right-arrow-alt"></i>
+                      <span>{recommendation.action}</span>
+                    </S.RecommendationAction>
                   </S.RecommendationCard>
                 ))}
               </S.RecommendationsList>

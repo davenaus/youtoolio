@@ -319,6 +319,72 @@ export const ThumbnailDownloader: React.FC = () => {
     }
   };
 
+  const copyThumbnailImage = async (quality: keyof ThumbnailData['thumbnails']) => {
+    if (!thumbnailData) return;
+
+    const thumbnailUrl = thumbnailData.thumbnails[quality]?.url;
+    if (!thumbnailUrl) return;
+
+    const ClipboardItemCtor = (window as any).ClipboardItem;
+    if (!navigator.clipboard?.write || !ClipboardItemCtor) {
+      try {
+        if (!navigator.clipboard?.writeText) {
+          throw new Error('Clipboard text copy is unavailable');
+        }
+        await navigator.clipboard.writeText(thumbnailUrl);
+        alert('Image clipboard copy is not supported in this browser, so the thumbnail URL was copied instead.');
+      } catch (error) {
+        console.error('Failed to copy URL fallback:', error);
+        alert('Image clipboard copy is not supported in this browser.');
+      }
+      return;
+    }
+
+    setIsDownloading(`copy-${quality}`);
+
+    try {
+      const response = await fetch(thumbnailUrl);
+      if (!response.ok) {
+        throw new Error('Failed to fetch thumbnail image');
+      }
+
+      const sourceBlob = await response.blob();
+      const imageBitmap = await createImageBitmap(sourceBlob);
+      const canvas = document.createElement('canvas');
+      canvas.width = imageBitmap.width;
+      canvas.height = imageBitmap.height;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error('Could not prepare thumbnail image');
+      }
+
+      ctx.drawImage(imageBitmap, 0, 0);
+      imageBitmap.close();
+
+      const pngBlob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Could not convert thumbnail image'));
+          }
+        }, 'image/png');
+      });
+
+      await navigator.clipboard.write([
+        new ClipboardItemCtor({ 'image/png': pngBlob })
+      ]);
+
+      alert('Thumbnail image copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy thumbnail image:', error);
+      alert('Failed to copy thumbnail image to clipboard');
+    } finally {
+      setIsDownloading(null);
+    }
+  };
+
   const formatDuration = (duration: string): string => {
     const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
     if (!match) return 'Unknown';
@@ -714,6 +780,14 @@ export const ThumbnailDownloader: React.FC = () => {
                           <div>
                             <div>Copy Direct URL</div>
                             <span>Copy thumbnail link to clipboard</span>
+                          </div>
+                        </S.AdvancedOption>
+
+                        <S.AdvancedOption onClick={() => copyThumbnailImage(selectedQuality)}>
+                          <i className="bx bx-clipboard"></i>
+                          <div>
+                            <div>Copy Image</div>
+                            <span>Copy the thumbnail image to clipboard</span>
                           </div>
                         </S.AdvancedOption>
 

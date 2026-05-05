@@ -39,6 +39,8 @@ export const ThumbnailAnalyzer: React.FC = () => {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [currentStep, setCurrentStep] = useState<'upload' | 'analyzing' | 'results'>('upload');
   const [error, setError] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [isFetchingThumbnail, setIsFetchingThumbnail] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const [heatmapOpacity, setHeatmapOpacity] = useState(50);
 
@@ -62,11 +64,35 @@ export const ThumbnailAnalyzer: React.FC = () => {
     return Math.abs(aspectRatio - targetRatio) < tolerance;
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const loadImageDataUrl = (imageDataUrl: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        if (!validateAspectRatio(img)) {
+          reject(new Error('Image must have a 16:9 aspect ratio (e.g., 1920x1080, 1280x720, 3840x2160)'));
+          return;
+        }
 
-    // Validate file type
+        setUploadedImage(imageDataUrl);
+        setCurrentStep('upload');
+        setAnalysisResult(null);
+        resolve();
+      };
+      img.onerror = () => reject(new Error('Could not load this image. Please try another file or video URL.'));
+      img.src = imageDataUrl;
+    });
+  };
+
+  const readFileAsDataUrl = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => resolve(event.target?.result as string);
+      reader.onerror = () => reject(new Error('Could not read this image file.'));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleImageFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       setError('Please upload a valid image file (JPG, PNG, WEBP)');
       return;
@@ -78,57 +104,114 @@ export const ThumbnailAnalyzer: React.FC = () => {
       return;
     }
 
-    setError(null);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        // Validate 16:9 aspect ratio
-        if (!validateAspectRatio(img)) {
-          setError('Image must have a 16:9 aspect ratio (e.g., 1920x1080, 1280x720, 3840x2160)');
-          return;
-        }
-        setUploadedImage(event.target?.result as string);
-        setCurrentStep('upload');
-        setAnalysisResult(null);
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
+    try {
+      setError(null);
+      const imageDataUrl = await readFileAsDataUrl(file);
+      await loadImageDataUrl(imageDataUrl);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load this image.');
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    handleImageFile(file);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (!file) return;
+    handleImageFile(file);
+  };
 
-    if (!file.type.startsWith('image/')) {
-      setError('Please upload a valid image file (JPG, PNG, WEBP)');
-      return;
+  const extractVideoId = (url: string): string | null => {
+    const input = url.trim();
+    if (/^[A-Za-z0-9_-]{11}$/.test(input)) return input;
+
+    const patterns = [
+      /v=([^&]+)/,
+      /youtu\.be\/([^?]+)/,
+      /embed\/([^?]+)/,
+      /shorts\/([^?]+)/
+    ];
+
+    for (const pattern of patterns) {
+      const match = input.match(pattern);
+      if (match) return match[1];
     }
 
-    if (file.size > 50 * 1024 * 1024) {
-      setError('Image file size must be less than 50MB');
-      return;
-    }
+    return null;
+  };
 
-    setError(null);
-    const reader = new FileReader();
-    reader.onload = (event) => {
+  const blobToDataUrl = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error('Could not prepare the thumbnail image.'));
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const hasValidAnalyzerAspectRatio = (imageDataUrl: string): Promise<boolean> => {
+    return new Promise((resolve) => {
       const img = new Image();
-      img.onload = () => {
-        // Validate 16:9 aspect ratio
-        if (!validateAspectRatio(img)) {
-          setError('Image must have a 16:9 aspect ratio (e.g., 1920x1080, 1280x720, 3840x2160)');
-          return;
+      img.onload = () => resolve(validateAspectRatio(img));
+      img.onerror = () => resolve(false);
+      img.src = imageDataUrl;
+    });
+  };
+
+  const fetchYouTubeThumbnailDataUrl = async (id: string): Promise<string> => {
+    const thumbnailUrls = [
+      `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`,
+      `https://i.ytimg.com/vi/${id}/sddefault.jpg`,
+      `https://i.ytimg.com/vi/${id}/hq720.jpg`,
+      `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
+    ];
+
+    for (const thumbnailUrl of thumbnailUrls) {
+      try {
+        const response = await fetch(thumbnailUrl);
+        if (!response.ok) continue;
+
+        const blob = await response.blob();
+        if (!blob.type.startsWith('image/')) continue;
+
+        const imageDataUrl = await blobToDataUrl(blob);
+        if (await hasValidAnalyzerAspectRatio(imageDataUrl)) {
+          return imageDataUrl;
         }
-        setUploadedImage(event.target?.result as string);
-        setCurrentStep('upload');
-        setAnalysisResult(null);
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
+      } catch {
+        // Try the next YouTube thumbnail tier.
+      }
+    }
+
+    throw new Error('Could not fetch a usable thumbnail for this video.');
+  };
+
+  const handleVideoUrlAnalyze = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const id = extractVideoId(videoUrl);
+    if (!id) {
+      setError('Please enter a valid YouTube video URL or video ID.');
+      return;
+    }
+
+    setIsFetchingThumbnail(true);
+    setError(null);
+
+    try {
+      const imageDataUrl = await fetchYouTubeThumbnailDataUrl(id);
+      await loadImageDataUrl(imageDataUrl);
+      await analyzeImage(imageDataUrl);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not analyze that video thumbnail.');
+    } finally {
+      setIsFetchingThumbnail(false);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -630,8 +713,9 @@ export const ThumbnailAnalyzer: React.FC = () => {
   };
 
 
-  const analyzeImage = async () => {
-    if (!uploadedImage) return;
+  const analyzeImage = async (imageOverride?: string) => {
+    const imageForAnalysis = imageOverride || uploadedImage;
+    if (!imageForAnalysis) return;
 
     setIsAnalyzing(true);
     setCurrentStep('analyzing');
@@ -659,15 +743,15 @@ export const ThumbnailAnalyzer: React.FC = () => {
       setAnalysisProgress(10);
 
       // Generate heatmap
-      const heatmap = await generateHeatmap(uploadedImage);
+      const heatmap = await generateHeatmap(imageForAnalysis);
       setAnalysisProgress(40);
 
       // Calculate all scores
       const [compositionData, lightingData, detectedTextResult, detectedObjectsResult] = await Promise.all([
-        calculateCompositionScore(uploadedImage),
-        calculateLightingScore(uploadedImage),
-        detectText(uploadedImage),
-        detectObjects(uploadedImage)
+        calculateCompositionScore(imageForAnalysis),
+        calculateLightingScore(imageForAnalysis),
+        detectText(imageForAnalysis),
+        detectObjects(imageForAnalysis)
       ]);
 
       setAnalysisProgress(80);
@@ -728,6 +812,7 @@ export const ThumbnailAnalyzer: React.FC = () => {
 
   const resetAnalysis = () => {
     setUploadedImage(null);
+    setVideoUrl('');
     setAnalysisResult(null);
     setCurrentStep('upload');
     setError(null);
@@ -805,6 +890,35 @@ export const ThumbnailAnalyzer: React.FC = () => {
             {currentStep === 'upload' && (
               <>
               <S.UploadSection>
+                <S.VideoUrlForm onSubmit={handleVideoUrlAnalyze}>
+                  <S.VideoUrlInputWrapper>
+                    <i className="bx bx-link"></i>
+                    <S.VideoUrlInput
+                      value={videoUrl}
+                      onChange={(event) => setVideoUrl(event.target.value)}
+                      placeholder="Paste a YouTube video link or video ID"
+                      disabled={isFetchingThumbnail || isAnalyzing}
+                    />
+                  </S.VideoUrlInputWrapper>
+                  <S.VideoUrlButton type="submit" disabled={isFetchingThumbnail || isAnalyzing}>
+                    {isFetchingThumbnail ? (
+                      <>
+                        <i className="bx bx-loader-alt bx-spin"></i>
+                        Fetching...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bx bx-search-alt"></i>
+                        Analyze Video Thumbnail
+                      </>
+                    )}
+                  </S.VideoUrlButton>
+                </S.VideoUrlForm>
+
+                <S.UploadDivider>
+                  <span>or upload your own image</span>
+                </S.UploadDivider>
+
                 <S.DropZone
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
@@ -838,7 +952,7 @@ export const ThumbnailAnalyzer: React.FC = () => {
                       <i className="bx bx-x"></i>
                       Remove Image
                     </S.SecondaryButton>
-                    <S.PrimaryButton onClick={analyzeImage} disabled={isAnalyzing}>
+                    <S.PrimaryButton onClick={() => analyzeImage()} disabled={isAnalyzing}>
                       <i className="bx bx-brain"></i>
                       Analyze Thumbnail
                     </S.PrimaryButton>
