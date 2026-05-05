@@ -378,6 +378,7 @@ interface FormErrors {
 const SUBJECT_OPTIONS = [
   { value: '', label: 'Select a topic…' },
   { value: 'General Question', label: 'General Question' },
+  { value: 'Extension', label: 'Extension' },
   { value: 'Bug Report', label: 'Bug Report' },
   { value: 'Feature Request', label: 'Feature Request' },
   { value: 'Business / Partnership', label: 'Business / Partnership' },
