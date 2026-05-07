@@ -1,6 +1,7 @@
 // @ts-nocheck
 const { createClient } = require('@supabase/supabase-js');
 const { createHash } = require('crypto');
+const { storeAccountDashboardAnalytics } = require('../../lib/youtube-analytics-store');
 
 const AUTH_HEADER_PREFIX = 'Bearer ';
 const DAY_MS = 86400000;
@@ -826,9 +827,11 @@ const handler = async (req: any, res: any) => {
 
     if (String(req.query?.full || '') === '1') {
       const fullAnalysis = await buildFullAnalysis(accessToken, summary, windows);
+      await storeAccountDashboardAnalytics(supabase, { userId, connection, summary, fullAnalysis });
       return res.status(200).json({ ...summary, fullAnalysis });
     }
 
+    await storeAccountDashboardAnalytics(supabase, { userId, connection, summary });
     return res.status(200).json(summary);
   } catch (err: any) {
     const status = Number(err?.status || 500);

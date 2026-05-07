@@ -1,5 +1,6 @@
 // @ts-nocheck
 const { createClient } = require('@supabase/supabase-js');
+const { revokeYouTubeAnalyticsStorage } = require('../../lib/youtube-analytics-store');
 
 const handler = async (req: any, res: any) => {
   if (req.method !== 'POST') return res.status(405).end();
@@ -23,6 +24,8 @@ const handler = async (req: any, res: any) => {
       .is('disconnected_at', null);
 
     if (updateError) return res.status(500).json({ error: updateError.message });
+
+    await revokeYouTubeAnalyticsStorage(supabase, { userId: user.id });
 
     return res.status(200).json({ ok: true });
   } catch (err: any) {

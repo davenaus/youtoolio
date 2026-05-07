@@ -1,5 +1,6 @@
 // @ts-nocheck
 const { createClient } = require('@supabase/supabase-js');
+const { ensureYouTubeAnalyticsConsentRecord } = require('../../lib/youtube-analytics-store');
 
 const REDIRECT_URI = 'https://youtool.io/account/extension-youtube-connect/callback';
 
@@ -75,6 +76,11 @@ const handler = async (req: any, res: any) => {
     }, { onConflict: 'user_id' });
 
     if (upsertError) return res.status(500).json({ error: upsertError.message });
+
+    await ensureYouTubeAnalyticsConsentRecord(supabase, {
+      userId: user.id,
+      channelId: channel?.id ?? null,
+    });
 
     return res.status(200).json({
       ok: true,
