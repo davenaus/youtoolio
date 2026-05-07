@@ -12,17 +12,36 @@ interface ConnectedChannel {
 interface MetricSet {
   views: number;
   engagedViews: number;
+  redViews: number;
   watchHours: number;
+  premiumWatchHours: number;
   averageViewDuration: number;
   averageViewPercentage: number;
+  uniqueViewers: number;
+  viewsPerUniqueViewer: number;
   likes: number;
+  dislikes: number;
   comments: number;
   shares: number;
   engagementRate: number;
   engagedViewRate: number;
+  premiumViewRate: number;
+  likeRate: number;
+  commentRate: number;
+  shareRate: number;
   subscribersGained: number;
   subscribersLost: number;
   netSubscribers: number;
+  videosAddedToPlaylists: number;
+  videosRemovedFromPlaylists: number;
+  playlistNetAdds: number;
+  playlistAddRate: number;
+  cardImpressions: number;
+  cardClicks: number;
+  cardClickRate: number;
+  cardTeaserImpressions: number;
+  cardTeaserClicks: number;
+  cardTeaserClickRate: number;
   videoThumbnailImpressions: number;
   thumbnailCtr: number | null;
   subsPerThousandViews: number;
@@ -32,11 +51,13 @@ interface TrendDay {
   date: string;
   views: number;
   engagedViews: number;
+  uniqueViewers: number;
   subscribersGained: number;
   subscribersLost: number;
   engagementRate: number;
   thumbnailCtr: number | null;
   averageViewDuration: number;
+  averageViewPercentage: number;
 }
 
 interface DeltaEntry {
@@ -50,12 +71,48 @@ interface TopVideo {
   thumbnailUrl: string | null;
   publishedAt: string | null;
   views: number;
+  engagedViews: number;
+  redViews: number;
   watchHours: number;
+  premiumWatchHours: number;
   averageViewDuration: number;
   averageViewPercentage: number;
+  likes: number;
+  dislikes: number;
+  comments: number;
+  shares: number;
+  playlistNetAdds: number;
   engagementRate: number;
   thumbnailCtr: number | null;
   netSubscribers: number;
+}
+
+interface SegmentRow {
+  key: string;
+  label: string;
+  views: number;
+  engagedViews: number;
+  watchHours: number;
+  shareOfViews: number;
+  engagedViewRate: number;
+}
+
+interface DemographicRow {
+  key: string;
+  label: string;
+  viewerPercentage: number;
+  shareOfKnownAudience: number;
+}
+
+interface AnalysisBreakdowns {
+  trafficSources: SegmentRow[];
+  devices: SegmentRow[];
+  subscribedStatus: SegmentRow[];
+  contentTypes: SegmentRow[];
+  countries: SegmentRow[];
+  youtubeProducts: SegmentRow[];
+  liveOrOnDemand: SegmentRow[];
+  demographics: DemographicRow[];
 }
 
 interface FullAnalysis {
@@ -70,6 +127,7 @@ interface FullAnalysis {
   current: MetricSet;
   previous: MetricSet;
   deltas: Record<string, DeltaEntry>;
+  breakdowns: AnalysisBreakdowns;
   topVideos: TopVideo[];
   insights: string[];
   opportunities: string[];
@@ -108,7 +166,7 @@ interface CacheEnvelope<T> {
 
 const DASHBOARD_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const FULL_ANALYSIS_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 
 const shimmer = keyframes`
   0% { background-position: 100% 0; }
@@ -331,8 +389,8 @@ const Overlay = styled.div`
 `;
 
 const Modal = styled.div`
-  width: min(920px, 100%);
-  max-height: min(86vh, 820px);
+  width: min(1080px, 100%);
+  max-height: min(88vh, 860px);
   overflow: auto;
   background: ${({ theme }) => theme.colors.dark3};
   border: 1px solid ${({ theme }) => theme.colors.dark5};
@@ -351,11 +409,23 @@ const ModalHeader = styled.div`
 
 const CloseButton = styled.button`
   width: 32px;
+  min-width: 32px;
+  max-width: 32px;
   height: 32px;
-  border-radius: 50%;
+  min-height: 32px;
+  max-height: 32px;
+  aspect-ratio: 1 / 1;
+  flex: 0 0 32px;
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  line-height: 1;
+  border-radius: 999px;
   border: 1px solid ${({ theme }) => theme.colors.dark5};
   background: ${({ theme }) => theme.colors.dark4};
   color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.9rem;
   cursor: pointer;
 
   &:hover {
@@ -403,6 +473,56 @@ const InsightList = styled.ul`
 const TopVideoList = styled.div`
   display: grid;
   gap: 0.7rem;
+`;
+
+const BreakdownList = styled.div`
+  display: grid;
+  gap: 0.75rem;
+`;
+
+const BreakdownRow = styled.div`
+  display: grid;
+  gap: 0.35rem;
+`;
+
+const BreakdownHead = styled.div`
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+`;
+
+const BreakdownLabel = styled.div`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.75rem;
+  line-height: 1.3;
+`;
+
+const BreakdownValue = styled.div`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+`;
+
+const BreakdownMeta = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.66rem;
+  line-height: 1.35;
+`;
+
+const BarTrack = styled.div`
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+`;
+
+const BarFill = styled.div<{ $width: number }>`
+  width: ${({ $width }) => Math.max(2, Math.min(100, $width))}%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ef4444, #9ca3af);
 `;
 
 const TopVideoRow = styled.div`
@@ -506,6 +626,58 @@ function formatDelta(delta: DeltaEntry | undefined, suffix = '') {
   return `${direction}${formatPrecise(delta.percent, 1)}% vs prev${suffix}`;
 }
 
+function formatSignedCount(value: number | null | undefined): string {
+  const next = Number(value || 0);
+  return `${next >= 0 ? '+' : ''}${formatCount(next)}`;
+}
+
+function renderSegmentRows(rows: SegmentRow[] | undefined, emptyLabel: string) {
+  if (!rows?.length) {
+    return <VideoMeta>{emptyLabel}</VideoMeta>;
+  }
+
+  return (
+    <BreakdownList>
+      {rows.map((row) => (
+        <BreakdownRow key={row.key}>
+          <BreakdownHead>
+            <BreakdownLabel>{row.label}</BreakdownLabel>
+            <BreakdownValue>{formatPercent(row.shareOfViews, 0)}</BreakdownValue>
+          </BreakdownHead>
+          <BarTrack>
+            <BarFill $width={row.shareOfViews} />
+          </BarTrack>
+          <BreakdownMeta>
+            {formatCount(row.views)} views · {formatCount(Math.round(row.watchHours))} watch hours · {formatPercent(row.engagedViewRate)} engaged
+          </BreakdownMeta>
+        </BreakdownRow>
+      ))}
+    </BreakdownList>
+  );
+}
+
+function renderDemographicRows(rows: DemographicRow[] | undefined) {
+  if (!rows?.length) {
+    return <VideoMeta>Not enough audience data returned for this period.</VideoMeta>;
+  }
+
+  return (
+    <BreakdownList>
+      {rows.map((row) => (
+        <BreakdownRow key={row.key}>
+          <BreakdownHead>
+            <BreakdownLabel>{row.label}</BreakdownLabel>
+            <BreakdownValue>{formatPercent(row.viewerPercentage)}</BreakdownValue>
+          </BreakdownHead>
+          <BarTrack>
+            <BarFill $width={row.viewerPercentage} />
+          </BarTrack>
+        </BreakdownRow>
+      ))}
+    </BreakdownList>
+  );
+}
+
 function buildPath(values: number[]) {
   if (values.length < 2) return '';
 
@@ -578,7 +750,7 @@ function LoadingCard() {
         <SkeletonLine $height="74px" />
       </GraphPanel>
       <SkeletonGrid>
-        {Array.from({ length: 6 }).map((_, index) => (
+        {Array.from({ length: 10 }).map((_, index) => (
           <MetricTile key={index}>
             <SkeletonLine $width="70%" $height="10px" />
             <div style={{ height: 14 }} />
@@ -674,9 +846,21 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
       },
       {
         label: 'Net subs',
-        value: `${current.netSubscribers >= 0 ? '+' : ''}${formatCount(current.netSubscribers)}`,
+        value: formatSignedCount(current.netSubscribers),
         delta: formatDelta(deltas.netSubscribers),
         tone: metricTone(deltas.netSubscribers),
+      },
+      {
+        label: 'Unique viewers',
+        value: formatCount(current.uniqueViewers),
+        delta: formatDelta(deltas.uniqueViewers),
+        tone: metricTone(deltas.uniqueViewers),
+      },
+      {
+        label: 'View depth',
+        value: formatPrecise(current.viewsPerUniqueViewer, 1),
+        delta: formatDelta(deltas.viewsPerUniqueViewer),
+        tone: metricTone(deltas.viewsPerUniqueViewer),
       },
       {
         label: 'Engagement',
@@ -697,10 +881,22 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
         tone: metricTone(deltas.averageViewDuration),
       },
       {
+        label: 'Avg viewed',
+        value: formatPercent(current.averageViewPercentage),
+        delta: formatDelta(deltas.averageViewPercentage),
+        tone: metricTone(deltas.averageViewPercentage),
+      },
+      {
         label: 'Watch hours',
         value: formatCount(Math.round(current.watchHours)),
         delta: formatDelta(deltas.watchHours),
         tone: metricTone(deltas.watchHours),
+      },
+      {
+        label: 'Playlist saves',
+        value: formatSignedCount(current.playlistNetAdds),
+        delta: formatDelta(deltas.playlistNetAdds),
+        tone: metricTone(deltas.playlistNetAdds),
       },
     ];
   }, [dashboard]);
@@ -856,6 +1052,36 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
                       <MetricDelta {...metricTone(fullAnalysis.deltas.engagementRate)}>{formatDelta(fullAnalysis.deltas.engagementRate)}</MetricDelta>
                     </MetricTile>
                     <MetricTile>
+                      <MetricLabel>Unique viewers</MetricLabel>
+                      <MetricValue>{formatCount(fullAnalysis.current.uniqueViewers)}</MetricValue>
+                      <MetricDelta {...metricTone(fullAnalysis.deltas.uniqueViewers)}>{formatDelta(fullAnalysis.deltas.uniqueViewers)}</MetricDelta>
+                    </MetricTile>
+                    <MetricTile>
+                      <MetricLabel>View depth</MetricLabel>
+                      <MetricValue>{formatPrecise(fullAnalysis.current.viewsPerUniqueViewer, 1)}</MetricValue>
+                      <MetricDelta {...metricTone(fullAnalysis.deltas.viewsPerUniqueViewer)}>{formatDelta(fullAnalysis.deltas.viewsPerUniqueViewer)}</MetricDelta>
+                    </MetricTile>
+                    <MetricTile>
+                      <MetricLabel>Avg viewed</MetricLabel>
+                      <MetricValue>{formatPercent(fullAnalysis.current.averageViewPercentage)}</MetricValue>
+                      <MetricDelta {...metricTone(fullAnalysis.deltas.averageViewPercentage)}>{formatDelta(fullAnalysis.deltas.averageViewPercentage)}</MetricDelta>
+                    </MetricTile>
+                    <MetricTile>
+                      <MetricLabel>Premium views</MetricLabel>
+                      <MetricValue>{formatPercent(fullAnalysis.current.premiumViewRate)}</MetricValue>
+                      <MetricDelta {...metricTone(fullAnalysis.deltas.premiumViewRate)}>{formatDelta(fullAnalysis.deltas.premiumViewRate)}</MetricDelta>
+                    </MetricTile>
+                    <MetricTile>
+                      <MetricLabel>Playlist saves</MetricLabel>
+                      <MetricValue>{formatSignedCount(fullAnalysis.current.playlistNetAdds)}</MetricValue>
+                      <MetricDelta {...metricTone(fullAnalysis.deltas.playlistNetAdds)}>{formatDelta(fullAnalysis.deltas.playlistNetAdds)}</MetricDelta>
+                    </MetricTile>
+                    <MetricTile>
+                      <MetricLabel>Card CTR</MetricLabel>
+                      <MetricValue>{formatPercent(fullAnalysis.current.cardClickRate)}</MetricValue>
+                      <MetricDelta {...metricTone(fullAnalysis.deltas.cardClickRate)}>{formatDelta(fullAnalysis.deltas.cardClickRate)}</MetricDelta>
+                    </MetricTile>
+                    <MetricTile>
                       <MetricLabel>Subs / 1K views</MetricLabel>
                       <MetricValue>{formatPrecise(fullAnalysis.current.subsPerThousandViews, 2)}</MetricValue>
                       <MetricDelta {...metricTone(fullAnalysis.deltas.subsPerThousandViews)}>{formatDelta(fullAnalysis.deltas.subsPerThousandViews)}</MetricDelta>
@@ -890,6 +1116,46 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
                   </InsightList>
                 </AnalysisSection>
 
+                <AnalysisSection>
+                  <SectionTitle>Discovery sources</SectionTitle>
+                  {renderSegmentRows(fullAnalysis.breakdowns?.trafficSources, 'No discovery source data returned for this period.')}
+                </AnalysisSection>
+
+                <AnalysisSection>
+                  <SectionTitle>Viewer relationship</SectionTitle>
+                  {renderSegmentRows(fullAnalysis.breakdowns?.subscribedStatus, 'No subscribed viewer split returned for this period.')}
+                </AnalysisSection>
+
+                <AnalysisSection>
+                  <SectionTitle>Viewing surfaces</SectionTitle>
+                  {renderSegmentRows(fullAnalysis.breakdowns?.devices, 'No device data returned for this period.')}
+                </AnalysisSection>
+
+                <AnalysisSection>
+                  <SectionTitle>YouTube surfaces</SectionTitle>
+                  {renderSegmentRows(fullAnalysis.breakdowns?.youtubeProducts, 'No YouTube surface data returned for this period.')}
+                </AnalysisSection>
+
+                <AnalysisSection>
+                  <SectionTitle>Content mix</SectionTitle>
+                  {renderSegmentRows(fullAnalysis.breakdowns?.contentTypes, 'No content type split returned for this period.')}
+                </AnalysisSection>
+
+                <AnalysisSection>
+                  <SectionTitle>Live vs on-demand</SectionTitle>
+                  {renderSegmentRows(fullAnalysis.breakdowns?.liveOrOnDemand, 'No live/on-demand split returned for this period.')}
+                </AnalysisSection>
+
+                <AnalysisSection>
+                  <SectionTitle>Top countries</SectionTitle>
+                  {renderSegmentRows(fullAnalysis.breakdowns?.countries, 'No geography data returned for this period.')}
+                </AnalysisSection>
+
+                <AnalysisSection>
+                  <SectionTitle>Known audience</SectionTitle>
+                  {renderDemographicRows(fullAnalysis.breakdowns?.demographics)}
+                </AnalysisSection>
+
                 <AnalysisSection style={{ gridColumn: '1 / -1' }}>
                   <SectionTitle>Top recent videos</SectionTitle>
                   <TopVideoList>
@@ -899,7 +1165,7 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
                         <div>
                           <VideoTitle>{video.title}</VideoTitle>
                           <VideoMeta>
-                            {formatCount(video.views)} views · {formatPercent(video.engagementRate)} engagement · {formatDuration(video.averageViewDuration)} AVD
+                            {formatCount(video.views)} views · {formatPercent(video.thumbnailCtr)} CTR · {formatPercent(video.engagementRate)} engagement · {formatDuration(video.averageViewDuration)} AVD · {formatSignedCount(video.netSubscribers)} subs
                           </VideoMeta>
                         </div>
                       </TopVideoRow>

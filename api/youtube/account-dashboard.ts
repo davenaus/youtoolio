@@ -7,17 +7,55 @@ const DAY_MS = 86400000;
 const YOUTUBE_ANALYTICS_BASE_URL = 'https://youtubeanalytics.googleapis.com/v2/reports';
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
-const BASE_METRICS = [
+const SUMMARY_METRICS = [
   'views',
   'engagedViews',
+  'redViews',
   'estimatedMinutesWatched',
+  'estimatedRedMinutesWatched',
   'averageViewDuration',
   'averageViewPercentage',
   'likes',
+  'dislikes',
   'comments',
   'shares',
+  'videosAddedToPlaylists',
+  'videosRemovedFromPlaylists',
+  'cardImpressions',
+  'cardClicks',
+  'cardTeaserImpressions',
+  'cardTeaserClicks',
+  'subscribersGained',
+  'subscribersLost',
+  'uniques'
+];
+
+const VIDEO_METRICS = [
+  'views',
+  'engagedViews',
+  'redViews',
+  'estimatedMinutesWatched',
+  'estimatedRedMinutesWatched',
+  'averageViewDuration',
+  'averageViewPercentage',
+  'likes',
+  'dislikes',
+  'comments',
+  'shares',
+  'videosAddedToPlaylists',
+  'videosRemovedFromPlaylists',
+  'cardImpressions',
+  'cardClicks',
+  'cardTeaserImpressions',
+  'cardTeaserClicks',
   'subscribersGained',
   'subscribersLost'
+];
+
+const SEGMENT_METRICS = [
+  'views',
+  'engagedViews',
+  'estimatedMinutesWatched'
 ];
 
 const REACH_METRICS = [
@@ -106,8 +144,9 @@ async function safeJson(response: any) {
   }
 }
 
-async function fetchAnalytics(accessToken: string, options: any, includeReach = true) {
-  const metrics = includeReach ? BASE_METRICS.concat(REACH_METRICS) : BASE_METRICS;
+async function fetchAnalytics(accessToken: string, options: any) {
+  const baseMetrics = options.metrics || SUMMARY_METRICS;
+  const metrics = options.includeReach === false ? baseMetrics : baseMetrics.concat(REACH_METRICS);
   const url = new URL(YOUTUBE_ANALYTICS_BASE_URL);
 
   url.searchParams.set('ids', 'channel==MINE');
@@ -118,6 +157,7 @@ async function fetchAnalytics(accessToken: string, options: any, includeReach = 
   if (options.dimensions) url.searchParams.set('dimensions', options.dimensions);
   if (options.sort) url.searchParams.set('sort', options.sort);
   if (options.maxResults) url.searchParams.set('maxResults', String(options.maxResults));
+  if (options.filters) url.searchParams.set('filters', options.filters);
 
   const response = await fetch(url.toString(), {
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -128,13 +168,21 @@ async function fetchAnalytics(accessToken: string, options: any, includeReach = 
     return payload;
   }
 
-  if (includeReach) {
-    return fetchAnalytics(accessToken, options, false);
+  if (options.includeReach !== false) {
+    return fetchAnalytics(accessToken, { ...options, includeReach: false });
   }
 
   const error = new Error(payload?.error?.message || 'Could not load YouTube Analytics data.');
   error.status = response.status || 502;
   throw error;
+}
+
+async function fetchOptionalAnalytics(accessToken: string, options: any) {
+  try {
+    return await fetchAnalytics(accessToken, options);
+  } catch {
+    return { columnHeaders: [], rows: [] };
+  }
 }
 
 function rowsToObjects(payload: any) {
@@ -152,19 +200,35 @@ function toNumber(value: any): number {
   return Number.isFinite(next) ? next : 0;
 }
 
+function ratio(numerator: number, denominator: number): number {
+  return denominator ? (numerator / denominator) * 100 : 0;
+}
+
 function aggregateRows(rows: any[]) {
   const total = rows.reduce((sum: any, row: any) => {
     const views = toNumber(row.views);
     const impressions = toNumber(row.videoThumbnailImpressions);
+    const cardImpressions = toNumber(row.cardImpressions);
+    const cardTeaserImpressions = toNumber(row.cardTeaserImpressions);
 
     sum.views += views;
     sum.engagedViews += toNumber(row.engagedViews);
+    sum.redViews += toNumber(row.redViews);
     sum.estimatedMinutesWatched += toNumber(row.estimatedMinutesWatched);
+    sum.estimatedRedMinutesWatched += toNumber(row.estimatedRedMinutesWatched);
     sum.likes += toNumber(row.likes);
+    sum.dislikes += toNumber(row.dislikes);
     sum.comments += toNumber(row.comments);
     sum.shares += toNumber(row.shares);
+    sum.videosAddedToPlaylists += toNumber(row.videosAddedToPlaylists);
+    sum.videosRemovedFromPlaylists += toNumber(row.videosRemovedFromPlaylists);
+    sum.cardImpressions += cardImpressions;
+    sum.cardClicks += toNumber(row.cardClicks);
+    sum.cardTeaserImpressions += cardTeaserImpressions;
+    sum.cardTeaserClicks += toNumber(row.cardTeaserClicks);
     sum.subscribersGained += toNumber(row.subscribersGained);
     sum.subscribersLost += toNumber(row.subscribersLost);
+    sum.uniqueViewers += toNumber(row.uniques);
     sum.videoThumbnailImpressions += impressions;
     sum.weightedAverageViewDuration += toNumber(row.averageViewDuration) * views;
     sum.weightedAverageViewPercentage += toNumber(row.averageViewPercentage) * views;
@@ -173,12 +237,22 @@ function aggregateRows(rows: any[]) {
   }, {
     views: 0,
     engagedViews: 0,
+    redViews: 0,
     estimatedMinutesWatched: 0,
+    estimatedRedMinutesWatched: 0,
     likes: 0,
+    dislikes: 0,
     comments: 0,
     shares: 0,
+    videosAddedToPlaylists: 0,
+    videosRemovedFromPlaylists: 0,
+    cardImpressions: 0,
+    cardClicks: 0,
+    cardTeaserImpressions: 0,
+    cardTeaserClicks: 0,
     subscribersGained: 0,
     subscribersLost: 0,
+    uniqueViewers: 0,
     videoThumbnailImpressions: 0,
     weightedAverageViewDuration: 0,
     weightedAverageViewPercentage: 0,
@@ -188,14 +262,33 @@ function aggregateRows(rows: any[]) {
   return {
     views: total.views,
     engagedViews: total.engagedViews,
+    redViews: total.redViews,
     watchHours: total.estimatedMinutesWatched / 60,
+    premiumWatchHours: total.estimatedRedMinutesWatched / 60,
     averageViewDuration: total.views ? total.weightedAverageViewDuration / total.views : 0,
     averageViewPercentage: total.views ? total.weightedAverageViewPercentage / total.views : 0,
+    uniqueViewers: total.uniqueViewers,
+    viewsPerUniqueViewer: total.uniqueViewers ? total.views / total.uniqueViewers : 0,
     likes: total.likes,
+    dislikes: total.dislikes,
     comments: total.comments,
     shares: total.shares,
-    engagementRate: total.views ? ((total.likes + total.comments + total.shares) / total.views) * 100 : 0,
-    engagedViewRate: total.views ? (total.engagedViews / total.views) * 100 : 0,
+    videosAddedToPlaylists: total.videosAddedToPlaylists,
+    videosRemovedFromPlaylists: total.videosRemovedFromPlaylists,
+    playlistNetAdds: total.videosAddedToPlaylists - total.videosRemovedFromPlaylists,
+    cardImpressions: total.cardImpressions,
+    cardClicks: total.cardClicks,
+    cardClickRate: ratio(total.cardClicks, total.cardImpressions),
+    cardTeaserImpressions: total.cardTeaserImpressions,
+    cardTeaserClicks: total.cardTeaserClicks,
+    cardTeaserClickRate: ratio(total.cardTeaserClicks, total.cardTeaserImpressions),
+    engagementRate: ratio(total.likes + total.comments + total.shares, total.views),
+    engagedViewRate: ratio(total.engagedViews, total.views),
+    premiumViewRate: ratio(total.redViews, total.views),
+    likeRate: ratio(total.likes, total.views),
+    commentRate: ratio(total.comments, total.views),
+    shareRate: ratio(total.shares, total.views),
+    playlistAddRate: ratio(total.videosAddedToPlaylists, total.views),
     subscribersGained: total.subscribersGained,
     subscribersLost: total.subscribersLost,
     netSubscribers: total.subscribersGained - total.subscribersLost,
@@ -220,14 +313,23 @@ function buildDeltas(current: any, previous: any) {
   const keys = [
     'views',
     'engagedViews',
+    'redViews',
     'watchHours',
+    'premiumWatchHours',
     'averageViewDuration',
     'averageViewPercentage',
+    'uniqueViewers',
+    'viewsPerUniqueViewer',
     'engagementRate',
     'engagedViewRate',
+    'premiumViewRate',
     'netSubscribers',
     'thumbnailCtr',
     'subsPerThousandViews',
+    'playlistNetAdds',
+    'playlistAddRate',
+    'cardClickRate',
+    'cardTeaserClickRate',
   ];
 
   return keys.reduce((deltas: any, key: string) => {
@@ -246,6 +348,105 @@ function buildDeltas(current: any, previous: any) {
     };
     return deltas;
   }, {});
+}
+
+function humanizeSegmentLabel(value: string): string {
+  const labels: Record<string, string> = {
+    ADVERTISING: 'Ads',
+    ANNOTATION: 'Annotations',
+    BROWSE: 'Browse',
+    CHANNEL: 'Channel pages',
+    CORE: 'YouTube',
+    DESKTOP: 'Desktop',
+    EMBEDDED: 'Embedded',
+    END_SCREEN: 'End screens',
+    EXT_URL: 'External',
+    GAME_CONSOLE: 'Game console',
+    GAMING: 'Gaming',
+    HASHTAGS: 'Hashtags',
+    KIDS: 'YouTube Kids',
+    LIVE: 'Live',
+    LIVE_STREAM: 'Live streams',
+    MOBILE: 'Mobile',
+    MUSIC: 'YouTube Music',
+    NO_LINK_EMBEDDED: 'Embedded/direct',
+    NO_LINK_OTHER: 'Direct/unknown',
+    NOTIFICATION: 'Notifications',
+    ON_DEMAND: 'On demand',
+    PLAYLIST: 'Playlists',
+    PRODUCT_PAGE: 'Product pages',
+    RELATED_VIDEO: 'Suggested videos',
+    SHORTS: 'Shorts',
+    STORY: 'Stories',
+    SUBSCRIBED: 'Subscribed viewers',
+    SUBSCRIBER: 'Subscriber feeds',
+    TABLET: 'Tablet',
+    TV: 'TV',
+    UNKNOWN: 'Unknown',
+    UNKNOWN_PLATFORM: 'Unknown',
+    UNSPECIFIED: 'Unspecified',
+    UNSUBSCRIBED: 'Not subscribed',
+    VIDEO_ON_DEMAND: 'Long-form videos',
+    WEARABLE: 'Wearable',
+    YT_CHANNEL: 'Channel pages',
+    YT_OTHER_PAGE: 'Other YouTube',
+    YT_SEARCH: 'YouTube search',
+  };
+
+  return labels[value] || String(value || 'Unknown').toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function formatCountryLabel(value: string): string {
+  try {
+    const displayNames = new Intl.DisplayNames(['en'], { type: 'region' });
+    return displayNames.of(value) || value;
+  } catch {
+    return value;
+  }
+}
+
+function buildSegmentRows(payload: any, dimension: string, totalViews: number, maxRows = 6) {
+  return rowsToObjects(payload)
+    .map((row: any) => {
+      const views = toNumber(row.views);
+      const watchHours = toNumber(row.estimatedMinutesWatched) / 60;
+      const key = String(row[dimension] || '');
+      return {
+        key,
+        label: dimension === 'country' ? formatCountryLabel(key) : humanizeSegmentLabel(key),
+        views,
+        engagedViews: toNumber(row.engagedViews),
+        watchHours,
+        shareOfViews: ratio(views, totalViews),
+        engagedViewRate: ratio(toNumber(row.engagedViews), views),
+      };
+    })
+    .filter((row: any) => row.key && (row.views > 0 || row.watchHours > 0))
+    .sort((left: any, right: any) => right.views - left.views)
+    .slice(0, maxRows);
+}
+
+function buildDemographicRows(payload: any, totalPercentage = 100, maxRows = 8) {
+  return rowsToObjects(payload)
+    .map((row: any) => {
+      const ageGroup = String(row.ageGroup || '');
+      const gender = String(row.gender || '');
+      const viewerPercentage = toNumber(row.viewerPercentage);
+      const label = [ageGroup, gender]
+        .filter(Boolean)
+        .map((value) => humanizeSegmentLabel(value))
+        .join(' · ');
+
+      return {
+        key: `${ageGroup}:${gender}`,
+        label: label || 'Unknown',
+        viewerPercentage,
+        shareOfKnownAudience: totalPercentage ? (viewerPercentage / totalPercentage) * 100 : viewerPercentage,
+      };
+    })
+    .filter((row: any) => row.viewerPercentage > 0)
+    .sort((left: any, right: any) => right.viewerPercentage - left.viewerPercentage)
+    .slice(0, maxRows);
 }
 
 async function fetchChannel(accessToken: string) {
@@ -327,11 +528,13 @@ async function buildSummary(accessToken: string, connection: any, windows: any) 
       date: row.day,
       views: toNumber(row.views),
       engagedViews: toNumber(row.engagedViews),
+      uniqueViewers: toNumber(row.uniques),
       subscribersGained: toNumber(row.subscribersGained),
       subscribersLost: toNumber(row.subscribersLost),
-      engagementRate: toNumber(row.views) ? ((toNumber(row.likes) + toNumber(row.comments) + toNumber(row.shares)) / toNumber(row.views)) * 100 : 0,
+      engagementRate: ratio(toNumber(row.likes) + toNumber(row.comments) + toNumber(row.shares), toNumber(row.views)),
       thumbnailCtr: row.videoThumbnailImpressions ? toNumber(row.videoThumbnailImpressionsClickRate) : null,
       averageViewDuration: toNumber(row.averageViewDuration),
+      averageViewPercentage: toNumber(row.averageViewPercentage),
     })),
     current,
     previous,
@@ -339,7 +542,7 @@ async function buildSummary(accessToken: string, connection: any, windows: any) 
   };
 }
 
-function buildInsightText(summary: any, topVideos: any[]) {
+function buildInsightText(summary: any, topVideos: any[], breakdowns: any) {
   const current = summary.current;
   const previous = summary.previous;
   const deltas = summary.deltas;
@@ -382,6 +585,33 @@ function buildInsightText(summary: any, topVideos: any[]) {
     actions.push('Add one clear subscribe reason near the strongest value moment, not only at the end.');
   }
 
+  if (current.uniqueViewers > 0) {
+    insights.push(`${current.uniqueViewers.toLocaleString('en-US')} unique viewers watched during this 28-day window, averaging ${current.viewsPerUniqueViewer.toFixed(1)} views per viewer.`);
+  }
+
+  if (current.playlistNetAdds > 0) {
+    insights.push(`Videos earned ${current.playlistNetAdds.toLocaleString('en-US')} net playlist saves, a useful signal for repeat discovery.`);
+  } else if (current.views > 0) {
+    opportunities.push('Playlist saves are flat or negative. Add stronger save-worthy formats like tutorials, checklists, or repeat-reference videos.');
+  }
+
+  if (current.cardImpressions > 0 && current.cardClickRate < 1) {
+    opportunities.push('Card click rate is under 1%. Use cards only at moments where the next video is truly relevant.');
+  }
+
+  const topTrafficSource = breakdowns?.trafficSources?.[0];
+  if (topTrafficSource) {
+    insights.push(`${topTrafficSource.label} is the top discovery source at ${Math.round(topTrafficSource.shareOfViews)}% of views.`);
+    if (['YouTube search', 'Suggested videos', 'Browse', 'Shorts'].includes(topTrafficSource.label)) {
+      actions.push(`Make the next upload intentionally serve ${topTrafficSource.label.toLowerCase()} with matching titles, thumbnails, and opening hooks.`);
+    }
+  }
+
+  const topContentType = breakdowns?.contentTypes?.[0];
+  if (topContentType) {
+    insights.push(`${topContentType.label} is carrying ${Math.round(topContentType.shareOfViews)}% of views in this period.`);
+  }
+
   const topVideo = topVideos[0];
   if (topVideo) {
     insights.push(`Top recent video: "${topVideo.title}" drove ${topVideo.views.toLocaleString('en-US')} views.`);
@@ -396,7 +626,19 @@ function buildInsightText(summary: any, topVideos: any[]) {
 }
 
 async function buildFullAnalysis(accessToken: string, summary: any, windows: any) {
-  const [fullCurrentPayload, fullPreviousPayload, topVideosPayload] = await Promise.all([
+  const [
+    fullCurrentPayload,
+    fullPreviousPayload,
+    topVideosPayload,
+    trafficPayload,
+    devicePayload,
+    subscribedPayload,
+    contentTypePayload,
+    countryPayload,
+    productPayload,
+    livePayload,
+    demographicPayload,
+  ] = await Promise.all([
     fetchAnalytics(accessToken, {
       startDate: windows.fullStartDate,
       endDate: windows.endDate,
@@ -413,7 +655,76 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
       startDate: windows.fullStartDate,
       endDate: windows.endDate,
       dimensions: 'video',
+      metrics: VIDEO_METRICS,
       sort: '-views',
+      maxResults: 8,
+    }),
+    fetchOptionalAnalytics(accessToken, {
+      startDate: windows.fullStartDate,
+      endDate: windows.endDate,
+      dimensions: 'insightTrafficSourceType',
+      metrics: SEGMENT_METRICS,
+      includeReach: false,
+      sort: '-views',
+      maxResults: 8,
+    }),
+    fetchOptionalAnalytics(accessToken, {
+      startDate: windows.fullStartDate,
+      endDate: windows.endDate,
+      dimensions: 'deviceType',
+      metrics: SEGMENT_METRICS,
+      includeReach: false,
+      sort: '-views',
+      maxResults: 8,
+    }),
+    fetchOptionalAnalytics(accessToken, {
+      startDate: windows.fullStartDate,
+      endDate: windows.endDate,
+      dimensions: 'subscribedStatus',
+      metrics: SEGMENT_METRICS,
+      includeReach: false,
+      sort: '-views',
+    }),
+    fetchOptionalAnalytics(accessToken, {
+      startDate: windows.fullStartDate,
+      endDate: windows.endDate,
+      dimensions: 'creatorContentType',
+      metrics: SEGMENT_METRICS,
+      includeReach: false,
+      sort: '-views',
+    }),
+    fetchOptionalAnalytics(accessToken, {
+      startDate: windows.fullStartDate,
+      endDate: windows.endDate,
+      dimensions: 'country',
+      metrics: SEGMENT_METRICS,
+      includeReach: false,
+      sort: '-views',
+      maxResults: 8,
+    }),
+    fetchOptionalAnalytics(accessToken, {
+      startDate: windows.fullStartDate,
+      endDate: windows.endDate,
+      dimensions: 'youtubeProduct',
+      metrics: SEGMENT_METRICS,
+      includeReach: false,
+      sort: '-views',
+    }),
+    fetchOptionalAnalytics(accessToken, {
+      startDate: windows.fullStartDate,
+      endDate: windows.endDate,
+      dimensions: 'liveOrOnDemand',
+      metrics: SEGMENT_METRICS,
+      includeReach: false,
+      sort: '-views',
+    }),
+    fetchOptionalAnalytics(accessToken, {
+      startDate: windows.fullStartDate,
+      endDate: windows.endDate,
+      dimensions: 'ageGroup,gender',
+      metrics: ['viewerPercentage'],
+      includeReach: false,
+      sort: '-viewerPercentage',
       maxResults: 8,
     }),
   ]);
@@ -437,16 +748,35 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
       thumbnailUrl: thumbnail,
       publishedAt: details?.snippet?.publishedAt || null,
       views: toNumber(row.views),
+      engagedViews: toNumber(row.engagedViews),
+      redViews: toNumber(row.redViews),
       watchHours: toNumber(row.estimatedMinutesWatched) / 60,
+      premiumWatchHours: toNumber(row.estimatedRedMinutesWatched) / 60,
       averageViewDuration: toNumber(row.averageViewDuration),
       averageViewPercentage: toNumber(row.averageViewPercentage),
-      engagementRate: toNumber(row.views) ? ((toNumber(row.likes) + toNumber(row.comments) + toNumber(row.shares)) / toNumber(row.views)) * 100 : 0,
+      likes: toNumber(row.likes),
+      dislikes: toNumber(row.dislikes),
+      comments: toNumber(row.comments),
+      shares: toNumber(row.shares),
+      playlistNetAdds: toNumber(row.videosAddedToPlaylists) - toNumber(row.videosRemovedFromPlaylists),
+      engagementRate: ratio(toNumber(row.likes) + toNumber(row.comments) + toNumber(row.shares), toNumber(row.views)),
       thumbnailCtr: row.videoThumbnailImpressions ? toNumber(row.videoThumbnailImpressionsClickRate) : null,
       netSubscribers: toNumber(row.subscribersGained) - toNumber(row.subscribersLost),
     };
   });
 
-  const text = buildInsightText(summary, topVideos);
+  const breakdowns = {
+    trafficSources: buildSegmentRows(trafficPayload, 'insightTrafficSourceType', fullCurrent.views, 8),
+    devices: buildSegmentRows(devicePayload, 'deviceType', fullCurrent.views, 6),
+    subscribedStatus: buildSegmentRows(subscribedPayload, 'subscribedStatus', fullCurrent.views, 4),
+    contentTypes: buildSegmentRows(contentTypePayload, 'creatorContentType', fullCurrent.views, 5),
+    countries: buildSegmentRows(countryPayload, 'country', fullCurrent.views, 8),
+    youtubeProducts: buildSegmentRows(productPayload, 'youtubeProduct', fullCurrent.views, 4),
+    liveOrOnDemand: buildSegmentRows(livePayload, 'liveOrOnDemand', fullCurrent.views, 4),
+    demographics: buildDemographicRows(demographicPayload),
+  };
+
+  const text = buildInsightText(summary, topVideos, breakdowns);
 
   return {
     generatedAt: new Date().toISOString(),
@@ -460,6 +790,7 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
     current: fullCurrent,
     previous: fullPrevious,
     deltas: buildDeltas(fullCurrent, fullPrevious),
+    breakdowns,
     topVideos,
     ...text,
   };
