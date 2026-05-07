@@ -26,8 +26,7 @@ const SUMMARY_METRICS = [
   'cardTeaserImpressions',
   'cardTeaserClicks',
   'subscribersGained',
-  'subscribersLost',
-  'uniques'
+  'subscribersLost'
 ];
 
 const VIDEO_METRICS = [
@@ -228,7 +227,6 @@ function aggregateRows(rows: any[]) {
     sum.cardTeaserClicks += toNumber(row.cardTeaserClicks);
     sum.subscribersGained += toNumber(row.subscribersGained);
     sum.subscribersLost += toNumber(row.subscribersLost);
-    sum.uniqueViewers += toNumber(row.uniques);
     sum.videoThumbnailImpressions += impressions;
     sum.weightedAverageViewDuration += toNumber(row.averageViewDuration) * views;
     sum.weightedAverageViewPercentage += toNumber(row.averageViewPercentage) * views;
@@ -252,7 +250,6 @@ function aggregateRows(rows: any[]) {
     cardTeaserClicks: 0,
     subscribersGained: 0,
     subscribersLost: 0,
-    uniqueViewers: 0,
     videoThumbnailImpressions: 0,
     weightedAverageViewDuration: 0,
     weightedAverageViewPercentage: 0,
@@ -267,8 +264,6 @@ function aggregateRows(rows: any[]) {
     premiumWatchHours: total.estimatedRedMinutesWatched / 60,
     averageViewDuration: total.views ? total.weightedAverageViewDuration / total.views : 0,
     averageViewPercentage: total.views ? total.weightedAverageViewPercentage / total.views : 0,
-    uniqueViewers: total.uniqueViewers,
-    viewsPerUniqueViewer: total.uniqueViewers ? total.views / total.uniqueViewers : 0,
     likes: total.likes,
     dislikes: total.dislikes,
     comments: total.comments,
@@ -318,8 +313,6 @@ function buildDeltas(current: any, previous: any) {
     'premiumWatchHours',
     'averageViewDuration',
     'averageViewPercentage',
-    'uniqueViewers',
-    'viewsPerUniqueViewer',
     'engagementRate',
     'engagedViewRate',
     'premiumViewRate',
@@ -528,7 +521,6 @@ async function buildSummary(accessToken: string, connection: any, windows: any) 
       date: row.day,
       views: toNumber(row.views),
       engagedViews: toNumber(row.engagedViews),
-      uniqueViewers: toNumber(row.uniques),
       subscribersGained: toNumber(row.subscribersGained),
       subscribersLost: toNumber(row.subscribersLost),
       engagementRate: ratio(toNumber(row.likes) + toNumber(row.comments) + toNumber(row.shares), toNumber(row.views)),
@@ -585,8 +577,8 @@ function buildInsightText(summary: any, topVideos: any[], breakdowns: any) {
     actions.push('Add one clear subscribe reason near the strongest value moment, not only at the end.');
   }
 
-  if (current.uniqueViewers > 0) {
-    insights.push(`${current.uniqueViewers.toLocaleString('en-US')} unique viewers watched during this 28-day window, averaging ${current.viewsPerUniqueViewer.toFixed(1)} views per viewer.`);
+  if (current.engagedViews > 0) {
+    insights.push(`${current.engagedViews.toLocaleString('en-US')} engaged views came from viewers who stayed past the opening seconds.`);
   }
 
   if (current.playlistNetAdds > 0) {

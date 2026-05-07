@@ -17,8 +17,6 @@ interface MetricSet {
   premiumWatchHours: number;
   averageViewDuration: number;
   averageViewPercentage: number;
-  uniqueViewers: number;
-  viewsPerUniqueViewer: number;
   likes: number;
   dislikes: number;
   comments: number;
@@ -51,7 +49,6 @@ interface TrendDay {
   date: string;
   views: number;
   engagedViews: number;
-  uniqueViewers: number;
   subscribersGained: number;
   subscribersLost: number;
   engagementRate: number;
@@ -851,16 +848,16 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
         tone: metricTone(deltas.netSubscribers),
       },
       {
-        label: 'Unique viewers',
-        value: formatCount(current.uniqueViewers),
-        delta: formatDelta(deltas.uniqueViewers),
-        tone: metricTone(deltas.uniqueViewers),
+        label: 'Engaged views',
+        value: formatCount(current.engagedViews),
+        delta: formatDelta(deltas.engagedViews),
+        tone: metricTone(deltas.engagedViews),
       },
       {
-        label: 'View depth',
-        value: formatPrecise(current.viewsPerUniqueViewer, 1),
-        delta: formatDelta(deltas.viewsPerUniqueViewer),
-        tone: metricTone(deltas.viewsPerUniqueViewer),
+        label: 'Engaged rate',
+        value: formatPercent(current.engagedViewRate),
+        delta: formatDelta(deltas.engagedViewRate),
+        tone: metricTone(deltas.engagedViewRate),
       },
       {
         label: 'Engagement',
@@ -1052,14 +1049,14 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
                       <MetricDelta {...metricTone(fullAnalysis.deltas.engagementRate)}>{formatDelta(fullAnalysis.deltas.engagementRate)}</MetricDelta>
                     </MetricTile>
                     <MetricTile>
-                      <MetricLabel>Unique viewers</MetricLabel>
-                      <MetricValue>{formatCount(fullAnalysis.current.uniqueViewers)}</MetricValue>
-                      <MetricDelta {...metricTone(fullAnalysis.deltas.uniqueViewers)}>{formatDelta(fullAnalysis.deltas.uniqueViewers)}</MetricDelta>
+                      <MetricLabel>Engaged views</MetricLabel>
+                      <MetricValue>{formatCount(fullAnalysis.current.engagedViews)}</MetricValue>
+                      <MetricDelta {...metricTone(fullAnalysis.deltas.engagedViews)}>{formatDelta(fullAnalysis.deltas.engagedViews)}</MetricDelta>
                     </MetricTile>
                     <MetricTile>
-                      <MetricLabel>View depth</MetricLabel>
-                      <MetricValue>{formatPrecise(fullAnalysis.current.viewsPerUniqueViewer, 1)}</MetricValue>
-                      <MetricDelta {...metricTone(fullAnalysis.deltas.viewsPerUniqueViewer)}>{formatDelta(fullAnalysis.deltas.viewsPerUniqueViewer)}</MetricDelta>
+                      <MetricLabel>Engaged rate</MetricLabel>
+                      <MetricValue>{formatPercent(fullAnalysis.current.engagedViewRate)}</MetricValue>
+                      <MetricDelta {...metricTone(fullAnalysis.deltas.engagedViewRate)}>{formatDelta(fullAnalysis.deltas.engagedViewRate)}</MetricDelta>
                     </MetricTile>
                     <MetricTile>
                       <MetricLabel>Avg viewed</MetricLabel>
