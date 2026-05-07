@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/Button/Button';
 import { AccountYouTubeInsights } from './AccountYouTubeInsights';
+import { AdminYouTubeResearchDashboard } from './AdminYouTubeResearchDashboard';
 import styled from 'styled-components';
 
 // ─── Page shell (matches 404 background) ──────────────────────────────────────
@@ -369,6 +370,7 @@ export const Account: React.FC = () => {
 
   const name  = user.user_metadata?.full_name ?? 'YouTool User';
   const avatar = user.user_metadata?.avatar_url as string | undefined;
+  const isResearchAdmin = user.email?.toLowerCase() === 'austindavenport000@gmail.com';
 
   const handleSignOut = async () => { await signOut(); navigate('/'); };
 
@@ -518,6 +520,8 @@ export const Account: React.FC = () => {
             </div>
           </InstructionBox>}
         </Card>
+
+        {isResearchAdmin && <AdminYouTubeResearchDashboard />}
 
         {ytChannel && <AccountYouTubeInsights channel={ytChannel} />}
 
