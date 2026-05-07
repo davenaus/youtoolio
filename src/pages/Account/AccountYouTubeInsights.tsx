@@ -519,7 +519,7 @@ const BarFill = styled.div<{ $width: number }>`
   width: ${({ $width }) => Math.max(2, Math.min(100, $width))}%;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #ef4444, #9ca3af);
+  background: linear-gradient(90deg, #ef4444, #b91c1c);
 `;
 
 const TopVideoRow = styled.div`
@@ -747,7 +747,7 @@ function LoadingCard() {
         <SkeletonLine $height="74px" />
       </GraphPanel>
       <SkeletonGrid>
-        {Array.from({ length: 10 }).map((_, index) => (
+        {Array.from({ length: 9 }).map((_, index) => (
           <MetricTile key={index}>
             <SkeletonLine $width="70%" $height="10px" />
             <div style={{ height: 14 }} />
@@ -864,12 +864,6 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
         value: formatPercent(current.engagementRate),
         delta: formatDelta(deltas.engagementRate),
         tone: metricTone(deltas.engagementRate),
-      },
-      {
-        label: 'CTR',
-        value: current.thumbnailCtr === null ? '-' : formatPercent(current.thumbnailCtr),
-        delta: formatDelta(deltas.thumbnailCtr),
-        tone: metricTone(deltas.thumbnailCtr),
       },
       {
         label: 'AVD',
