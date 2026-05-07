@@ -271,57 +271,6 @@ on public.youtube_analytics_breakdowns (
   dimension_key
 );
 
-create table if not exists public.youtube_playlist_snapshots (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  channel_id text not null,
-  playlist_id text not null,
-  snapshot_date date not null default current_date,
-  title text,
-  description text,
-  published_at timestamptz,
-  thumbnail_url text,
-  privacy_status text,
-  item_count integer,
-  raw jsonb not null default '{}'::jsonb,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (user_id, playlist_id, snapshot_date)
-);
-
-drop trigger if exists set_youtube_playlist_snapshots_updated_at on public.youtube_playlist_snapshots;
-create trigger set_youtube_playlist_snapshots_updated_at
-before update on public.youtube_playlist_snapshots
-for each row execute function public.set_updated_at();
-
-create table if not exists public.youtube_playlist_item_snapshots (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
-  channel_id text not null,
-  playlist_id text not null,
-  video_id text,
-  snapshot_date date not null default current_date,
-  position integer,
-  title text,
-  published_at timestamptz,
-  raw jsonb not null default '{}'::jsonb,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-drop trigger if exists set_youtube_playlist_item_snapshots_updated_at on public.youtube_playlist_item_snapshots;
-create trigger set_youtube_playlist_item_snapshots_updated_at
-before update on public.youtube_playlist_item_snapshots
-for each row execute function public.set_updated_at();
-
-create unique index if not exists idx_youtube_playlist_item_snapshots_unique
-on public.youtube_playlist_item_snapshots (
-  user_id,
-  playlist_id,
-  coalesce(video_id, ''),
-  snapshot_date
-);
-
 create table if not exists public.youtube_comment_snapshots (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -365,29 +314,6 @@ create table if not exists public.youtube_channel_insight_runs (
 create index if not exists idx_youtube_channel_insight_runs_channel_generated
 on public.youtube_channel_insight_runs (user_id, channel_id, generated_at desc);
 
-create table if not exists public.youtube_public_analytics_rollups (
-  id uuid primary key default gen_random_uuid(),
-  cohort_key text not null,
-  cohort_values jsonb not null default '{}'::jsonb,
-  period_start date not null,
-  period_end date not null,
-  channel_count integer not null default 0,
-  video_count integer not null default 0,
-  metrics jsonb not null default '{}'::jsonb,
-  generated_at timestamptz not null default now(),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (cohort_key, period_start, period_end)
-);
-
-drop trigger if exists set_youtube_public_analytics_rollups_updated_at on public.youtube_public_analytics_rollups;
-create trigger set_youtube_public_analytics_rollups_updated_at
-before update on public.youtube_public_analytics_rollups
-for each row execute function public.set_updated_at();
-
-create index if not exists idx_youtube_public_analytics_rollups_lookup
-on public.youtube_public_analytics_rollups (cohort_key, period_end desc);
-
 alter table public.youtube_analytics_consent enable row level security;
 alter table public.youtube_analytics_sync_runs enable row level security;
 alter table public.youtube_channel_snapshots enable row level security;
@@ -395,11 +321,8 @@ alter table public.youtube_video_snapshots enable row level security;
 alter table public.youtube_channel_analytics_daily enable row level security;
 alter table public.youtube_video_analytics_daily enable row level security;
 alter table public.youtube_analytics_breakdowns enable row level security;
-alter table public.youtube_playlist_snapshots enable row level security;
-alter table public.youtube_playlist_item_snapshots enable row level security;
 alter table public.youtube_comment_snapshots enable row level security;
 alter table public.youtube_channel_insight_runs enable row level security;
-alter table public.youtube_public_analytics_rollups enable row level security;
 
 drop policy if exists "Users can read own analytics consent" on public.youtube_analytics_consent;
 create policy "Users can read own analytics consent"
@@ -422,18 +345,9 @@ on public.youtube_video_analytics_daily for select using (auth.uid() = user_id);
 drop policy if exists "Users can read own analytics breakdowns" on public.youtube_analytics_breakdowns;
 create policy "Users can read own analytics breakdowns"
 on public.youtube_analytics_breakdowns for select using (auth.uid() = user_id);
-drop policy if exists "Users can read own playlist snapshots" on public.youtube_playlist_snapshots;
-create policy "Users can read own playlist snapshots"
-on public.youtube_playlist_snapshots for select using (auth.uid() = user_id);
-drop policy if exists "Users can read own playlist item snapshots" on public.youtube_playlist_item_snapshots;
-create policy "Users can read own playlist item snapshots"
-on public.youtube_playlist_item_snapshots for select using (auth.uid() = user_id);
 drop policy if exists "Users can read own comment snapshots" on public.youtube_comment_snapshots;
 create policy "Users can read own comment snapshots"
 on public.youtube_comment_snapshots for select using (auth.uid() = user_id);
 drop policy if exists "Users can read own insight runs" on public.youtube_channel_insight_runs;
 create policy "Users can read own insight runs"
 on public.youtube_channel_insight_runs for select using (auth.uid() = user_id);
-drop policy if exists "Anyone can read public analytics rollups" on public.youtube_public_analytics_rollups;
-create policy "Anyone can read public analytics rollups"
-on public.youtube_public_analytics_rollups for select using (true);
