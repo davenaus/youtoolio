@@ -131,6 +131,24 @@ interface FullAnalysis {
   insights: string[];
   opportunities: string[];
   actions: string[];
+  researchLab?: ResearchLab;
+}
+
+interface ResearchLabItem {
+  label: string;
+  answer: string;
+  confidence: string;
+}
+
+interface ResearchLabSection {
+  title: string;
+  items: ResearchLabItem[];
+}
+
+interface ResearchLab {
+  generatedAt: string;
+  note: string;
+  sections: ResearchLabSection[];
 }
 
 interface DashboardPayload {
@@ -165,7 +183,7 @@ interface CacheEnvelope<T> {
 
 const DASHBOARD_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const FULL_ANALYSIS_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 
 const shimmer = keyframes`
   0% { background-position: 100% 0; }
@@ -550,6 +568,67 @@ const VideoMeta = styled.div`
   margin-top: 0.25rem;
 `;
 
+const ResearchGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const ResearchCard = styled.div`
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: 10px;
+  padding: 0.85rem;
+  background: rgba(255, 255, 255, 0.018);
+`;
+
+const ResearchTitle = styled.h4`
+  margin: 0 0 0.65rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.78rem;
+`;
+
+const ResearchList = styled.div`
+  display: grid;
+  gap: 0.55rem;
+`;
+
+const ResearchItem = styled.div`
+  display: grid;
+  gap: 0.16rem;
+`;
+
+const ResearchQuestion = styled.div`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.69rem;
+  font-weight: 700;
+  line-height: 1.35;
+`;
+
+const ResearchAnswer = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.68rem;
+  line-height: 1.45;
+`;
+
+const ConfidencePill = styled.span`
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 0.12rem;
+  border: 1px solid rgba(239, 68, 68, 0.32);
+  border-radius: 999px;
+  padding: 0.1rem 0.4rem;
+  color: #fca5a5;
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+`;
+
 function readCache<T>(key: string, ttlMs: number): T | null {
   try {
     const raw = localStorage.getItem(key);
@@ -677,6 +756,33 @@ function renderDemographicRows(rows: DemographicRow[] | undefined) {
   );
 }
 
+function renderResearchLab(researchLab: ResearchLab | undefined) {
+  if (!researchLab?.sections?.length) return null;
+
+  return (
+    <AnalysisSection style={{ gridColumn: '1 / -1' }}>
+      <SectionTitle>Private research lab</SectionTitle>
+      <VideoMeta style={{ marginBottom: '0.9rem' }}>{researchLab.note}</VideoMeta>
+      <ResearchGrid>
+        {researchLab.sections.map((section) => (
+          <ResearchCard key={section.title}>
+            <ResearchTitle>{section.title}</ResearchTitle>
+            <ResearchList>
+              {section.items.map((entry) => (
+                <ResearchItem key={`${section.title}-${entry.label}`}>
+                  <ResearchQuestion>{entry.label}</ResearchQuestion>
+                  <ResearchAnswer>{entry.answer}</ResearchAnswer>
+                  <ConfidencePill>{entry.confidence}</ConfidencePill>
+                </ResearchItem>
+              ))}
+            </ResearchList>
+          </ResearchCard>
+        ))}
+      </ResearchGrid>
+    </AnalysisSection>
+  );
+}
+
 function buildPath(values: number[]) {
   if (values.length < 2) return '';
 
@@ -783,6 +889,7 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
 
   const dashboardCacheKey = user?.id ? `youtool.account.dashboard.${CACHE_VERSION}.${user.id}` : '';
   const fullCacheKey = user?.id ? `youtool.account.fullAnalysis.${CACHE_VERSION}.${user.id}` : '';
+  const isResearchAdmin = user?.email?.toLowerCase() === 'austindavenport000@gmail.com';
 
   useEffect(() => {
     let cancelled = false;
@@ -1158,6 +1265,8 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
                   <SectionTitle>Known audience</SectionTitle>
                   {renderDemographicRows(fullAnalysis.breakdowns?.demographics)}
                 </AnalysisSection>
+
+                {isResearchAdmin && renderResearchLab(fullAnalysis.researchLab)}
 
                 <AnalysisSection style={{ gridColumn: '1 / -1' }}>
                   <SectionTitle>Top recent videos</SectionTitle>

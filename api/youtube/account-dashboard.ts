@@ -803,6 +803,419 @@ function buildInsightText(summary: any, topVideos: any[], breakdowns: any) {
   };
 }
 
+function compact(value: number | null | undefined, digits = 1) {
+  const next = Number(value || 0);
+  return new Intl.NumberFormat('en-US', {
+    notation: Math.abs(next) >= 10000 ? 'compact' : 'standard',
+    maximumFractionDigits: Math.abs(next) >= 10000 ? digits : 0,
+  }).format(next);
+}
+
+function pct(value: number | null | undefined, digits = 1) {
+  const next = Number(value);
+  if (!Number.isFinite(next)) return 'not enough data';
+  return `${new Intl.NumberFormat('en-US', { maximumFractionDigits: digits }).format(next)}%`;
+}
+
+function secondsToLabel(seconds: number | null | undefined) {
+  const total = Math.round(Number(seconds || 0));
+  const minutes = Math.floor(total / 60);
+  const secs = total % 60;
+  if (minutes >= 60) return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+  return `${minutes}:${String(secs).padStart(2, '0')}`;
+}
+
+function item(label: string, answer: string, confidence = 'Live') {
+  return { label, answer, confidence };
+}
+
+function median(values: number[]) {
+  const sorted = values.filter((value) => Number.isFinite(value)).sort((a, b) => a - b);
+  if (!sorted.length) return 0;
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
+function percentile(values: number[], percent: number) {
+  const sorted = values.filter((value) => Number.isFinite(value)).sort((a, b) => a - b);
+  if (!sorted.length) return 0;
+  const index = Math.min(sorted.length - 1, Math.max(0, Math.ceil((percent / 100) * sorted.length) - 1));
+  return sorted[index];
+}
+
+function pearson(pairs: any[], leftKey: string, rightKey: string) {
+  const points = pairs
+    .map((entry) => [Number(entry[leftKey]), Number(entry[rightKey])])
+    .filter(([left, right]) => Number.isFinite(left) && Number.isFinite(right));
+
+  if (points.length < 3) return null;
+
+  const leftMean = points.reduce((sum, point) => sum + point[0], 0) / points.length;
+  const rightMean = points.reduce((sum, point) => sum + point[1], 0) / points.length;
+  let numerator = 0;
+  let leftVariance = 0;
+  let rightVariance = 0;
+
+  points.forEach(([left, right]) => {
+    const leftDelta = left - leftMean;
+    const rightDelta = right - rightMean;
+    numerator += leftDelta * rightDelta;
+    leftVariance += leftDelta ** 2;
+    rightVariance += rightDelta ** 2;
+  });
+
+  const denominator = Math.sqrt(leftVariance * rightVariance);
+  return denominator ? numerator / denominator : null;
+}
+
+function correlationLabel(value: number | null) {
+  if (value === null) return 'Needs at least 3 matching videos.';
+  const strength = Math.abs(value) >= 0.7 ? 'strong' : Math.abs(value) >= 0.4 ? 'moderate' : Math.abs(value) >= 0.2 ? 'light' : 'weak';
+  const direction = value > 0 ? 'positive' : value < 0 ? 'negative' : 'flat';
+  return `${strength} ${direction} relationship (r=${value.toFixed(2)})`;
+}
+
+function groupStats(rows: any[], keyFn: (row: any) => string, valueFn: (row: any) => number) {
+  const groups = new Map();
+  rows.forEach((row) => {
+    const key = keyFn(row);
+    const value = valueFn(row);
+    if (!key || !Number.isFinite(value)) return;
+    const current = groups.get(key) || { key, count: 0, total: 0 };
+    current.count += 1;
+    current.total += value;
+    groups.set(key, current);
+  });
+
+  return Array.from(groups.values())
+    .map((group) => ({ ...group, average: group.count ? group.total / group.count : 0 }))
+    .sort((left, right) => right.average - left.average);
+}
+
+function weekdayLabel(dateValue: string | null | undefined) {
+  if (!dateValue) return '';
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+}
+
+function hourLabel(dateValue: string | null | undefined) {
+  if (!dateValue) return '';
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return '';
+  const hour = date.getUTCHours();
+  const suffix = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 || 12;
+  return `${displayHour} ${suffix} UTC`;
+}
+
+function durationBucket(seconds: number) {
+  if (!seconds) return 'Unknown length';
+  if (seconds <= 60) return '0-60 seconds';
+  if (seconds <= 180) return '1-3 minutes';
+  if (seconds <= 480) return '3-8 minutes';
+  if (seconds <= 900) return '8-15 minutes';
+  if (seconds <= 1800) return '15-30 minutes';
+  return '30+ minutes';
+}
+
+function titleFeatures(video: any) {
+  const title = String(video.title || '');
+  const words = title.toLowerCase().match(/[a-z0-9]+/g) || [];
+  const emotionalWords = ['best', 'worst', 'secret', 'shocking', 'easy', 'hard', 'mistake', 'truth', 'insane', 'powerful', 'fast', 'slow'];
+  return {
+    titleLength: title.length,
+    titleWordCount: words.length,
+    hasNumber: /\d/.test(title),
+    hasQuestion: title.includes('?'),
+    emotionalWordCount: words.filter((word) => emotionalWords.includes(word)).length,
+    uppercaseShare: title.length ? ((title.match(/[A-Z]/g) || []).length / title.length) * 100 : 0,
+  };
+}
+
+function enrichVideosForResearch(topVideos: any[]) {
+  return topVideos.map((video) => {
+    const features = titleFeatures(video);
+    const views = toNumber(video.views);
+    const engagementRate = toNumber(video.engagementRate);
+    const thumbnailCtr = video.thumbnailCtr === null ? null : toNumber(video.thumbnailCtr);
+    const averageViewPercentage = toNumber(video.averageViewPercentage);
+    const netSubscribers = toNumber(video.netSubscribers);
+    return {
+      ...video,
+      ...features,
+      durationBucket: durationBucket(toNumber(video.durationSeconds)),
+      views,
+      engagementRate,
+      thumbnailCtr,
+      averageViewPercentage,
+      watchHours: toNumber(video.watchHours),
+      netSubscribers,
+      subsPerThousandViews: views ? (netSubscribers / views) * 1000 : 0,
+      likeRate: ratio(toNumber(video.likes), views),
+      commentRate: ratio(toNumber(video.comments), views),
+      shareRate: ratio(toNumber(video.shares), views),
+      playlistAddRate: ratio(toNumber(video.playlistNetAdds), views),
+    };
+  });
+}
+
+function topLabel(rows: any[], empty = 'Not enough data yet') {
+  return rows[0]?.key || rows[0]?.label || empty;
+}
+
+function buildResearchLab(summary: any, fullAnalysis: any) {
+  const videos = enrichVideosForResearch(fullAnalysis.topVideos || []);
+  const dailyRows = fullAnalysis.dailyRows || [];
+  const videoDailyRows = fullAnalysis.videoDailyRows || [];
+  const breakdowns = fullAnalysis.breakdowns || {};
+  const comments = fullAnalysis.comments || [];
+  const views = videos.map((video: any) => video.views);
+  const ctrs = videos.map((video: any) => Number(video.thumbnailCtr)).filter(Number.isFinite);
+  const retentions = videos.map((video: any) => video.averageViewPercentage);
+  const engagements = videos.map((video: any) => video.engagementRate);
+  const medianViews = median(views);
+  const medianCtr = median(ctrs);
+  const medianRetention = median(retentions);
+  const medianEngagement = median(engagements);
+  const p90Views = percentile(views, 90);
+  const p90Ctr = percentile(ctrs, 90);
+  const p90Retention = percentile(retentions, 90);
+  const p90Engagement = percentile(engagements, 90);
+  const topVideo = videos[0];
+  const strongestTraffic = breakdowns.trafficSources?.[0];
+  const strongestSearch = breakdowns.searchTerms?.[0];
+  const strongestExternal = breakdowns.externalSources?.[0];
+  const strongestCountry = breakdowns.countries?.[0];
+  const strongestDevice = breakdowns.devices?.[0];
+  const strongestContentType = breakdowns.contentTypes?.[0];
+  const subscribed = breakdowns.subscribedStatus?.find((row: any) => row.key === 'SUBSCRIBED');
+  const unsubscribed = breakdowns.subscribedStatus?.find((row: any) => row.key === 'UNSUBSCRIBED');
+  const bestPublishDayViews = groupStats(videos, (video) => weekdayLabel(video.publishedAt), (video) => video.views);
+  const bestPublishDaySubs = groupStats(videos, (video) => weekdayLabel(video.publishedAt), (video) => video.subsPerThousandViews);
+  const bestPublishHourCtr = groupStats(videos.filter((video: any) => video.thumbnailCtr !== null), (video) => hourLabel(video.publishedAt), (video) => video.thumbnailCtr);
+  const bestPublishHourWatch = groupStats(videos, (video) => hourLabel(video.publishedAt), (video) => video.watchHours);
+  const bestPublishHourEngagement = groupStats(videos, (video) => hourLabel(video.publishedAt), (video) => video.engagementRate);
+  const bestDailyViews = groupStats(dailyRows, (row) => weekdayLabel(row.date), (row) => toNumber(row.views));
+  const bestDailySubs = groupStats(dailyRows, (row) => weekdayLabel(row.date), (row) => toNumber(row.subscribersGained) - toNumber(row.subscribersLost));
+  const bestLengthViews = groupStats(videos, (video) => video.durationBucket, (video) => video.views);
+  const bestLengthRetention = groupStats(videos, (video) => video.durationBucket, (video) => video.averageViewPercentage);
+  const bestLengthSubs = groupStats(videos, (video) => video.durationBucket, (video) => video.subsPerThousandViews);
+  const highCtrWeakRetention = videos.filter((video: any) => video.thumbnailCtr !== null && video.thumbnailCtr >= medianCtr && video.averageViewPercentage < medianRetention).slice(0, 3);
+  const lowReachHighEngagement = videos.filter((video: any) => video.views < medianViews && video.engagementRate >= medianEngagement).slice(0, 3);
+  const highReachLowEngagement = videos.filter((video: any) => video.views >= medianViews && video.engagementRate < medianEngagement).slice(0, 3);
+  const outliers = videos.filter((video: any) => video.views >= p90Views || video.thumbnailCtr >= p90Ctr || video.averageViewPercentage >= p90Retention).slice(0, 5);
+  const shorts = videos.filter((video: any) => video.isShortGuess);
+  const longForm = videos.filter((video: any) => !video.isShortGuess);
+  const avg = (rows: any[], fn: (row: any) => number) => rows.length ? rows.reduce((sum, row) => sum + fn(row), 0) / rows.length : 0;
+  const commentVelocityVideo = videos
+    .map((video: any) => ({
+      key: video.title,
+      average: comments.filter((comment: any) => comment.videoId === video.id).length,
+    }))
+    .sort((left: any, right: any) => right.average - left.average);
+  const peakRows = videoDailyRows.reduce((map: any, row: any) => {
+    if (!map[row.videoId] || toNumber(row.views) > toNumber(map[row.videoId].views)) map[row.videoId] = row;
+    return map;
+  }, {});
+  const peakDescriptions = Object.values(peakRows).slice(0, 3).map((row: any) => {
+    const video = videos.find((entry: any) => entry.id === row.videoId);
+    return `${video?.title || row.videoId}: ${compact(row.views)} views on ${row.date}`;
+  });
+
+  return {
+    generatedAt: new Date().toISOString(),
+    note: 'Private admin research view. Some answers are live from the current 28-day pull; hourly/longitudinal answers improve as stored history accumulates.',
+    sections: [
+      {
+        title: 'Timing, Cadence, And Lifecycle',
+        items: [
+          item('Best hour of day for highest CTR', `${topLabel(bestPublishHourCtr, 'Needs more videos with CTR')} is the current publish-hour proxy for CTR.`, 'Proxy'),
+          item('Best hour of day for highest watch time', `${topLabel(bestPublishHourWatch, 'Needs more videos')} is the current publish-hour proxy for watch time.`, 'Proxy'),
+          item('Best hour of day for highest engagement rate', `${topLabel(bestPublishHourEngagement, 'Needs more videos')} is the current publish-hour proxy for engagement.`, 'Proxy'),
+          item('Best day of week for video performance', `${topLabel(bestPublishDayViews, topLabel(bestDailyViews))} leads by average views in the current sample.`),
+          item('Best day for subscriber conversion', `${topLabel(bestPublishDaySubs, topLabel(bestDailySubs))} currently leads subscriber conversion.`),
+          item('Time-to-peak views after publish', peakDescriptions.length ? peakDescriptions.join(' | ') : 'Daily video rows are now being collected; peak timing strengthens after repeated runs.', 'Building history'),
+          item('Time-to-peak impressions after publish', 'Daily impression rows are now stored when YouTube returns them; true peak timing needs repeated daily snapshots after publish.', 'Building history'),
+          item('Average lifespan of a video’s growth', 'Growth lifespan is now trackable from stored daily video rows; first useful decay curve appears after several weeks of repeated full analyses.', 'Building history'),
+          item('View velocity in first 1 hour', 'YouTube Analytics does not provide hourly rows here; this needs scheduled snapshots around publish time.', 'Needs hourly snapshots'),
+          item('View velocity in first 24 hours', 'Publish-day daily video rows are now stored as the 24-hour proxy.', 'Proxy'),
+          item('Impression velocity in first 24 hours', 'Publish-day thumbnail impressions are now stored when returned by YouTube Analytics.', 'Proxy'),
+          item('CTR, retention, and engagement decay over time', `Current 28-day medians are ${pct(medianCtr)} CTR, ${pct(medianRetention)} average viewed, and ${pct(medianEngagement)} engagement; decay curves improve as daily history accumulates.`, 'Building history'),
+        ],
+      },
+      {
+        title: 'Length, Format, And Content Type',
+        items: [
+          item('Optimal video length by niche', `${topLabel(bestLengthViews)} leads by average views in this channel sample; niche-level benchmark needs more channels.`, 'Channel-level'),
+          item('Optimal video length by traffic source', `Current strongest source is ${strongestTraffic?.label || 'not enough data'}; source-by-length becomes stronger as more videos are stored.`, 'Building history'),
+          item('Optimal video length for subscriber growth', `${topLabel(bestLengthSubs)} currently leads subscribers per 1K views.`),
+          item('Relationship between video length and retention', correlationLabel(pearson(videos, 'durationSeconds', 'averageViewPercentage'))),
+          item('Relationship between video length and CTR', correlationLabel(pearson(videos.filter((video: any) => video.thumbnailCtr !== null), 'durationSeconds', 'thumbnailCtr'))),
+          item('Relationship between video length and watch time', correlationLabel(pearson(videos, 'durationSeconds', 'watchHours'))),
+          item('Shorts vs long-form performance differences', `Shorts avg ${compact(avg(shorts, (video) => video.views))} views vs long-form avg ${compact(avg(longForm, (video) => video.views))} views.`),
+          item('Shorts contribution to total channel growth', `${strongestContentType?.label || 'Content type data not returned'} is currently carrying ${pct(strongestContentType?.shareOfViews || 0, 0)} of views.`),
+          item('Live vs VOD performance differences', `${breakdowns.liveOrOnDemand?.[0]?.label || 'No live/on-demand split'} leads the current period.`),
+        ],
+      },
+      {
+        title: 'Metric Relationships',
+        items: [
+          item('CTR vs watch time correlation', correlationLabel(pearson(videos.filter((video: any) => video.thumbnailCtr !== null), 'thumbnailCtr', 'watchHours'))),
+          item('CTR vs retention correlation', correlationLabel(pearson(videos.filter((video: any) => video.thumbnailCtr !== null), 'thumbnailCtr', 'averageViewPercentage'))),
+          item('Retention vs subscriber conversion correlation', correlationLabel(pearson(videos, 'averageViewPercentage', 'subsPerThousandViews'))),
+          item('Engagement vs retention correlation', correlationLabel(pearson(videos, 'engagementRate', 'averageViewPercentage'))),
+          item('Engagement vs CTR correlation', correlationLabel(pearson(videos.filter((video: any) => video.thumbnailCtr !== null), 'engagementRate', 'thumbnailCtr'))),
+          item('Views vs subscriber conversion rate', correlationLabel(pearson(videos, 'views', 'subsPerThousandViews'))),
+          item('Views vs engagement rate scaling patterns', correlationLabel(pearson(videos, 'views', 'engagementRate'))),
+          item('Like, comment, share, and playlist add rate vs performance', `Like/views ${correlationLabel(pearson(videos, 'likeRate', 'views'))}; comment/views ${correlationLabel(pearson(videos, 'commentRate', 'views'))}; share/views ${correlationLabel(pearson(videos, 'shareRate', 'views'))}; playlist/views ${correlationLabel(pearson(videos, 'playlistAddRate', 'views'))}.`),
+          item('Impressions vs views efficiency', `Current channel CTR is ${pct(fullAnalysis.current.thumbnailCtr)} with ${compact(fullAnalysis.current.videoThumbnailImpressions)} impressions.`),
+          item('Watch time per impression', fullAnalysis.current.videoThumbnailImpressions ? `${secondsToLabel((fullAnalysis.current.watchHours * 3600) / fullAnalysis.current.videoThumbnailImpressions)} watch time per impression.` : 'Needs impression data.'),
+          item('Engagement and subscriber conversion per impression', fullAnalysis.current.videoThumbnailImpressions ? `${pct((fullAnalysis.current.likes + fullAnalysis.current.comments + fullAnalysis.current.shares) / fullAnalysis.current.videoThumbnailImpressions * 100)} engagement per impression; ${pct(fullAnalysis.current.netSubscribers / fullAnalysis.current.videoThumbnailImpressions * 100)} net subs per impression.` : 'Needs impression data.'),
+        ],
+      },
+      {
+        title: 'Benchmarks, Outliers, And Breakout Signals',
+        items: [
+          item('Top percentile CTR benchmarks', `Top current sample CTR starts around ${pct(p90Ctr)}.`),
+          item('Top percentile retention benchmarks', `Top current sample retention starts around ${pct(p90Retention)} average viewed.`),
+          item('Top percentile engagement benchmarks', `Top current sample engagement starts around ${pct(p90Engagement)}.`),
+          item('Median vs top performer gaps', `Median views ${compact(medianViews)} vs top sample threshold ${compact(p90Views)}.`),
+          item('Performance distribution curves across channels', 'Personal distribution is live; cross-channel curves need more opted-in channels and rollups.', 'Building cohort data'),
+          item('Outlier detection for viral videos', outliers.length ? outliers.map((video: any) => video.title).join(' | ') : 'No strong outlier in the current sample.'),
+          item('Retention thresholds for scaling', `Current retention threshold proxy: ${pct(p90Retention)} average viewed.`),
+          item('CTR thresholds for scaling', `Current CTR threshold proxy: ${pct(p90Ctr)}.`),
+          item('Combined CTR + retention thresholds for growth', `Flag videos above ${pct(p90Ctr)} CTR and ${pct(p90Retention)} average viewed as strongest packaging-content fit.`),
+          item('Signals that predict breakout videos', `Best current breakout recipe: high CTR, high retention, strong engagement, and traffic diversity. Top candidate: ${topVideo?.title || 'not enough data'}.`),
+          item('Minimum viable performance for algorithm pickup', `Use channel medians as baseline: ${pct(medianCtr)} CTR, ${pct(medianRetention)} retention, ${pct(medianEngagement)} engagement.`),
+        ],
+      },
+      {
+        title: 'Traffic, Search, And Discovery',
+        items: [
+          item('Browse vs suggested vs search performance splits', `${(breakdowns.trafficSources || []).map((row: any) => `${row.label}: ${pct(row.shareOfViews, 0)}`).slice(0, 4).join(' | ') || 'No source split returned.'}`),
+          item('Traffic source contribution over time', 'Current source mix is live; source transition over time improves as daily breakdown history accumulates.', 'Building history'),
+          item('Which sources dominate early vs late lifecycle', 'Now collecting video/day rows; early vs late source detail needs repeated source breakdowns over time.', 'Building history'),
+          item('Source-specific retention differences', `${strongestTraffic?.label || 'Top source'} currently averages ${secondsToLabel(strongestTraffic?.views ? strongestTraffic.watchHours * 3600 / strongestTraffic.views : 0)} AVD proxy.`),
+          item('Source-specific CTR differences', 'Traffic source reports do not return thumbnail CTR; use source views + watch time + engagement as source quality proxy.', 'Limited by API'),
+          item('Search-driven video characteristics', `${strongestSearch?.label || 'No search term'} is the strongest returned search detail.`),
+          item('Browse-driven video characteristics', `${breakdowns.trafficSources?.find((row: any) => row.key === 'BROWSE')?.label || 'Browse'} contributes ${pct(breakdowns.trafficSources?.find((row: any) => row.key === 'BROWSE')?.shareOfViews || 0, 0)} of views.`),
+          item('Suggested-driven video characteristics', `${breakdowns.trafficSources?.find((row: any) => row.key === 'RELATED_VIDEO')?.label || 'Suggested videos'} contributes ${pct(breakdowns.trafficSources?.find((row: any) => row.key === 'RELATED_VIDEO')?.shareOfViews || 0, 0)} of views.`),
+          item('External traffic impact on performance', `${strongestExternal?.label || 'No external source'} is the strongest returned external source.`),
+          item('Dependence on single traffic source vs diversified', strongestTraffic ? `${strongestTraffic.label} owns ${pct(strongestTraffic.shareOfViews, 0)} of views; higher than 60% means source dependence risk.` : 'No traffic source data returned.'),
+          item('Top performing search terms by niche', `${strongestSearch?.label || 'No search terms returned yet'} is the current top returned term; niche-level requires cohort rollups.`, 'Channel-level'),
+          item('Long-tail vs short-tail search effectiveness', breakdowns.searchTerms?.length ? `${breakdowns.searchTerms.length} search details returned this period; classify multi-word terms as long-tail in the research table.` : 'No search details returned.'),
+        ],
+      },
+      {
+        title: 'Audience, Geo, Device, And Playback',
+        items: [
+          item('Subscribed vs non-subscribed viewer behavior', `Subscribed ${pct(subscribed?.shareOfViews || 0, 0)} vs non-subscribed ${pct(unsubscribed?.shareOfViews || 0, 0)} of views.`),
+          item('Subscriber retention vs non-subscriber retention', 'Subscribed-status report gives views/watch time; retention proxy is watch time per view by segment.', 'Proxy'),
+          item('Subscriber conversion rate by video type', `${strongestContentType?.label || 'Content type split'} is the leading current type; conversion by type gets stronger as video rows accumulate.`),
+          item('Videos that attract new vs returning viewers', 'Returning/new viewer split is not available from current scope in this endpoint; subscribed/unsubscribed is the closest live proxy.', 'Limited by API'),
+          item('Geographic performance differences', `${strongestCountry?.label || 'No country'} leads with ${pct(strongestCountry?.shareOfViews || 0, 0)} of views.`),
+          item('Country-level retention, CTR, and engagement differences', 'Country rows are stored for views/watch time; CTR and engagement by country need additional report combinations if supported.', 'Partial'),
+          item('Geographic contribution to growth', `${strongestCountry?.label || 'No country'} is the current strongest geography.`),
+          item('Time zone alignment vs performance', 'Publish-hour proxy is UTC today; mapping audience country/time zone becomes stronger with stored geo + publish history.', 'Building history'),
+          item('Age and gender performance differences', `${breakdowns.demographics?.[0]?.label || 'No demographic split'} is the strongest known audience segment returned.`),
+          item('Demographic retention and CTR differences', 'YouTube demographic rows here return viewer percentage; retention/CTR by demographic is not live in this endpoint.', 'Limited by API'),
+          item('Mobile vs desktop vs TV performance', `${strongestDevice?.label || 'No device'} leads device views at ${pct(strongestDevice?.shareOfViews || 0, 0)}.`),
+          item('Device-based retention and engagement differences', `Top device AVD proxy is ${secondsToLabel(strongestDevice?.views ? strongestDevice.watchHours * 3600 / strongestDevice.views : 0)}.`),
+          item('Playback location impact on performance', `${breakdowns.youtubeProducts?.[0]?.label || 'No YouTube surface'} is the top returned YouTube surface.`),
+        ],
+      },
+      {
+        title: 'Subscribers, Engagement, And Conversion',
+        items: [
+          item('Subscriber gain per 1,000 views', `${fullAnalysis.current.subsPerThousandViews.toFixed(2)} net subscribers per 1K views in the current window.`),
+          item('Subscriber loss patterns after uploads', 'Subscribers gained/lost are now stored by video/day where returned; patterns improve after more publish cycles.', 'Building history'),
+          item('Net subscriber growth by content type', `${strongestContentType?.label || 'Content type'} leads current views; subscriber-by-type strengthens as video/day rows accumulate.`),
+          item('Channels with high views but low subscriber growth', 'Cross-channel detection needs opted-in cohort rollups; personal detection is live via views vs subs/1K.', 'Building cohort data'),
+          item('Videos with high engagement but low reach', lowReachHighEngagement.length ? lowReachHighEngagement.map((video: any) => video.title).join(' | ') : 'No obvious low-reach/high-engagement candidate.'),
+          item('Videos with high reach but low engagement', highReachLowEngagement.length ? highReachLowEngagement.map((video: any) => video.title).join(' | ') : 'No obvious high-reach/low-engagement candidate.'),
+          item('Engagement as leading vs lagging indicator', correlationLabel(pearson(videos, 'engagementRate', 'views'))),
+          item('Best performing content for gaining subscribers', videos.slice().sort((a: any, b: any) => b.netSubscribers - a.netSubscribers)[0]?.title || 'Needs video subscriber rows.'),
+          item('Best performing content for generating engagement', videos.slice().sort((a: any, b: any) => b.engagementRate - a.engagementRate)[0]?.title || 'Needs video engagement rows.'),
+          item('Best performing content for maximizing watch time', videos.slice().sort((a: any, b: any) => b.watchHours - a.watchHours)[0]?.title || 'Needs video watch-time rows.'),
+          item('Videos that convert viewers into subscribers efficiently', videos.slice().sort((a: any, b: any) => b.subsPerThousandViews - a.subsPerThousandViews)[0]?.title || 'Needs subscriber conversion rows.'),
+          item('Videos that generate passive, non-converting views', videos.filter((video: any) => video.views >= medianViews).sort((a: any, b: any) => a.subsPerThousandViews - b.subsPerThousandViews)[0]?.title || 'No passive-view candidate yet.'),
+        ],
+      },
+      {
+        title: 'Metadata, Packaging, And Thumbnails',
+        items: [
+          item('Correlation between title length and CTR', correlationLabel(pearson(videos.filter((video: any) => video.thumbnailCtr !== null), 'titleLength', 'thumbnailCtr'))),
+          item('Title length vs retention correlation', correlationLabel(pearson(videos, 'titleLength', 'averageViewPercentage'))),
+          item('Impact of numbers in titles on performance', `Number titles avg ${compact(avg(videos.filter((video: any) => video.hasNumber), (video) => video.views))} views vs non-number avg ${compact(avg(videos.filter((video: any) => !video.hasNumber), (video) => video.views))}.`),
+          item('Impact of questions in titles on CTR', `Question titles avg ${pct(avg(videos.filter((video: any) => video.hasQuestion && video.thumbnailCtr !== null), (video) => video.thumbnailCtr))} CTR.`),
+          item('Impact of emotional words in titles on engagement', correlationLabel(pearson(videos, 'emotionalWordCount', 'engagementRate'))),
+          item('Title capitalization patterns vs performance', correlationLabel(pearson(videos, 'uppercaseShare', 'views'))),
+          item('Description length vs performance', correlationLabel(pearson(videos.map((video: any) => ({ ...video, descriptionLength: String(video.description || '').length })), 'descriptionLength', 'views'))),
+          item('Links in description vs external traffic share', `${strongestExternal?.label || 'External data'} is now tracked; description link counts are stored in video snapshots for correlation.`, 'Stored for analysis'),
+          item('Tags count vs CTR correlation', correlationLabel(pearson(videos.filter((video: any) => video.thumbnailCtr !== null).map((video: any) => ({ ...video, tagCount: Array.isArray(video.tags) ? video.tags.length : 0 })), 'tagCount', 'thumbnailCtr'))),
+          item('Tags usage vs search traffic share', `${strongestSearch?.label || 'Search data'} is tracked while tag counts are stored per video.`, 'Stored for analysis'),
+          item('Thumbnail style consistency vs channel growth', 'Thumbnail resolution/aspect metadata is stored now; true visual style/text detection needs image processing.', 'Needs image processing'),
+          item('Thumbnail text presence vs CTR', 'Thumbnail image URLs are stored; text detection needs OCR/image analysis in a later pass.', 'Needs image processing'),
+          item('Thumbnail complexity vs CTR', 'Thumbnail proxy features are stored; visual complexity requires image analysis.', 'Needs image processing'),
+          item('High CTR but low retention patterns', highCtrWeakRetention.length ? highCtrWeakRetention.map((video: any) => video.title).join(' | ') : 'No high-CTR/low-retention candidate in current sample.'),
+          item('Low CTR but high retention patterns', videos.filter((video: any) => video.thumbnailCtr !== null && video.thumbnailCtr < medianCtr && video.averageViewPercentage >= medianRetention).slice(0, 3).map((video: any) => video.title).join(' | ') || 'No low-CTR/high-retention candidate in current sample.'),
+        ],
+      },
+      {
+        title: 'Topics, Niches, And Channel Strategy',
+        items: [
+          item('Topic-level and format-level performance trends', `${topVideo?.title || 'Top video'} is the current top-performing topic proxy; title/tag clustering is stored for deeper grouping.`),
+          item('Channel niche identification from metadata', `Current channel topics: ${(summary.channel.topicCategories || []).slice(0, 3).join(', ') || 'not returned by YouTube'}.`),
+          item('Niche-specific performance baselines', 'Cross-channel niche baselines require more opted-in channels and public rollups; personal baseline is live.', 'Building cohort data'),
+          item('Single-topic vs multi-topic channels', `Recent sample has ${new Set(videos.flatMap((video: any) => video.tags || []).slice(0, 100)).size} distinct tag signals.`),
+          item('Topic repetition vs performance', 'Titles/tags/descriptions are stored now, so repeated-topic performance can be measured after more uploads.', 'Building history'),
+          item('Topic diversification vs growth stability', 'Daily channel and video rows are now stored, enabling stability scoring over time.', 'Building history'),
+          item('Series-based content performance', 'Episode/series naming can be inferred from stored titles; needs more stored videos for stronger repeatability signals.', 'Building history'),
+          item('Upload clustering and cannibalization', 'Publish dates plus daily video rows are now stored; cannibalization improves after repeated upload cycles.', 'Building history'),
+          item('Videos that revive after initial drop', 'Daily video history is now stored; revival detection needs multiple snapshots per video over time.', 'Building history'),
+          item('Evergreen vs trending content patterns', 'Slow-burn vs spike behavior is now measurable from stored video/day rows as history accumulates.', 'Building history'),
+          item('Cross-channel comparison of similar videos', 'Requires opted-in cohort rollups; personal same-topic comparison is available once enough videos are stored.', 'Building cohort data'),
+          item('Channel authority signals', `Current consistency proxy: top video ${compact(topVideo?.views)} views vs median ${compact(medianViews)} views.`),
+        ],
+      },
+      {
+        title: 'Community, Comments, And Playlists',
+        items: [
+          item('Playlist-driven session extension', `${fullAnalysis.current.playlistNetAdds >= 0 ? '+' : ''}${compact(fullAnalysis.current.playlistNetAdds)} net playlist saves this window.`),
+          item('Playlist impact on watch time', `Playlist save rate is ${pct(fullAnalysis.current.playlistAddRate)} of views.`),
+          item('Videos that perform better inside playlists', 'Playlist adds/removes are now stored by video where returned; stronger ranking needs more video rows.', 'Building history'),
+          item('Comment volume vs video performance', correlationLabel(pearson(videos, 'comments', 'views'))),
+          item('Comment velocity after publish', `${topLabel(commentVelocityVideo, 'No comments synced')} has the most recent synced comments among top videos.`),
+          item('Comment sentiment vs engagement', 'Recent public comments are stored; sentiment requires a processing pass before scoring.', 'Needs text processing'),
+          item('Creator reply rate vs engagement growth', 'Replies are stored when returned, but creator-reply classification needs author matching.', 'Needs processing'),
+          item('Pinned comments impact on engagement', 'Pinned comment status is not returned in the current comment API payload.', 'Limited by API'),
+          item('Comment timing vs performance', 'Comment timestamps are stored now; early-vs-late comment analysis improves as publish cycles accumulate.', 'Building history'),
+          item('Community intensity per channel', `${comments.length} recent comments/replies synced from top videos in this full-analysis run.`),
+        ],
+      },
+      {
+        title: 'Channel Health, Reliability, And Momentum',
+        items: [
+          item('Top videos by views, watch time, and subscribers', `Views: ${videos.slice().sort((a: any, b: any) => b.views - a.views)[0]?.title || 'n/a'} | Watch: ${videos.slice().sort((a: any, b: any) => b.watchHours - a.watchHours)[0]?.title || 'n/a'} | Subs: ${videos.slice().sort((a: any, b: any) => b.netSubscribers - a.netSubscribers)[0]?.title || 'n/a'}.`),
+          item('Consistency vs volatility of channel performance', `Top/median views ratio is ${medianViews ? (Math.max(...views) / medianViews).toFixed(1) : 'n/a'}x.`),
+          item('Frequency of breakout videos per channel', `${outliers.length} videos currently clear a top-percentile threshold.`),
+          item('Upload frequency vs performance', 'Upload dates and performance are stored now; cadence scoring improves with more history.', 'Building history'),
+          item('Upload gaps vs performance dips', 'Daily channel rows are stored now, enabling gap/dip analysis after more days accumulate.', 'Building history'),
+          item('Burnout and audience fatigue signals', `Watch time delta ${pct(fullAnalysis.deltas.watchHours?.percent)}; engagement delta ${pct(fullAnalysis.deltas.engagementRate?.percent)}.`),
+          item('False positives and slow burn vs fast viral patterns', 'Stored daily rows will separate strong starts from durable performance over time.', 'Building history'),
+          item('Signals of content saturation', `Traffic diversity plus median engagement is the current proxy; top source share is ${pct(strongestTraffic?.shareOfViews || 0, 0)}.`),
+          item('Correlation between traffic diversity and stability', 'Traffic breakdown history is now stored by run; stability correlation improves over repeated runs.', 'Building history'),
+          item('Growth compounding effects over multiple uploads', 'Video sequencing and momentum stacking require multi-upload history; collection starts now.', 'Building history'),
+          item('Relative importance of each metric by outcome', `Current strongest quick read: ${correlationLabel(pearson(videos, 'watchHours', 'views'))} for watch time vs views, ${correlationLabel(pearson(videos, 'engagementRate', 'views'))} for engagement vs views.`),
+          item('Algorithm testing, scaling, and decline phases', 'Use high impressions + stable retention as scaling proxy; daily impression/retention rows are now stored for phase detection.', 'Building history'),
+          item('Videos that maintain performance vs decay quickly', 'Daily video rows are now stored; durable-vs-decay classification improves after repeated daily runs.', 'Building history'),
+        ],
+      },
+    ],
+  };
+}
+
 async function buildFullAnalysis(accessToken: string, summary: any, windows: any) {
   const [
     fullCurrentPayload,
@@ -1058,6 +1471,18 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
   };
 
   const text = buildInsightText(summary, topVideos, breakdowns);
+  const researchSource = {
+    current: fullCurrent,
+    previous: fullPrevious,
+    deltas: buildDeltas(fullCurrent, fullPrevious),
+    breakdowns,
+    topVideos,
+    dailyRows: fullDailyRows,
+    videoDailyRows,
+    videoMetadata,
+    comments,
+  };
+  const researchLab = buildResearchLab(summary, researchSource);
 
   return {
     generatedAt: new Date().toISOString(),
@@ -1077,6 +1502,7 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
     videoDailyRows,
     videoMetadata,
     comments,
+    researchLab,
     ...text,
   };
 }
