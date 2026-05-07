@@ -63,8 +63,26 @@ const REACH_METRICS = [
   'videoThumbnailImpressionsClickRate'
 ];
 
+const FULL_ANALYSIS_VIDEO_LIMIT = 50;
+const RECENT_UPLOAD_VIDEO_LIMIT = 50;
+const VIDEO_DAILY_ROW_LIMIT = 500;
+const COMMENT_VIDEO_LIMIT = 8;
+const COMMENT_LIMIT_PER_VIDEO = 20;
+
 function formatApiDate(timestamp: number): string {
   return new Date(timestamp).toISOString().split('T')[0];
+}
+
+function parseIsoDuration(duration: string): number {
+  const match = String(duration || '').match(/^P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
+  if (!match) return 0;
+  const [, days, hours, minutes, seconds] = match;
+  return (
+    toNumber(days) * 86400 +
+    toNumber(hours) * 3600 +
+    toNumber(minutes) * 60 +
+    toNumber(seconds)
+  );
 }
 
 function resolveDateWindows() {
@@ -405,9 +423,14 @@ function buildSegmentRows(payload: any, dimension: string, totalViews: number, m
       const views = toNumber(row.views);
       const watchHours = toNumber(row.estimatedMinutesWatched) / 60;
       const key = String(row[dimension] || '');
+      const label = dimension === 'country'
+        ? formatCountryLabel(key)
+        : dimension === 'insightTrafficSourceDetail'
+          ? key
+          : humanizeSegmentLabel(key);
       return {
         key,
-        label: dimension === 'country' ? formatCountryLabel(key) : humanizeSegmentLabel(key),
+        label,
         views,
         engagedViews: toNumber(row.engagedViews),
         watchHours,
@@ -445,7 +468,7 @@ function buildDemographicRows(payload: any, totalPercentage = 100, maxRows = 8) 
 
 async function fetchChannel(accessToken: string) {
   const url = new URL(`${YOUTUBE_API_BASE_URL}/channels`);
-  url.searchParams.set('part', 'snippet,statistics,contentDetails,status');
+  url.searchParams.set('part', 'snippet,statistics,contentDetails,status,brandingSettings,topicDetails,localizations');
   url.searchParams.set('mine', 'true');
 
   const response = await fetch(url.toString(), {
@@ -463,25 +486,177 @@ async function fetchChannel(accessToken: string) {
     viewCount: toNumber(channel?.statistics?.viewCount),
     uploadsPlaylistId: channel?.contentDetails?.relatedPlaylists?.uploads || '',
     madeForKids: channel?.status?.madeForKids ?? null,
+    customUrl: channel?.snippet?.customUrl || null,
+    country: channel?.snippet?.country || channel?.brandingSettings?.channel?.country || null,
+    defaultLanguage: channel?.snippet?.defaultLanguage || channel?.brandingSettings?.channel?.defaultLanguage || null,
+    description: channel?.snippet?.description || '',
+    publishedAt: channel?.snippet?.publishedAt || null,
+    topicCategories: channel?.topicDetails?.topicCategories || [],
+    localized: channel?.snippet?.localized || {},
+    branding: channel?.brandingSettings || {},
+    status: channel?.status || {},
+    raw: channel || {},
   };
 }
 
 async function fetchVideoDetails(accessToken: string, videoIds: string[]) {
-  if (!videoIds.length) return {};
+  const uniqueIds = Array.from(new Set(videoIds.filter(Boolean)));
+  if (!uniqueIds.length) return {};
 
-  const url = new URL(`${YOUTUBE_API_BASE_URL}/videos`);
-  url.searchParams.set('part', 'snippet,contentDetails,statistics,status');
-  url.searchParams.set('id', videoIds.join(','));
+  const chunks = [];
+  for (let index = 0; index < uniqueIds.length; index += 50) {
+    chunks.push(uniqueIds.slice(index, index + 50));
+  }
 
-  const response = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  const payload = await safeJson(response);
+  const maps = await Promise.all(chunks.map(async (chunk) => {
+    const url = new URL(`${YOUTUBE_API_BASE_URL}/videos`);
+    url.searchParams.set('part', 'snippet,contentDetails,statistics,status,topicDetails,localizations');
+    url.searchParams.set('id', chunk.join(','));
 
-  return (payload?.items || []).reduce((map: any, video: any) => {
-    map[video.id] = video;
-    return map;
-  }, {});
+    const response = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const payload = await safeJson(response);
+
+    return (payload?.items || []).reduce((map: any, video: any) => {
+      map[video.id] = video;
+      return map;
+    }, {});
+  }));
+
+  return maps.reduce((merged: any, map: any) => ({ ...merged, ...map }), {});
+}
+
+async function fetchRecentUploadVideoIds(accessToken: string, uploadsPlaylistId: string, maxResults = RECENT_UPLOAD_VIDEO_LIMIT) {
+  if (!uploadsPlaylistId) return [];
+
+  const ids: string[] = [];
+  let pageToken = '';
+
+  while (ids.length < maxResults) {
+    const url = new URL(`${YOUTUBE_API_BASE_URL}/playlistItems`);
+    url.searchParams.set('part', 'contentDetails');
+    url.searchParams.set('playlistId', uploadsPlaylistId);
+    url.searchParams.set('maxResults', String(Math.min(50, maxResults - ids.length)));
+    if (pageToken) url.searchParams.set('pageToken', pageToken);
+
+    const response = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const payload = await safeJson(response);
+    if (!response.ok || payload?.error) break;
+
+    (payload?.items || []).forEach((item: any) => {
+      const videoId = item?.contentDetails?.videoId;
+      if (videoId) ids.push(videoId);
+    });
+
+    pageToken = payload?.nextPageToken || '';
+    if (!pageToken) break;
+  }
+
+  return ids;
+}
+
+function resolveBestThumbnail(thumbnails: any) {
+  return thumbnails?.maxres?.url ||
+    thumbnails?.standard?.url ||
+    thumbnails?.high?.url ||
+    thumbnails?.medium?.url ||
+    thumbnails?.default?.url ||
+    null;
+}
+
+function buildThumbnailFeatures(video: any) {
+  const thumbnails = video?.snippet?.thumbnails || {};
+  const entries = Object.values(thumbnails).filter(Boolean) as any[];
+  const largest = entries
+    .slice()
+    .sort((left: any, right: any) => toNumber(right.width) * toNumber(right.height) - toNumber(left.width) * toNumber(left.height))[0];
+
+  return {
+    hasDefault: Boolean(thumbnails.default?.url),
+    hasHigh: Boolean(thumbnails.high?.url),
+    hasStandard: Boolean(thumbnails.standard?.url),
+    hasMaxres: Boolean(thumbnails.maxres?.url),
+    largestWidth: toNumber(largest?.width),
+    largestHeight: toNumber(largest?.height),
+    largestAspectRatio: largest?.height ? toNumber(largest.width) / toNumber(largest.height) : null,
+  };
+}
+
+function normalizeVideoMetadata(video: any, analyticsRow: any = {}) {
+  const durationSeconds = parseIsoDuration(video?.contentDetails?.duration || '');
+  const title = video?.snippet?.title || analyticsRow.title || video?.id || '';
+
+  return {
+    id: video?.id || analyticsRow.video || '',
+    title,
+    description: video?.snippet?.description || '',
+    thumbnailUrl: resolveBestThumbnail(video?.snippet?.thumbnails) || analyticsRow.thumbnailUrl || null,
+    publishedAt: video?.snippet?.publishedAt || analyticsRow.publishedAt || null,
+    durationIso: video?.contentDetails?.duration || null,
+    durationSeconds,
+    categoryId: video?.snippet?.categoryId || null,
+    tags: video?.snippet?.tags || [],
+    defaultLanguage: video?.snippet?.defaultLanguage || null,
+    defaultAudioLanguage: video?.snippet?.defaultAudioLanguage || null,
+    privacyStatus: video?.status?.privacyStatus || null,
+    uploadStatus: video?.status?.uploadStatus || null,
+    madeForKids: video?.status?.madeForKids ?? null,
+    caption: video?.contentDetails?.caption === 'true',
+    definition: video?.contentDetails?.definition || null,
+    dimension: video?.contentDetails?.dimension || null,
+    liveBroadcastContent: video?.snippet?.liveBroadcastContent || null,
+    topicCategories: video?.topicDetails?.topicCategories || [],
+    localized: video?.snippet?.localized || {},
+    viewCount: toNumber(video?.statistics?.viewCount),
+    likeCount: toNumber(video?.statistics?.likeCount),
+    commentCount: toNumber(video?.statistics?.commentCount),
+    isShortGuess: durationSeconds > 0 && durationSeconds <= 180,
+    thumbnailFeatures: buildThumbnailFeatures(video),
+    raw: video || {},
+  };
+}
+
+async function fetchRecentComments(accessToken: string, videoIds: string[]) {
+  const commentLists = await Promise.all(videoIds.slice(0, COMMENT_VIDEO_LIMIT).map(async (videoId) => {
+    try {
+      const url = new URL(`${YOUTUBE_API_BASE_URL}/commentThreads`);
+      url.searchParams.set('part', 'snippet,replies');
+      url.searchParams.set('videoId', videoId);
+      url.searchParams.set('order', 'time');
+      url.searchParams.set('textFormat', 'plainText');
+      url.searchParams.set('maxResults', String(COMMENT_LIMIT_PER_VIDEO));
+
+      const response = await fetch(url.toString(), {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const payload = await safeJson(response);
+      if (!response.ok || payload?.error) return [];
+
+      return (payload?.items || []).flatMap((thread: any) => {
+        const topComment = thread?.snippet?.topLevelComment;
+        const replies = thread?.replies?.comments || [];
+        return [topComment, ...replies].filter(Boolean).map((comment: any) => ({
+          id: comment.id,
+          videoId,
+          parentCommentId: comment?.snippet?.parentId || null,
+          authorDisplayName: comment?.snippet?.authorDisplayName || null,
+          authorChannelId: comment?.snippet?.authorChannelId?.value || null,
+          likeCount: toNumber(comment?.snippet?.likeCount),
+          publishedAt: comment?.snippet?.publishedAt || null,
+          updatedAt: comment?.snippet?.updatedAt || null,
+          textDisplay: comment?.snippet?.textDisplay || '',
+          textOriginal: comment?.snippet?.textOriginal || '',
+          raw: comment,
+        }));
+      });
+    } catch {
+      return [];
+    }
+  }));
+  return commentLists.flat();
 }
 
 async function buildSummary(accessToken: string, connection: any, windows: any) {
@@ -517,6 +692,16 @@ async function buildSummary(accessToken: string, connection: any, windows: any) 
       subscriberCount: channel.subscriberCount,
       videoCount: channel.videoCount,
       viewCount: channel.viewCount,
+      uploadsPlaylistId: channel.uploadsPlaylistId,
+      description: channel.description,
+      customUrl: channel.customUrl,
+      country: channel.country,
+      defaultLanguage: channel.defaultLanguage,
+      publishedAt: channel.publishedAt,
+      topicCategories: channel.topicCategories,
+      localized: channel.localized,
+      branding: channel.branding,
+      status: channel.status,
     },
     trendDays: currentRows.map((row: any) => ({
       date: row.day,
@@ -623,7 +808,10 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
     fullCurrentPayload,
     fullPreviousPayload,
     topVideosPayload,
+    videoDayPayload,
     trafficPayload,
+    searchTermsPayload,
+    externalTrafficPayload,
     devicePayload,
     subscribedPayload,
     contentTypePayload,
@@ -650,7 +838,15 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
       dimensions: 'video',
       metrics: VIDEO_METRICS,
       sort: '-views',
-      maxResults: 8,
+      maxResults: FULL_ANALYSIS_VIDEO_LIMIT,
+    }),
+    fetchOptionalAnalytics(accessToken, {
+      startDate: windows.fullStartDate,
+      endDate: windows.endDate,
+      dimensions: 'day,video',
+      metrics: VIDEO_METRICS,
+      sort: 'day',
+      maxResults: VIDEO_DAILY_ROW_LIMIT,
     }),
     fetchOptionalAnalytics(accessToken, {
       startDate: windows.fullStartDate,
@@ -660,6 +856,26 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
       includeReach: false,
       sort: '-views',
       maxResults: 8,
+    }),
+    fetchOptionalAnalytics(accessToken, {
+      startDate: windows.fullStartDate,
+      endDate: windows.endDate,
+      dimensions: 'insightTrafficSourceDetail',
+      metrics: SEGMENT_METRICS,
+      filters: 'insightTrafficSourceType==YT_SEARCH',
+      includeReach: false,
+      sort: '-views',
+      maxResults: 25,
+    }),
+    fetchOptionalAnalytics(accessToken, {
+      startDate: windows.fullStartDate,
+      endDate: windows.endDate,
+      dimensions: 'insightTrafficSourceDetail',
+      metrics: SEGMENT_METRICS,
+      filters: 'insightTrafficSourceType==EXT_URL',
+      includeReach: false,
+      sort: '-views',
+      maxResults: 25,
     }),
     fetchOptionalAnalytics(accessToken, {
       startDate: windows.fullStartDate,
@@ -725,21 +941,91 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
   const fullCurrent = aggregateRows(rowsToObjects(fullCurrentPayload));
   const fullPrevious = aggregateRows(rowsToObjects(fullPreviousPayload));
   const videoRows = rowsToObjects(topVideosPayload);
-  const videoIds = videoRows.map((row: any) => String(row.video || '')).filter(Boolean);
-  const videoDetails = await fetchVideoDetails(accessToken, videoIds);
+  const videoDailyRows = rowsToObjects(videoDayPayload).map((row: any) => ({
+    date: row.day,
+    videoId: row.video,
+    views: toNumber(row.views),
+    engagedViews: toNumber(row.engagedViews),
+    redViews: toNumber(row.redViews),
+    estimatedMinutesWatched: toNumber(row.estimatedMinutesWatched),
+    estimatedRedMinutesWatched: toNumber(row.estimatedRedMinutesWatched),
+    averageViewDuration: toNumber(row.averageViewDuration),
+    averageViewPercentage: toNumber(row.averageViewPercentage),
+    likes: toNumber(row.likes),
+    dislikes: toNumber(row.dislikes),
+    comments: toNumber(row.comments),
+    shares: toNumber(row.shares),
+    videosAddedToPlaylists: toNumber(row.videosAddedToPlaylists),
+    videosRemovedFromPlaylists: toNumber(row.videosRemovedFromPlaylists),
+    subscribersGained: toNumber(row.subscribersGained),
+    subscribersLost: toNumber(row.subscribersLost),
+    videoThumbnailImpressions: toNumber(row.videoThumbnailImpressions),
+    thumbnailCtr: row.videoThumbnailImpressions ? toNumber(row.videoThumbnailImpressionsClickRate) : null,
+  })).filter((row: any) => row.date && row.videoId);
+
+  const fullDailyRows = rowsToObjects(fullCurrentPayload).concat(rowsToObjects(fullPreviousPayload)).map((row: any) => ({
+    date: row.day,
+    views: toNumber(row.views),
+    engagedViews: toNumber(row.engagedViews),
+    redViews: toNumber(row.redViews),
+    estimatedMinutesWatched: toNumber(row.estimatedMinutesWatched),
+    estimatedRedMinutesWatched: toNumber(row.estimatedRedMinutesWatched),
+    averageViewDuration: toNumber(row.averageViewDuration),
+    averageViewPercentage: toNumber(row.averageViewPercentage),
+    likes: toNumber(row.likes),
+    dislikes: toNumber(row.dislikes),
+    comments: toNumber(row.comments),
+    shares: toNumber(row.shares),
+    videosAddedToPlaylists: toNumber(row.videosAddedToPlaylists),
+    videosRemovedFromPlaylists: toNumber(row.videosRemovedFromPlaylists),
+    cardImpressions: toNumber(row.cardImpressions),
+    cardClicks: toNumber(row.cardClicks),
+    cardTeaserImpressions: toNumber(row.cardTeaserImpressions),
+    cardTeaserClicks: toNumber(row.cardTeaserClicks),
+    subscribersGained: toNumber(row.subscribersGained),
+    subscribersLost: toNumber(row.subscribersLost),
+    videoThumbnailImpressions: toNumber(row.videoThumbnailImpressions),
+    thumbnailCtr: row.videoThumbnailImpressions ? toNumber(row.videoThumbnailImpressionsClickRate) : null,
+  })).filter((row: any) => row.date);
+
+  const topVideoIds = videoRows.map((row: any) => String(row.video || '')).filter(Boolean);
+  const recentVideoIds = await fetchRecentUploadVideoIds(accessToken, summary?.channel?.uploadsPlaylistId, RECENT_UPLOAD_VIDEO_LIMIT);
+  const videoIds = Array.from(new Set(topVideoIds.concat(recentVideoIds)));
+  const [videoDetails, comments] = await Promise.all([
+    fetchVideoDetails(accessToken, videoIds),
+    fetchRecentComments(accessToken, topVideoIds),
+  ]);
+
+  const videoMetadata = videoIds
+    .map((videoId) => videoDetails[videoId])
+    .filter(Boolean)
+    .map((video: any) => normalizeVideoMetadata(video));
 
   const topVideos = videoRows.map((row: any) => {
     const details = videoDetails[row.video] || {};
-    const thumbnail = details?.snippet?.thumbnails?.medium?.url ||
-      details?.snippet?.thumbnails?.default?.url ||
-      details?.snippet?.thumbnails?.high?.url ||
-      null;
+    const metadata = normalizeVideoMetadata(details, row);
 
     return {
       id: row.video,
-      title: details?.snippet?.title || row.video,
-      thumbnailUrl: thumbnail,
-      publishedAt: details?.snippet?.publishedAt || null,
+      title: metadata.title || row.video,
+      description: metadata.description || '',
+      thumbnailUrl: metadata.thumbnailUrl,
+      publishedAt: metadata.publishedAt,
+      durationIso: metadata.durationIso,
+      durationSeconds: metadata.durationSeconds,
+      categoryId: metadata.categoryId,
+      tags: metadata.tags,
+      defaultLanguage: metadata.defaultLanguage,
+      defaultAudioLanguage: metadata.defaultAudioLanguage,
+      privacyStatus: metadata.privacyStatus,
+      uploadStatus: metadata.uploadStatus,
+      madeForKids: metadata.madeForKids,
+      caption: metadata.caption,
+      definition: metadata.definition,
+      dimension: metadata.dimension,
+      liveBroadcastContent: metadata.liveBroadcastContent,
+      isShortGuess: metadata.isShortGuess,
+      thumbnailFeatures: metadata.thumbnailFeatures,
       views: toNumber(row.views),
       engagedViews: toNumber(row.engagedViews),
       redViews: toNumber(row.redViews),
@@ -760,6 +1046,8 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
 
   const breakdowns = {
     trafficSources: buildSegmentRows(trafficPayload, 'insightTrafficSourceType', fullCurrent.views, 8),
+    searchTerms: buildSegmentRows(searchTermsPayload, 'insightTrafficSourceDetail', fullCurrent.views, 10),
+    externalSources: buildSegmentRows(externalTrafficPayload, 'insightTrafficSourceDetail', fullCurrent.views, 10),
     devices: buildSegmentRows(devicePayload, 'deviceType', fullCurrent.views, 6),
     subscribedStatus: buildSegmentRows(subscribedPayload, 'subscribedStatus', fullCurrent.views, 4),
     contentTypes: buildSegmentRows(contentTypePayload, 'creatorContentType', fullCurrent.views, 5),
@@ -785,8 +1073,46 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
     deltas: buildDeltas(fullCurrent, fullPrevious),
     breakdowns,
     topVideos,
+    dailyRows: fullDailyRows,
+    videoDailyRows,
+    videoMetadata,
+    comments,
     ...text,
   };
+}
+
+function stripFullAnalysisForResponse(fullAnalysis: any) {
+  const {
+    dailyRows,
+    videoDailyRows,
+    videoMetadata,
+    comments,
+    ...publicFullAnalysis
+  } = fullAnalysis || {};
+
+  publicFullAnalysis.topVideos = (publicFullAnalysis.topVideos || []).map((video: any) => ({
+    id: video.id,
+    title: video.title,
+    thumbnailUrl: video.thumbnailUrl,
+    publishedAt: video.publishedAt,
+    views: video.views,
+    engagedViews: video.engagedViews,
+    redViews: video.redViews,
+    watchHours: video.watchHours,
+    premiumWatchHours: video.premiumWatchHours,
+    averageViewDuration: video.averageViewDuration,
+    averageViewPercentage: video.averageViewPercentage,
+    likes: video.likes,
+    dislikes: video.dislikes,
+    comments: video.comments,
+    shares: video.shares,
+    playlistNetAdds: video.playlistNetAdds,
+    engagementRate: video.engagementRate,
+    thumbnailCtr: video.thumbnailCtr,
+    netSubscribers: video.netSubscribers,
+  }));
+
+  return publicFullAnalysis;
 }
 
 const handler = async (req: any, res: any) => {
@@ -828,7 +1154,7 @@ const handler = async (req: any, res: any) => {
     if (String(req.query?.full || '') === '1') {
       const fullAnalysis = await buildFullAnalysis(accessToken, summary, windows);
       await storeAccountDashboardAnalytics(supabase, { userId, connection, summary, fullAnalysis });
-      return res.status(200).json({ ...summary, fullAnalysis });
+      return res.status(200).json({ ...summary, fullAnalysis: stripFullAnalysisForResponse(fullAnalysis) });
     }
 
     await storeAccountDashboardAnalytics(supabase, { userId, connection, summary });

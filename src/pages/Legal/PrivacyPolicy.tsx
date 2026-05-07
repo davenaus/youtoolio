@@ -179,13 +179,14 @@ export const PrivacyPolicy: React.FC = () => {
             <li><strong>Account Profile:</strong> If you sign in with Google, we receive basic profile information such as your name, email address, avatar, and Google account identifier through Supabase authentication</li>
             <li><strong>Extension Session Data:</strong> When you link the Chrome extension to your YouTool.io account, we create extension session records, token hashes, expiration dates, revocation status, user agent, and last-used timestamps</li>
             <li><strong>Connected YouTube Channel:</strong> If you choose to connect your YouTube channel, we store your channel ID, channel title, thumbnail URL, authorized scopes, token expiration time, and OAuth tokens needed to refresh your connection</li>
+            <li><strong>Connected Channel Analytics History:</strong> While your YouTube channel remains connected, we may store read-only YouTube Data API and YouTube Analytics API results such as channel snapshots, video metadata, daily performance metrics, traffic source breakdowns, audience/device/geography breakdowns, playlist information, recent public comments, and generated insight reports so your account can compare performance over time</li>
             <li><strong>Extension Settings:</strong> The extension stores enabled features, theme choices, selected stats range, and daily stats cache locally in Chrome storage on your device</li>
           </ul>
 
           <h3>Third-Party Data</h3>
           <ul>
             <li><strong>YouTube API Data:</strong> Public information retrieved from YouTube's API including video metadata, channel statistics, playlist data, thumbnails, tags, descriptions, and public comments</li>
-            <li><strong>YouTube Analytics Data:</strong> If you connect your own channel, we use your authorization to retrieve read-only channel analytics such as views and subscriber changes for selected date ranges</li>
+            <li><strong>YouTube Analytics Data:</strong> If you connect your own channel, we use your authorization to retrieve and store read-only channel analytics such as views, impressions, thumbnail click-through rate, watch time, average view duration, average percentage viewed, subscriber gains/losses, engagement metrics, traffic sources, audience/device/geography breakdowns, and content type breakdowns</li>
             <li><strong>YouTube Page Content:</strong> The extension may read the current YouTube page URL, video ID, channel ID, title, transcript, description, tags, thumbnail, or visible page signals when you enable or use related features</li>
             <li><strong>Analytics Services:</strong> Data from Google Analytics, Vercel Analytics, and other measurement tools</li>
           </ul>
@@ -239,9 +240,10 @@ export const PrivacyPolicy: React.FC = () => {
             <li><strong>Account Profile:</strong> Stored while your YouTool.io account remains active or until deletion is requested</li>
             <li><strong>Extension Sessions:</strong> Stored while the extension is linked to your account and may be revoked when you sign out or disconnect the extension</li>
             <li><strong>YouTube Connection Records:</strong> Stored while your channel remains connected. Disconnecting your channel marks the connection as disconnected and stops use of the stored tokens for new requests</li>
+            <li><strong>Connected Channel Analytics History:</strong> Stored while your channel remains connected so we can power historical comparisons, outlier detection, topic/metadata pattern analysis, and full channel analysis. Disconnecting your channel disables analytics history and deletes stored private connected-channel analytics history tied to your account</li>
             <li><strong>Extension Stats Cache:</strong> Stored locally in Chrome storage once per day for the selected 1D, 7D, or 30D range so the popup can load quickly</li>
             <li><strong>Analytics Data:</strong> Aggregated usage data retained for service improvement</li>
-            <li><strong>Tool Results:</strong> Video analysis, channel analysis, and connected-channel stats are generally retrieved and returned in real time. We do not use those results to build a permanent database of your analytics history unless a feature clearly states otherwise</li>
+            <li><strong>Tool Results:</strong> Public website tool results are generally retrieved and returned in real time. Connected-channel account analytics may be stored as analytics history while your YouTube channel remains connected</li>
             <li><strong>Session Data:</strong> Cleared when you close your browser or end your session</li>
           </ul>
 

@@ -24,7 +24,7 @@ $$ language plpgsql;
 create table if not exists public.youtube_analytics_consent (
   user_id uuid primary key references auth.users(id) on delete cascade,
   channel_id text not null,
-  analytics_history_enabled boolean not null default false,
+  analytics_history_enabled boolean not null default true,
   anonymized_research_opt_in boolean not null default false,
   public_case_study_opt_in boolean not null default false,
   consent_version text,
@@ -33,6 +33,15 @@ create table if not exists public.youtube_analytics_consent (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.youtube_analytics_consent
+alter column analytics_history_enabled set default true;
+
+update public.youtube_analytics_consent
+set analytics_history_enabled = true,
+    updated_at = now()
+where revoked_at is null
+  and analytics_history_enabled = false;
 
 drop trigger if exists set_youtube_analytics_consent_updated_at on public.youtube_analytics_consent;
 create trigger set_youtube_analytics_consent_updated_at
@@ -121,12 +130,20 @@ create table if not exists public.youtube_video_snapshots (
   view_count bigint,
   like_count bigint,
   comment_count bigint,
+  metadata_features jsonb not null default '{}'::jsonb,
+  thumbnail_features jsonb not null default '{}'::jsonb,
   is_short_guess boolean,
   raw jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (user_id, video_id, snapshot_date)
 );
+
+alter table public.youtube_video_snapshots
+add column if not exists metadata_features jsonb not null default '{}'::jsonb;
+
+alter table public.youtube_video_snapshots
+add column if not exists thumbnail_features jsonb not null default '{}'::jsonb;
 
 drop trigger if exists set_youtube_video_snapshots_updated_at on public.youtube_video_snapshots;
 create trigger set_youtube_video_snapshots_updated_at
@@ -417,3 +434,6 @@ on public.youtube_comment_snapshots for select using (auth.uid() = user_id);
 drop policy if exists "Users can read own insight runs" on public.youtube_channel_insight_runs;
 create policy "Users can read own insight runs"
 on public.youtube_channel_insight_runs for select using (auth.uid() = user_id);
+drop policy if exists "Anyone can read public analytics rollups" on public.youtube_public_analytics_rollups;
+create policy "Anyone can read public analytics rollups"
+on public.youtube_public_analytics_rollups for select using (true);

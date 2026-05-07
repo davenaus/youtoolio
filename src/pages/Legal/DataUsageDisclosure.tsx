@@ -360,7 +360,7 @@ export const DataUsageDisclosure: React.FC = () => {
             <FlowStep>
               <StepNumber>6</StepNumber>
               <StepDescription>
-                <strong>Storage:</strong> Public tool inputs are generally handled for the requested result. Account profiles, extension session records, YouTube connection records, local preferences, and local extension stats cache may be stored as described in this disclosure.
+                <strong>Storage:</strong> Public tool inputs are generally handled for the requested result. Account profiles, extension session records, YouTube connection records, connected-channel analytics history, local preferences, and local extension stats cache may be stored as described in this disclosure.
               </StepDescription>
             </FlowStep>
           </DataFlowCard>
@@ -383,8 +383,9 @@ export const DataUsageDisclosure: React.FC = () => {
           <ul>
             <li><strong>Stored Connection Fields:</strong> Google subject ID, YouTube channel ID, channel title, channel thumbnail URL, authorized scopes, access token, refresh token, token expiration time, update time, and disconnect status</li>
             <li><strong>Stats Requests:</strong> When the extension popup loads connected-channel stats, our API requests channel subscriber count plus YouTube Analytics metrics such as views, subscribers gained, and subscribers lost for the selected 1D, 7D, or 30D range</li>
+            <li><strong>Analytics History:</strong> While your channel remains connected, YouTool.io may store connected-channel snapshots, video metadata, daily channel/video analytics, traffic sources, search terms where returned by YouTube Analytics, audience/device/geography breakdowns, playlist information, recent public comment data, and generated insight reports to support historical comparisons and full channel analysis</li>
             <li><strong>Analysis Requests:</strong> Video and channel analyzer features request public YouTube metadata and statistics for the video or channel you ask to analyze</li>
-            <li><strong>Disconnection:</strong> You can disconnect your YouTube channel from the Account page. After disconnection, the connection is marked inactive and not used for new stats requests</li>
+            <li><strong>Disconnection:</strong> You can disconnect your YouTube channel from the Account page. After disconnection, the connection is marked inactive, not used for new stats requests, and stored private connected-channel analytics history tied to your account is deleted</li>
           </ul>
 
           <h2>YouTube API Data Usage</h2>
@@ -399,6 +400,7 @@ export const DataUsageDisclosure: React.FC = () => {
             <li>Data is used solely for analytics and insights</li>
             <li>We comply with all YouTube API quotas and rate limits</li>
             <li>Extension stats may be cached locally in Chrome storage once per day for faster loading</li>
+            <li>Public/cross-channel benchmarks use anonymized or aggregated data only after appropriate opt-in and review</li>
             <li>We do not sell YouTube API data or use it for personalized advertising</li>
           </ul>
 

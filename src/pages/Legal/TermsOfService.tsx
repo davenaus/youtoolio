@@ -247,7 +247,7 @@ export const TermsOfService: React.FC = () => {
           </p>
           <ul>
             <li>We only collect data necessary for service functionality</li>
-            <li>If you sign in or connect a YouTube channel, we store account, extension session, and YouTube connection records needed to provide those features</li>
+            <li>If you sign in or connect a YouTube channel, we store account, extension session, YouTube connection records, and connected-channel analytics history needed to provide those features</li>
             <li>We do not collect your YouTube password</li>
             <li>Search history is stored locally in your browser</li>
             <li>We use analytics to improve our service</li>

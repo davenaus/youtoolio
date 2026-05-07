@@ -103,6 +103,8 @@ interface DemographicRow {
 
 interface AnalysisBreakdowns {
   trafficSources: SegmentRow[];
+  searchTerms?: SegmentRow[];
+  externalSources?: SegmentRow[];
   devices: SegmentRow[];
   subscribedStatus: SegmentRow[];
   contentTypes: SegmentRow[];
@@ -1110,6 +1112,16 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
                 <AnalysisSection>
                   <SectionTitle>Discovery sources</SectionTitle>
                   {renderSegmentRows(fullAnalysis.breakdowns?.trafficSources, 'No discovery source data returned for this period.')}
+                </AnalysisSection>
+
+                <AnalysisSection>
+                  <SectionTitle>Search terms</SectionTitle>
+                  {renderSegmentRows(fullAnalysis.breakdowns?.searchTerms, 'No search term detail returned for this period.')}
+                </AnalysisSection>
+
+                <AnalysisSection>
+                  <SectionTitle>External sources</SectionTitle>
+                  {renderSegmentRows(fullAnalysis.breakdowns?.externalSources, 'No external source detail returned for this period.')}
                 </AnalysisSection>
 
                 <AnalysisSection>
