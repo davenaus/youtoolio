@@ -3,6 +3,7 @@ import { Navigate, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/Button/Button';
+import { AccountYouTubeInsights } from './AccountYouTubeInsights';
 import styled from 'styled-components';
 
 // ─── Page shell (matches 404 background) ──────────────────────────────────────
@@ -111,19 +112,6 @@ const ProfileEmail = styled.p`
   font-size: 0.875rem;
   color: ${({ theme }) => theme.colors.text.secondary};
   margin: 0;
-`;
-
-const PlanBadge = styled.span`
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.2rem 0.65rem;
-  border-radius: 999px;
-  background: ${({ theme }) => theme.colors.dark5};
-  color: ${({ theme }) => theme.colors.text.muted};
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
-  white-space: nowrap;
 `;
 
 // ─── Status rows ─────────────────────────────────────────────────────────────
@@ -279,20 +267,6 @@ const PromoTileSub = styled.div`
   line-height: 1.4;
 `;
 
-// ─── Subscription ─────────────────────────────────────────────────────────────
-
-const ComingSoon = styled.span`
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.2rem 0.5rem;
-  border-radius: 999px;
-  background: rgba(239, 68, 68, 0.1);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-`;
-
 const SignOutLink = styled.button`
   background: none;
   border: none;
@@ -415,7 +389,6 @@ export const Account: React.FC = () => {
               <ProfileName>{name}</ProfileName>
               <ProfileEmail>{user.email}</ProfileEmail>
             </ProfileInfo>
-            <PlanBadge>Free</PlanBadge>
           </ProfileRow>
         </Card>
 
@@ -493,22 +466,7 @@ export const Account: React.FC = () => {
           </InstructionBox>}
         </Card>
 
-        {/* Subscription */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Subscription</CardTitle>
-            <ComingSoon>Coming soon</ComingSoon>
-          </CardHeader>
-          <StatusRow>
-            <StatusLeft>
-              <StatusIcon><i className="bx bx-crown"></i></StatusIcon>
-              <div>
-                <StatusLabel>Current plan</StatusLabel>
-                <StatusSub>Free — all website tools included</StatusSub>
-              </div>
-            </StatusLeft>
-          </StatusRow>
-        </Card>
+        {ytChannel && <AccountYouTubeInsights channel={ytChannel} />}
 
         {/* Promo — explore the website */}
         <CardTitle style={{ padding: '0 0.25rem' }}>While you're here</CardTitle>
