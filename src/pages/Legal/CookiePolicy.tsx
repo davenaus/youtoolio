@@ -333,7 +333,7 @@ export const CookiePolicy: React.FC = () => {
             <li><strong>Google Analytics:</strong> For website analytics and usage tracking</li>
             <li><strong>Google AdSense:</strong> For advertising where ads are displayed</li>
             <li><strong>Vercel Analytics:</strong> For performance monitoring</li>
-            <li><strong>YouTube API:</strong> For accessing video and channel data</li>
+            <li><strong>YouTube API and YouTube Analytics API:</strong> For accessing video, channel, and connected-channel analytics data when requested or authorized</li>
           </ul>
 
           <h2>Managing Your Cookie Preferences</h2>

@@ -160,6 +160,41 @@ const StatusSub = styled.div`
   margin-top: 0.15rem;
 `;
 
+const ConnectDisclosure = styled.div`
+  margin-top: 0.9rem;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 113, 113, 0.22);
+  background: rgba(125, 0, 0, 0.12);
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.78rem;
+  line-height: 1.55;
+`;
+
+const DisclosureTitle = styled.p`
+  margin: 0 0 0.35rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.82rem;
+  font-weight: 700;
+`;
+
+const DisclosureText = styled.p`
+  margin: 0;
+
+  & + & {
+    margin-top: 0.45rem;
+  }
+
+  a {
+    color: #fca5a5;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+`;
+
 const Dot = styled.span<{ $connected?: boolean }>`
   width: 8px;
   height: 8px;
@@ -338,7 +373,7 @@ export const Account: React.FC = () => {
   const handleSignOut = async () => { await signOut(); navigate('/'); };
 
   const handleDisconnectYouTube = async () => {
-    if (!window.confirm('Disconnect your YouTube channel from YouTool?')) return;
+    if (!window.confirm('Disconnect your YouTube channel from YouTool? This stops new connected-channel stats requests and deletes stored private YouTube analytics history tied to your account.')) return;
     setYtDisconnecting(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { setYtDisconnecting(false); return; }
@@ -351,6 +386,12 @@ export const Account: React.FC = () => {
   };
 
   const handleConnectYouTube = async () => {
+    const confirmed = window.confirm(
+      'Connect your YouTube channel to YouTool.io? We will request read-only YouTube and YouTube Analytics access, store the connection needed to keep your channel linked, and store connected-channel analytics history while your channel remains connected. You can disconnect later from this Account page to stop new requests and delete stored private analytics history.'
+    );
+
+    if (!confirmed) return;
+
     setYtConnecting(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { navigate('/login'); return; }
@@ -434,6 +475,18 @@ export const Account: React.FC = () => {
                 </Button>
             }
           </StatusRow>
+
+          {!ytChannel && (
+            <ConnectDisclosure role="note" aria-label="YouTube connection data disclosure">
+              <DisclosureTitle>Before you connect YouTube</DisclosureTitle>
+              <DisclosureText>
+                YouTool.io requests read-only YouTube and YouTube Analytics access. While connected, we store your channel connection and connected-channel analytics history so your dashboard, extension stats, trend graphs, and full channel analysis can compare performance over time.
+              </DisclosureText>
+              <DisclosureText>
+                Disconnecting your channel from this page stops new connected-channel requests and deletes stored private YouTube analytics history tied to your account. See the <Link to="/privacy-policy">Privacy Policy</Link> and <Link to="/data-usage">Data Usage Disclosure</Link>.
+              </DisclosureText>
+            </ConnectDisclosure>
+          )}
 
           {extensionConnected !== true && <InstructionBox>
             <InstructionTitle>Don't have the extension yet?</InstructionTitle>

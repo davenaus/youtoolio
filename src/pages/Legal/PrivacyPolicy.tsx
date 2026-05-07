@@ -239,7 +239,7 @@ export const PrivacyPolicy: React.FC = () => {
             <li><strong>Search History:</strong> Stored locally in your browser and can be cleared at any time</li>
             <li><strong>Account Profile:</strong> Stored while your YouTool.io account remains active or until deletion is requested</li>
             <li><strong>Extension Sessions:</strong> Stored while the extension is linked to your account and may be revoked when you sign out or disconnect the extension</li>
-            <li><strong>YouTube Connection Records:</strong> Stored while your channel remains connected. Disconnecting your channel marks the connection as disconnected and stops use of the stored tokens for new requests</li>
+            <li><strong>YouTube Connection Records:</strong> Stored while your channel remains connected. Disconnecting your channel marks the connection as disconnected, clears stored OAuth tokens where supported by the connection record, and stops use of the connection for new requests</li>
             <li><strong>Connected Channel Analytics History:</strong> Stored while your channel remains connected so we can power historical comparisons, outlier detection, topic/metadata pattern analysis, and full channel analysis. Disconnecting your channel disables analytics history and deletes stored private connected-channel analytics history tied to your account</li>
             <li><strong>Extension Stats Cache:</strong> Stored locally in Chrome storage once per day for the selected 1D, 7D, or 30D range so the popup can load quickly</li>
             <li><strong>Analytics Data:</strong> Aggregated usage data retained for service improvement</li>

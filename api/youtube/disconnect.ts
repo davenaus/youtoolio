@@ -17,13 +17,32 @@ const handler = async (req: any, res: any) => {
     const { data: { user }, error } = await supabase.auth.getUser(authHeader.slice(7));
     if (error || !user) return res.status(401).json({ error: 'unauthorized' });
 
+    const disconnectedAt = new Date().toISOString();
+
     const { error: updateError } = await supabase
       .from('youtube_connections')
-      .update({ disconnected_at: new Date().toISOString() })
+      .update({
+        access_token: null,
+        refresh_token: null,
+        token_expires_at: null,
+        disconnected_at: disconnectedAt,
+        updated_at: disconnectedAt,
+      })
       .eq('user_id', user.id)
       .is('disconnected_at', null);
 
-    if (updateError) return res.status(500).json({ error: updateError.message });
+    if (updateError) {
+      const { error: fallbackError } = await supabase
+        .from('youtube_connections')
+        .update({
+          disconnected_at: disconnectedAt,
+          updated_at: disconnectedAt,
+        })
+        .eq('user_id', user.id)
+        .is('disconnected_at', null);
+
+      if (fallbackError) return res.status(500).json({ error: fallbackError.message });
+    }
 
     await revokeYouTubeAnalyticsStorage(supabase, { userId: user.id });
 

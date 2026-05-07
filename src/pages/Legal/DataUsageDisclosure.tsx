@@ -385,7 +385,7 @@ export const DataUsageDisclosure: React.FC = () => {
             <li><strong>Stats Requests:</strong> When the extension popup loads connected-channel stats, our API requests channel subscriber count plus YouTube Analytics metrics such as views, subscribers gained, and subscribers lost for the selected 1D, 7D, or 30D range</li>
             <li><strong>Analytics History:</strong> While your channel remains connected, YouTool.io may store connected-channel snapshots, video metadata, daily channel/video analytics, traffic sources, search terms where returned by YouTube Analytics, audience/device/geography breakdowns, playlist add/remove metrics, recent public comment data, and generated insight reports to support historical comparisons and full channel analysis</li>
             <li><strong>Analysis Requests:</strong> Video and channel analyzer features request public YouTube metadata and statistics for the video or channel you ask to analyze</li>
-            <li><strong>Disconnection:</strong> You can disconnect your YouTube channel from the Account page. After disconnection, the connection is marked inactive, not used for new stats requests, and stored private connected-channel analytics history tied to your account is deleted</li>
+            <li><strong>Disconnection:</strong> You can disconnect your YouTube channel from the Account page. After disconnection, the connection is marked inactive, stored OAuth tokens are cleared where supported by the connection record, the connection is not used for new stats requests, and stored private connected-channel analytics history tied to your account is deleted</li>
           </ul>
 
           <h2>YouTube API Data Usage</h2>
@@ -411,7 +411,7 @@ export const DataUsageDisclosure: React.FC = () => {
             <li><strong>Channel Information:</strong> Names, subscriber counts, creation dates</li>
             <li><strong>Public Comments:</strong> Text content of publicly visible comments</li>
             <li><strong>Playlist Data:</strong> Public playlist contents and metadata</li>
-            <li><strong>Connected Channel Analytics:</strong> Views and subscriber gain/loss metrics for your own connected channel when you authorize that access</li>
+            <li><strong>Connected Channel Analytics:</strong> Views, impressions, thumbnail click-through rate, watch time, average view duration, average percentage viewed, subscriber gain/loss metrics, engagement metrics, traffic sources, search terms where returned, audience/device/geography breakdowns, and content type breakdowns for your own connected channel when you authorize that access</li>
           </ul>
 
           <h3>Chrome Web Store Limited Use</h3>

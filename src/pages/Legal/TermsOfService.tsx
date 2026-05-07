@@ -217,7 +217,7 @@ export const TermsOfService: React.FC = () => {
           </p>
           <ul>
             <li>Comply with the <a href="https://developers.google.com/youtube/terms/api-services-terms-of-service" target="_blank" rel="noopener noreferrer">YouTube API Services Terms of Service</a></li>
-            <li>Only access publicly available information</li>
+            <li>Only access publicly available YouTube information or connected-channel data that you authorize through Google OAuth</li>
             <li>Respect content creators' rights and privacy</li>
             <li>Use data responsibly and ethically</li>
             <li>Authorize YouTool.io only for channels and Google accounts you have the right to connect</li>
@@ -248,6 +248,7 @@ export const TermsOfService: React.FC = () => {
           <ul>
             <li>We only collect data necessary for service functionality</li>
             <li>If you sign in or connect a YouTube channel, we store account, extension session, YouTube connection records, and connected-channel analytics history needed to provide those features</li>
+            <li>Disconnecting your YouTube channel stops new connected-channel requests and deletes stored private YouTube analytics history tied to your account</li>
             <li>We do not collect your YouTube password</li>
             <li>Search history is stored locally in your browser</li>
             <li>We use analytics to improve our service</li>
