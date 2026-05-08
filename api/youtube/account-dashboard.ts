@@ -1724,7 +1724,7 @@ async function buildAdminPlatformStats(supabase: any) {
     listAdminAuthUsers(supabase),
     readAdminTable(supabase, 'profiles', 'user_id,email,display_name,created_at,updated_at', 'created_at'),
     readAdminTable(supabase, 'extension_sessions', 'user_id,created_at,last_used_at,revoked_at', 'created_at'),
-    readAdminTable(supabase, 'youtube_connections', 'user_id,channel_id,channel_title,disconnected_at,created_at,updated_at', 'updated_at'),
+    readAdminTable(supabase, 'youtube_connections', 'user_id,channel_id,channel_title,disconnected_at,updated_at', 'updated_at'),
     readAdminTable(supabase, 'youtube_analytics_sync_runs', 'user_id,channel_id,sync_type,status,created_at,completed_at', 'created_at'),
     readOptionalExportStats(supabase, monthStart),
   ]);
@@ -2150,7 +2150,42 @@ function buildAdminResearchSections(data: any) {
     ? compareSegments(visualThumbsWithCtr, (record: any) => record.thumbnailTextPresent === true, (record: any) => record.thumbnailCtr, 'Text-present thumbnails', 'No-text thumbnails', formatPercentMetric)
     : 'Thumbnail text-presence proxies are collected during full channel analysis.';
 
-  const item = (label: string, answer: string, status = 'Live', detail = '') => ({ label, answer, status, detail });
+  const normalizeResearchStatus = (answer: string, status: string) => {
+    if (!['Live', 'Proxy', 'Early'].includes(status)) return status;
+
+    const text = String(answer || '').trim().toLowerCase();
+    if (
+      text.startsWith('need ') ||
+      text.startsWith('needs ') ||
+      text.startsWith('need at least') ||
+      text.startsWith('not enough') ||
+      text.includes('needs both') ||
+      text.includes('needs more') ||
+      text.includes('need more') ||
+      text.includes('need ctr') ||
+      text.includes('need traffic') ||
+      text.includes('need search') ||
+      text.includes('need device') ||
+      text.includes('need country') ||
+      text.includes('need youtube') ||
+      text.includes('need subscribed') ||
+      text.includes('need external') ||
+      text.includes('no low-reach/high-engagement candidates yet') ||
+      text.includes('no high-reach/low-engagement candidates yet') ||
+      text.includes('no high-ctr/weak-retention candidates yet') ||
+      text.includes('no passive-view candidate yet')
+    ) {
+      return 'Needs data';
+    }
+
+    return status;
+  };
+  const item = (label: string, answer: string, status = 'Live', detail = '') => ({
+    label,
+    answer,
+    status: normalizeResearchStatus(answer, status),
+    detail,
+  });
   const building = (label: string, answer: string) => item(label, answer, 'Building history');
   const collector = (label: string, answer: string) => item(label, answer, 'Needs collector');
 
