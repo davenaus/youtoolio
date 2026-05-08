@@ -4,6 +4,56 @@ const { ensureYouTubeAnalyticsConsentRecord } = require('../../lib/youtube-analy
 
 const REDIRECT_URI = 'https://youtool.io/account/extension-youtube-connect/callback';
 
+function integerOrNull(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const next = Number(value);
+  return Number.isFinite(next) ? Math.round(next) : null;
+}
+
+function resolveBestThumbnail(thumbnails) {
+  return thumbnails?.maxres?.url ||
+    thumbnails?.standard?.url ||
+    thumbnails?.high?.url ||
+    thumbnails?.medium?.url ||
+    thumbnails?.default?.url ||
+    null;
+}
+
+async function storeInitialChannelSnapshot(supabase, userId, channel) {
+  if (!supabase || !userId || !channel?.id) return;
+
+  const today = new Date().toISOString().split('T')[0];
+  const { error } = await supabase
+    .from('youtube_channel_snapshots')
+    .upsert({
+      user_id: userId,
+      channel_id: channel.id,
+      snapshot_date: today,
+      title: channel?.snippet?.title || null,
+      description: channel?.snippet?.description || null,
+      custom_url: channel?.snippet?.customUrl || null,
+      published_at: channel?.snippet?.publishedAt || null,
+      country: channel?.snippet?.country || null,
+      default_language: channel?.snippet?.defaultLanguage || null,
+      localized: channel?.snippet?.localized || {},
+      thumbnail_url: resolveBestThumbnail(channel?.snippet?.thumbnails),
+      banner_url: channel?.brandingSettings?.image?.bannerExternalUrl || null,
+      subscriber_count: integerOrNull(channel?.statistics?.subscriberCount),
+      hidden_subscriber_count: channel?.statistics?.hiddenSubscriberCount ?? null,
+      view_count: integerOrNull(channel?.statistics?.viewCount),
+      video_count: integerOrNull(channel?.statistics?.videoCount),
+      uploads_playlist_id: channel?.contentDetails?.relatedPlaylists?.uploads || null,
+      topic_categories: Array.isArray(channel?.topicDetails?.topicCategories) ? channel.topicDetails.topicCategories : [],
+      status: channel?.status || {},
+      branding: channel?.brandingSettings || {},
+      raw: channel,
+    }, { onConflict: 'user_id,channel_id,snapshot_date' });
+
+  if (error) {
+    console.warn('[youtube-exchange] initial channel snapshot:', error.message);
+  }
+}
+
 const handler = async (req: any, res: any) => {
   if (req.method !== 'POST') return res.status(405).end();
 
@@ -55,7 +105,7 @@ const handler = async (req: any, res: any) => {
 
     // Fetch channel info from YouTube Data API
     const channelRes = await fetch(
-      'https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&mine=true',
+      'https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails,brandingSettings,status,topicDetails&mine=true',
       { headers: { Authorization: `Bearer ${access_token}` } }
     );
     const channelData = await channelRes.json();
@@ -81,6 +131,7 @@ const handler = async (req: any, res: any) => {
       userId: user.id,
       channelId: channel?.id ?? null,
     });
+    await storeInitialChannelSnapshot(supabase, user.id, channel);
 
     return res.status(200).json({
       ok: true,

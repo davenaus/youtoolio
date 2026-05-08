@@ -69,7 +69,8 @@ const VIDEO_DAILY_ROW_LIMIT = 500;
 const COMMENT_VIDEO_LIMIT = 8;
 const COMMENT_LIMIT_PER_VIDEO = 20;
 const ADMIN_RESEARCH_EMAIL = 'austindavenport000@gmail.com';
-const ADMIN_TABLE_LIMIT = 5000;
+const ADMIN_TABLE_PAGE_SIZE = 1000;
+const ADMIN_TABLE_MAX_ROWS = 100000;
 const EMOTIONAL_TITLE_WORDS = new Set([
   'best', 'worst', 'secret', 'shocking', 'insane', 'crazy', 'brutal', 'honest', 'truth',
   'mistake', 'mistakes', 'failed', 'perfect', 'easy', 'hard', 'love', 'hate', 'stop',
@@ -1553,19 +1554,74 @@ function stripFullAnalysisForResponse(fullAnalysis: any) {
   return publicFullAnalysis;
 }
 
-async function readAdminTable(supabase: any, table: string, select: string, orderColumn = 'created_at') {
-  const query = supabase
-    .from(table)
-    .select(select)
-    .order(orderColumn, { ascending: false })
-    .limit(ADMIN_TABLE_LIMIT);
+async function readAdminTable(supabase: any, table: string, select: string, orderColumn = 'created_at', truncatedTables: string[] = []) {
+  const rows: any[] = [];
 
-  const { data, error } = await query;
-  if (error) {
-    console.warn(`[admin-research] ${table}:`, error.message);
-    return [];
+  for (let from = 0; from < ADMIN_TABLE_MAX_ROWS; from += ADMIN_TABLE_PAGE_SIZE) {
+    const to = from + ADMIN_TABLE_PAGE_SIZE - 1;
+    const { data, error } = await supabase
+      .from(table)
+      .select(select)
+      .order(orderColumn, { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      console.warn(`[admin-research] ${table}:`, error.message);
+      return rows;
+    }
+
+    const page = data || [];
+    rows.push(...page);
+
+    if (page.length < ADMIN_TABLE_PAGE_SIZE) {
+      return rows;
+    }
   }
-  return data || [];
+
+  truncatedTables.push(table);
+  return rows;
+}
+
+function normalizeAdminMinSubscribers(value: any) {
+  const parsed = Math.max(0, Math.floor(toNumber(value)));
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.min(parsed, 1000000000);
+}
+
+function filterRowsByChannels(rows: any[], allowedChannelIds: Set<string>) {
+  if (!allowedChannelIds.size) return [];
+  return rows.filter((row) => allowedChannelIds.has(String(row?.channel_id || '')));
+}
+
+function resolveAdminChannelFilter(channelSnapshots: any[], minSubscribers: number) {
+  const latestChannels = latestRowsBy(channelSnapshots, 'channel_id', 'snapshot_date');
+  const allowedChannelIds = new Set<string>();
+  let unknownSubscriberChannels = 0;
+
+  latestChannels.forEach((channel: any) => {
+    const channelId = String(channel?.channel_id || '');
+    if (!channelId) return;
+
+    const subscriberCount = Number(channel.subscriber_count);
+    if (!Number.isFinite(subscriberCount)) {
+      unknownSubscriberChannels += 1;
+      if (minSubscribers === 0) allowedChannelIds.add(channelId);
+      return;
+    }
+
+    if (subscriberCount >= minSubscribers) {
+      allowedChannelIds.add(channelId);
+    }
+  });
+
+  return {
+    latestChannels,
+    allowedChannelIds,
+    totalChannels: latestChannels.length,
+    includedChannels: allowedChannelIds.size,
+    excludedChannels: Math.max(0, latestChannels.length - allowedChannelIds.size),
+    unknownSubscriberChannels,
+  };
 }
 
 function latestRowsBy(rows: any[], keyField: string, dateField: string) {
@@ -2064,30 +2120,42 @@ function buildAdminResearchSections(data: any) {
   ];
 }
 
-async function buildAdminResearchDashboard(supabase: any) {
+async function buildAdminResearchDashboard(supabase: any, options: { minSubscribers?: number } = {}) {
+  const minSubscribers = normalizeAdminMinSubscribers(options.minSubscribers);
+  const truncatedTables: string[] = [];
   const [
-    channelSnapshots,
-    videoSnapshots,
-    channelDailyRows,
-    videoDailyRows,
-    breakdowns,
-    comments,
-    connections,
-    syncRuns,
+    allChannelSnapshots,
+    allVideoSnapshots,
+    allChannelDailyRows,
+    allVideoDailyRows,
+    allBreakdowns,
+    allComments,
+    allConnections,
+    allSyncRuns,
   ] = await Promise.all([
-    readAdminTable(supabase, 'youtube_channel_snapshots', 'user_id,channel_id,snapshot_date,title,description,published_at,country,default_language,subscriber_count,view_count,video_count,topic_categories,branding,thumbnail_url,banner_url', 'snapshot_date'),
-    readAdminTable(supabase, 'youtube_video_snapshots', 'user_id,channel_id,video_id,snapshot_date,title,description,published_at,duration_seconds,category_id,tags,privacy_status,upload_status,caption,definition,dimension,live_broadcast_content,thumbnail_url,view_count,like_count,comment_count,metadata_features,thumbnail_features,is_short_guess', 'snapshot_date'),
-    readAdminTable(supabase, 'youtube_channel_analytics_daily', 'user_id,channel_id,metric_date,views,engaged_views,estimated_minutes_watched,average_view_duration_seconds,average_view_percentage,subscribers_gained,subscribers_lost,likes,comments,shares,videos_added_to_playlists,videos_removed_from_playlists,thumbnail_impressions,thumbnail_ctr', 'metric_date'),
-    readAdminTable(supabase, 'youtube_video_analytics_daily', 'user_id,channel_id,video_id,metric_date,views,engaged_views,estimated_minutes_watched,average_view_duration_seconds,average_view_percentage,subscribers_gained,subscribers_lost,likes,comments,shares,videos_added_to_playlists,videos_removed_from_playlists,thumbnail_impressions,thumbnail_ctr', 'metric_date'),
-    readAdminTable(supabase, 'youtube_analytics_breakdowns', 'user_id,channel_id,video_id,period_start,period_end,dimension_set,dimension_key,dimension_values,metrics', 'period_end'),
-    readAdminTable(supabase, 'youtube_comment_snapshots', 'user_id,channel_id,video_id,comment_id,parent_comment_id,snapshot_date,like_count,published_at,text_original,text_display', 'snapshot_date'),
-    readAdminTable(supabase, 'youtube_connections', 'user_id,channel_id,channel_title,disconnected_at,updated_at', 'updated_at'),
-    readAdminTable(supabase, 'youtube_analytics_sync_runs', 'user_id,channel_id,sync_type,status,period_start,period_end,completed_at,created_at', 'created_at'),
+    readAdminTable(supabase, 'youtube_channel_snapshots', 'user_id,channel_id,snapshot_date,title,description,published_at,country,default_language,subscriber_count,view_count,video_count,topic_categories,branding,thumbnail_url,banner_url', 'snapshot_date', truncatedTables),
+    readAdminTable(supabase, 'youtube_video_snapshots', 'user_id,channel_id,video_id,snapshot_date,title,description,published_at,duration_seconds,category_id,tags,privacy_status,upload_status,caption,definition,dimension,live_broadcast_content,thumbnail_url,view_count,like_count,comment_count,metadata_features,thumbnail_features,is_short_guess', 'snapshot_date', truncatedTables),
+    readAdminTable(supabase, 'youtube_channel_analytics_daily', 'user_id,channel_id,metric_date,views,engaged_views,estimated_minutes_watched,average_view_duration_seconds,average_view_percentage,subscribers_gained,subscribers_lost,likes,comments,shares,videos_added_to_playlists,videos_removed_from_playlists,thumbnail_impressions,thumbnail_ctr', 'metric_date', truncatedTables),
+    readAdminTable(supabase, 'youtube_video_analytics_daily', 'user_id,channel_id,video_id,metric_date,views,engaged_views,estimated_minutes_watched,average_view_duration_seconds,average_view_percentage,subscribers_gained,subscribers_lost,likes,comments,shares,videos_added_to_playlists,videos_removed_from_playlists,thumbnail_impressions,thumbnail_ctr', 'metric_date', truncatedTables),
+    readAdminTable(supabase, 'youtube_analytics_breakdowns', 'user_id,channel_id,video_id,period_start,period_end,dimension_set,dimension_key,dimension_values,metrics', 'period_end', truncatedTables),
+    readAdminTable(supabase, 'youtube_comment_snapshots', 'user_id,channel_id,video_id,comment_id,parent_comment_id,snapshot_date,like_count,published_at,text_original,text_display', 'snapshot_date', truncatedTables),
+    readAdminTable(supabase, 'youtube_connections', 'user_id,channel_id,channel_title,disconnected_at,updated_at', 'updated_at', truncatedTables),
+    readAdminTable(supabase, 'youtube_analytics_sync_runs', 'user_id,channel_id,sync_type,status,period_start,period_end,completed_at,created_at', 'created_at', truncatedTables),
   ]);
 
+  const channelFilter = resolveAdminChannelFilter(allChannelSnapshots, minSubscribers);
+  const channelSnapshots = filterRowsByChannels(allChannelSnapshots, channelFilter.allowedChannelIds);
+  const videoSnapshots = filterRowsByChannels(allVideoSnapshots, channelFilter.allowedChannelIds);
+  const channelDailyRows = filterRowsByChannels(allChannelDailyRows, channelFilter.allowedChannelIds);
+  const videoDailyRows = filterRowsByChannels(allVideoDailyRows, channelFilter.allowedChannelIds);
+  const breakdowns = filterRowsByChannels(allBreakdowns, channelFilter.allowedChannelIds);
+  const comments = filterRowsByChannels(allComments, channelFilter.allowedChannelIds);
+  const connections = filterRowsByChannels(allConnections, channelFilter.allowedChannelIds);
+  const syncRuns = filterRowsByChannels(allSyncRuns, channelFilter.allowedChannelIds);
   const records = buildVideoResearchRecords(videoSnapshots, videoDailyRows);
   const activeChannels = new Set(connections.filter((row: any) => !row.disconnected_at).map((row: any) => row.channel_id).filter(Boolean));
   const storedChannels = new Set(channelSnapshots.map((row: any) => row.channel_id).filter(Boolean));
+  const allStoredChannels = new Set(allChannelSnapshots.map((row: any) => row.channel_id).filter(Boolean));
   const storedUsers = new Set([
     ...channelSnapshots.map((row: any) => row.user_id),
     ...videoSnapshots.map((row: any) => row.user_id),
@@ -2103,9 +2171,18 @@ async function buildAdminResearchDashboard(supabase: any) {
   return {
     generatedAt: new Date().toISOString(),
     note: 'Private owner dashboard. Uses stored connected-channel analytics history only; no new YouTube API calls are made by this admin view.',
+    filter: {
+      minSubscribers,
+      includedChannels: channelFilter.includedChannels,
+      excludedChannels: channelFilter.excludedChannels,
+      totalChannels: channelFilter.totalChannels,
+      unknownSubscriberChannels: channelFilter.unknownSubscriberChannels,
+      truncatedTables,
+    },
     totals: {
       activeConnectedChannels: activeChannels.size,
       storedChannels: storedChannels.size,
+      allStoredChannels: allStoredChannels.size,
       storedUsers: storedUsers.size,
       channelSnapshotRows: channelSnapshots.length,
       videoSnapshotRows: videoSnapshots.length,
@@ -2151,7 +2228,9 @@ const handler = async (req: any, res: any) => {
         return res.status(403).json({ error: 'forbidden' });
       }
 
-      const adminDashboard = await buildAdminResearchDashboard(supabase);
+      const adminDashboard = await buildAdminResearchDashboard(supabase, {
+        minSubscribers: req.query?.minSubscribers,
+      });
       return res.status(200).json(adminDashboard);
     }
 

@@ -1,6 +1,7 @@
 // @ts-nocheck
 const { createClient } = require('@supabase/supabase-js');
 const { createHash } = require('crypto');
+const { storeAccountDashboardAnalytics } = require('../../lib/youtube-analytics-store');
 
 const ALLOWED_DAY_RANGES = new Set([1, 7, 30]);
 const DEFAULT_DAY_RANGE = 7;
@@ -22,6 +23,15 @@ function resolveDayRange(value: any): number | null {
 
 function formatApiDate(timestamp: number): string {
   return new Date(timestamp).toISOString().split('T')[0];
+}
+
+function resolveBestThumbnail(thumbnails: any) {
+  return thumbnails?.maxres?.url ||
+    thumbnails?.standard?.url ||
+    thumbnails?.high?.url ||
+    thumbnails?.medium?.url ||
+    thumbnails?.default?.url ||
+    null;
 }
 
 function shiftApiDate(date: string, days: number): string | null {
@@ -221,11 +231,12 @@ const handler = async (req: any, res: any) => {
 
     // Total subscriber count from YouTube Data API (live)
     const channelRes = await fetch(
-      'https://www.googleapis.com/youtube/v3/channels?part=statistics&mine=true',
+      'https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails,brandingSettings,status,topicDetails&mine=true',
       { headers: { Authorization: `Bearer ${accessToken}` } }
     );
     const channelData = await channelRes.json();
-    const statistics = channelData.items?.[0]?.statistics;
+    const channel = channelData.items?.[0] || {};
+    const statistics = channel?.statistics;
 
     // Views + subscriber gain/loss from YouTube Analytics API for the selected range.
     const range = resolveAnalyticsDateRange(days);
@@ -245,7 +256,7 @@ const handler = async (req: any, res: any) => {
     const endDate = reportedDate || range.endDate;
     const trendDays = resolveTrendDays(days, analyticsData, reportedDate);
 
-    return res.status(200).json({
+    const payload = {
       days,
       startDate,
       endDate,
@@ -261,7 +272,41 @@ const handler = async (req: any, res: any) => {
       weeklySubsLost: row ? row[2] : null,
       channelTitle: connection.channel_title,
       channelThumbnail: connection.channel_thumbnail_url,
+    };
+
+    await storeAccountDashboardAnalytics(supabase, {
+      userId,
+      connection,
+      summary: {
+        generatedAt: new Date().toISOString(),
+        period: {
+          label: `${days}D extension stats`,
+          currentStartDate: startDate,
+          currentEndDate: endDate,
+        },
+        channel: {
+          id: channel?.id || connection.channel_id,
+          title: channel?.snippet?.title || connection.channel_title,
+          thumbnailUrl: resolveBestThumbnail(channel?.snippet?.thumbnails) || connection.channel_thumbnail_url,
+          subscriberCount: statistics?.subscriberCount ? Number(statistics.subscriberCount) : null,
+          videoCount: statistics?.videoCount ? Number(statistics.videoCount) : null,
+          viewCount: statistics?.viewCount ? Number(statistics.viewCount) : null,
+          uploadsPlaylistId: channel?.contentDetails?.relatedPlaylists?.uploads || null,
+          description: channel?.snippet?.description || null,
+          customUrl: channel?.snippet?.customUrl || null,
+          country: channel?.snippet?.country || null,
+          defaultLanguage: channel?.snippet?.defaultLanguage || null,
+          publishedAt: channel?.snippet?.publishedAt || null,
+          topicCategories: Array.isArray(channel?.topicDetails?.topicCategories) ? channel.topicDetails.topicCategories : [],
+          localized: channel?.snippet?.localized || {},
+          branding: channel?.brandingSettings || {},
+          status: channel?.status || {},
+        },
+        trendDays,
+      },
     });
+
+    return res.status(200).json(payload);
   } catch (err: any) {
     return res.status(500).json({ error: err?.message ?? String(err) });
   }
