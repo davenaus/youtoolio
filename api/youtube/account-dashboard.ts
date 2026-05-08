@@ -2,6 +2,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const { createHash } = require('crypto');
 const { storeAccountDashboardAnalytics } = require('../../lib/youtube-analytics-store');
+const { analyzeThumbnailUrl } = require('../../lib/thumbnail-visual-features');
 
 const AUTH_HEADER_PREFIX = 'Bearer ';
 const DAY_MS = 86400000;
@@ -68,6 +69,8 @@ const RECENT_UPLOAD_VIDEO_LIMIT = 50;
 const VIDEO_DAILY_ROW_LIMIT = 500;
 const COMMENT_VIDEO_LIMIT = 8;
 const COMMENT_LIMIT_PER_VIDEO = 20;
+const THUMBNAIL_VISUAL_ANALYSIS_LIMIT = 50;
+const THUMBNAIL_VISUAL_ANALYSIS_CONCURRENCY = 3;
 const ADMIN_RESEARCH_EMAIL = 'austindavenport000@gmail.com';
 const ADMIN_TABLE_PAGE_SIZE = 1000;
 const ADMIN_TABLE_MAX_ROWS = 100000;
@@ -598,6 +601,42 @@ function buildThumbnailFeatures(video: any) {
   };
 }
 
+async function enrichThumbnailVisualFeatures(videos: any[]) {
+  const targets = new Map<string, { url: string; videos: any[] }>();
+
+  videos.forEach((video) => {
+    const url = String(video?.thumbnailUrl || '').trim();
+    if (!url) return;
+
+    const current = targets.get(url) || { url, videos: [] };
+    current.videos.push(video);
+    targets.set(url, current);
+  });
+
+  const entries = Array.from(targets.values()).slice(0, THUMBNAIL_VISUAL_ANALYSIS_LIMIT);
+
+  for (let index = 0; index < entries.length; index += THUMBNAIL_VISUAL_ANALYSIS_CONCURRENCY) {
+    const batch = entries.slice(index, index + THUMBNAIL_VISUAL_ANALYSIS_CONCURRENCY);
+
+    await Promise.all(batch.map(async (entry) => {
+      try {
+        const visual = await analyzeThumbnailUrl(entry.url);
+        if (!visual) return;
+
+        entry.videos.forEach((video) => {
+          video.thumbnailFeatures = {
+            ...(video.thumbnailFeatures || {}),
+            visual,
+            visualAnalyzedAt: new Date().toISOString(),
+          };
+        });
+      } catch {
+        // Thumbnail visual features are useful, but they should never block account analytics.
+      }
+    }));
+  }
+}
+
 function normalizeVideoMetadata(video: any, analyticsRow: any = {}) {
   const durationSeconds = parseIsoDuration(video?.contentDetails?.duration || '');
   const title = video?.snippet?.title || analyticsRow.title || video?.id || '';
@@ -856,7 +895,7 @@ function percentile(values: number[], percent: number) {
   return sorted[index];
 }
 
-function pearson(pairs: any[], leftKey: string, rightKey: string) {
+function pearsonByKey(pairs: any[], leftKey: string, rightKey: string) {
   const points = pairs
     .map((entry) => [Number(entry[leftKey]), Number(entry[rightKey])])
     .filter(([left, right]) => Number.isFinite(left) && Number.isFinite(right));
@@ -949,6 +988,7 @@ function titleFeatures(video: any) {
 function enrichVideosForResearch(topVideos: any[]) {
   return topVideos.map((video) => {
     const features = titleFeatures(video);
+    const thumbnailVisual = video?.thumbnailFeatures?.visual || {};
     const views = toNumber(video.views);
     const engagementRate = toNumber(video.engagementRate);
     const thumbnailCtr = video.thumbnailCtr === null ? null : toNumber(video.thumbnailCtr);
@@ -969,6 +1009,11 @@ function enrichVideosForResearch(topVideos: any[]) {
       commentRate: ratio(toNumber(video.comments), views),
       shareRate: ratio(toNumber(video.shares), views),
       playlistAddRate: ratio(toNumber(video.playlistNetAdds), views),
+      thumbnailVisual,
+      thumbnailTextPresent: thumbnailVisual.textPresent === undefined ? null : Boolean(thumbnailVisual.textPresent),
+      thumbnailComplexity: Number.isFinite(Number(thumbnailVisual.visualComplexity)) ? toNumber(thumbnailVisual.visualComplexity) : null,
+      thumbnailOverallScore: Number.isFinite(Number(thumbnailVisual.overallScore)) ? toNumber(thumbnailVisual.overallScore) : null,
+      thumbnailStyleSignature: thumbnailVisual.styleSignature || '',
     };
   });
 }
@@ -1021,6 +1066,16 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
   const shorts = videos.filter((video: any) => video.isShortGuess);
   const longForm = videos.filter((video: any) => !video.isShortGuess);
   const avg = (rows: any[], fn: (row: any) => number) => rows.length ? rows.reduce((sum, row) => sum + fn(row), 0) / rows.length : 0;
+  const visualVideos = videos.filter((video: any) => Number.isFinite(Number(video.thumbnailOverallScore)));
+  const visualVideosWithCtr = visualVideos.filter((video: any) => video.thumbnailCtr !== null);
+  const thumbnailTextVideosWithCtr = visualVideosWithCtr.filter((video: any) => video.thumbnailTextPresent !== null);
+  const strongestThumbnailStyle = groupStats(visualVideos, (video: any) => video.thumbnailStyleSignature, (video: any) => video.subsPerThousandViews)[0];
+  const strongestThumbnailStyleCtr = groupStats(visualVideosWithCtr, (video: any) => video.thumbnailStyleSignature, (video: any) => video.thumbnailCtr)[0];
+  const textPresentCtrVideos = thumbnailTextVideosWithCtr.filter((video: any) => video.thumbnailTextPresent);
+  const textAbsentCtrVideos = thumbnailTextVideosWithCtr.filter((video: any) => !video.thumbnailTextPresent);
+  const thumbnailTextCtrAnswer = textPresentCtrVideos.length && textAbsentCtrVideos.length
+    ? `Text-present thumbnails avg ${pct(avg(textPresentCtrVideos, (video) => video.thumbnailCtr))} CTR vs no-text avg ${pct(avg(textAbsentCtrVideos, (video) => video.thumbnailCtr))}.`
+    : 'Text-presence proxies are now collected from thumbnail pixels; needs both text and no-text examples with CTR.';
   const topRecentCommentVideo = videos
     .map((video: any) => ({
       key: video.title,
@@ -1060,9 +1115,9 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
           item('Optimal video length by niche', `${topLabel(bestLengthViews)} leads by average views in this channel sample; niche-level benchmark needs more channels.`, 'Channel-level'),
           item('Optimal video length by traffic source', `Current strongest source is ${strongestTraffic?.label || 'not enough data'}; source-by-length becomes stronger as more videos are stored.`, 'Building history'),
           item('Optimal video length for subscriber growth', `${topLabel(bestLengthSubs)} currently leads subscribers per 1K views.`),
-          item('Relationship between video length and retention', correlationLabel(pearson(videos, 'durationSeconds', 'averageViewPercentage'))),
-          item('Relationship between video length and CTR', correlationLabel(pearson(videos.filter((video: any) => video.thumbnailCtr !== null), 'durationSeconds', 'thumbnailCtr'))),
-          item('Relationship between video length and watch time', correlationLabel(pearson(videos, 'durationSeconds', 'watchHours'))),
+          item('Relationship between video length and retention', correlationLabel(pearsonByKey(videos, 'durationSeconds', 'averageViewPercentage'))),
+          item('Relationship between video length and CTR', correlationLabel(pearsonByKey(videos.filter((video: any) => video.thumbnailCtr !== null), 'durationSeconds', 'thumbnailCtr'))),
+          item('Relationship between video length and watch time', correlationLabel(pearsonByKey(videos, 'durationSeconds', 'watchHours'))),
           item('Shorts vs long-form performance differences', `Shorts avg ${compact(avg(shorts, (video) => video.views))} views vs long-form avg ${compact(avg(longForm, (video) => video.views))} views.`),
           item('Shorts contribution to total channel growth', `${strongestContentType?.label || 'Content type data not returned'} is currently carrying ${pct(strongestContentType?.shareOfViews || 0, 0)} of views.`),
           item('Live vs VOD performance differences', `${breakdowns.liveOrOnDemand?.[0]?.label || 'No live/on-demand split'} leads the current period.`),
@@ -1071,14 +1126,14 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
       {
         title: 'Metric Relationships',
         items: [
-          item('CTR vs watch time correlation', correlationLabel(pearson(videos.filter((video: any) => video.thumbnailCtr !== null), 'thumbnailCtr', 'watchHours'))),
-          item('CTR vs retention correlation', correlationLabel(pearson(videos.filter((video: any) => video.thumbnailCtr !== null), 'thumbnailCtr', 'averageViewPercentage'))),
-          item('Retention vs subscriber conversion correlation', correlationLabel(pearson(videos, 'averageViewPercentage', 'subsPerThousandViews'))),
-          item('Engagement vs retention correlation', correlationLabel(pearson(videos, 'engagementRate', 'averageViewPercentage'))),
-          item('Engagement vs CTR correlation', correlationLabel(pearson(videos.filter((video: any) => video.thumbnailCtr !== null), 'engagementRate', 'thumbnailCtr'))),
-          item('Views vs subscriber conversion rate', correlationLabel(pearson(videos, 'views', 'subsPerThousandViews'))),
-          item('Views vs engagement rate scaling patterns', correlationLabel(pearson(videos, 'views', 'engagementRate'))),
-          item('Like, comment, share, and playlist add rate vs performance', `Like/views ${correlationLabel(pearson(videos, 'likeRate', 'views'))}; comment/views ${correlationLabel(pearson(videos, 'commentRate', 'views'))}; share/views ${correlationLabel(pearson(videos, 'shareRate', 'views'))}; playlist/views ${correlationLabel(pearson(videos, 'playlistAddRate', 'views'))}.`),
+          item('CTR vs watch time correlation', correlationLabel(pearsonByKey(videos.filter((video: any) => video.thumbnailCtr !== null), 'thumbnailCtr', 'watchHours'))),
+          item('CTR vs retention correlation', correlationLabel(pearsonByKey(videos.filter((video: any) => video.thumbnailCtr !== null), 'thumbnailCtr', 'averageViewPercentage'))),
+          item('Retention vs subscriber conversion correlation', correlationLabel(pearsonByKey(videos, 'averageViewPercentage', 'subsPerThousandViews'))),
+          item('Engagement vs retention correlation', correlationLabel(pearsonByKey(videos, 'engagementRate', 'averageViewPercentage'))),
+          item('Engagement vs CTR correlation', correlationLabel(pearsonByKey(videos.filter((video: any) => video.thumbnailCtr !== null), 'engagementRate', 'thumbnailCtr'))),
+          item('Views vs subscriber conversion rate', correlationLabel(pearsonByKey(videos, 'views', 'subsPerThousandViews'))),
+          item('Views vs engagement rate scaling patterns', correlationLabel(pearsonByKey(videos, 'views', 'engagementRate'))),
+          item('Like, comment, share, and playlist add rate vs performance', `Like/views ${correlationLabel(pearsonByKey(videos, 'likeRate', 'views'))}; comment/views ${correlationLabel(pearsonByKey(videos, 'commentRate', 'views'))}; share/views ${correlationLabel(pearsonByKey(videos, 'shareRate', 'views'))}; playlist/views ${correlationLabel(pearsonByKey(videos, 'playlistAddRate', 'views'))}.`),
           item('Impressions vs views efficiency', `Current channel CTR is ${pct(fullAnalysis.current.thumbnailCtr)} with ${compact(fullAnalysis.current.videoThumbnailImpressions)} impressions.`),
           item('Watch time per impression', fullAnalysis.current.videoThumbnailImpressions ? `${secondsToLabel((fullAnalysis.current.watchHours * 3600) / fullAnalysis.current.videoThumbnailImpressions)} watch time per impression.` : 'Needs impression data.'),
           item('Engagement and subscriber conversion per impression', fullAnalysis.current.videoThumbnailImpressions ? `${pct((fullAnalysis.current.likes + fullAnalysis.current.comments + fullAnalysis.current.shares) / fullAnalysis.current.videoThumbnailImpressions * 100)} engagement per impression; ${pct(fullAnalysis.current.netSubscribers / fullAnalysis.current.videoThumbnailImpressions * 100)} net subs per impression.` : 'Needs impression data.'),
@@ -1144,7 +1199,7 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
           item('Channels with high views but low subscriber growth', 'Cross-channel detection needs opted-in cohort rollups; personal detection is live via views vs subs/1K.', 'Building cohort data'),
           item('Videos with high engagement but low reach', lowReachHighEngagement.length ? lowReachHighEngagement.map((video: any) => video.title).join(' | ') : 'No obvious low-reach/high-engagement candidate.'),
           item('Videos with high reach but low engagement', highReachLowEngagement.length ? highReachLowEngagement.map((video: any) => video.title).join(' | ') : 'No obvious high-reach/low-engagement candidate.'),
-          item('Engagement as leading vs lagging indicator', correlationLabel(pearson(videos, 'engagementRate', 'views'))),
+          item('Engagement as leading vs lagging indicator', correlationLabel(pearsonByKey(videos, 'engagementRate', 'views'))),
           item('Best performing content for gaining subscribers', videos.slice().sort((a: any, b: any) => b.netSubscribers - a.netSubscribers)[0]?.title || 'Needs video subscriber rows.'),
           item('Best performing content for generating engagement', videos.slice().sort((a: any, b: any) => b.engagementRate - a.engagementRate)[0]?.title || 'Needs video engagement rows.'),
           item('Best performing content for maximizing watch time', videos.slice().sort((a: any, b: any) => b.watchHours - a.watchHours)[0]?.title || 'Needs video watch-time rows.'),
@@ -1155,19 +1210,19 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
       {
         title: 'Metadata, Packaging, And Thumbnails',
         items: [
-          item('Correlation between title length and CTR', correlationLabel(pearson(videos.filter((video: any) => video.thumbnailCtr !== null), 'titleLength', 'thumbnailCtr'))),
-          item('Title length vs retention correlation', correlationLabel(pearson(videos, 'titleLength', 'averageViewPercentage'))),
+          item('Correlation between title length and CTR', correlationLabel(pearsonByKey(videos.filter((video: any) => video.thumbnailCtr !== null), 'titleLength', 'thumbnailCtr'))),
+          item('Title length vs retention correlation', correlationLabel(pearsonByKey(videos, 'titleLength', 'averageViewPercentage'))),
           item('Impact of numbers in titles on performance', `Number titles avg ${compact(avg(videos.filter((video: any) => video.hasNumber), (video) => video.views))} views vs non-number avg ${compact(avg(videos.filter((video: any) => !video.hasNumber), (video) => video.views))}.`),
           item('Impact of questions in titles on CTR', `Question titles avg ${pct(avg(videos.filter((video: any) => video.hasQuestion && video.thumbnailCtr !== null), (video) => video.thumbnailCtr))} CTR.`),
-          item('Impact of emotional words in titles on engagement', correlationLabel(pearson(videos, 'emotionalWordCount', 'engagementRate'))),
-          item('Title capitalization patterns vs performance', correlationLabel(pearson(videos, 'uppercaseShare', 'views'))),
-          item('Description length vs performance', correlationLabel(pearson(videos.map((video: any) => ({ ...video, descriptionLength: String(video.description || '').length })), 'descriptionLength', 'views'))),
+          item('Impact of emotional words in titles on engagement', correlationLabel(pearsonByKey(videos, 'emotionalWordCount', 'engagementRate'))),
+          item('Title capitalization patterns vs performance', correlationLabel(pearsonByKey(videos, 'uppercaseShare', 'views'))),
+          item('Description length vs performance', correlationLabel(pearsonByKey(videos.map((video: any) => ({ ...video, descriptionLength: String(video.description || '').length })), 'descriptionLength', 'views'))),
           item('Links in description vs external traffic share', `${strongestExternal?.label || 'External data'} is now tracked; description link counts are stored in video snapshots for correlation.`, 'Stored for analysis'),
-          item('Tags count vs CTR correlation', correlationLabel(pearson(videos.filter((video: any) => video.thumbnailCtr !== null).map((video: any) => ({ ...video, tagCount: Array.isArray(video.tags) ? video.tags.length : 0 })), 'tagCount', 'thumbnailCtr'))),
+          item('Tags count vs CTR correlation', correlationLabel(pearsonByKey(videos.filter((video: any) => video.thumbnailCtr !== null).map((video: any) => ({ ...video, tagCount: Array.isArray(video.tags) ? video.tags.length : 0 })), 'tagCount', 'thumbnailCtr'))),
           item('Tags usage vs search traffic share', `${strongestSearch?.label || 'Search data'} is tracked while tag counts are stored per video.`, 'Stored for analysis'),
-          item('Thumbnail style consistency vs channel growth', 'Thumbnail resolution/aspect metadata is stored now; true visual style/text detection needs image processing.', 'Needs image processing'),
-          item('Thumbnail text presence vs CTR', 'Thumbnail image URLs are stored; text detection needs OCR/image analysis in a later pass.', 'Needs image processing'),
-          item('Thumbnail complexity vs CTR', 'Thumbnail proxy features are stored; visual complexity requires image analysis.', 'Needs image processing'),
+          item('Thumbnail style consistency vs channel growth', strongestThumbnailStyle ? `Top saved visual style for subscriber conversion is ${strongestThumbnailStyle.key} (${compact(strongestThumbnailStyle.average)} subs per 1K views, n=${strongestThumbnailStyle.count}).${strongestThumbnailStyleCtr ? ` Best CTR style is ${strongestThumbnailStyleCtr.key} (${pct(strongestThumbnailStyleCtr.average)}, n=${strongestThumbnailStyleCtr.count}).` : ''}` : 'Thumbnail visual features are collected during full analysis; run again as channels connect to build style benchmarks.', strongestThumbnailStyle ? 'Live' : 'Collecting'),
+          item('Thumbnail text presence vs CTR', thumbnailTextCtrAnswer, textPresentCtrVideos.length && textAbsentCtrVideos.length ? 'Live' : 'Collecting'),
+          item('Thumbnail complexity vs CTR', visualVideosWithCtr.length ? correlationLabel(pearsonByKey(visualVideosWithCtr, 'thumbnailComplexity', 'thumbnailCtr')) : 'Visual complexity scores are now collected from thumbnail pixels during full analysis.', visualVideosWithCtr.length ? 'Live' : 'Collecting'),
           item('High CTR but low retention patterns', highCtrWeakRetention.length ? highCtrWeakRetention.map((video: any) => video.title).join(' | ') : 'No high-CTR/low-retention candidate in current sample.'),
           item('Low CTR but high retention patterns', videos.filter((video: any) => video.thumbnailCtr !== null && video.thumbnailCtr < medianCtr && video.averageViewPercentage >= medianRetention).slice(0, 3).map((video: any) => video.title).join(' | ') || 'No low-CTR/high-retention candidate in current sample.'),
         ],
@@ -1195,7 +1250,7 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
           item('Playlist-driven session extension', `${fullAnalysis.current.playlistNetAdds >= 0 ? '+' : ''}${compact(fullAnalysis.current.playlistNetAdds)} net playlist saves this window.`),
           item('Playlist impact on watch time', `Playlist save rate is ${pct(fullAnalysis.current.playlistAddRate)} of views.`),
           item('Videos that perform better inside playlists', 'Playlist adds/removes are now stored by video where returned; stronger ranking needs more video rows.', 'Building history'),
-          item('Comment volume vs video performance', correlationLabel(pearson(videos, 'comments', 'views'))),
+          item('Comment volume vs video performance', correlationLabel(pearsonByKey(videos, 'comments', 'views'))),
           item('Recent comment volume by video', `${topLabel(topRecentCommentVideo, 'No comments synced')} has the most recent synced comments among top videos.`),
           item('Comment sentiment vs engagement', 'Recent public comments are stored; sentiment requires a processing pass before scoring.', 'Needs text processing'),
           item('Creator reply rate vs engagement growth', 'Replies are stored when returned, but creator-reply classification needs author matching.', 'Needs processing'),
@@ -1217,7 +1272,7 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
           item('Signals of content saturation', `Traffic diversity plus median engagement is the current proxy; top source share is ${pct(strongestTraffic?.shareOfViews || 0, 0)}.`),
           item('Correlation between traffic diversity and stability', 'Traffic breakdown history is now stored by run; stability correlation improves over repeated runs.', 'Building history'),
           item('Growth compounding effects over multiple uploads', 'Video sequencing and momentum stacking require multi-upload history; collection starts now.', 'Building history'),
-          item('Relative importance of each metric by outcome', `Current strongest quick read: ${correlationLabel(pearson(videos, 'watchHours', 'views'))} for watch time vs views, ${correlationLabel(pearson(videos, 'engagementRate', 'views'))} for engagement vs views.`),
+          item('Relative importance of each metric by outcome', `Current strongest quick read: ${correlationLabel(pearsonByKey(videos, 'watchHours', 'views'))} for watch time vs views, ${correlationLabel(pearsonByKey(videos, 'engagementRate', 'views'))} for engagement vs views.`),
           item('Algorithm testing, scaling, and decline phases', 'Use high impressions + stable retention as scaling proxy; daily impression/retention rows are now stored for phase detection.', 'Building history'),
           item('Videos that maintain performance vs decay quickly', 'Daily video rows are now stored; durable-vs-decay classification improves after repeated daily runs.', 'Building history'),
         ],
@@ -1466,6 +1521,8 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
       netSubscribers: toNumber(row.subscribersGained) - toNumber(row.subscribersLost),
     };
   });
+
+  await enrichThumbnailVisualFeatures(videoMetadata.concat(topVideos));
 
   const breakdowns = {
     trafficSources: buildSegmentRows(trafficPayload, 'insightTrafficSourceType', fullCurrent.views, 8),
@@ -1832,6 +1889,9 @@ function buildVideoResearchRecords(videoSnapshots: any[], videoDailyRows: any[])
     const views = toNumber(perf.views || video.view_count);
     const engagement = toNumber(perf.likes) + toNumber(perf.comments) + toNumber(perf.shares);
     const durationSeconds = toNumber(video.duration_seconds);
+    const thumbnailFeatures = video.thumbnail_features || {};
+    const thumbnailVisual = thumbnailFeatures.visual || {};
+    const visualNumber = (value: any) => Number.isFinite(Number(value)) ? toNumber(value) : null;
 
     return {
       ...video,
@@ -1871,6 +1931,21 @@ function buildVideoResearchRecords(videoSnapshots: any[], videoDailyRows: any[])
       playlistAddRate: safeDivide(toNumber(perf.playlistNetAdds), views),
       subsPerThousandViews: views ? (toNumber(perf.netSubscribers) / views) * 1000 : null,
       viewsPerSubscriber: null,
+      thumbnailFeatures,
+      thumbnailVisual,
+      thumbnailTextPresent: thumbnailVisual.textPresent === undefined ? null : Boolean(thumbnailVisual.textPresent),
+      thumbnailTextReadabilityScore: visualNumber(thumbnailVisual.textReadabilityScore),
+      thumbnailComplexity: visualNumber(thumbnailVisual.visualComplexity),
+      thumbnailOverallScore: visualNumber(thumbnailVisual.overallScore),
+      thumbnailCompositionScore: visualNumber(thumbnailVisual.compositionScore),
+      thumbnailLightingScore: visualNumber(thumbnailVisual.lightingScore),
+      thumbnailAverageBrightness: visualNumber(thumbnailVisual.averageBrightness),
+      thumbnailAverageSaturation: visualNumber(thumbnailVisual.averageSaturation),
+      thumbnailContrastStdDev: visualNumber(thumbnailVisual.contrastStdDev),
+      thumbnailEdgeDensity: visualNumber(thumbnailVisual.edgeDensity),
+      thumbnailCenterFocusRatio: visualNumber(thumbnailVisual.centerFocusRatio),
+      thumbnailDominantHueBucket: thumbnailVisual.dominantHueBucket || '',
+      thumbnailStyleSignature: thumbnailVisual.styleSignature || '',
       dailyRows: perf.rows || [],
     };
   });
@@ -1897,6 +1972,12 @@ function buildAdminResearchSections(data: any) {
   const avgEngagementRate = average(videosWithViews.map((record: any) => record.engagementRate).filter((value: any) => Number.isFinite(Number(value)))) || 0;
   const avgCtr = average(videosWithCtr.map((record: any) => record.thumbnailCtr));
   const avgRetention = average(videosWithRetention.map((record: any) => record.averageViewPercentage));
+  const recordsWithVisualThumbs = records.filter((record: any) => Number.isFinite(Number(record.thumbnailOverallScore)));
+  const visualThumbsWithCtr = recordsWithVisualThumbs.filter((record: any) => Number.isFinite(Number(record.thumbnailCtr)));
+  const textPresentVisualsWithCtr = visualThumbsWithCtr.filter((record: any) => record.thumbnailTextPresent === true);
+  const textAbsentVisualsWithCtr = visualThumbsWithCtr.filter((record: any) => record.thumbnailTextPresent === false);
+  const strongestThumbnailStyleBySubs = groupByAverage(recordsWithVisualThumbs, (record: any) => record.thumbnailStyleSignature, (record: any) => record.subsPerThousandViews)[0];
+  const strongestThumbnailStyleByCtr = groupByAverage(visualThumbsWithCtr, (record: any) => record.thumbnailStyleSignature, (record: any) => record.thumbnailCtr)[0];
   const topTraffic = topBreakdown(breakdowns, 'trafficSources');
   const topSearch = topBreakdown(breakdowns, 'searchTerms');
   const topDevice = topBreakdown(breakdowns, 'devices');
@@ -1929,6 +2010,9 @@ function buildAdminResearchSections(data: any) {
     return map;
   }, {});
   const recordsWithRecentCommentCounts = records.map((record: any) => ({ ...record, storedCommentCount: commentCountsByVideo[record.video_id] || 0 }));
+  const thumbnailTextPresenceAnswer = visualThumbsWithCtr.length
+    ? compareSegments(visualThumbsWithCtr, (record: any) => record.thumbnailTextPresent === true, (record: any) => record.thumbnailCtr, 'Text-present thumbnails', 'No-text thumbnails', formatPercentMetric)
+    : 'Thumbnail text-presence proxies are collected during full channel analysis.';
 
   const item = (label: string, answer: string, status = 'Live', detail = '') => ({ label, answer, status, detail });
   const building = (label: string, answer: string) => item(label, answer, 'Building history');
@@ -1953,9 +2037,9 @@ function buildAdminResearchSections(data: any) {
         item('Tags usage vs search traffic share', compareSegments(records, (record: any) => record.tagCount > 0, (record: any) => record.views, 'Tagged videos', 'Untagged videos'), 'Live'),
         item('Tag consistency vs channel growth', describeCorrelation(pearson(records.map((record: any) => [record.tagCount, record.subsPerThousandViews])), 'tag count', 'subscriber conversion'), 'Live'),
         item('Tag overlap across videos vs performance consistency', building('Tag overlap across videos vs performance consistency', 'We store tags now; this gets stronger once the same channels have more saved videos over time.').answer, 'Building history'),
-        item('Thumbnail style consistency vs channel growth', duplicateThumbs > 0 ? `${duplicateThumbs} repeated thumbnail URL patterns detected. Visual style needs OCR/image processing for real style matching.` : 'Thumbnail URLs and basic resolution proxies are stored; visual style matching needs image analysis.', duplicateThumbs > 0 ? 'Proxy' : 'Needs collector'),
-        collector('Thumbnail text presence vs CTR', 'Needs OCR/image analysis against stored thumbnail URLs.'),
-        collector('Thumbnail complexity vs CTR', 'Needs image complexity analysis; current data only stores URL/resolution proxies.'),
+        item('Thumbnail style consistency vs channel growth', strongestThumbnailStyleBySubs ? `Top saved visual style for subscriber conversion is ${strongestThumbnailStyleBySubs.key} (${formatNumber(strongestThumbnailStyleBySubs.average)} subs per 1K views, n=${strongestThumbnailStyleBySubs.count}).${strongestThumbnailStyleByCtr ? ` Best CTR style is ${strongestThumbnailStyleByCtr.key} (${formatPercentMetric(strongestThumbnailStyleByCtr.average)}, n=${strongestThumbnailStyleByCtr.count}).` : ''}` : 'Thumbnail visual features are now collected during full channel analysis.', strongestThumbnailStyleBySubs ? 'Live' : 'Collecting'),
+        item('Thumbnail text presence vs CTR', thumbnailTextPresenceAnswer, textPresentVisualsWithCtr.length && textAbsentVisualsWithCtr.length ? 'Live' : 'Collecting'),
+        item('Thumbnail complexity vs CTR', visualThumbsWithCtr.length ? describeCorrelation(pearson(visualThumbsWithCtr.map((record: any) => [record.thumbnailComplexity, record.thumbnailCtr])), 'thumbnail complexity', 'CTR') : 'Thumbnail visual complexity is now collected during full channel analysis.', visualThumbsWithCtr.length >= 3 ? 'Live' : 'Collecting'),
         item('Thumbnail reuse vs performance', duplicateThumbs > 0 ? `${duplicateThumbs} possible thumbnail URL reuse cases found.` : 'No repeated thumbnail URLs found in current snapshots.', 'Proxy'),
       ],
     },
