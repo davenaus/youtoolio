@@ -1642,9 +1642,145 @@ function normalizeAdminMinSubscribers(value: any) {
   return Math.min(parsed, 1000000000);
 }
 
+function monthStartIso() {
+  const date = new Date();
+  date.setUTCDate(1);
+  date.setUTCHours(0, 0, 0, 0);
+  return date.toISOString();
+}
+
+function isCurrentMonth(value: any, monthStart: string) {
+  if (!value) return false;
+  const timestamp = Date.parse(String(value));
+  return Number.isFinite(timestamp) && timestamp >= Date.parse(monthStart);
+}
+
+async function listAdminAuthUsers(supabase: any) {
+  const users: any[] = [];
+  const perPage = 1000;
+
+  for (let page = 1; page <= 20; page += 1) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage });
+    if (error) throw error;
+
+    const batch = data?.users || [];
+    users.push(...batch);
+
+    if (batch.length < perPage) break;
+  }
+
+  return users;
+}
+
+async function readOptionalExportStats(supabase: any, monthStart: string) {
+  const tableCandidates = ['platform_exports', 'tool_exports', 'export_events', 'exports'];
+
+  for (const table of tableCandidates) {
+    try {
+      const total = await supabase
+        .from(table)
+        .select('*', { count: 'exact', head: true });
+      if (total.error) continue;
+
+      const month = await supabase
+        .from(table)
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', monthStart);
+
+      return {
+        tracked: true,
+        table,
+        total: Number(total.count || 0),
+        thisMonth: month.error ? null : Number(month.count || 0),
+      };
+    } catch {
+      // Export tracking is optional and may not exist yet.
+    }
+  }
+
+  return {
+    tracked: false,
+    table: null,
+    total: null,
+    thisMonth: null,
+  };
+}
+
 function filterRowsByChannels(rows: any[], allowedChannelIds: Set<string>) {
   if (!allowedChannelIds.size) return [];
   return rows.filter((row) => allowedChannelIds.has(String(row?.channel_id || '')));
+}
+
+async function buildAdminPlatformStats(supabase: any) {
+  const monthStart = monthStartIso();
+  const [
+    users,
+    profiles,
+    extensionSessions,
+    youtubeConnections,
+    syncRuns,
+    exportStats,
+  ] = await Promise.all([
+    listAdminAuthUsers(supabase),
+    readAdminTable(supabase, 'profiles', 'user_id,email,display_name,created_at,updated_at', 'created_at'),
+    readAdminTable(supabase, 'extension_sessions', 'user_id,created_at,last_used_at,revoked_at', 'created_at'),
+    readAdminTable(supabase, 'youtube_connections', 'user_id,channel_id,channel_title,disconnected_at,created_at,updated_at', 'updated_at'),
+    readAdminTable(supabase, 'youtube_analytics_sync_runs', 'user_id,channel_id,sync_type,status,created_at,completed_at', 'created_at'),
+    readOptionalExportStats(supabase, monthStart),
+  ]);
+
+  const profileByUserId = new Map(profiles.map((profile: any) => [profile.user_id, profile]));
+  const activeUserIds = new Set<string>();
+
+  users.forEach((user: any) => {
+    if (isCurrentMonth(user.last_sign_in_at, monthStart)) activeUserIds.add(user.id);
+  });
+
+  extensionSessions.forEach((session: any) => {
+    if (isCurrentMonth(session.last_used_at || session.created_at, monthStart)) activeUserIds.add(session.user_id);
+  });
+
+  syncRuns.forEach((run: any) => {
+    if (isCurrentMonth(run.completed_at || run.created_at, monthStart)) activeUserIds.add(run.user_id);
+  });
+
+  const userRows = users
+    .map((user: any) => {
+      const profile = profileByUserId.get(user.id) || {};
+      return {
+        id: user.id,
+        email: user.email || profile.email || '',
+        displayName: profile.display_name || user.user_metadata?.full_name || null,
+        createdAt: user.created_at || profile.created_at || null,
+        lastSignInAt: user.last_sign_in_at || null,
+        profileUpdatedAt: profile.updated_at || null,
+      };
+    })
+    .filter((user: any) => user.email)
+    .sort((left: any, right: any) => String(right.createdAt || '').localeCompare(String(left.createdAt || '')));
+
+  const connectedUserIds = new Set(youtubeConnections.filter((row: any) => !row.disconnected_at).map((row: any) => row.user_id).filter(Boolean));
+  const extensionUserIds = new Set(extensionSessions.filter((row: any) => !row.revoked_at).map((row: any) => row.user_id).filter(Boolean));
+  const activeConnectedChannels = new Set(youtubeConnections.filter((row: any) => !row.disconnected_at).map((row: any) => row.channel_id).filter(Boolean));
+
+  return {
+    generatedAt: new Date().toISOString(),
+    monthStart,
+    totals: {
+      totalUsers: users.length,
+      profileRows: profiles.length,
+      newUsersThisMonth: users.filter((user: any) => isCurrentMonth(user.created_at, monthStart)).length,
+      activeUsersThisMonth: activeUserIds.size,
+      totalExports: exportStats.total,
+      exportsThisMonth: exportStats.thisMonth,
+      exportTrackingAvailable: exportStats.tracked,
+      exportTrackingTable: exportStats.table,
+      connectedYouTubeUsers: connectedUserIds.size,
+      connectedYouTubeChannels: activeConnectedChannels.size,
+      extensionConnectedUsers: extensionUserIds.size,
+    },
+    users: userRows,
+  };
 }
 
 function resolveAdminChannelFilter(channelSnapshots: any[], minSubscribers: number) {
@@ -2302,9 +2438,15 @@ const handler = async (req: any, res: any) => {
     const requestUser = await resolveRequestUser(supabase, authHeader.slice(AUTH_HEADER_PREFIX.length));
     if (!requestUser?.id) return res.status(401).json({ error: 'unauthorized' });
 
-    if (String(req.query?.admin || '') === 'research') {
+    const adminView = String(req.query?.admin || '');
+    if (adminView === 'research' || adminView === 'platform') {
       if (String(requestUser.email || '').toLowerCase() !== ADMIN_RESEARCH_EMAIL) {
         return res.status(403).json({ error: 'forbidden' });
+      }
+
+      if (adminView === 'platform') {
+        const platformStats = await buildAdminPlatformStats(supabase);
+        return res.status(200).json(platformStats);
       }
 
       const adminDashboard = await buildAdminResearchDashboard(supabase, {

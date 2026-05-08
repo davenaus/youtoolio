@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/Button/Button';
 import { AccountYouTubeInsights } from './AccountYouTubeInsights';
+import { AdminPlatformStats } from './AdminPlatformStats';
 import { AdminYouTubeResearchDashboard } from './AdminYouTubeResearchDashboard';
 import styled from 'styled-components';
 
@@ -520,6 +521,8 @@ export const Account: React.FC = () => {
             </div>
           </InstructionBox>}
         </Card>
+
+        {isResearchAdmin && <AdminPlatformStats />}
 
         {isResearchAdmin && <AdminYouTubeResearchDashboard />}
 
