@@ -1021,7 +1021,7 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
   const shorts = videos.filter((video: any) => video.isShortGuess);
   const longForm = videos.filter((video: any) => !video.isShortGuess);
   const avg = (rows: any[], fn: (row: any) => number) => rows.length ? rows.reduce((sum, row) => sum + fn(row), 0) / rows.length : 0;
-  const commentVelocityVideo = videos
+  const topRecentCommentVideo = videos
     .map((video: any) => ({
       key: video.title,
       average: comments.filter((comment: any) => comment.videoId === video.id).length,
@@ -1038,7 +1038,7 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
 
   return {
     generatedAt: new Date().toISOString(),
-    note: 'Private admin research view. Some answers are live from the current 28-day pull; hourly/longitudinal answers improve as stored history accumulates.',
+    note: 'Private admin research view. Some answers are live from the current 28-day pull; longitudinal answers improve as stored history accumulates.',
     sections: [
       {
         title: 'Timing, Cadence, And Lifecycle',
@@ -1051,9 +1051,6 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
           item('Time-to-peak views after publish', peakDescriptions.length ? peakDescriptions.join(' | ') : 'Daily video rows are now being collected; peak timing strengthens after repeated runs.', 'Building history'),
           item('Time-to-peak impressions after publish', 'Daily impression rows are now stored when YouTube returns them; true peak timing needs repeated daily snapshots after publish.', 'Building history'),
           item('Average lifespan of a video’s growth', 'Growth lifespan is now trackable from stored daily video rows; first useful decay curve appears after several weeks of repeated full analyses.', 'Building history'),
-          item('View velocity in first 1 hour', 'YouTube Analytics does not provide hourly rows here; this needs scheduled snapshots around publish time.', 'Needs hourly snapshots'),
-          item('View velocity in first 24 hours', 'Publish-day daily video rows are now stored as the 24-hour proxy.', 'Proxy'),
-          item('Impression velocity in first 24 hours', 'Publish-day thumbnail impressions are now stored when returned by YouTube Analytics.', 'Proxy'),
           item('CTR, retention, and engagement decay over time', `Current 28-day medians are ${pct(medianCtr)} CTR, ${pct(medianRetention)} average viewed, and ${pct(medianEngagement)} engagement; decay curves improve as daily history accumulates.`, 'Building history'),
         ],
       },
@@ -1199,7 +1196,7 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
           item('Playlist impact on watch time', `Playlist save rate is ${pct(fullAnalysis.current.playlistAddRate)} of views.`),
           item('Videos that perform better inside playlists', 'Playlist adds/removes are now stored by video where returned; stronger ranking needs more video rows.', 'Building history'),
           item('Comment volume vs video performance', correlationLabel(pearson(videos, 'comments', 'views'))),
-          item('Comment velocity after publish', `${topLabel(commentVelocityVideo, 'No comments synced')} has the most recent synced comments among top videos.`),
+          item('Recent comment volume by video', `${topLabel(topRecentCommentVideo, 'No comments synced')} has the most recent synced comments among top videos.`),
           item('Comment sentiment vs engagement', 'Recent public comments are stored; sentiment requires a processing pass before scoring.', 'Needs text processing'),
           item('Creator reply rate vs engagement growth', 'Replies are stored when returned, but creator-reply classification needs author matching.', 'Needs processing'),
           item('Pinned comments impact on engagement', 'Pinned comment status is not returned in the current comment API payload.', 'Limited by API'),
@@ -1931,7 +1928,7 @@ function buildAdminResearchSections(data: any) {
     map[comment.video_id] = (map[comment.video_id] || 0) + 1;
     return map;
   }, {});
-  const recordsWithCommentVelocity = records.map((record: any) => ({ ...record, storedCommentCount: commentCountsByVideo[record.video_id] || 0 }));
+  const recordsWithRecentCommentCounts = records.map((record: any) => ({ ...record, storedCommentCount: commentCountsByVideo[record.video_id] || 0 }));
 
   const item = (label: string, answer: string, status = 'Live', detail = '') => ({ label, answer, status, detail });
   const building = (label: string, answer: string) => item(label, answer, 'Building history');
@@ -1979,8 +1976,6 @@ function buildAdminResearchSections(data: any) {
         item('Video age vs cumulative views', describeCorrelation(pearson(records.map((record: any) => [record.ageDays, record.views])), 'video age', 'views'), 'Live'),
         building('Evergreen content identification', buildOutlierSummary(records.filter((record: any) => toNumber(record.ageDays) > 30), 'views', 'older-video views'), 'Building history'),
         building('Decay rate / lifespan / time-to-peak', 'Needs repeated daily snapshots across longer periods. Daily rows are being stored, so this will mature over time.'),
-        collector('View velocity in first 1 hour', 'Needs scheduled hourly snapshots around publish time.'),
-        building('View velocity / impression velocity in first 24 hours', 'Possible later from daily snapshots if collection catches videos near publish day; hourly is better.'),
         building('CTR, retention, and engagement decay over time', 'Daily CTR/retention/engagement rows are stored; decay gets reliable after weeks of repeated collection.'),
         item('Optimal video length by niche / traffic source / subscriber growth', bestLengthWatch ? `${bestLengthWatch.key} leads by watch time (${formatNumber(bestLengthWatch.average)} avg watch hours, n=${bestLengthWatch.count}).` : 'Need more duration + analytics rows.', bestLengthWatch ? 'Live' : 'Needs data'),
         item('Relationship between video length and retention', describeCorrelation(pearson(videosWithRetention.map((record: any) => [record.durationSeconds, record.averageViewPercentage])), 'duration', 'average viewed'), 'Live'),
@@ -2108,7 +2103,7 @@ function buildAdminResearchSections(data: any) {
       title: 'Comments, Playlists, And Community',
       items: [
         item('Comment volume vs video performance', describeCorrelation(pearson(records.map((record: any) => [record.comments, record.views])), 'comment count', 'views'), 'Live'),
-        item('Comment velocity after publish', recordsWithCommentVelocity.some((record: any) => record.storedCommentCount) ? describeCorrelation(pearson(recordsWithCommentVelocity.map((record: any) => [record.storedCommentCount, record.views])), 'stored recent comments', 'views') : 'Need comment snapshots from full analysis runs.', recordsWithCommentVelocity.some((record: any) => record.storedCommentCount) ? 'Proxy' : 'Needs data'),
+        item('Recent comment volume vs performance', recordsWithRecentCommentCounts.some((record: any) => record.storedCommentCount) ? describeCorrelation(pearson(recordsWithRecentCommentCounts.map((record: any) => [record.storedCommentCount, record.views])), 'stored recent comments', 'views') : 'Need comment snapshots from full analysis runs.', recordsWithRecentCommentCounts.some((record: any) => record.storedCommentCount) ? 'Proxy' : 'Needs data'),
         collector('Comment sentiment vs engagement', 'Comment text is stored for recent public comments, but sentiment requires text processing.'),
         collector('Creator reply rate / pinned comments impact', 'Needs reliable reply/pinned-comment detection beyond the current comment snapshot path.'),
         item('Like-to-view ratio benchmarks', avgEngagementRate ? `Average engagement rate across stored videos is ${formatRatioPercent(avgEngagementRate)}; like-rate relationship to views is ${describeCorrelation(pearson(records.map((record: any) => [record.likeRate, record.views])), 'like rate', 'views')}` : 'Need engagement rows.', avgEngagementRate ? 'Live' : 'Needs data'),
