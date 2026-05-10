@@ -328,7 +328,7 @@ export const Account: React.FC = () => {
         .then(({ isAdmin }) => setIsResearchAdmin(Boolean(isAdmin)))
         .catch(() => setIsResearchAdmin(false));
 
-      fetch('/api/youtube/connection-status', {
+      fetch('/api/youtube/account-dashboard?connection=status', {
         headers: { Authorization: `Bearer ${session.access_token}` },
       })
         .then(r => r.json())
