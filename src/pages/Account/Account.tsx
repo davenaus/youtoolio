@@ -354,12 +354,6 @@ export const Account: React.FC = () => {
   };
 
   const handleConnectYouTube = async () => {
-    const confirmed = window.confirm(
-      'Connect your YouTube channel to YouTool.io? We will request read-only YouTube and YouTube Analytics access, store the connection needed to keep your channel linked, and store connected-channel analytics history while your channel remains connected. You can disconnect later from this Account page to stop new requests and delete stored private analytics history.'
-    );
-
-    if (!confirmed) return;
-
     setYtConnecting(true);
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { navigate('/login'); return; }
