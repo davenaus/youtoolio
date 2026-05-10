@@ -71,7 +71,7 @@ const COMMENT_VIDEO_LIMIT = 8;
 const COMMENT_LIMIT_PER_VIDEO = 20;
 const THUMBNAIL_VISUAL_ANALYSIS_LIMIT = 50;
 const THUMBNAIL_VISUAL_ANALYSIS_CONCURRENCY = 3;
-const ADMIN_RESEARCH_EMAIL = 'austindavenport000@gmail.com';
+const ADMIN_RESEARCH_EMAIL_HASH = '7d44cddbb1d4279022486b6195df17a232ccc8365bf0d89b2a971b8481f08bb8';
 const ADMIN_TABLE_PAGE_SIZE = 1000;
 const ADMIN_TABLE_MAX_ROWS = 100000;
 const EMOTIONAL_TITLE_WORDS = new Set([
@@ -82,6 +82,12 @@ const EMOTIONAL_TITLE_WORDS = new Set([
 
 function formatApiDate(timestamp: number): string {
   return new Date(timestamp).toISOString().split('T')[0];
+}
+
+function isAdminResearchUser(user: any) {
+  const email = String(user?.email || '').trim().toLowerCase();
+  if (!email) return false;
+  return createHash('sha256').update(email).digest('hex') === ADMIN_RESEARCH_EMAIL_HASH;
 }
 
 function parseIsoDuration(duration: string): number {
@@ -1093,6 +1099,7 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
 
   return {
     generatedAt: new Date().toISOString(),
+    adminOnly: true,
     note: 'Private admin research view. Some answers are live from the current 28-day pull; longitudinal answers improve as stored history accumulates.',
     sections: [
       {
@@ -1281,7 +1288,7 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
   };
 }
 
-async function buildFullAnalysis(accessToken: string, summary: any, windows: any) {
+async function buildFullAnalysis(accessToken: string, summary: any, windows: any, options: { includeResearchLab?: boolean } = {}) {
   const [
     fullCurrentPayload,
     fullPreviousPayload,
@@ -1538,18 +1545,19 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
   };
 
   const text = buildInsightText(summary, topVideos, breakdowns);
-  const researchSource = {
-    current: fullCurrent,
-    previous: fullPrevious,
-    deltas: buildDeltas(fullCurrent, fullPrevious),
-    breakdowns,
-    topVideos,
-    dailyRows: fullDailyRows,
-    videoDailyRows,
-    videoMetadata,
-    comments,
-  };
-  const researchLab = buildResearchLab(summary, researchSource);
+  const researchLab = options.includeResearchLab
+    ? buildResearchLab(summary, {
+        current: fullCurrent,
+        previous: fullPrevious,
+        deltas: buildDeltas(fullCurrent, fullPrevious),
+        breakdowns,
+        topVideos,
+        dailyRows: fullDailyRows,
+        videoDailyRows,
+        videoMetadata,
+        comments,
+      })
+    : null;
 
   return {
     generatedAt: new Date().toISOString(),
@@ -1569,19 +1577,24 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
     videoDailyRows,
     videoMetadata,
     comments,
-    researchLab,
+    ...(researchLab ? { researchLab } : {}),
     ...text,
   };
 }
 
-function stripFullAnalysisForResponse(fullAnalysis: any) {
+function stripFullAnalysisForResponse(fullAnalysis: any, options: { includeResearchLab?: boolean } = {}) {
   const {
     dailyRows,
     videoDailyRows,
     videoMetadata,
     comments,
+    researchLab,
     ...publicFullAnalysis
   } = fullAnalysis || {};
+
+  if (options.includeResearchLab && researchLab) {
+    publicFullAnalysis.researchLab = researchLab;
+  }
 
   publicFullAnalysis.topVideos = (publicFullAnalysis.topVideos || []).map((video: any) => ({
     id: video.id,
@@ -2473,9 +2486,14 @@ const handler = async (req: any, res: any) => {
     const requestUser = await resolveRequestUser(supabase, authHeader.slice(AUTH_HEADER_PREFIX.length));
     if (!requestUser?.id) return res.status(401).json({ error: 'unauthorized' });
 
+    const isAdminResearch = isAdminResearchUser(requestUser);
     const adminView = String(req.query?.admin || '');
+    if (adminView === 'status') {
+      return res.status(200).json({ isAdmin: isAdminResearch });
+    }
+
     if (adminView === 'research' || adminView === 'platform') {
-      if (String(requestUser.email || '').toLowerCase() !== ADMIN_RESEARCH_EMAIL) {
+      if (!isAdminResearch) {
         return res.status(403).json({ error: 'forbidden' });
       }
 
@@ -2508,9 +2526,9 @@ const handler = async (req: any, res: any) => {
     const summary = await buildSummary(accessToken, connection, windows);
 
     if (String(req.query?.full || '') === '1') {
-      const fullAnalysis = await buildFullAnalysis(accessToken, summary, windows);
+      const fullAnalysis = await buildFullAnalysis(accessToken, summary, windows, { includeResearchLab: isAdminResearch });
       await storeAccountDashboardAnalytics(supabase, { userId, connection, summary, fullAnalysis });
-      return res.status(200).json({ ...summary, fullAnalysis: stripFullAnalysisForResponse(fullAnalysis) });
+      return res.status(200).json({ ...summary, fullAnalysis: stripFullAnalysisForResponse(fullAnalysis, { includeResearchLab: isAdminResearch }) });
     }
 
     await storeAccountDashboardAnalytics(supabase, { userId, connection, summary });

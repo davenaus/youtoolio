@@ -147,6 +147,7 @@ interface ResearchLabSection {
 
 interface ResearchLab {
   generatedAt: string;
+  adminOnly?: boolean;
   note: string;
   sections: ResearchLabSection[];
 }
@@ -757,7 +758,7 @@ function renderDemographicRows(rows: DemographicRow[] | undefined) {
 }
 
 function renderResearchLab(researchLab: ResearchLab | undefined) {
-  if (!researchLab?.sections?.length) return null;
+  if (!researchLab?.adminOnly || !researchLab.sections?.length) return null;
 
   return (
     <AnalysisSection style={{ gridColumn: '1 / -1' }}>
@@ -889,7 +890,6 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
 
   const dashboardCacheKey = user?.id ? `youtool.account.dashboard.${CACHE_VERSION}.${user.id}` : '';
   const fullCacheKey = user?.id ? `youtool.account.fullAnalysis.${CACHE_VERSION}.${user.id}` : '';
-  const isResearchAdmin = user?.email?.toLowerCase() === 'austindavenport000@gmail.com';
 
   useEffect(() => {
     let cancelled = false;
@@ -1266,7 +1266,7 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
                   {renderDemographicRows(fullAnalysis.breakdowns?.demographics)}
                 </AnalysisSection>
 
-                {isResearchAdmin && renderResearchLab(fullAnalysis.researchLab)}
+                {renderResearchLab(fullAnalysis.researchLab)}
 
                 <AnalysisSection style={{ gridColumn: '1 / -1' }}>
                   <SectionTitle>Top recent videos</SectionTitle>

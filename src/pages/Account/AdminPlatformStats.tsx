@@ -39,7 +39,7 @@ const shimmer = keyframes`
   100% { background-position: -100% 0; }
 `;
 
-const Card = styled.section`
+const Card = styled.details`
   background: ${({ theme }) => theme.colors.dark3};
   border: 1px solid rgba(248, 113, 113, 0.22);
   border-radius: 16px;
@@ -47,16 +47,35 @@ const Card = styled.section`
   overflow: hidden;
 `;
 
-const Header = styled.div`
+const CardSummary = styled.summary`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1rem;
+  cursor: pointer;
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
 
   @media (max-width: 560px) {
-    flex-direction: column;
+    align-items: flex-start;
   }
+`;
+
+const SummaryToggle = styled.span`
+  border: 1px solid rgba(248, 113, 113, 0.24);
+  border-radius: 999px;
+  color: #fca5a5;
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.36rem 0.7rem;
+`;
+
+const PanelBody = styled.div`
+  margin-top: 1rem;
 `;
 
 const Kicker = styled.p`
@@ -276,9 +295,10 @@ function formatDate(value: string | null | undefined) {
 
 export const AdminPlatformStats: React.FC = () => {
   const [stats, setStats] = useState<PlatformStatsPayload | null>(() => readCache());
-  const [loading, setLoading] = useState(!readCache());
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
 
   const refresh = useCallback(async (force = false) => {
     if (!force) {
@@ -315,8 +335,9 @@ export const AdminPlatformStats: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (!isOpen) return;
     refresh(false);
-  }, [refresh]);
+  }, [isOpen, refresh]);
 
   const emails = useMemo(() => stats?.users.map((user) => user.email).filter(Boolean) || [], [stats]);
   const rawJson = useMemo(() => stats ? JSON.stringify(stats, null, 2) : '', [stats]);
@@ -341,90 +362,83 @@ export const AdminPlatformStats: React.FC = () => {
     { label: 'Extension Users', value: stats.totals.extensionConnectedUsers, note: 'Active extension sessions' },
   ] : [];
 
-  if (loading && !stats) {
-    return (
-      <Card>
-        <Header>
-          <div>
-            <Kicker>Admin</Kicker>
-            <Title>Platform stats</Title>
-            <Sub>Loading account and usage totals.</Sub>
-          </div>
-        </Header>
-        <Skeleton />
-      </Card>
-    );
-  }
-
   return (
-    <Card>
-      <Header>
+    <Card open={isOpen} onToggle={(event) => setIsOpen(event.currentTarget.open)}>
+      <CardSummary>
         <div>
           <Kicker>Admin</Kicker>
           <Title>Platform stats</Title>
-          <Sub>Private owner snapshot for users, active accounts, connected channels, and copyable emails.</Sub>
+          <Sub>{isOpen ? 'Private owner snapshot for users, active accounts, connected channels, and copyable emails.' : 'Collapsed private owner snapshot.'}</Sub>
         </div>
-        <Actions>
-          {stats && (
-            <Button variant="secondary" size="sm" onClick={() => copyText('json', rawJson)}>
-              {copied === 'json' ? 'Copied JSON' : 'Copy JSON'}
-            </Button>
-          )}
-          <Button variant="secondary" size="sm" onClick={() => refresh(true)} disabled={loading}>
-            {loading ? 'Refreshing…' : 'Refresh'}
-          </Button>
-        </Actions>
-      </Header>
+        <SummaryToggle>{isOpen ? 'Collapse' : 'Open'}</SummaryToggle>
+      </CardSummary>
 
-      {stats && (
-        <>
-          <StatGrid>
-            {statTiles.map(({ label, value, note }) => (
-              <StatTile key={label}>
-                <StatValue>{formatCount(value)}</StatValue>
-                <StatLabel>{label}</StatLabel>
-                <StatLabel>{note}</StatLabel>
-              </StatTile>
-            ))}
-          </StatGrid>
-
-          {!stats.totals.exportTrackingAvailable && (
-            <Note>
-              Export totals are ready to display, but this site does not currently store export events in Supabase.
-            </Note>
-          )}
-
-          <EmailPanel>
-            <EmailHeader>
-              <div>
-                <EmailTitle>User emails</EmailTitle>
-                <Sub>{formatCount(emails.length)} email{emails.length === 1 ? '' : 's'} available to copy.</Sub>
-              </div>
-              <Button variant="secondary" size="sm" onClick={() => copyText('emails', emails.join('\n'))} disabled={!emails.length}>
-                {copied === 'emails' ? 'Copied emails' : 'Copy emails'}
+      {isOpen && (
+        <PanelBody>
+          <Actions>
+            {stats && (
+              <Button variant="secondary" size="sm" onClick={() => copyText('json', rawJson)}>
+                {copied === 'json' ? 'Copied JSON' : 'Copy JSON'}
               </Button>
-            </EmailHeader>
-            <EmailList>
-              {stats.users.map((user) => (
-                <EmailRow key={user.id}>
+            )}
+            <Button variant="secondary" size="sm" onClick={() => refresh(true)} disabled={loading}>
+              {loading ? 'Refreshing…' : 'Refresh'}
+            </Button>
+          </Actions>
+
+          {loading && !stats && <Skeleton />}
+
+          {stats && (
+            <>
+              <StatGrid>
+                {statTiles.map(({ label, value, note }) => (
+                  <StatTile key={label}>
+                    <StatValue>{formatCount(value)}</StatValue>
+                    <StatLabel>{label}</StatLabel>
+                    <StatLabel>{note}</StatLabel>
+                  </StatTile>
+                ))}
+              </StatGrid>
+
+              {!stats.totals.exportTrackingAvailable && (
+                <Note>
+                  Export totals are ready to display, but this site does not currently store export events in Supabase.
+                </Note>
+              )}
+
+              <EmailPanel>
+                <EmailHeader>
                   <div>
-                    <Email>{user.email}</Email>
-                    {user.displayName && <EmailMeta>{user.displayName}</EmailMeta>}
+                    <EmailTitle>User emails</EmailTitle>
+                    <Sub>{formatCount(emails.length)} email{emails.length === 1 ? '' : 's'} available to copy.</Sub>
                   </div>
-                  <EmailMeta>Joined {formatDate(user.createdAt)} · Last sign-in {formatDate(user.lastSignInAt)}</EmailMeta>
-                </EmailRow>
-              ))}
-            </EmailList>
-          </EmailPanel>
+                  <Button variant="secondary" size="sm" onClick={() => copyText('emails', emails.join('\n'))} disabled={!emails.length}>
+                    {copied === 'emails' ? 'Copied emails' : 'Copy emails'}
+                  </Button>
+                </EmailHeader>
+                <EmailList>
+                  {stats.users.map((user) => (
+                    <EmailRow key={user.id}>
+                      <div>
+                        <Email>{user.email}</Email>
+                        {user.displayName && <EmailMeta>{user.displayName}</EmailMeta>}
+                      </div>
+                      <EmailMeta>Joined {formatDate(user.createdAt)} · Last sign-in {formatDate(user.lastSignInAt)}</EmailMeta>
+                    </EmailRow>
+                  ))}
+                </EmailList>
+              </EmailPanel>
 
-          <RawDetails>
-            <RawSummary>Raw JSON →</RawSummary>
-            <RawPre>{rawJson}</RawPre>
-          </RawDetails>
-        </>
+              <RawDetails>
+                <RawSummary>Raw JSON →</RawSummary>
+                <RawPre>{rawJson}</RawPre>
+              </RawDetails>
+            </>
+          )}
+
+          {error && <ErrorText>{error}</ErrorText>}
+        </PanelBody>
       )}
-
-      {error && <ErrorText>{error}</ErrorText>}
     </Card>
   );
 };

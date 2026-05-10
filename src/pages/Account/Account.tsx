@@ -303,9 +303,11 @@ export const Account: React.FC = () => {
   const [ytChannel, setYtChannel] = useState<{ title: string; thumbnail: string | null } | null>(null);
   const [ytConnecting, setYtConnecting] = useState(false);
   const [ytDisconnecting, setYtDisconnecting] = useState(false);
+  const [isResearchAdmin, setIsResearchAdmin] = useState(false);
 
   useEffect(() => {
     if (!user) return;
+    setIsResearchAdmin(false);
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) return;
 
@@ -318,6 +320,13 @@ export const Account: React.FC = () => {
           setLastUsed(last_used_at);
         })
         .catch(() => setExtensionConnected(false));
+
+      fetch('/api/youtube/account-dashboard?admin=status', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+        .then(r => r.json())
+        .then(({ isAdmin }) => setIsResearchAdmin(Boolean(isAdmin)))
+        .catch(() => setIsResearchAdmin(false));
 
       // Check YouTube connection via Supabase directly
       supabase
@@ -336,7 +345,6 @@ export const Account: React.FC = () => {
 
   const name  = user.user_metadata?.full_name ?? 'YouTool User';
   const avatar = user.user_metadata?.avatar_url as string | undefined;
-  const isResearchAdmin = user.email?.toLowerCase() === 'austindavenport000@gmail.com';
 
   const handleSignOut = async () => { await signOut(); navigate('/'); };
 

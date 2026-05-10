@@ -73,7 +73,7 @@ const shimmer = keyframes`
   100% { background-position: -100% 0; }
 `;
 
-const Card = styled.section`
+const Card = styled.details`
   background: ${({ theme }) => theme.colors.dark3};
   border: 1px solid rgba(248, 113, 113, 0.22);
   border-radius: 16px;
@@ -81,16 +81,35 @@ const Card = styled.section`
   overflow: hidden;
 `;
 
-const Header = styled.div`
+const CardSummary = styled.summary`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1rem;
+  cursor: pointer;
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
 
   @media (max-width: 560px) {
-    flex-direction: column;
+    align-items: flex-start;
   }
+`;
+
+const SummaryToggle = styled.span`
+  border: 1px solid rgba(248, 113, 113, 0.24);
+  border-radius: 999px;
+  color: #fca5a5;
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.36rem 0.7rem;
+`;
+
+const PanelBody = styled.div`
+  margin-top: 1rem;
 `;
 
 const Kicker = styled.p`
@@ -395,8 +414,9 @@ export const AdminYouTubeResearchDashboard: React.FC = () => {
   const initialMinSubscribers = readStoredMinSubscribers();
   const [minSubscribers, setMinSubscribers] = useState(initialMinSubscribers);
   const [dashboard, setDashboard] = useState<AdminResearchDashboardPayload | null>(() => readCache(initialMinSubscribers));
-  const [loading, setLoading] = useState(!readCache(initialMinSubscribers));
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
 
   const refresh = useCallback(async (force = false, requestedMinSubscribers = minSubscribers) => {
     if (!force) {
@@ -433,8 +453,9 @@ export const AdminYouTubeResearchDashboard: React.FC = () => {
   }, [minSubscribers]);
 
   useEffect(() => {
+    if (!isOpen) return;
     refresh(false, minSubscribers);
-  }, [minSubscribers, refresh]);
+  }, [isOpen, minSubscribers, refresh]);
 
   const onMinSubscribersChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const nextValue = Number(event.target.value) || 0;
@@ -457,107 +478,102 @@ export const AdminYouTubeResearchDashboard: React.FC = () => {
     ];
   }, [dashboard]);
 
-  if (loading && !dashboard) {
-    return (
-      <Card>
-        <Header>
-          <div>
-            <Kicker>Owner research</Kicker>
-            <Title>YouTube analytics lab</Title>
-            <Sub>Loading stored channel research signals.</Sub>
-          </div>
-        </Header>
-        <Skeleton />
-      </Card>
-    );
-  }
-
   return (
-    <Card>
-      <Header>
+    <Card open={isOpen} onToggle={(event) => setIsOpen(event.currentTarget.open)}>
+      <CardSummary>
         <div>
           <Kicker>Owner research</Kicker>
           <Title>YouTube analytics lab</Title>
           <Sub>
-            Private dashboard for stored opt-in YouTube analytics. It uses database history only, so opening this panel does not call YouTube.
+            {isOpen
+              ? 'Private dashboard for stored opt-in YouTube analytics. It uses database history only, so opening this panel does not call YouTube.'
+              : 'Collapsed private analytics research dashboard.'}
           </Sub>
         </div>
-        <Button variant="secondary" size="sm" onClick={() => refresh(true, minSubscribers)} disabled={loading}>
-          {loading ? 'Refreshing…' : 'Refresh'}
-        </Button>
-      </Header>
+        <SummaryToggle>{isOpen ? 'Collapse' : 'Open'}</SummaryToggle>
+      </CardSummary>
 
-      {dashboard && (
-        <>
-          <FilterBar>
-            <FilterCopy>
-              <FilterLabel>Filter sample by subscriber count</FilterLabel>
-              <FilterHelp>
-                Showing {formatCount(dashboard.filter.includedChannels)} of {formatCount(dashboard.filter.totalChannels)} stored channels.
-                {dashboard.filter.excludedChannels > 0 ? ` Filtered out ${formatCount(dashboard.filter.excludedChannels)} smaller channels.` : ''}
-              </FilterHelp>
-            </FilterCopy>
-            <FilterSelect value={minSubscribers} onChange={onMinSubscribersChange} aria-label="Minimum subscriber count">
-              {SUBSCRIBER_FILTERS.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </FilterSelect>
-          </FilterBar>
+      {isOpen && (
+        <PanelBody>
+          <Button variant="secondary" size="sm" onClick={() => refresh(true, minSubscribers)} disabled={loading}>
+            {loading ? 'Refreshing…' : 'Refresh'}
+          </Button>
 
-          <MetaGrid>
-            {metaTiles.map(([label, value]) => (
-              <MetaTile key={label}>
-                <MetaValue>{formatCount(value as number)}</MetaValue>
-                <MetaLabel>{label}</MetaLabel>
-              </MetaTile>
-            ))}
-          </MetaGrid>
+          {loading && !dashboard && <Skeleton />}
 
-          <CoverageRow>
-            <CoverageTile $tone="live">
-              <MetaValue>{formatCount(dashboard.coverage.live)}</MetaValue>
-              <MetaLabel>Live / proxy answers</MetaLabel>
-            </CoverageTile>
-            <CoverageTile $tone="building">
-              <MetaValue>{formatCount(dashboard.coverage.building)}</MetaValue>
-              <MetaLabel>Building with more history</MetaLabel>
-            </CoverageTile>
-            <CoverageTile $tone="collector">
-              <MetaValue>{formatCount(dashboard.coverage.needsCollector)}</MetaValue>
-              <MetaLabel>Needs future collector</MetaLabel>
-            </CoverageTile>
-          </CoverageRow>
+          {dashboard && (
+            <>
+              <FilterBar>
+                <FilterCopy>
+                  <FilterLabel>Filter sample by subscriber count</FilterLabel>
+                  <FilterHelp>
+                    Showing {formatCount(dashboard.filter.includedChannels)} of {formatCount(dashboard.filter.totalChannels)} stored channels.
+                    {dashboard.filter.excludedChannels > 0 ? ` Filtered out ${formatCount(dashboard.filter.excludedChannels)} smaller channels.` : ''}
+                  </FilterHelp>
+                </FilterCopy>
+                <FilterSelect value={minSubscribers} onChange={onMinSubscribersChange} aria-label="Minimum subscriber count">
+                  {SUBSCRIBER_FILTERS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </FilterSelect>
+              </FilterBar>
 
-          <Sub style={{ marginBottom: '1rem' }}>
-            Last stored sync: {formatUpdated(dashboard.totals.latestSync)} · Dashboard generated {formatUpdated(dashboard.generatedAt)}
-          </Sub>
+              <MetaGrid>
+                {metaTiles.map(([label, value]) => (
+                  <MetaTile key={label}>
+                    <MetaValue>{formatCount(value as number)}</MetaValue>
+                    <MetaLabel>{label}</MetaLabel>
+                  </MetaTile>
+                ))}
+              </MetaGrid>
 
-          {dashboard.filter.truncatedTables.length > 0 && (
-            <Notice>
-              Some very large tables hit the admin read cap: {dashboard.filter.truncatedTables.join(', ')}. The current 15-channel scale should stay below this, but this notice will show if the sample ever needs deeper pagination.
-            </Notice>
+              <CoverageRow>
+                <CoverageTile $tone="live">
+                  <MetaValue>{formatCount(dashboard.coverage.live)}</MetaValue>
+                  <MetaLabel>Live / proxy answers</MetaLabel>
+                </CoverageTile>
+                <CoverageTile $tone="building">
+                  <MetaValue>{formatCount(dashboard.coverage.building)}</MetaValue>
+                  <MetaLabel>Building with more history</MetaLabel>
+                </CoverageTile>
+                <CoverageTile $tone="collector">
+                  <MetaValue>{formatCount(dashboard.coverage.needsCollector)}</MetaValue>
+                  <MetaLabel>Needs future collector</MetaLabel>
+                </CoverageTile>
+              </CoverageRow>
+
+              <Sub style={{ marginBottom: '1rem' }}>
+                Last stored sync: {formatUpdated(dashboard.totals.latestSync)} · Dashboard generated {formatUpdated(dashboard.generatedAt)}
+              </Sub>
+
+              {dashboard.filter.truncatedTables.length > 0 && (
+                <Notice>
+                  Some very large tables hit the admin read cap: {dashboard.filter.truncatedTables.join(', ')}. The current 15-channel scale should stay below this, but this notice will show if the sample ever needs deeper pagination.
+                </Notice>
+              )}
+
+              <SectionList>
+                {dashboard.sections.map((section, index) => (
+                  <Section key={section.title} open={index < 2}>
+                    <SectionSummary>{section.title} · {section.items.length} signals</SectionSummary>
+                    <ItemList>
+                      {section.items.map((item) => (
+                        <ItemRow key={`${section.title}-${item.label}`}>
+                          <ItemLabel>{item.label}</ItemLabel>
+                          <ItemAnswer>{item.answer}</ItemAnswer>
+                          <Badge $status={item.status}>{item.status}</Badge>
+                        </ItemRow>
+                      ))}
+                    </ItemList>
+                  </Section>
+                ))}
+              </SectionList>
+            </>
           )}
 
-          <SectionList>
-            {dashboard.sections.map((section, index) => (
-              <Section key={section.title} open={index < 2}>
-                <SectionSummary>{section.title} · {section.items.length} signals</SectionSummary>
-                <ItemList>
-                  {section.items.map((item) => (
-                    <ItemRow key={`${section.title}-${item.label}`}>
-                      <ItemLabel>{item.label}</ItemLabel>
-                      <ItemAnswer>{item.answer}</ItemAnswer>
-                      <Badge $status={item.status}>{item.status}</Badge>
-                    </ItemRow>
-                  ))}
-                </ItemList>
-              </Section>
-            ))}
-          </SectionList>
-        </>
+          {error && <ErrorText>{error}</ErrorText>}
+        </PanelBody>
       )}
-
-      {error && <ErrorText>{error}</ErrorText>}
     </Card>
   );
 };
