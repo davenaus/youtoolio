@@ -328,15 +328,14 @@ export const Account: React.FC = () => {
         .then(({ isAdmin }) => setIsResearchAdmin(Boolean(isAdmin)))
         .catch(() => setIsResearchAdmin(false));
 
-      // Check YouTube connection via Supabase directly
-      supabase
-        .from('youtube_connections')
-        .select('channel_title, channel_thumbnail_url')
-        .is('disconnected_at', null)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data) setYtChannel({ title: data.channel_title, thumbnail: data.channel_thumbnail_url });
-        });
+      fetch('/api/youtube/connection-status', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+        .then(r => r.json())
+        .then(({ connected, channelTitle, channelThumbnail }) => {
+          setYtChannel(connected ? { title: channelTitle, thumbnail: channelThumbnail } : null);
+        })
+        .catch(() => setYtChannel(null));
     });
   }, [user]);
 
