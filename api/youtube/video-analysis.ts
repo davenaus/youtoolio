@@ -2,6 +2,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const { createHash } = require('crypto');
 const { buildVideoResearchEnhancements } = require('../../lib/youtube-research-utils');
+const { buildViewerComparison } = require('../../lib/youtube-owner-comparison');
 
 const VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
@@ -1047,8 +1048,18 @@ const handler = async (req: any, res: any) => {
     const channel = await fetchChannelData(video.snippet?.channelId, apiKey);
     const channelVideos = await fetchChannelVideos(video.snippet?.channelId, apiKey);
     const analysis = await performAnalysis(video, channel, channelVideos, apiKey);
+    const viewerComparison = await buildViewerComparison(supabase, {
+      userId,
+      kind: 'video',
+      targetVideo: video,
+      targetChannel: channel,
+      targetVideos: channelVideos,
+    });
 
-    return res.status(200).json(buildPayload(video, channel, channelVideos, analysis));
+    return res.status(200).json({
+      ...buildPayload(video, channel, channelVideos, analysis),
+      viewerComparison,
+    });
   } catch (err: any) {
     const status = Number(err?.status || 500);
     const safeStatus = status >= 400 && status < 600 ? status : 500;
