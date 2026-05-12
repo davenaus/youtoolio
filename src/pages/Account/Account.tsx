@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate, useNavigate, Link } from 'react-router-dom';
+import { Navigate, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/Button/Button';
@@ -386,6 +386,7 @@ interface BillingStatus {
 export const Account: React.FC = () => {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [extensionConnected, setExtensionConnected] = useState<boolean | null>(null);
   const [lastUsed, setLastUsed] = useState<string | null>(null);
   const [ytChannel, setYtChannel] = useState<{ title: string; thumbnail: string | null } | null>(null);
@@ -429,16 +430,34 @@ export const Account: React.FC = () => {
         })
         .catch(() => setYtChannel(null));
 
+      const checkoutParams = new URLSearchParams(location.search);
+      const checkoutSessionId = checkoutParams.get('session_id');
+      const shouldSyncCheckout = checkoutParams.get('checkout') === 'success' && checkoutSessionId;
+
       setBillingLoading(true);
-      fetch('/api/billing?action=status', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      })
+      const billingRequest = shouldSyncCheckout
+        ? fetch('/api/billing', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ action: 'sync_checkout_session', sessionId: checkoutSessionId }),
+          })
+        : fetch('/api/billing?action=status', {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+
+      billingRequest
         .then(r => r.json())
-        .then(({ billing }) => setBilling(billing || null))
+        .then(({ billing, message }) => {
+          setBilling(billing || null);
+          if (!billing && message) setBillingError(message);
+        })
         .catch(() => setBilling(null))
         .finally(() => setBillingLoading(false));
     });
-  }, [user]);
+  }, [user, location.search]);
 
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;

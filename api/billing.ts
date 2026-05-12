@@ -44,10 +44,6 @@ function createHttpError(status: number, message: string, code = 'billing_error'
 }
 
 async function readRawBody(req: any): Promise<string> {
-  if (typeof req.body === 'string') return req.body;
-  if (Buffer.isBuffer(req.body)) return req.body.toString('utf8');
-  if (req.body && typeof req.body === 'object') return JSON.stringify(req.body);
-
   return await new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     req.on('data', (chunk: Buffer) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
@@ -228,7 +224,7 @@ async function createCheckoutSession(req: any, supabase: any, user: any, body: a
     customer: customerId,
     client_reference_id: user.id,
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${baseUrl}/account?checkout=success`,
+    success_url: `${baseUrl}/account?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${baseUrl}/account?checkout=cancelled`,
     allow_promotion_codes: true,
     metadata: {
@@ -298,6 +294,14 @@ async function retrieveStripeSubscription(subscriptionId: string) {
   );
 }
 
+async function retrieveCheckoutSession(sessionId: string) {
+  return await stripeRequest(
+    `/checkout/sessions/${encodeURIComponent(sessionId)}?expand[]=subscription&expand[]=subscription.items.data.price`,
+    undefined,
+    'GET'
+  );
+}
+
 function timestampToIso(value: any) {
   const timestamp = Number(value || 0);
   return timestamp ? new Date(timestamp * 1000).toISOString() : null;
@@ -357,6 +361,30 @@ async function upsertStripeSubscription(supabase: any, subscription: any, fallba
     .upsert(fields, { onConflict: 'user_id' });
 
   if (error) throw createHttpError(500, `Could not sync subscription: ${error.message}`, 'subscription_sync_failed');
+}
+
+async function syncCheckoutSession(supabase: any, user: any, sessionId: string) {
+  if (!sessionId || !String(sessionId).startsWith('cs_')) {
+    throw createHttpError(400, 'Invalid checkout session.', 'invalid_checkout_session');
+  }
+
+  const session = await retrieveCheckoutSession(sessionId);
+  const ownerUserId = session.client_reference_id || session.metadata?.user_id || null;
+  if (ownerUserId !== user.id) {
+    throw createHttpError(403, 'This checkout session does not belong to this account.', 'checkout_session_mismatch');
+  }
+
+  const stripeSubscription = typeof session.subscription === 'string'
+    ? await retrieveStripeSubscription(session.subscription)
+    : session.subscription;
+
+  if (!stripeSubscription?.id) {
+    throw createHttpError(404, 'No subscription was found for this checkout.', 'missing_subscription');
+  }
+
+  await upsertStripeSubscription(supabase, stripeSubscription, user.id);
+  const subscription = await readSubscription(supabase, user.id);
+  return { billing: publicBillingStatus(subscription) };
 }
 
 async function handleStripeWebhook(supabase: any, req: any, rawBody: string) {
@@ -423,6 +451,11 @@ async function handler(req: any, res: any) {
 
     if (action === 'create_customer_portal_session') {
       const result = await createPortalSession(req, supabase, user);
+      return res.status(200).json(result);
+    }
+
+    if (action === 'sync_checkout_session') {
+      const result = await syncCheckoutSession(supabase, user, String(body.sessionId || body.session_id || ''));
       return res.status(200).json(result);
     }
 
