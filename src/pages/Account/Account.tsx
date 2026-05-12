@@ -293,6 +293,94 @@ const BackLink = styled(Link)`
   &:hover { color: ${({ theme }) => theme.colors.text.primary}; }
 `;
 
+const PlanBadge = styled.span<{ $premium?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid ${({ $premium }) => $premium ? 'rgba(248, 113, 113, 0.35)' : 'rgba(255,255,255,0.12)'};
+  background: ${({ $premium }) => $premium ? 'rgba(248, 113, 113, 0.12)' : 'rgba(255,255,255,0.05)'};
+  color: ${({ $premium, theme }) => $premium ? '#fecaca' : theme.colors.text.secondary};
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: ${({ $premium }) => $premium ? '#f87171' : 'rgba(255,255,255,0.28)'};
+    box-shadow: ${({ $premium }) => $premium ? '0 0 10px rgba(248, 113, 113, 0.7)' : 'none'};
+  }
+`;
+
+const BillingLead = styled.p`
+  margin: 0 0 1.1rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.86rem;
+  line-height: 1.55;
+`;
+
+const BillingRows = styled.div`
+  display: grid;
+  gap: 0;
+  border-top: 1px solid ${({ theme }) => theme.colors.dark5};
+`;
+
+const BillingRow = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+
+  &:last-child { border-bottom: none; }
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+`;
+
+const BillingRowTitle = styled.div`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.92rem;
+  font-weight: 700;
+`;
+
+const BillingRowMeta = styled.div`
+  margin-top: 0.2rem;
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.75rem;
+  line-height: 1.45;
+`;
+
+const BillingError = styled.div`
+  margin-top: 1rem;
+  padding: 0.8rem 0.95rem;
+  border: 1px solid rgba(248, 113, 113, 0.22);
+  border-radius: 10px;
+  background: rgba(127, 29, 29, 0.16);
+  color: #fecaca;
+  font-size: 0.78rem;
+  line-height: 1.45;
+`;
+
+interface BillingStatus {
+  plan: string;
+  label: string;
+  isPremium: boolean;
+  status: string;
+  interval: string | null;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+  hasStripeCustomer: boolean;
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export const Account: React.FC = () => {
@@ -304,6 +392,10 @@ export const Account: React.FC = () => {
   const [ytConnecting, setYtConnecting] = useState(false);
   const [ytDisconnecting, setYtDisconnecting] = useState(false);
   const [isResearchAdmin, setIsResearchAdmin] = useState(false);
+  const [billing, setBilling] = useState<BillingStatus | null>(null);
+  const [billingLoading, setBillingLoading] = useState(false);
+  const [billingAction, setBillingAction] = useState('');
+  const [billingError, setBillingError] = useState('');
 
   useEffect(() => {
     if (!user) return;
@@ -336,6 +428,15 @@ export const Account: React.FC = () => {
           setYtChannel(connected ? { title: channelTitle, thumbnail: channelThumbnail } : null);
         })
         .catch(() => setYtChannel(null));
+
+      setBillingLoading(true);
+      fetch('/api/billing?action=status', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+        .then(r => r.json())
+        .then(({ billing }) => setBilling(billing || null))
+        .catch(() => setBilling(null))
+        .finally(() => setBillingLoading(false));
     });
   }, [user]);
 
@@ -372,11 +473,87 @@ export const Account: React.FC = () => {
     window.location.href = url;
   };
 
+  const refreshBilling = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const res = await fetch('/api/billing?action=status', {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    const payload = await res.json();
+    if (payload.billing) setBilling(payload.billing);
+  };
+
+  const handleStartCheckout = async (interval: 'monthly' | 'yearly') => {
+    setBillingError('');
+    if (!ytChannel) {
+      setBillingError('Connect your YouTube channel before upgrading to Premium.');
+      return;
+    }
+
+    setBillingAction(interval);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { navigate('/login'); return; }
+
+    try {
+      const res = await fetch('/api/billing', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'create_checkout_session', interval }),
+      });
+      const payload = await res.json();
+      if (!res.ok || !payload.url) throw new Error(payload.message || 'Could not start checkout.');
+      window.location.href = payload.url;
+    } catch (error) {
+      setBillingError(error instanceof Error ? error.message : 'Could not start checkout.');
+      setBillingAction('');
+    }
+  };
+
+  const handleManageBilling = async () => {
+    setBillingError('');
+    setBillingAction('portal');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { navigate('/login'); return; }
+
+    try {
+      const res = await fetch('/api/billing', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'create_customer_portal_session' }),
+      });
+      const payload = await res.json();
+      if (!res.ok || !payload.url) throw new Error(payload.message || 'Could not open billing portal.');
+      window.location.href = payload.url;
+    } catch (error) {
+      setBillingError(error instanceof Error ? error.message : 'Could not open billing portal.');
+      setBillingAction('');
+      refreshBilling().catch(() => {});
+    }
+  };
+
   const formatLastUsed = (iso: string | null) => {
     if (!iso) return null;
     const d = new Date(iso);
     return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   };
+
+  const formatBillingDate = (iso: string | null) => {
+    if (!iso) return '';
+    return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const isPremium = Boolean(billing?.isPremium);
+  const billingLabel = billingLoading ? 'Checking' : isPremium ? 'Premium' : 'Free';
+  const billingRenewalCopy = billing?.currentPeriodEnd
+    ? `${billing.cancelAtPeriodEnd ? 'Access ends' : 'Renews'} ${formatBillingDate(billing.currentPeriodEnd)}`
+    : '';
 
   return (
     <Page>
@@ -474,6 +651,81 @@ export const Account: React.FC = () => {
               </Button>
             </div>
           </InstructionBox>}
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Premium</CardTitle>
+            <PlanBadge $premium={isPremium}>{billingLabel}</PlanBadge>
+          </CardHeader>
+
+          <BillingLead>
+            Premium is for using YouTool tools directly inside YouTube. Keep the website tools free, and upgrade only when
+            you want in-YouTube analysis, comment exports, and premium Studio workflow features.
+          </BillingLead>
+
+          <BillingRows>
+            <BillingRow>
+              <div>
+                <BillingRowTitle>Monthly</BillingRowTitle>
+                <BillingRowMeta>$4.99/month · Unlimited in-YouTube YouTool tools</BillingRowMeta>
+              </div>
+              <Button
+                variant={isPremium && billing?.interval === 'monthly' ? 'secondary' : 'primary'}
+                size="sm"
+                disabled={billingLoading || isPremium || billingAction !== '' || !ytChannel}
+                onClick={() => handleStartCheckout('monthly')}
+              >
+                {billingAction === 'monthly' ? 'Opening…' : isPremium ? 'Active' : 'Upgrade'}
+              </Button>
+            </BillingRow>
+
+            <BillingRow>
+              <div>
+                <BillingRowTitle>Yearly</BillingRowTitle>
+                <BillingRowMeta>$47.99/year · About 20% off monthly billing</BillingRowMeta>
+              </div>
+              <Button
+                variant="primary"
+                size="sm"
+                disabled={billingLoading || isPremium || billingAction !== '' || !ytChannel}
+                onClick={() => handleStartCheckout('yearly')}
+              >
+                {billingAction === 'yearly' ? 'Opening…' : isPremium ? 'Active' : 'Upgrade'}
+              </Button>
+            </BillingRow>
+
+            <BillingRow>
+              <div>
+                <BillingRowTitle>Billing</BillingRowTitle>
+                <BillingRowMeta>
+                  {billingLoading
+                    ? 'Checking your plan…'
+                    : isPremium
+                      ? `${billing?.status || 'Active'}${billingRenewalCopy ? ` · ${billingRenewalCopy}` : ''}`
+                      : ytChannel
+                        ? 'Upgrade when you want YouTool tools inside YouTube.'
+                        : 'Connect your YouTube channel before upgrading.'}
+                </BillingRowMeta>
+              </div>
+              {isPremium ? (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={billingAction !== '' || !billing?.hasStripeCustomer}
+                  onClick={handleManageBilling}
+                >
+                  {billingAction === 'portal' ? 'Opening…' : 'Manage billing'}
+                </Button>
+              ) : (
+                <Button variant="secondary" size="sm" onClick={handleConnectYouTube} disabled={Boolean(ytChannel) || ytConnecting}>
+                  {ytChannel ? 'Connected' : ytConnecting ? 'Redirecting…' : 'Connect YouTube'}
+                </Button>
+              )}
+            </BillingRow>
+          </BillingRows>
+
+          {billingError && <BillingError>{billingError}</BillingError>}
         </Card>
 
         {isResearchAdmin && <AdminPlatformStats />}

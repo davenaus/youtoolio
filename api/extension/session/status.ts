@@ -55,6 +55,18 @@ async function readYouTubeConnection(supabase: any, userId: string) {
   return connection || null;
 }
 
+async function revokeExtensionSession(supabase: any, refreshToken: string) {
+  if (!refreshToken) return { ok: false, status: 400, error: 'invalid_request' };
+
+  const refreshHash = createHash('sha256').update(refreshToken).digest('hex');
+  await supabase
+    .from('extension_sessions')
+    .update({ revoked_at: new Date().toISOString() })
+    .eq('refresh_token_hash', refreshHash);
+
+  return { ok: true };
+}
+
 function createHttpError(status: number, message: string) {
   const error = new Error(message);
   error.status = status;
@@ -269,6 +281,11 @@ const handler = async (req: any, res: any) => {
       process.env.REACT_APP_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
+
+    if (req.method === 'POST' && String(req.query?.sessionAction || '') === 'revoke') {
+      const result = await revokeExtensionSession(supabase, String(req.body?.refresh_token || ''));
+      return res.status(result.ok ? 200 : result.status || 400).json(result.ok ? { ok: true } : { error: result.error });
+    }
 
     const authHeader: string | undefined = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {

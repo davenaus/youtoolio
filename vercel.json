@@ -3,6 +3,8 @@
   "outputDirectory": "build",
   "redirects": [],
   "rewrites": [
+    { "source": "/api/extension/session/revoke", "destination": "/api/extension/session/status?sessionAction=revoke" },
+    { "source": "/api/billing/webhook", "destination": "/api/billing?stripe=webhook" },
     { "source": "/((?!.*\\.).*)", "destination": "/index.html" }
   ],
   "headers": [
