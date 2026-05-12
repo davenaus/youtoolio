@@ -3,6 +3,11 @@ const { createClient } = require('@supabase/supabase-js');
 const { createHash } = require('crypto');
 const { buildVideoResearchEnhancements } = require('../../lib/youtube-research-utils');
 const { buildViewerComparison } = require('../../lib/youtube-owner-comparison');
+const {
+  checkExtensionToolAccess,
+  consumeExtensionToolUse,
+  isExtensionClient,
+} = require('../../lib/extension-entitlements');
 
 const VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
@@ -1043,6 +1048,15 @@ const handler = async (req: any, res: any) => {
       return res.status(401).json({ error: 'unauthorized' });
     }
 
+    const shouldMeterExtensionUse = isExtensionClient(req);
+    const extensionAccess = shouldMeterExtensionUse
+      ? await checkExtensionToolAccess(supabase, userId)
+      : null;
+
+    if (extensionAccess && !extensionAccess.allowed) {
+      return res.status(extensionAccess.status || 402).json(extensionAccess);
+    }
+
     const apiKey = getYouTubeApiKey();
     const video = await fetchVideoData(videoId, apiKey);
     const channel = await fetchChannelData(video.snippet?.channelId, apiKey);
@@ -1055,10 +1069,21 @@ const handler = async (req: any, res: any) => {
       targetChannel: channel,
       targetVideos: channelVideos,
     });
+    const extensionUsage = shouldMeterExtensionUse
+      ? await consumeExtensionToolUse(supabase, {
+          userId,
+          toolKey: 'video_analysis',
+          metadata: {
+            videoId,
+            channelId: video.snippet?.channelId || null,
+          },
+        })
+      : null;
 
     return res.status(200).json({
       ...buildPayload(video, channel, channelVideos, analysis),
       viewerComparison,
+      extensionUsage,
     });
   } catch (err: any) {
     const status = Number(err?.status || 500);
