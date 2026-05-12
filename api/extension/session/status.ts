@@ -12,8 +12,8 @@ const {
 const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
 const VIDEO_ID_PATTERN = /^[A-Za-z0-9_-]{11}$/;
 const COMMENT_MAX_RESULTS = 100;
-const COMMENT_DEFAULT_LIMIT = 100;
-const COMMENT_LIMIT_MAX = 500;
+const COMMENT_FREE_LIMIT = 200;
+const COMMENT_PREMIUM_LIMIT = 2000;
 
 async function resolveUserId(supabase: any, token: string): Promise<string | null> {
   const tokenHash = createHash('sha256').update(token).digest('hex');
@@ -71,14 +71,20 @@ function getYouTubeApiKey(): string {
   return apiKey;
 }
 
-function normalizeCommentOptions(body: any) {
-  const rawLimit = Number(body?.maxComments || body?.limit || COMMENT_DEFAULT_LIMIT);
-  const maxComments = Math.min(COMMENT_LIMIT_MAX, Math.max(1, Number.isFinite(rawLimit) ? Math.floor(rawLimit) : COMMENT_DEFAULT_LIMIT));
+function normalizeCommentOptions(body: any, entitlement: any) {
+  const isPremium = Boolean(entitlement?.isPremium);
+  const limit = isPremium ? COMMENT_PREMIUM_LIMIT : COMMENT_FREE_LIMIT;
+  const rawLimit = Number(body?.maxComments || body?.limit || limit);
+  const requestedMaxComments = Math.max(1, Number.isFinite(rawLimit) ? Math.floor(rawLimit) : limit);
+  const maxComments = Math.min(limit, requestedMaxComments);
   const sortBy = String(body?.sortBy || 'relevance') === 'time' ? 'time' : 'relevance';
 
   return {
-    includeReplies: body?.includeReplies !== false,
+    includeReplies: isPremium && body?.includeReplies !== false,
     maxComments,
+    requestedMaxComments,
+    accountLimit: limit,
+    isPremium,
     sortBy,
   };
 }
@@ -287,7 +293,7 @@ const handler = async (req: any, res: any) => {
           return res.status(access.status || 402).json(access);
         }
 
-        const options = normalizeCommentOptions(req.body);
+        const options = normalizeCommentOptions(req.body, access.entitlement);
         const [video, comments] = await Promise.all([
           fetchVideoSummary(videoId),
           fetchVideoComments(videoId, options),
@@ -299,6 +305,7 @@ const handler = async (req: any, res: any) => {
             videoId,
             commentCount: comments.length,
             maxComments: options.maxComments,
+            includeReplies: options.includeReplies,
           },
         });
 
