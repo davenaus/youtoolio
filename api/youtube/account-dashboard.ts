@@ -86,17 +86,13 @@ const RECENT_UPLOAD_VIDEO_LIMIT = 50;
 const VIDEO_DAILY_ROW_LIMIT = 500;
 const VIDEO_DAILY_VIDEO_CHUNK_SIZE = 10;
 const VIDEO_DAILY_FALLBACK_VIDEO_LIMIT = 12;
-const COMMENT_VIDEO_LIMIT = 8;
-const COMMENT_LIMIT_PER_VIDEO = 20;
-const COMMENT_REPLY_LIMIT_PER_THREAD = 10;
-const COMMENT_TOTAL_LIMIT = 260;
 const RETENTION_VIDEO_LIMIT = 5;
 const RETENTION_ROW_LIMIT = 120;
 const PLAYLIST_DATA_LIMIT = 25;
 const PLAYLIST_ANALYTICS_LIMIT = 10;
 const THUMBNAIL_VISUAL_ANALYSIS_LIMIT = 50;
 const THUMBNAIL_VISUAL_ANALYSIS_CONCURRENCY = 3;
-const FULL_ANALYSIS_MODEL_VERSION = 'account-dashboard-v2';
+const FULL_ANALYSIS_MODEL_VERSION = 'account-dashboard-v3';
 const FULL_ANALYSIS_SERVER_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const ADMIN_RESEARCH_EMAIL_HASH = '7d44cddbb1d4279022486b6195df17a232ccc8365bf0d89b2a971b8481f08bb8';
 const ADMIN_TABLE_PAGE_SIZE = 1000;
@@ -653,6 +649,26 @@ function resolveBestThumbnail(thumbnails: any) {
     null;
 }
 
+function normalizeThumbnailUrlForFingerprint(url: string) {
+  const value = String(url || '').trim();
+  if (!value) return '';
+
+  try {
+    const parsed = new URL(value);
+    parsed.search = '';
+    parsed.hash = '';
+    return `${parsed.hostname}${parsed.pathname}`.toLowerCase();
+  } catch {
+    return value.split('?')[0].split('#')[0].toLowerCase();
+  }
+}
+
+function thumbnailFingerprintForUrl(url: string) {
+  const normalized = normalizeThumbnailUrlForFingerprint(url);
+  if (!normalized) return '';
+  return createHash('sha256').update(normalized).digest('hex');
+}
+
 function buildThumbnailFeatures(video: any) {
   const thumbnails = video?.snippet?.thumbnails || {};
   const entries = Object.values(thumbnails).filter(Boolean) as any[];
@@ -671,16 +687,67 @@ function buildThumbnailFeatures(video: any) {
   };
 }
 
-async function enrichThumbnailVisualFeatures(videos: any[]) {
-  const targets = new Map<string, { url: string; videos: any[] }>();
+async function readStoredThumbnailFeatureCache(supabase: any, userId: string, channelId: string) {
+  if (!supabase || !userId || !channelId) return new Map();
+
+  const { data, error } = await supabase
+    .from('youtube_video_snapshots')
+    .select('thumbnail_url,thumbnail_features,updated_at')
+    .eq('user_id', userId)
+    .eq('channel_id', channelId)
+    .not('thumbnail_url', 'is', null)
+    .order('updated_at', { ascending: false })
+    .limit(2000);
+
+  if (error) {
+    console.warn('[account-dashboard] read thumbnail feature cache:', error.message);
+    return new Map();
+  }
+
+  const cache = new Map();
+  (data || []).forEach((row: any) => {
+    const features = row?.thumbnail_features || {};
+    const fingerprint = features.thumbnailFingerprint || thumbnailFingerprintForUrl(row?.thumbnail_url || '');
+    if (!fingerprint || !features.visual || cache.has(fingerprint)) return;
+
+    cache.set(fingerprint, {
+      visual: features.visual,
+      visualAnalyzedAt: features.visualAnalyzedAt || row.updated_at || null,
+    });
+  });
+
+  return cache;
+}
+
+async function enrichThumbnailVisualFeatures(videos: any[], storedFeatureCache = new Map()) {
+  const targets = new Map<string, { fingerprint: string; url: string; videos: any[] }>();
 
   videos.forEach((video) => {
     const url = String(video?.thumbnailUrl || '').trim();
     if (!url) return;
+    const fingerprint = thumbnailFingerprintForUrl(url);
+    if (!fingerprint) return;
 
-    const current = targets.get(url) || { url, videos: [] };
+    video.thumbnailFeatures = {
+      ...(video.thumbnailFeatures || {}),
+      thumbnailFingerprint: fingerprint,
+    };
+
+    const storedFeatures = storedFeatureCache.get(fingerprint);
+    if (storedFeatures?.visual) {
+      video.thumbnailFeatures = {
+        ...(video.thumbnailFeatures || {}),
+        thumbnailFingerprint: fingerprint,
+        visual: storedFeatures.visual,
+        visualAnalyzedAt: storedFeatures.visualAnalyzedAt || null,
+        visualSource: 'stored',
+      };
+      return;
+    }
+
+    const current = targets.get(fingerprint) || { fingerprint, url, videos: [] };
     current.videos.push(video);
-    targets.set(url, current);
+    targets.set(fingerprint, current);
   });
 
   const entries = Array.from(targets.values()).slice(0, THUMBNAIL_VISUAL_ANALYSIS_LIMIT);
@@ -696,8 +763,10 @@ async function enrichThumbnailVisualFeatures(videos: any[]) {
         entry.videos.forEach((video) => {
           video.thumbnailFeatures = {
             ...(video.thumbnailFeatures || {}),
+            thumbnailFingerprint: entry.fingerprint,
             visual,
             visualAnalyzedAt: new Date().toISOString(),
+            visualSource: 'fresh',
           };
         });
       } catch {
@@ -710,12 +779,15 @@ async function enrichThumbnailVisualFeatures(videos: any[]) {
 function normalizeVideoMetadata(video: any, analyticsRow: any = {}) {
   const durationSeconds = parseIsoDuration(video?.contentDetails?.duration || '');
   const title = video?.snippet?.title || analyticsRow.title || video?.id || '';
+  const thumbnailUrl = resolveBestThumbnail(video?.snippet?.thumbnails) || analyticsRow.thumbnailUrl || null;
+  const thumbnailFeatures = buildThumbnailFeatures(video);
+  const thumbnailFingerprint = thumbnailFingerprintForUrl(thumbnailUrl || '');
 
   return {
     id: video?.id || analyticsRow.video || '',
     title,
     description: video?.snippet?.description || '',
-    thumbnailUrl: resolveBestThumbnail(video?.snippet?.thumbnails) || analyticsRow.thumbnailUrl || null,
+    thumbnailUrl,
     publishedAt: video?.snippet?.publishedAt || analyticsRow.publishedAt || null,
     durationIso: video?.contentDetails?.duration || null,
     durationSeconds,
@@ -736,189 +808,12 @@ function normalizeVideoMetadata(video: any, analyticsRow: any = {}) {
     likeCount: toNumber(video?.statistics?.likeCount),
     commentCount: toNumber(video?.statistics?.commentCount),
     isShortGuess: durationSeconds > 0 && durationSeconds <= 180,
-    thumbnailFeatures: buildThumbnailFeatures(video),
+    thumbnailFeatures: {
+      ...thumbnailFeatures,
+      ...(thumbnailFingerprint ? { thumbnailFingerprint } : {}),
+    },
     raw: video || {},
   };
-}
-
-function normalizeCommentSnapshot(comment: any, videoId: string) {
-  return {
-    id: comment?.id,
-    videoId,
-    parentCommentId: comment?.snippet?.parentId || null,
-    authorDisplayName: comment?.snippet?.authorDisplayName || null,
-    authorChannelId: comment?.snippet?.authorChannelId?.value || null,
-    likeCount: toNumber(comment?.snippet?.likeCount),
-    publishedAt: comment?.snippet?.publishedAt || null,
-    updatedAt: comment?.snippet?.updatedAt || null,
-    textDisplay: comment?.snippet?.textDisplay || '',
-    textOriginal: comment?.snippet?.textOriginal || '',
-    raw: comment,
-  };
-}
-
-async function fetchCommentReplies(accessToken: string, parentCommentId: string, videoId: string, maxResults = COMMENT_REPLY_LIMIT_PER_THREAD) {
-  if (!parentCommentId || maxResults <= 0) return { comments: [], diagnostic: { status: 'skipped', rows: 0 } };
-
-  try {
-    const url = new URL(`${YOUTUBE_API_BASE_URL}/comments`);
-    url.searchParams.set('part', 'snippet');
-    url.searchParams.set('parentId', parentCommentId);
-    url.searchParams.set('textFormat', 'plainText');
-    url.searchParams.set('maxResults', String(Math.min(100, maxResults)));
-
-    const response = await fetch(url.toString(), {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    const payload = await safeJson(response);
-
-    if (!response.ok || payload?.error) {
-      return {
-        comments: [],
-        diagnostic: {
-          status: 'error',
-          rows: 0,
-          httpStatus: response.status,
-          message: payload?.error?.message || 'Could not load comment replies.',
-          reason: payload?.error?.errors?.[0]?.reason || payload?.error?.status || null,
-        },
-      };
-    }
-
-    const comments = (payload?.items || []).map((comment: any) => normalizeCommentSnapshot(comment, videoId));
-    return {
-      comments,
-      diagnostic: {
-        status: 'ok',
-        rows: comments.length,
-        hasMore: Boolean(payload?.nextPageToken),
-      },
-    };
-  } catch (error) {
-    return {
-      comments: [],
-      diagnostic: {
-        status: 'error',
-        rows: 0,
-        message: error?.message || String(error),
-      },
-    };
-  }
-}
-
-function selectCommentVideoIds(videoIds: string[], videoDetails: any, preferredVideoIds: string[]) {
-  const preferred = new Set(preferredVideoIds.filter(Boolean));
-  return Array.from(new Set(videoIds.filter(Boolean)))
-    .map((videoId) => ({
-      videoId,
-      commentCount: toNumber(videoDetails?.[videoId]?.statistics?.commentCount),
-      preferred: preferred.has(videoId),
-    }))
-    .filter((entry) => entry.commentCount > 0 || entry.preferred)
-    .sort((left, right) => {
-      if (right.commentCount !== left.commentCount) return right.commentCount - left.commentCount;
-      return Number(right.preferred) - Number(left.preferred);
-    })
-    .map((entry) => entry.videoId)
-    .slice(0, COMMENT_VIDEO_LIMIT);
-}
-
-async function fetchRecentComments(accessToken: string, videoIds: string[]) {
-  const diagnostics: any = {
-    status: videoIds.length ? 'ok' : 'skipped',
-    requestedVideos: videoIds.length,
-    videos: [],
-    topLevelComments: 0,
-    replies: 0,
-    rows: 0,
-  };
-  const comments: any[] = [];
-
-  for (const videoId of videoIds.slice(0, COMMENT_VIDEO_LIMIT)) {
-    try {
-      const url = new URL(`${YOUTUBE_API_BASE_URL}/commentThreads`);
-      url.searchParams.set('part', 'snippet,replies');
-      url.searchParams.set('videoId', videoId);
-      url.searchParams.set('order', 'time');
-      url.searchParams.set('textFormat', 'plainText');
-      url.searchParams.set('maxResults', String(COMMENT_LIMIT_PER_VIDEO));
-
-      const response = await fetch(url.toString(), {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      const payload = await safeJson(response);
-      if (!response.ok || payload?.error) {
-        diagnostics.videos.push({
-          videoId,
-          status: 'error',
-          rows: 0,
-          httpStatus: response.status,
-          message: payload?.error?.message || 'Could not load comments.',
-          reason: payload?.error?.errors?.[0]?.reason || payload?.error?.status || null,
-        });
-        continue;
-      }
-
-      let videoTopLevelComments = 0;
-      let videoReplies = 0;
-
-      for (const thread of payload?.items || []) {
-        const topComment = thread?.snippet?.topLevelComment;
-        if (topComment) {
-          comments.push(normalizeCommentSnapshot(topComment, videoId));
-          videoTopLevelComments += 1;
-        }
-
-        const inlineReplies = (thread?.replies?.comments || []).map((comment: any) => normalizeCommentSnapshot(comment, videoId));
-        comments.push(...inlineReplies);
-        videoReplies += inlineReplies.length;
-
-        const totalReplyCount = toNumber(thread?.snippet?.totalReplyCount);
-        const missingReplyCount = Math.max(0, totalReplyCount - inlineReplies.length);
-        if (missingReplyCount > 0 && topComment?.id && comments.length < COMMENT_TOTAL_LIMIT) {
-          const replyResult = await fetchCommentReplies(
-            accessToken,
-            topComment.id,
-            videoId,
-            Math.min(COMMENT_REPLY_LIMIT_PER_THREAD, COMMENT_TOTAL_LIMIT - comments.length)
-          );
-          comments.push(...replyResult.comments);
-          videoReplies += replyResult.comments.length;
-        }
-
-        if (comments.length >= COMMENT_TOTAL_LIMIT) break;
-      }
-
-      diagnostics.topLevelComments += videoTopLevelComments;
-      diagnostics.replies += videoReplies;
-      diagnostics.videos.push({
-        videoId,
-        status: 'ok',
-        rows: videoTopLevelComments + videoReplies,
-        topLevelComments: videoTopLevelComments,
-        replies: videoReplies,
-        hasMore: Boolean(payload?.nextPageToken),
-      });
-    } catch (error) {
-      diagnostics.videos.push({
-        videoId,
-        status: 'error',
-        rows: 0,
-        message: error?.message || String(error),
-      });
-    }
-
-    if (comments.length >= COMMENT_TOTAL_LIMIT) break;
-  }
-
-  diagnostics.rows = comments.length;
-  if (diagnostics.requestedVideos && !comments.length && diagnostics.videos.some((entry: any) => entry.status === 'error')) {
-    diagnostics.status = 'error';
-  } else if (diagnostics.requestedVideos && !comments.length) {
-    diagnostics.status = 'empty';
-  }
-
-  return { comments, diagnostic: diagnostics };
 }
 
 async function buildSummary(accessToken: string, connection: any, windows: any) {
@@ -1237,7 +1132,6 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
   const dailyRows = fullAnalysis.dailyRows || [];
   const videoDailyRows = fullAnalysis.videoDailyRows || [];
   const breakdowns = fullAnalysis.breakdowns || {};
-  const comments = fullAnalysis.comments || [];
   const views = videos.map((video: any) => video.views);
   const ctrs = videos.map((video: any) => Number(video.thumbnailCtr)).filter(Number.isFinite);
   const retentions = videos.map((video: any) => video.averageViewPercentage);
@@ -1286,12 +1180,6 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
   const thumbnailTextCtrAnswer = textPresentCtrVideos.length && textAbsentCtrVideos.length
     ? `Text-present thumbnails avg ${pct(avg(textPresentCtrVideos, (video) => video.thumbnailCtr))} CTR vs no-text avg ${pct(avg(textAbsentCtrVideos, (video) => video.thumbnailCtr))}.`
     : 'Text-presence proxies are now collected from thumbnail pixels; needs both text and no-text examples with CTR.';
-  const topRecentCommentVideo = videos
-    .map((video: any) => ({
-      key: video.title,
-      average: comments.filter((comment: any) => comment.videoId === video.id).length,
-    }))
-    .sort((left: any, right: any) => right.average - left.average);
   const peakRows = videoDailyRows.reduce((map: any, row: any) => {
     if (!map[row.videoId] || toNumber(row.views) > toNumber(map[row.videoId].views)) map[row.videoId] = row;
     return map;
@@ -1462,12 +1350,10 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
           item('Playlist impact on watch time', `Playlist save rate is ${pct(fullAnalysis.current.playlistAddRate)} of views.`),
           item('Videos that perform better inside playlists', 'Playlist adds/removes are now stored by video where returned; stronger ranking needs more video rows.', 'Building history'),
           item('Comment volume vs video performance', correlationLabel(pearsonByKey(videos, 'comments', 'views'))),
-          item('Recent comment volume by video', `${topLabel(topRecentCommentVideo, 'No comments synced')} has the most recent synced comments among top videos.`),
-          item('Comment sentiment vs engagement', 'Recent public comments are stored; sentiment requires a processing pass before scoring.', 'Needs text processing'),
-          item('Creator reply rate vs engagement growth', 'Replies are stored when returned, but creator-reply classification needs author matching.', 'Needs processing'),
-          item('Pinned comments impact on engagement', 'Pinned comment status is not returned in the current comment API payload.', 'Limited by API'),
-          item('Comment timing vs performance', 'Comment timestamps are stored now; early-vs-late comment analysis improves as publish cycles accumulate.', 'Building history'),
-          item('Community intensity per channel', `${comments.length} recent comments/replies synced from top videos in this full-analysis run.`),
+          item('Comment rate vs video performance', correlationLabel(pearsonByKey(videos, 'commentRate', 'views'))),
+          item('Comment sentiment / replies / pinned comment impact', 'Disabled for now. We keep aggregate comment counts, but no longer request or store comment text/reply snapshots.', 'Not collected'),
+          item('Comment timing vs performance', 'Disabled for now because we are not storing individual comment timestamps.', 'Not collected'),
+          item('Community intensity per channel', `${compact(fullAnalysis.current.comments)} aggregate comments in the current analysis window.`),
         ],
       },
       {
@@ -1738,7 +1624,7 @@ async function fetchPlaylistAnalytics(accessToken: string, playlists: any[], win
   };
 }
 
-async function buildFullAnalysis(accessToken: string, summary: any, windows: any, options: { includeResearchLab?: boolean } = {}) {
+async function buildFullAnalysis(accessToken: string, summary: any, windows: any, options: { includeResearchLab?: boolean; thumbnailFeatureCache?: Map<string, any> } = {}) {
   const [
     fullCurrentPayload,
     fullPreviousPayload,
@@ -1962,15 +1848,21 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
     };
   });
 
-  await enrichThumbnailVisualFeatures(videoMetadata.concat(topVideos));
+  const thumbnailTargets = videoMetadata.concat(topVideos);
+  await enrichThumbnailVisualFeatures(thumbnailTargets, options.thumbnailFeatureCache || new Map());
+  const thumbnailVisualDiagnostics = {
+    status: 'ok',
+    requestedVideos: thumbnailTargets.filter((video: any) => video?.thumbnailUrl).length,
+    rows: thumbnailTargets.filter((video: any) => video?.thumbnailFeatures?.visual).length,
+    reused: thumbnailTargets.filter((video: any) => video?.thumbnailFeatures?.visualSource === 'stored').length,
+    fresh: thumbnailTargets.filter((video: any) => video?.thumbnailFeatures?.visualSource === 'fresh').length,
+    limit: THUMBNAIL_VISUAL_ANALYSIS_LIMIT,
+  };
 
-  const commentVideoIds = selectCommentVideoIds(videoIds, videoDetails, topVideoIds);
-  const [commentsResult, retentionResult, playlistAnalyticsResult] = await Promise.all([
-    fetchRecentComments(accessToken, commentVideoIds),
+  const [retentionResult, playlistAnalyticsResult] = await Promise.all([
     fetchRetentionCurves(accessToken, topVideos, windows),
     fetchPlaylistAnalytics(accessToken, playlists, windows, fullCurrent.views),
   ]);
-  const comments = commentsResult.comments;
   const retentionCurves = retentionResult.rows;
   const topPlaylists = playlistAnalyticsResult.rows;
 
@@ -2002,7 +1894,7 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
       demographics: demographicPayload._diagnostic,
     },
     videoDailyRows: videoDailyResult.diagnostic,
-    comments: commentsResult.diagnostic,
+    thumbnailVisuals: thumbnailVisualDiagnostics,
     retentionCurves: retentionResult.diagnostic,
     playlists: {
       data: playlistDataResult.diagnostic,
@@ -2021,7 +1913,6 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
         dailyRows: fullDailyRows,
         videoDailyRows,
         videoMetadata,
-        comments,
         playlists,
         collectorDiagnostics,
       })
@@ -2044,7 +1935,6 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
     dailyRows: fullDailyRows,
     videoDailyRows,
     videoMetadata,
-    comments,
     playlists,
     collectorDiagnostics,
     ...(researchLab ? { researchLab } : {}),
@@ -2714,7 +2604,7 @@ function buildOutlierSummary(records: any[], metric: string, label: string, form
 }
 
 function buildAdminResearchSections(data: any) {
-  const { records, channelDailyRows, breakdowns, comments, channelSnapshots } = data;
+  const { records, channelDailyRows, breakdowns, channelSnapshots } = data;
   const videosWithCtr = records.filter((record: any) => Number.isFinite(Number(record.thumbnailCtr)));
   const videosWithRetention = records.filter((record: any) => Number.isFinite(Number(record.averageViewPercentage)));
   const videosWithViews = records.filter((record: any) => Number.isFinite(Number(record.views)) && record.views > 0);
@@ -2758,11 +2648,6 @@ function buildAdminResearchSections(data: any) {
   const channelsWithBranding = channelSnapshots.filter((channel: any) => channel.thumbnail_url || channel.banner_url || Object.keys(channel.branding || {}).length).length;
   const duplicateTitles = records.length - new Set(records.map((record: any) => String(record.title || '').toLowerCase().trim()).filter(Boolean)).size;
   const duplicateThumbs = records.length - new Set(records.map((record: any) => String(record.thumbnail_url || '').trim()).filter(Boolean)).size;
-  const commentCountsByVideo = comments.reduce((map: any, comment: any) => {
-    map[comment.video_id] = (map[comment.video_id] || 0) + 1;
-    return map;
-  }, {});
-  const recordsWithRecentCommentCounts = records.map((record: any) => ({ ...record, storedCommentCount: commentCountsByVideo[record.video_id] || 0 }));
   const thumbnailTextPresenceAnswer = visualThumbsWithCtr.length
     ? compareSegments(visualThumbsWithCtr, (record: any) => record.thumbnailTextPresent === true, (record: any) => record.thumbnailCtr, 'Text-present thumbnails', 'No-text thumbnails', formatPercentMetric)
     : 'Thumbnail text-presence proxies are collected during full channel analysis.';
@@ -2804,7 +2689,6 @@ function buildAdminResearchSections(data: any) {
     detail,
   });
   const building = (label: string, answer: string) => item(label, answer, 'Building history');
-  const collector = (label: string, answer: string) => item(label, answer, 'Needs collector');
 
   return [
     {
@@ -2975,9 +2859,8 @@ function buildAdminResearchSections(data: any) {
       title: 'Comments, Playlists, And Community',
       items: [
         item('Comment volume vs video performance', describeCorrelation(pearson(records.map((record: any) => [record.comments, record.views])), 'comment count', 'views'), 'Live'),
-        item('Recent comment volume vs performance', recordsWithRecentCommentCounts.some((record: any) => record.storedCommentCount) ? describeCorrelation(pearson(recordsWithRecentCommentCounts.map((record: any) => [record.storedCommentCount, record.views])), 'stored recent comments', 'views') : 'Need comment snapshots from full analysis runs.', recordsWithRecentCommentCounts.some((record: any) => record.storedCommentCount) ? 'Proxy' : 'Needs data'),
-        collector('Comment sentiment vs engagement', 'Comment text is stored for recent public comments, but sentiment requires text processing.'),
-        collector('Creator reply rate / pinned comments impact', 'Needs reliable reply/pinned-comment detection beyond the current comment snapshot path.'),
+        item('Comment rate vs video performance', describeCorrelation(pearson(records.map((record: any) => [record.commentRate, record.views])), 'comment rate', 'views'), 'Live'),
+        item('Comment text, sentiment, replies, and pinned comments', 'Disabled for now. We keep aggregate comment counts from YouTube Analytics, but no longer request or store comment text/reply snapshots.', 'Not collected'),
         item('Like-to-view ratio benchmarks', avgEngagementRate ? `Average engagement rate across stored videos is ${formatRatioPercent(avgEngagementRate)}; like-rate relationship to views is ${describeCorrelation(pearson(records.map((record: any) => [record.likeRate, record.views])), 'like rate', 'views')}` : 'Need engagement rows.', avgEngagementRate ? 'Live' : 'Needs data'),
         item('Share behavior vs traffic source expansion', describeCorrelation(pearson(records.map((record: any) => [record.shareRate, record.views])), 'share rate', 'views'), 'Live'),
         item('Playlist add rate vs video performance', describeCorrelation(pearson(records.map((record: any) => [record.playlistAddRate, record.watchHours])), 'playlist add rate', 'watch time'), 'Live'),
@@ -2998,7 +2881,6 @@ async function buildAdminResearchDashboard(supabase: any, options: { minSubscrib
     allChannelDailyRows,
     allVideoDailyRows,
     allBreakdowns,
-    allComments,
     allConnections,
     allSyncRuns,
   ] = await Promise.all([
@@ -3007,7 +2889,6 @@ async function buildAdminResearchDashboard(supabase: any, options: { minSubscrib
     readAdminTable(supabase, 'youtube_channel_analytics_daily', 'user_id,channel_id,metric_date,views,engaged_views,estimated_minutes_watched,average_view_duration_seconds,average_view_percentage,subscribers_gained,subscribers_lost,likes,comments,shares,videos_added_to_playlists,videos_removed_from_playlists,thumbnail_impressions,thumbnail_ctr', 'metric_date', truncatedTables),
     readAdminTable(supabase, 'youtube_video_analytics_daily', 'user_id,channel_id,video_id,metric_date,views,engaged_views,estimated_minutes_watched,average_view_duration_seconds,average_view_percentage,subscribers_gained,subscribers_lost,likes,comments,shares,videos_added_to_playlists,videos_removed_from_playlists,thumbnail_impressions,thumbnail_ctr', 'metric_date', truncatedTables),
     readAdminTable(supabase, 'youtube_analytics_breakdowns', 'user_id,channel_id,video_id,period_start,period_end,dimension_set,dimension_key,dimension_values,metrics', 'period_end', truncatedTables),
-    readAdminTable(supabase, 'youtube_comment_snapshots', 'user_id,channel_id,video_id,comment_id,parent_comment_id,snapshot_date,like_count,published_at,text_original,text_display', 'snapshot_date', truncatedTables),
     readAdminTable(supabase, 'youtube_connections', 'user_id,channel_id,channel_title,disconnected_at,updated_at', 'updated_at', truncatedTables),
     readAdminTable(supabase, 'youtube_analytics_sync_runs', 'user_id,channel_id,sync_type,status,period_start,period_end,completed_at,started_at', 'started_at', truncatedTables),
   ]);
@@ -3018,7 +2899,6 @@ async function buildAdminResearchDashboard(supabase: any, options: { minSubscrib
   const channelDailyRows = filterRowsByChannels(allChannelDailyRows, channelFilter.allowedChannelIds);
   const videoDailyRows = filterRowsByChannels(allVideoDailyRows, channelFilter.allowedChannelIds);
   const breakdowns = latestBreakdownRows(filterRowsByChannels(allBreakdowns, channelFilter.allowedChannelIds));
-  const comments = filterRowsByChannels(allComments, channelFilter.allowedChannelIds);
   const connections = filterRowsByChannels(allConnections, channelFilter.allowedChannelIds);
   const syncRuns = filterRowsByChannels(allSyncRuns, channelFilter.allowedChannelIds);
   const records = buildVideoResearchRecords(videoSnapshots, videoDailyRows);
@@ -3031,7 +2911,7 @@ async function buildAdminResearchDashboard(supabase: any, options: { minSubscrib
     ...connections.map((row: any) => row.user_id),
   ].filter(Boolean));
   const latestSync = syncRuns[0]?.completed_at || syncRuns[0]?.started_at || null;
-  const sections = buildAdminResearchSections({ records, channelDailyRows, breakdowns, comments, channelSnapshots });
+  const sections = buildAdminResearchSections({ records, channelDailyRows, breakdowns, channelSnapshots });
   const items = sections.flatMap((section: any) => section.items);
   const liveCount = items.filter((item: any) => ['Live', 'Proxy', 'Early'].includes(item.status)).length;
   const buildingCount = items.filter((item: any) => String(item.status).includes('Building')).length;
@@ -3058,7 +2938,6 @@ async function buildAdminResearchDashboard(supabase: any, options: { minSubscrib
       channelDailyRows: channelDailyRows.length,
       videoDailyRows: videoDailyRows.length,
       breakdownRows: breakdowns.length,
-      commentRows: comments.length,
       latestSync,
     },
     coverage: {
@@ -3172,7 +3051,15 @@ const handler = async (req: any, res: any) => {
         });
       }
 
-      const fullAnalysis = await buildFullAnalysis(accessToken, summary, windows, { includeResearchLab: isAdminResearch });
+      const thumbnailFeatureCache = await readStoredThumbnailFeatureCache(
+        supabase,
+        userId,
+        summary.channel.id || connection.channel_id
+      );
+      const fullAnalysis = await buildFullAnalysis(accessToken, summary, windows, {
+        includeResearchLab: isAdminResearch,
+        thumbnailFeatureCache,
+      });
       await storeAccountDashboardAnalytics(supabase, { userId, connection, summary, fullAnalysis });
       return res.status(200).json({
         ...summary,
