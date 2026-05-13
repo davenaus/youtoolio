@@ -571,7 +571,9 @@ export const Account: React.FC = () => {
   const isPremium = Boolean(billing?.isPremium);
   const billingLabel = billingLoading ? 'Checking' : isPremium ? 'Premium' : 'Free';
   const billingRenewalCopy = billing?.currentPeriodEnd
-    ? `${billing.cancelAtPeriodEnd ? 'Access ends' : 'Renews'} ${formatBillingDate(billing.currentPeriodEnd)}`
+    ? billing.cancelAtPeriodEnd
+      ? `Your plan will cancel on ${formatBillingDate(billing.currentPeriodEnd)}`
+      : `Renews on ${formatBillingDate(billing.currentPeriodEnd)}`
     : '';
 
   return (
@@ -721,7 +723,7 @@ export const Account: React.FC = () => {
                   {billingLoading
                     ? 'Checking your plan…'
                     : isPremium
-                      ? `${billing?.status || 'Active'}${billingRenewalCopy ? ` · ${billingRenewalCopy}` : ''}`
+                      ? billingRenewalCopy || (billing?.status || 'Active')
                       : ytChannel
                         ? 'Upgrade when you want YouTool tools inside YouTube.'
                         : 'Connect your YouTube channel before upgrading.'}

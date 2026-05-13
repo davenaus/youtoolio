@@ -182,10 +182,12 @@ async function ensureStripeCustomer(supabase: any, user: any, subscription: any)
 function isActiveSubscription(row: any) {
   if (!row) return false;
   const status = String(row.status || row.subscription_status || row.stripe_status || '').toLowerCase();
-  if (ACTIVE_STATUSES.has(status)) return true;
+  const periodEnd = row.current_period_end ? new Date(row.current_period_end) : null;
+  const accessWindowOpen = !periodEnd || periodEnd.getTime() > Date.now();
+
+  if (ACTIVE_STATUSES.has(status)) return accessWindowOpen;
   if (ENDED_STATUSES.has(status)) return false;
 
-  const periodEnd = row.current_period_end ? new Date(row.current_period_end) : null;
   return Boolean(row.is_premium || (periodEnd && periodEnd.getTime() > Date.now() && String(row.plan || '').toLowerCase() !== 'free'));
 }
 
