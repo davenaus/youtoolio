@@ -94,6 +94,15 @@ interface SegmentRow {
   engagedViewRate: number;
 }
 
+interface PlaylistRow extends SegmentRow {
+  playlistViews?: number;
+  playlistWatchHours?: number;
+  playlistStarts?: number;
+  playlistSaves?: number;
+  viewsPerPlaylistStart?: number | null;
+  averageTimeInPlaylist?: number | null;
+}
+
 interface DemographicRow {
   key: string;
   label: string;
@@ -112,6 +121,7 @@ interface AnalysisBreakdowns {
   youtubeProducts: SegmentRow[];
   liveOrOnDemand: SegmentRow[];
   demographics: DemographicRow[];
+  topPlaylists?: PlaylistRow[];
 }
 
 interface FullAnalysis {
@@ -735,6 +745,38 @@ function renderSegmentRows(rows: SegmentRow[] | undefined, emptyLabel: string) {
   );
 }
 
+function renderPlaylistRows(rows: PlaylistRow[] | undefined) {
+  if (!rows?.length) {
+    return <VideoMeta>No playlist performance data returned for this period.</VideoMeta>;
+  }
+
+  const maxViews = Math.max(...rows.map((row) => Number(row.playlistViews ?? row.views ?? 0)), 1);
+
+  return (
+    <BreakdownList>
+      {rows.map((row) => {
+        const views = Number(row.playlistViews ?? row.views ?? 0);
+        const watchHours = Number(row.playlistWatchHours ?? row.watchHours ?? 0);
+
+        return (
+          <BreakdownRow key={row.key}>
+            <BreakdownHead>
+              <BreakdownLabel>{row.label}</BreakdownLabel>
+              <BreakdownValue>{formatCount(views)}</BreakdownValue>
+            </BreakdownHead>
+            <BarTrack>
+              <BarFill $width={(views / maxViews) * 100} />
+            </BarTrack>
+            <BreakdownMeta>
+              {formatCount(Math.round(watchHours))} watch hours · {formatCount(row.playlistStarts)} starts · {formatCount(row.playlistSaves)} saves
+            </BreakdownMeta>
+          </BreakdownRow>
+        );
+      })}
+    </BreakdownList>
+  );
+}
+
 function renderDemographicRows(rows: DemographicRow[] | undefined) {
   if (!rows?.length) {
     return <VideoMeta>Not enough audience data returned for this period.</VideoMeta>;
@@ -1249,6 +1291,11 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
                 <AnalysisSection>
                   <SectionTitle>Content mix</SectionTitle>
                   {renderSegmentRows(fullAnalysis.breakdowns?.contentTypes, 'No content type split returned for this period.')}
+                </AnalysisSection>
+
+                <AnalysisSection>
+                  <SectionTitle>Playlist performance</SectionTitle>
+                  {renderPlaylistRows(fullAnalysis.breakdowns?.topPlaylists)}
                 </AnalysisSection>
 
                 <AnalysisSection>

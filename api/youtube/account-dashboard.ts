@@ -64,11 +64,36 @@ const REACH_METRICS = [
   'videoThumbnailImpressionsClickRate'
 ];
 
+const RETENTION_METRICS = [
+  'audienceWatchRatio',
+  'relativeRetentionPerformance',
+  'startedWatching',
+  'stoppedWatching',
+  'totalSegmentImpressions'
+];
+
+const PLAYLIST_ANALYTICS_METRICS = [
+  'playlistViews',
+  'playlistEstimatedMinutesWatched',
+  'playlistStarts',
+  'playlistSaves',
+  'viewsPerPlaylistStart',
+  'averageTimeInPlaylist'
+];
+
 const FULL_ANALYSIS_VIDEO_LIMIT = 50;
 const RECENT_UPLOAD_VIDEO_LIMIT = 50;
 const VIDEO_DAILY_ROW_LIMIT = 500;
+const VIDEO_DAILY_VIDEO_CHUNK_SIZE = 10;
+const VIDEO_DAILY_FALLBACK_VIDEO_LIMIT = 12;
 const COMMENT_VIDEO_LIMIT = 8;
 const COMMENT_LIMIT_PER_VIDEO = 20;
+const COMMENT_REPLY_LIMIT_PER_THREAD = 10;
+const COMMENT_TOTAL_LIMIT = 260;
+const RETENTION_VIDEO_LIMIT = 5;
+const RETENTION_ROW_LIMIT = 120;
+const PLAYLIST_DATA_LIMIT = 25;
+const PLAYLIST_ANALYTICS_LIMIT = 10;
 const THUMBNAIL_VISUAL_ANALYSIS_LIMIT = 50;
 const THUMBNAIL_VISUAL_ANALYSIS_CONCURRENCY = 3;
 const ADMIN_RESEARCH_EMAIL_HASH = '7d44cddbb1d4279022486b6195df17a232ccc8365bf0d89b2a971b8481f08bb8';
@@ -214,14 +239,51 @@ async function fetchAnalytics(accessToken: string, options: any) {
 
   const error = new Error(payload?.error?.message || 'Could not load YouTube Analytics data.');
   error.status = response.status || 502;
+  error.reason = payload?.error?.errors?.[0]?.reason || payload?.error?.status || null;
+  error.payload = payload?.error || payload || null;
+  error.request = {
+    dimensions: options.dimensions || null,
+    filters: options.filters || null,
+    metrics: baseMetrics,
+    includeReach: options.includeReach !== false,
+  };
   throw error;
+}
+
+function compactDiagnosticOptions(options: any) {
+  return {
+    label: options.label || options.dimensions || options.filters || 'analytics',
+    dimensions: options.dimensions || null,
+    filters: options.filters || null,
+    metrics: options.metrics || SUMMARY_METRICS,
+    includeReach: options.includeReach !== false,
+  };
+}
+
+function analyticsDiagnostic(status: string, options: any, payload: any = null, error: any = null) {
+  return {
+    ...compactDiagnosticOptions(options),
+    status,
+    rows: Array.isArray(payload?.rows) ? payload.rows.length : 0,
+    message: error?.message || payload?.error?.message || null,
+    reason: error?.reason || payload?.error?.errors?.[0]?.reason || payload?.error?.status || null,
+    httpStatus: error?.status || null,
+  };
 }
 
 async function fetchOptionalAnalytics(accessToken: string, options: any) {
   try {
-    return await fetchAnalytics(accessToken, options);
-  } catch {
-    return { columnHeaders: [], rows: [] };
+    const payload = await fetchAnalytics(accessToken, options);
+    return {
+      ...payload,
+      _diagnostic: analyticsDiagnostic('ok', options, payload),
+    };
+  } catch (error) {
+    return {
+      columnHeaders: [],
+      rows: [],
+      _diagnostic: analyticsDiagnostic('error', options, null, error),
+    };
   }
 }
 
@@ -677,8 +739,100 @@ function normalizeVideoMetadata(video: any, analyticsRow: any = {}) {
   };
 }
 
+function normalizeCommentSnapshot(comment: any, videoId: string) {
+  return {
+    id: comment?.id,
+    videoId,
+    parentCommentId: comment?.snippet?.parentId || null,
+    authorDisplayName: comment?.snippet?.authorDisplayName || null,
+    authorChannelId: comment?.snippet?.authorChannelId?.value || null,
+    likeCount: toNumber(comment?.snippet?.likeCount),
+    publishedAt: comment?.snippet?.publishedAt || null,
+    updatedAt: comment?.snippet?.updatedAt || null,
+    textDisplay: comment?.snippet?.textDisplay || '',
+    textOriginal: comment?.snippet?.textOriginal || '',
+    raw: comment,
+  };
+}
+
+async function fetchCommentReplies(accessToken: string, parentCommentId: string, videoId: string, maxResults = COMMENT_REPLY_LIMIT_PER_THREAD) {
+  if (!parentCommentId || maxResults <= 0) return { comments: [], diagnostic: { status: 'skipped', rows: 0 } };
+
+  try {
+    const url = new URL(`${YOUTUBE_API_BASE_URL}/comments`);
+    url.searchParams.set('part', 'snippet');
+    url.searchParams.set('parentId', parentCommentId);
+    url.searchParams.set('textFormat', 'plainText');
+    url.searchParams.set('maxResults', String(Math.min(100, maxResults)));
+
+    const response = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const payload = await safeJson(response);
+
+    if (!response.ok || payload?.error) {
+      return {
+        comments: [],
+        diagnostic: {
+          status: 'error',
+          rows: 0,
+          httpStatus: response.status,
+          message: payload?.error?.message || 'Could not load comment replies.',
+          reason: payload?.error?.errors?.[0]?.reason || payload?.error?.status || null,
+        },
+      };
+    }
+
+    const comments = (payload?.items || []).map((comment: any) => normalizeCommentSnapshot(comment, videoId));
+    return {
+      comments,
+      diagnostic: {
+        status: 'ok',
+        rows: comments.length,
+        hasMore: Boolean(payload?.nextPageToken),
+      },
+    };
+  } catch (error) {
+    return {
+      comments: [],
+      diagnostic: {
+        status: 'error',
+        rows: 0,
+        message: error?.message || String(error),
+      },
+    };
+  }
+}
+
+function selectCommentVideoIds(videoIds: string[], videoDetails: any, preferredVideoIds: string[]) {
+  const preferred = new Set(preferredVideoIds.filter(Boolean));
+  return Array.from(new Set(videoIds.filter(Boolean)))
+    .map((videoId) => ({
+      videoId,
+      commentCount: toNumber(videoDetails?.[videoId]?.statistics?.commentCount),
+      preferred: preferred.has(videoId),
+    }))
+    .filter((entry) => entry.commentCount > 0 || entry.preferred)
+    .sort((left, right) => {
+      if (right.commentCount !== left.commentCount) return right.commentCount - left.commentCount;
+      return Number(right.preferred) - Number(left.preferred);
+    })
+    .map((entry) => entry.videoId)
+    .slice(0, COMMENT_VIDEO_LIMIT);
+}
+
 async function fetchRecentComments(accessToken: string, videoIds: string[]) {
-  const commentLists = await Promise.all(videoIds.slice(0, COMMENT_VIDEO_LIMIT).map(async (videoId) => {
+  const diagnostics: any = {
+    status: videoIds.length ? 'ok' : 'skipped',
+    requestedVideos: videoIds.length,
+    videos: [],
+    topLevelComments: 0,
+    replies: 0,
+    rows: 0,
+  };
+  const comments: any[] = [];
+
+  for (const videoId of videoIds.slice(0, COMMENT_VIDEO_LIMIT)) {
     try {
       const url = new URL(`${YOUTUBE_API_BASE_URL}/commentThreads`);
       url.searchParams.set('part', 'snippet,replies');
@@ -691,30 +845,78 @@ async function fetchRecentComments(accessToken: string, videoIds: string[]) {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const payload = await safeJson(response);
-      if (!response.ok || payload?.error) return [];
-
-      return (payload?.items || []).flatMap((thread: any) => {
-        const topComment = thread?.snippet?.topLevelComment;
-        const replies = thread?.replies?.comments || [];
-        return [topComment, ...replies].filter(Boolean).map((comment: any) => ({
-          id: comment.id,
+      if (!response.ok || payload?.error) {
+        diagnostics.videos.push({
           videoId,
-          parentCommentId: comment?.snippet?.parentId || null,
-          authorDisplayName: comment?.snippet?.authorDisplayName || null,
-          authorChannelId: comment?.snippet?.authorChannelId?.value || null,
-          likeCount: toNumber(comment?.snippet?.likeCount),
-          publishedAt: comment?.snippet?.publishedAt || null,
-          updatedAt: comment?.snippet?.updatedAt || null,
-          textDisplay: comment?.snippet?.textDisplay || '',
-          textOriginal: comment?.snippet?.textOriginal || '',
-          raw: comment,
-        }));
+          status: 'error',
+          rows: 0,
+          httpStatus: response.status,
+          message: payload?.error?.message || 'Could not load comments.',
+          reason: payload?.error?.errors?.[0]?.reason || payload?.error?.status || null,
+        });
+        continue;
+      }
+
+      let videoTopLevelComments = 0;
+      let videoReplies = 0;
+
+      for (const thread of payload?.items || []) {
+        const topComment = thread?.snippet?.topLevelComment;
+        if (topComment) {
+          comments.push(normalizeCommentSnapshot(topComment, videoId));
+          videoTopLevelComments += 1;
+        }
+
+        const inlineReplies = (thread?.replies?.comments || []).map((comment: any) => normalizeCommentSnapshot(comment, videoId));
+        comments.push(...inlineReplies);
+        videoReplies += inlineReplies.length;
+
+        const totalReplyCount = toNumber(thread?.snippet?.totalReplyCount);
+        const missingReplyCount = Math.max(0, totalReplyCount - inlineReplies.length);
+        if (missingReplyCount > 0 && topComment?.id && comments.length < COMMENT_TOTAL_LIMIT) {
+          const replyResult = await fetchCommentReplies(
+            accessToken,
+            topComment.id,
+            videoId,
+            Math.min(COMMENT_REPLY_LIMIT_PER_THREAD, COMMENT_TOTAL_LIMIT - comments.length)
+          );
+          comments.push(...replyResult.comments);
+          videoReplies += replyResult.comments.length;
+        }
+
+        if (comments.length >= COMMENT_TOTAL_LIMIT) break;
+      }
+
+      diagnostics.topLevelComments += videoTopLevelComments;
+      diagnostics.replies += videoReplies;
+      diagnostics.videos.push({
+        videoId,
+        status: 'ok',
+        rows: videoTopLevelComments + videoReplies,
+        topLevelComments: videoTopLevelComments,
+        replies: videoReplies,
+        hasMore: Boolean(payload?.nextPageToken),
       });
-    } catch {
-      return [];
+    } catch (error) {
+      diagnostics.videos.push({
+        videoId,
+        status: 'error',
+        rows: 0,
+        message: error?.message || String(error),
+      });
     }
-  }));
-  return commentLists.flat();
+
+    if (comments.length >= COMMENT_TOTAL_LIMIT) break;
+  }
+
+  diagnostics.rows = comments.length;
+  if (diagnostics.requestedVideos && !comments.length && diagnostics.videos.some((entry: any) => entry.status === 'error')) {
+    diagnostics.status = 'error';
+  } else if (diagnostics.requestedVideos && !comments.length) {
+    diagnostics.status = 'empty';
+  }
+
+  return { comments, diagnostic: diagnostics };
 }
 
 async function buildSummary(accessToken: string, connection: any, windows: any) {
@@ -1288,12 +1490,257 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
   };
 }
 
+function normalizeVideoDailyAnalyticsRow(row: any, forcedVideoId = '') {
+  return {
+    date: row.day,
+    videoId: row.video || forcedVideoId,
+    views: toNumber(row.views),
+    engagedViews: toNumber(row.engagedViews),
+    redViews: toNumber(row.redViews),
+    estimatedMinutesWatched: toNumber(row.estimatedMinutesWatched),
+    estimatedRedMinutesWatched: toNumber(row.estimatedRedMinutesWatched),
+    averageViewDuration: toNumber(row.averageViewDuration),
+    averageViewPercentage: toNumber(row.averageViewPercentage),
+    likes: toNumber(row.likes),
+    dislikes: toNumber(row.dislikes),
+    comments: toNumber(row.comments),
+    shares: toNumber(row.shares),
+    videosAddedToPlaylists: toNumber(row.videosAddedToPlaylists),
+    videosRemovedFromPlaylists: toNumber(row.videosRemovedFromPlaylists),
+    subscribersGained: toNumber(row.subscribersGained),
+    subscribersLost: toNumber(row.subscribersLost),
+    videoThumbnailImpressions: toNumber(row.videoThumbnailImpressions),
+    thumbnailCtr: row.videoThumbnailImpressions ? toNumber(row.videoThumbnailImpressionsClickRate) : null,
+  };
+}
+
+async function fetchVideoDailyAnalytics(accessToken: string, videoIds: string[], windows: any) {
+  const uniqueIds = Array.from(new Set(videoIds.filter(Boolean))).slice(0, FULL_ANALYSIS_VIDEO_LIMIT);
+  const diagnostic: any = {
+    status: uniqueIds.length ? 'ok' : 'skipped',
+    requestedVideos: uniqueIds.length,
+    attempts: [],
+    rows: 0,
+  };
+  const rows: any[] = [];
+
+  for (let index = 0; index < uniqueIds.length; index += VIDEO_DAILY_VIDEO_CHUNK_SIZE) {
+    const chunk = uniqueIds.slice(index, index + VIDEO_DAILY_VIDEO_CHUNK_SIZE);
+    const payload = await fetchOptionalAnalytics(accessToken, {
+      label: `video_daily_chunk_${Math.floor(index / VIDEO_DAILY_VIDEO_CHUNK_SIZE) + 1}`,
+      startDate: windows.fullStartDate,
+      endDate: windows.endDate,
+      dimensions: 'day,video',
+      filters: `video==${chunk.join(',')}`,
+      metrics: VIDEO_METRICS,
+      sort: 'day',
+      maxResults: VIDEO_DAILY_ROW_LIMIT,
+    });
+
+    diagnostic.attempts.push(payload._diagnostic);
+    rows.push(...rowsToObjects(payload).map((row: any) => normalizeVideoDailyAnalyticsRow(row)));
+  }
+
+  const chunkHadErrors = diagnostic.attempts.some((attempt: any) => attempt?.status === 'error');
+  if (!rows.length && chunkHadErrors) {
+    for (const videoId of uniqueIds.slice(0, VIDEO_DAILY_FALLBACK_VIDEO_LIMIT)) {
+      const payload = await fetchOptionalAnalytics(accessToken, {
+        label: `video_daily_fallback_${videoId}`,
+        startDate: windows.fullStartDate,
+        endDate: windows.endDate,
+        dimensions: 'day',
+        filters: `video==${videoId}`,
+        metrics: VIDEO_METRICS,
+        sort: 'day',
+        maxResults: VIDEO_DAILY_ROW_LIMIT,
+      });
+
+      diagnostic.attempts.push(payload._diagnostic);
+      rows.push(...rowsToObjects(payload).map((row: any) => normalizeVideoDailyAnalyticsRow(row, videoId)));
+    }
+  }
+
+  const cleanRows = rows.filter((row: any) => row.date && row.videoId);
+  diagnostic.rows = cleanRows.length;
+  if (uniqueIds.length && !cleanRows.length && diagnostic.attempts.every((attempt: any) => attempt?.status === 'error')) {
+    diagnostic.status = 'error';
+  } else if (uniqueIds.length && !cleanRows.length) {
+    diagnostic.status = 'empty';
+  }
+
+  return { rows: cleanRows, diagnostic };
+}
+
+function buildRetentionCurveRows(payload: any, video: any) {
+  return rowsToObjects(payload)
+    .map((row: any) => {
+      const elapsed = Number(row.elapsedVideoTimeRatio);
+      return {
+        key: `${video.id}:${Number.isFinite(elapsed) ? elapsed.toFixed(4) : row.elapsedVideoTimeRatio}`,
+        label: `${video.title || video.id} · ${Number.isFinite(elapsed) ? Math.round(elapsed * 100) : '?'}%`,
+        videoId: video.id,
+        title: video.title || video.id,
+        elapsedVideoTimeRatio: Number.isFinite(elapsed) ? elapsed : null,
+        audienceWatchRatio: Number.isFinite(Number(row.audienceWatchRatio)) ? toNumber(row.audienceWatchRatio) : null,
+        relativeRetentionPerformance: Number.isFinite(Number(row.relativeRetentionPerformance)) ? toNumber(row.relativeRetentionPerformance) : null,
+        startedWatching: Number.isFinite(Number(row.startedWatching)) ? toNumber(row.startedWatching) : null,
+        stoppedWatching: Number.isFinite(Number(row.stoppedWatching)) ? toNumber(row.stoppedWatching) : null,
+        totalSegmentImpressions: Number.isFinite(Number(row.totalSegmentImpressions)) ? toNumber(row.totalSegmentImpressions) : null,
+      };
+    })
+    .filter((row: any) => row.videoId && row.elapsedVideoTimeRatio !== null);
+}
+
+async function fetchRetentionCurves(accessToken: string, videos: any[], windows: any) {
+  const targets = videos.filter((video: any) => video?.id).slice(0, RETENTION_VIDEO_LIMIT);
+  const diagnostic: any = {
+    status: targets.length ? 'ok' : 'skipped',
+    requestedVideos: targets.length,
+    attempts: [],
+    rows: 0,
+  };
+  const rows: any[] = [];
+
+  for (const video of targets) {
+    const payload = await fetchOptionalAnalytics(accessToken, {
+      label: `retention_${video.id}`,
+      startDate: windows.fullStartDate,
+      endDate: windows.endDate,
+      dimensions: 'elapsedVideoTimeRatio',
+      filters: `video==${video.id}`,
+      metrics: RETENTION_METRICS,
+      includeReach: false,
+      sort: 'elapsedVideoTimeRatio',
+      maxResults: RETENTION_ROW_LIMIT,
+    });
+
+    diagnostic.attempts.push(payload._diagnostic);
+    rows.push(...buildRetentionCurveRows(payload, video));
+  }
+
+  diagnostic.rows = rows.length;
+  if (targets.length && !rows.length && diagnostic.attempts.every((attempt: any) => attempt?.status === 'error')) {
+    diagnostic.status = 'error';
+  } else if (targets.length && !rows.length) {
+    diagnostic.status = 'empty';
+  }
+
+  return { rows, diagnostic };
+}
+
+async function fetchChannelPlaylists(accessToken: string, maxResults = PLAYLIST_DATA_LIMIT) {
+  const playlists: any[] = [];
+  const diagnostic: any = {
+    status: 'ok',
+    rows: 0,
+    pages: 0,
+  };
+  let pageToken = '';
+
+  try {
+    while (playlists.length < maxResults) {
+      const url = new URL(`${YOUTUBE_API_BASE_URL}/playlists`);
+      url.searchParams.set('part', 'snippet,contentDetails,status');
+      url.searchParams.set('mine', 'true');
+      url.searchParams.set('maxResults', String(Math.min(50, maxResults - playlists.length)));
+      if (pageToken) url.searchParams.set('pageToken', pageToken);
+
+      const response = await fetch(url.toString(), {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const payload = await safeJson(response);
+      diagnostic.pages += 1;
+
+      if (!response.ok || payload?.error) {
+        diagnostic.status = 'error';
+        diagnostic.httpStatus = response.status;
+        diagnostic.message = payload?.error?.message || 'Could not load playlists.';
+        diagnostic.reason = payload?.error?.errors?.[0]?.reason || payload?.error?.status || null;
+        break;
+      }
+
+      (payload?.items || []).forEach((playlist: any) => {
+        playlists.push({
+          id: playlist.id,
+          title: playlist?.snippet?.title || playlist.id,
+          description: playlist?.snippet?.description || '',
+          publishedAt: playlist?.snippet?.publishedAt || null,
+          thumbnailUrl: resolveBestThumbnail(playlist?.snippet?.thumbnails),
+          itemCount: toNumber(playlist?.contentDetails?.itemCount),
+          privacyStatus: playlist?.status?.privacyStatus || null,
+          raw: playlist,
+        });
+      });
+
+      pageToken = payload?.nextPageToken || '';
+      if (!pageToken) break;
+    }
+  } catch (error) {
+    diagnostic.status = 'error';
+    diagnostic.message = error?.message || String(error);
+  }
+
+  diagnostic.rows = playlists.length;
+  if (diagnostic.status === 'ok' && !playlists.length) diagnostic.status = 'empty';
+  return { playlists, diagnostic };
+}
+
+function buildPlaylistAnalyticsRows(payload: any, playlists: any[], totalViews: number) {
+  const playlistMap = new Map(playlists.map((playlist: any) => [playlist.id, playlist]));
+
+  return rowsToObjects(payload)
+    .map((row: any) => {
+      const playlistId = row.playlist || '';
+      const playlist = playlistMap.get(playlistId) || {};
+      const playlistViews = toNumber(row.playlistViews);
+      const playlistWatchHours = toNumber(row.playlistEstimatedMinutesWatched) / 60;
+
+      return {
+        key: playlistId,
+        label: playlist.title || playlistId,
+        playlistId,
+        title: playlist.title || playlistId,
+        itemCount: toNumber(playlist.itemCount),
+        privacyStatus: playlist.privacyStatus || null,
+        views: playlistViews,
+        watchHours: playlistWatchHours,
+        playlistViews,
+        playlistWatchHours,
+        playlistStarts: toNumber(row.playlistStarts),
+        playlistSaves: toNumber(row.playlistSaves),
+        viewsPerPlaylistStart: Number.isFinite(Number(row.viewsPerPlaylistStart)) ? toNumber(row.viewsPerPlaylistStart) : null,
+        averageTimeInPlaylist: Number.isFinite(Number(row.averageTimeInPlaylist)) ? toNumber(row.averageTimeInPlaylist) : null,
+        shareOfViews: ratio(playlistViews, totalViews),
+      };
+    })
+    .filter((row: any) => row.playlistId && (row.playlistViews > 0 || row.playlistStarts > 0 || row.playlistSaves > 0))
+    .sort((left: any, right: any) => right.playlistViews - left.playlistViews)
+    .slice(0, PLAYLIST_ANALYTICS_LIMIT);
+}
+
+async function fetchPlaylistAnalytics(accessToken: string, playlists: any[], windows: any, totalViews: number) {
+  const payload = await fetchOptionalAnalytics(accessToken, {
+    label: 'top_playlists',
+    startDate: windows.fullStartDate,
+    endDate: windows.endDate,
+    dimensions: 'playlist',
+    metrics: PLAYLIST_ANALYTICS_METRICS,
+    includeReach: false,
+    sort: '-playlistViews',
+    maxResults: PLAYLIST_ANALYTICS_LIMIT,
+  });
+
+  return {
+    rows: buildPlaylistAnalyticsRows(payload, playlists, totalViews),
+    diagnostic: payload._diagnostic,
+  };
+}
+
 async function buildFullAnalysis(accessToken: string, summary: any, windows: any, options: { includeResearchLab?: boolean } = {}) {
   const [
     fullCurrentPayload,
     fullPreviousPayload,
     topVideosPayload,
-    videoDayPayload,
     trafficPayload,
     searchTermsPayload,
     externalTrafficPayload,
@@ -1326,14 +1773,7 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
       maxResults: FULL_ANALYSIS_VIDEO_LIMIT,
     }),
     fetchOptionalAnalytics(accessToken, {
-      startDate: windows.fullStartDate,
-      endDate: windows.endDate,
-      dimensions: 'day,video',
-      metrics: VIDEO_METRICS,
-      sort: 'day',
-      maxResults: VIDEO_DAILY_ROW_LIMIT,
-    }),
-    fetchOptionalAnalytics(accessToken, {
+      label: 'traffic_sources',
       startDate: windows.fullStartDate,
       endDate: windows.endDate,
       dimensions: 'insightTrafficSourceType',
@@ -1343,6 +1783,7 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
       maxResults: 8,
     }),
     fetchOptionalAnalytics(accessToken, {
+      label: 'search_terms',
       startDate: windows.fullStartDate,
       endDate: windows.endDate,
       dimensions: 'insightTrafficSourceDetail',
@@ -1353,6 +1794,7 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
       maxResults: 25,
     }),
     fetchOptionalAnalytics(accessToken, {
+      label: 'external_sources',
       startDate: windows.fullStartDate,
       endDate: windows.endDate,
       dimensions: 'insightTrafficSourceDetail',
@@ -1363,6 +1805,7 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
       maxResults: 25,
     }),
     fetchOptionalAnalytics(accessToken, {
+      label: 'devices',
       startDate: windows.fullStartDate,
       endDate: windows.endDate,
       dimensions: 'deviceType',
@@ -1372,6 +1815,7 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
       maxResults: 8,
     }),
     fetchOptionalAnalytics(accessToken, {
+      label: 'subscribed_status',
       startDate: windows.fullStartDate,
       endDate: windows.endDate,
       dimensions: 'subscribedStatus',
@@ -1380,6 +1824,7 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
       sort: '-views',
     }),
     fetchOptionalAnalytics(accessToken, {
+      label: 'content_types',
       startDate: windows.fullStartDate,
       endDate: windows.endDate,
       dimensions: 'creatorContentType',
@@ -1388,6 +1833,7 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
       sort: '-views',
     }),
     fetchOptionalAnalytics(accessToken, {
+      label: 'countries',
       startDate: windows.fullStartDate,
       endDate: windows.endDate,
       dimensions: 'country',
@@ -1397,6 +1843,7 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
       maxResults: 8,
     }),
     fetchOptionalAnalytics(accessToken, {
+      label: 'youtube_products',
       startDate: windows.fullStartDate,
       endDate: windows.endDate,
       dimensions: 'youtubeProduct',
@@ -1405,6 +1852,7 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
       sort: '-views',
     }),
     fetchOptionalAnalytics(accessToken, {
+      label: 'live_or_on_demand',
       startDate: windows.fullStartDate,
       endDate: windows.endDate,
       dimensions: 'liveOrOnDemand',
@@ -1413,6 +1861,7 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
       sort: '-views',
     }),
     fetchOptionalAnalytics(accessToken, {
+      label: 'demographics',
       startDate: windows.fullStartDate,
       endDate: windows.endDate,
       dimensions: 'ageGroup,gender',
@@ -1426,27 +1875,6 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
   const fullCurrent = aggregateRows(rowsToObjects(fullCurrentPayload));
   const fullPrevious = aggregateRows(rowsToObjects(fullPreviousPayload));
   const videoRows = rowsToObjects(topVideosPayload);
-  const videoDailyRows = rowsToObjects(videoDayPayload).map((row: any) => ({
-    date: row.day,
-    videoId: row.video,
-    views: toNumber(row.views),
-    engagedViews: toNumber(row.engagedViews),
-    redViews: toNumber(row.redViews),
-    estimatedMinutesWatched: toNumber(row.estimatedMinutesWatched),
-    estimatedRedMinutesWatched: toNumber(row.estimatedRedMinutesWatched),
-    averageViewDuration: toNumber(row.averageViewDuration),
-    averageViewPercentage: toNumber(row.averageViewPercentage),
-    likes: toNumber(row.likes),
-    dislikes: toNumber(row.dislikes),
-    comments: toNumber(row.comments),
-    shares: toNumber(row.shares),
-    videosAddedToPlaylists: toNumber(row.videosAddedToPlaylists),
-    videosRemovedFromPlaylists: toNumber(row.videosRemovedFromPlaylists),
-    subscribersGained: toNumber(row.subscribersGained),
-    subscribersLost: toNumber(row.subscribersLost),
-    videoThumbnailImpressions: toNumber(row.videoThumbnailImpressions),
-    thumbnailCtr: row.videoThumbnailImpressions ? toNumber(row.videoThumbnailImpressionsClickRate) : null,
-  })).filter((row: any) => row.date && row.videoId);
 
   const fullDailyRows = rowsToObjects(fullCurrentPayload).concat(rowsToObjects(fullPreviousPayload)).map((row: any) => ({
     date: row.day,
@@ -1476,10 +1904,13 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
   const topVideoIds = videoRows.map((row: any) => String(row.video || '')).filter(Boolean);
   const recentVideoIds = await fetchRecentUploadVideoIds(accessToken, summary?.channel?.uploadsPlaylistId, RECENT_UPLOAD_VIDEO_LIMIT);
   const videoIds = Array.from(new Set(topVideoIds.concat(recentVideoIds)));
-  const [videoDetails, comments] = await Promise.all([
+  const [videoDailyResult, videoDetails, playlistDataResult] = await Promise.all([
+    fetchVideoDailyAnalytics(accessToken, topVideoIds, windows),
     fetchVideoDetails(accessToken, videoIds),
-    fetchRecentComments(accessToken, topVideoIds),
+    fetchChannelPlaylists(accessToken, PLAYLIST_DATA_LIMIT),
   ]);
+  const videoDailyRows = videoDailyResult.rows;
+  const playlists = playlistDataResult.playlists;
 
   const videoMetadata = videoIds
     .map((videoId) => videoDetails[videoId])
@@ -1531,6 +1962,16 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
 
   await enrichThumbnailVisualFeatures(videoMetadata.concat(topVideos));
 
+  const commentVideoIds = selectCommentVideoIds(videoIds, videoDetails, topVideoIds);
+  const [commentsResult, retentionResult, playlistAnalyticsResult] = await Promise.all([
+    fetchRecentComments(accessToken, commentVideoIds),
+    fetchRetentionCurves(accessToken, topVideos, windows),
+    fetchPlaylistAnalytics(accessToken, playlists, windows, fullCurrent.views),
+  ]);
+  const comments = commentsResult.comments;
+  const retentionCurves = retentionResult.rows;
+  const topPlaylists = playlistAnalyticsResult.rows;
+
   const breakdowns = {
     trafficSources: buildSegmentRows(trafficPayload, 'insightTrafficSourceType', fullCurrent.views, 8),
     searchTerms: buildSegmentRows(searchTermsPayload, 'insightTrafficSourceDetail', fullCurrent.views, 10),
@@ -1542,6 +1983,29 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
     youtubeProducts: buildSegmentRows(productPayload, 'youtubeProduct', fullCurrent.views, 4),
     liveOrOnDemand: buildSegmentRows(livePayload, 'liveOrOnDemand', fullCurrent.views, 4),
     demographics: buildDemographicRows(demographicPayload),
+    retentionCurves,
+    topPlaylists,
+  };
+  const collectorDiagnostics = {
+    optionalReports: {
+      trafficSources: trafficPayload._diagnostic,
+      searchTerms: searchTermsPayload._diagnostic,
+      externalSources: externalTrafficPayload._diagnostic,
+      devices: devicePayload._diagnostic,
+      subscribedStatus: subscribedPayload._diagnostic,
+      contentTypes: contentTypePayload._diagnostic,
+      countries: countryPayload._diagnostic,
+      youtubeProducts: productPayload._diagnostic,
+      liveOrOnDemand: livePayload._diagnostic,
+      demographics: demographicPayload._diagnostic,
+    },
+    videoDailyRows: videoDailyResult.diagnostic,
+    comments: commentsResult.diagnostic,
+    retentionCurves: retentionResult.diagnostic,
+    playlists: {
+      data: playlistDataResult.diagnostic,
+      analytics: playlistAnalyticsResult.diagnostic,
+    },
   };
 
   const text = buildInsightText(summary, topVideos, breakdowns);
@@ -1556,6 +2020,8 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
         videoDailyRows,
         videoMetadata,
         comments,
+        playlists,
+        collectorDiagnostics,
       })
     : null;
 
@@ -1577,6 +2043,8 @@ async function buildFullAnalysis(accessToken: string, summary: any, windows: any
     videoDailyRows,
     videoMetadata,
     comments,
+    playlists,
+    collectorDiagnostics,
     ...(researchLab ? { researchLab } : {}),
     ...text,
   };
@@ -1588,12 +2056,15 @@ function stripFullAnalysisForResponse(fullAnalysis: any, options: { includeResea
     videoDailyRows,
     videoMetadata,
     comments,
+    playlists,
+    collectorDiagnostics,
     researchLab,
     ...publicFullAnalysis
   } = fullAnalysis || {};
 
   if (options.includeResearchLab && researchLab) {
     publicFullAnalysis.researchLab = researchLab;
+    publicFullAnalysis.collectorDiagnostics = collectorDiagnostics;
   }
 
   publicFullAnalysis.topVideos = (publicFullAnalysis.topVideos || []).map((video: any) => ({
@@ -1840,6 +2311,26 @@ function latestRowsBy(rows: any[], keyField: string, dateField: string) {
   return Array.from(map.values());
 }
 
+function latestBreakdownRows(rows: any[]) {
+  const map = new Map();
+  rows.forEach((row) => {
+    const key = [
+      row?.channel_id || '',
+      row?.video_id || '',
+      row?.dimension_set || '',
+      row?.dimension_key || '',
+    ].join(':');
+    if (!key.replace(/:/g, '')) return;
+    const current = map.get(key);
+    const rowDate = String(row?.period_end || row?.period_start || '');
+    const currentDate = String(current?.period_end || current?.period_start || '');
+    if (!current || rowDate >= currentDate) {
+      map.set(key, row);
+    }
+  });
+  return Array.from(map.values());
+}
+
 function average(values: any[]) {
   const numbers = values.map(toNumber).filter((value) => Number.isFinite(value));
   if (!numbers.length) return null;
@@ -1970,6 +2461,63 @@ function topBreakdown(breakdowns: any[], dimensionSet: string, metric = 'views')
 
   if (!rows.length) return null;
   return rows.sort((left, right) => right.value - left.value)[0];
+}
+
+function summarizeRetentionCurveBreakdowns(breakdowns: any[]) {
+  const rows = breakdowns
+    .filter((row) => row.dimension_set === 'retentionCurves')
+    .map((row) => ({
+      videoId: row.dimension_values?.videoId || row.video_id || '',
+      title: row.dimension_values?.title || row.dimension_values?.label || row.dimension_key,
+      elapsed: Number(row.dimension_values?.elapsedVideoTimeRatio),
+      audienceWatchRatio: Number(row.metrics?.audienceWatchRatio),
+      stoppedWatching: Number(row.metrics?.stoppedWatching),
+    }))
+    .filter((row) => row.videoId && Number.isFinite(row.elapsed) && Number.isFinite(row.audienceWatchRatio));
+
+  if (!rows.length) return null;
+
+  const byVideo = new Map();
+  rows.forEach((row) => {
+    byVideo.set(row.videoId, (byVideo.get(row.videoId) || []).concat(row));
+  });
+
+  const summaries = Array.from(byVideo.entries()).map(([videoId, videoRows]) => {
+    const sorted = videoRows.slice().sort((left: any, right: any) => left.elapsed - right.elapsed);
+    const earlyRows = sorted.filter((row: any) => row.elapsed <= 0.15);
+    const midRows = sorted.filter((row: any) => row.elapsed >= 0.35 && row.elapsed <= 0.65);
+    const lateRows = sorted.filter((row: any) => row.elapsed >= 0.75);
+    const early = average(earlyRows.map((row: any) => row.audienceWatchRatio));
+    const mid = average(midRows.map((row: any) => row.audienceWatchRatio));
+    const late = average(lateRows.map((row: any) => row.audienceWatchRatio));
+    const biggestStop = sorted.slice().sort((left: any, right: any) => toNumber(right.stoppedWatching) - toNumber(left.stoppedWatching))[0];
+
+    return {
+      videoId,
+      title: sorted[0]?.title || videoId,
+      rows: sorted.length,
+      early,
+      mid,
+      late,
+      earlyToMidDrop: early !== null && mid !== null ? early - mid : null,
+      biggestStopAt: biggestStop ? biggestStop.elapsed : null,
+      biggestStopValue: biggestStop ? biggestStop.stoppedWatching : null,
+    };
+  });
+
+  const weakestHook = summaries
+    .filter((row) => Number.isFinite(Number(row.earlyToMidDrop)))
+    .sort((left, right) => Number(right.earlyToMidDrop) - Number(left.earlyToMidDrop))[0];
+  const strongestRetention = summaries
+    .filter((row) => Number.isFinite(Number(row.late)))
+    .sort((left, right) => Number(right.late) - Number(left.late))[0];
+
+  return {
+    rows: rows.length,
+    videos: summaries.length,
+    weakestHook,
+    strongestRetention,
+  };
 }
 
 function buildVideoResearchRecords(videoSnapshots: any[], videoDailyRows: any[]) {
@@ -2133,6 +2681,9 @@ function buildAdminResearchSections(data: any) {
   const topCountry = topBreakdown(breakdowns, 'countries');
   const topProduct = topBreakdown(breakdowns, 'youtubeProducts');
   const topSubscribed = topBreakdown(breakdowns, 'subscribedStatus');
+  const topPlaylist = topBreakdown(breakdowns, 'topPlaylists', 'playlistViews');
+  const topPlaylistWatch = topBreakdown(breakdowns, 'topPlaylists', 'playlistWatchHours');
+  const retentionSummary = summarizeRetentionCurveBreakdowns(breakdowns);
   const bestPublishDay = groupByAverage(records, (record: any) => record.published_at ? new Date(record.published_at).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' }) : '', (record: any) => record.views)[0];
   const bestPublishHourCtr = groupByAverage(videosWithCtr, (record: any) => record.published_at ? `${new Date(record.published_at).getUTCHours()}:00 UTC` : '', (record: any) => record.thumbnailCtr)[0];
   const bestPublishHourWatch = groupByAverage(records, (record: any) => record.published_at ? `${new Date(record.published_at).getUTCHours()}:00 UTC` : '', (record: any) => record.watchHours)[0];
@@ -2352,7 +2903,7 @@ function buildAdminResearchSections(data: any) {
         item('Cross-channel comparison of similar videos', strongestTopic ? `Topic token “${strongestTopic.key}” can be used for early same-topic grouping.` : 'Need more shared topic clusters across channels.', strongestTopic ? 'Proxy' : 'Building cohort'),
         item('Same topic performance across different channels', 'Possible once multiple opted-in channels have overlapping title/tag/description clusters.', 'Building cohort'),
         item('Video structure inferred from duration + retention proxies', describeCorrelation(pearson(videosWithRetention.map((record: any) => [record.durationSeconds, record.averageViewPercentage])), 'duration', 'retention'), 'Proxy'),
-        collector('Hook effectiveness / unusual retention drop-offs', 'Needs retention-curve reports, not just average view percentage.'),
+        item('Hook effectiveness / unusual retention drop-offs', retentionSummary?.weakestHook ? `Largest early-to-mid retention drop is “${retentionSummary.weakestHook.title}” (${formatPercentMetric(retentionSummary.weakestHook.earlyToMidDrop)} drop across ${retentionSummary.weakestHook.rows} curve points).` : 'Need retention-curve rows from full analysis.', retentionSummary?.weakestHook ? 'Live' : 'Needs data'),
         item('Content backlog performance and videos resurfacing', 'Daily rows make this possible over time; needs longer repeated snapshots.', 'Building history'),
         item('Relevance cycles and seasonality trends', 'Date-based daily rows are stored; seasonality needs months of collection.', 'Building history'),
         item('Growth efficiency per upload / average impact per video', (() => {
@@ -2377,7 +2928,9 @@ function buildAdminResearchSections(data: any) {
         item('Like-to-view ratio benchmarks', avgEngagementRate ? `Average engagement rate across stored videos is ${formatRatioPercent(avgEngagementRate)}; like-rate relationship to views is ${describeCorrelation(pearson(records.map((record: any) => [record.likeRate, record.views])), 'like rate', 'views')}` : 'Need engagement rows.', avgEngagementRate ? 'Live' : 'Needs data'),
         item('Share behavior vs traffic source expansion', describeCorrelation(pearson(records.map((record: any) => [record.shareRate, record.views])), 'share rate', 'views'), 'Live'),
         item('Playlist add rate vs video performance', describeCorrelation(pearson(records.map((record: any) => [record.playlistAddRate, record.watchHours])), 'playlist add rate', 'watch time'), 'Live'),
-        building('Playlist structure/order/session continuation', 'We store playlist add/remove metrics, but not playlist layout/order right now.'),
+        item('Playlist performance by playlist', topPlaylist ? `Top playlist by playlist-context views is “${topPlaylist.label}” (${formatNumber(topPlaylist.value)} playlist views).` : 'Need playlist analytics rows from full analysis.', topPlaylist ? 'Live' : 'Needs data'),
+        item('Playlist watch-time contribution', topPlaylistWatch ? `Top playlist by watch time is “${topPlaylistWatch.label}” (${formatNumber(topPlaylistWatch.value)} hours).` : 'Need playlist watch-time rows.', topPlaylistWatch ? 'Live' : 'Needs data'),
+        item('Playlist structure/order/session continuation', topPlaylist ? 'Playlist analytics are now stored as cohort breakdown rows. Exact playlist ordering still needs a playlist-item snapshot table if we want order-level analysis later.' : 'Need playlist analytics rows.', topPlaylist ? 'Partial' : 'Needs data'),
       ],
     },
   ];
@@ -2403,7 +2956,7 @@ async function buildAdminResearchDashboard(supabase: any, options: { minSubscrib
     readAdminTable(supabase, 'youtube_analytics_breakdowns', 'user_id,channel_id,video_id,period_start,period_end,dimension_set,dimension_key,dimension_values,metrics', 'period_end', truncatedTables),
     readAdminTable(supabase, 'youtube_comment_snapshots', 'user_id,channel_id,video_id,comment_id,parent_comment_id,snapshot_date,like_count,published_at,text_original,text_display', 'snapshot_date', truncatedTables),
     readAdminTable(supabase, 'youtube_connections', 'user_id,channel_id,channel_title,disconnected_at,updated_at', 'updated_at', truncatedTables),
-    readAdminTable(supabase, 'youtube_analytics_sync_runs', 'user_id,channel_id,sync_type,status,period_start,period_end,completed_at,created_at', 'created_at', truncatedTables),
+    readAdminTable(supabase, 'youtube_analytics_sync_runs', 'user_id,channel_id,sync_type,status,period_start,period_end,completed_at,started_at', 'started_at', truncatedTables),
   ]);
 
   const channelFilter = resolveAdminChannelFilter(allChannelSnapshots, minSubscribers);
@@ -2411,7 +2964,7 @@ async function buildAdminResearchDashboard(supabase: any, options: { minSubscrib
   const videoSnapshots = filterRowsByChannels(allVideoSnapshots, channelFilter.allowedChannelIds);
   const channelDailyRows = filterRowsByChannels(allChannelDailyRows, channelFilter.allowedChannelIds);
   const videoDailyRows = filterRowsByChannels(allVideoDailyRows, channelFilter.allowedChannelIds);
-  const breakdowns = filterRowsByChannels(allBreakdowns, channelFilter.allowedChannelIds);
+  const breakdowns = latestBreakdownRows(filterRowsByChannels(allBreakdowns, channelFilter.allowedChannelIds));
   const comments = filterRowsByChannels(allComments, channelFilter.allowedChannelIds);
   const connections = filterRowsByChannels(allConnections, channelFilter.allowedChannelIds);
   const syncRuns = filterRowsByChannels(allSyncRuns, channelFilter.allowedChannelIds);
@@ -2424,7 +2977,7 @@ async function buildAdminResearchDashboard(supabase: any, options: { minSubscrib
     ...videoSnapshots.map((row: any) => row.user_id),
     ...connections.map((row: any) => row.user_id),
   ].filter(Boolean));
-  const latestSync = syncRuns[0]?.completed_at || syncRuns[0]?.created_at || null;
+  const latestSync = syncRuns[0]?.completed_at || syncRuns[0]?.started_at || null;
   const sections = buildAdminResearchSections({ records, channelDailyRows, breakdowns, comments, channelSnapshots });
   const items = sections.flatMap((section: any) => section.items);
   const liveCount = items.filter((item: any) => ['Live', 'Proxy', 'Early'].includes(item.status)).length;
