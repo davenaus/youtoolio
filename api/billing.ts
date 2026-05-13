@@ -139,6 +139,20 @@ async function readSubscription(supabase: any, userId: string) {
   return data || null;
 }
 
+async function readSyncedSubscription(supabase: any, userId: string) {
+  const subscription = await readSubscription(supabase, userId);
+  if (!subscription?.stripe_subscription_id) return subscription;
+
+  try {
+    const stripeSubscription = await retrieveStripeSubscription(subscription.stripe_subscription_id);
+    await upsertStripeSubscription(supabase, stripeSubscription, userId);
+    return await readSubscription(supabase, userId);
+  } catch (error) {
+    console.warn('Could not refresh Stripe subscription status:', error?.message || error);
+    return subscription;
+  }
+}
+
 async function readYouTubeConnection(supabase: any, userId: string) {
   const { data } = await supabase
     .from('youtube_connections')
@@ -183,12 +197,18 @@ function isActiveSubscription(row: any) {
   if (!row) return false;
   const status = String(row.status || row.subscription_status || row.stripe_status || '').toLowerCase();
   const periodEnd = row.current_period_end ? new Date(row.current_period_end) : null;
-  const accessWindowOpen = !periodEnd || periodEnd.getTime() > Date.now();
+  const hasFuturePeriodEnd = Boolean(periodEnd && periodEnd.getTime() > Date.now());
+  const accessWindowOpen = !periodEnd || hasFuturePeriodEnd;
+  const cancelingAtPeriodEnd = row.cancel_at_period_end === true || String(row.cancel_at_period_end || '').toLowerCase() === 'true';
+
+  if (cancelingAtPeriodEnd && hasFuturePeriodEnd && (ACTIVE_STATUSES.has(status) || status === 'canceled' || status === 'cancelled')) {
+    return true;
+  }
 
   if (ACTIVE_STATUSES.has(status)) return accessWindowOpen;
   if (ENDED_STATUSES.has(status)) return false;
 
-  return Boolean(row.is_premium || (periodEnd && periodEnd.getTime() > Date.now() && String(row.plan || '').toLowerCase() !== 'free'));
+  return Boolean(row.is_premium || (hasFuturePeriodEnd && String(row.plan || '').toLowerCase() !== 'free'));
 }
 
 function publicBillingStatus(row: any) {
@@ -202,7 +222,7 @@ function publicBillingStatus(row: any) {
     interval: row?.price_interval || null,
     priceId: row?.stripe_price_id || null,
     currentPeriodEnd: row?.current_period_end || null,
-    cancelAtPeriodEnd: Boolean(row?.cancel_at_period_end),
+    cancelAtPeriodEnd: row?.cancel_at_period_end === true || String(row?.cancel_at_period_end || '').toLowerCase() === 'true',
     hasStripeCustomer: Boolean(row?.stripe_customer_id),
   };
 }
@@ -433,7 +453,7 @@ async function handler(req: any, res: any) {
     const user = await resolveUser(supabase, req);
 
     if (req.method === 'GET') {
-      const subscription = await readSubscription(supabase, user.id);
+      const subscription = await readSyncedSubscription(supabase, user.id);
       return res.status(200).json({
         billing: publicBillingStatus(subscription),
         prices: {

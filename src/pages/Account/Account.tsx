@@ -324,6 +324,24 @@ const BillingLead = styled.p`
   line-height: 1.55;
 `;
 
+const BillingNotice = styled.div<{ $canceling?: boolean }>`
+  display: grid;
+  gap: 0.35rem;
+  margin: 0 0 1.15rem;
+  padding: 0.95rem 1rem;
+  border-radius: 12px;
+  border: 1px solid ${({ $canceling }) => $canceling ? 'rgba(248, 113, 113, 0.38)' : 'rgba(248, 113, 113, 0.22)'};
+  background: ${({ $canceling }) => $canceling ? 'rgba(127, 29, 29, 0.22)' : 'rgba(248, 113, 113, 0.1)'};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.8rem;
+  line-height: 1.45;
+
+  strong {
+    color: ${({ $canceling }) => $canceling ? '#fecaca' : '#fff'};
+    font-size: 0.86rem;
+  }
+`;
+
 const BillingRows = styled.div`
   display: grid;
   gap: 0;
@@ -570,10 +588,12 @@ export const Account: React.FC = () => {
 
   const isPremium = Boolean(billing?.isPremium);
   const billingLabel = billingLoading ? 'Checking' : isPremium ? 'Premium' : 'Free';
-  const billingRenewalCopy = billing?.currentPeriodEnd
-    ? billing.cancelAtPeriodEnd
-      ? `Your plan will cancel on ${formatBillingDate(billing.currentPeriodEnd)}`
-      : `Renews on ${formatBillingDate(billing.currentPeriodEnd)}`
+  const billingPeriodEndLabel = formatBillingDate(billing?.currentPeriodEnd || null);
+  const billingIsCanceling = Boolean(isPremium && billing?.cancelAtPeriodEnd && billingPeriodEndLabel);
+  const billingRenewalCopy = billingPeriodEndLabel
+    ? billingIsCanceling
+      ? `Your plan will cancel on ${billingPeriodEndLabel}`
+      : `Renews on ${billingPeriodEndLabel}`
     : '';
 
   return (
@@ -684,6 +704,17 @@ export const Account: React.FC = () => {
             Premium is for using YouTool tools directly inside YouTube. Keep the website tools free, and upgrade only when
             you want in-YouTube analysis, comment exports, and premium Studio workflow features.
           </BillingLead>
+
+          {isPremium && billingRenewalCopy && (
+            <BillingNotice $canceling={billingIsCanceling}>
+              <strong>{billingRenewalCopy}</strong>
+              <span>
+                {billingIsCanceling
+                  ? 'You keep Premium access until that date, including the Chrome extension features.'
+                  : 'Your Premium access and Chrome extension features stay active.'}
+              </span>
+            </BillingNotice>
+          )}
 
           <BillingRows>
             <BillingRow>
