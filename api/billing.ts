@@ -329,6 +329,23 @@ function timestampToIso(value: any) {
   return timestamp ? new Date(timestamp * 1000).toISOString() : null;
 }
 
+function getSubscriptionPeriodTimestamp(subscription: any, key: 'current_period_start' | 'current_period_end') {
+  const directTimestamp = Number(subscription?.[key] || 0);
+  if (directTimestamp) return directTimestamp;
+
+  const primaryItemTimestamp = Number(subscription?.items?.data?.[0]?.[key] || 0);
+  if (primaryItemTimestamp) return primaryItemTimestamp;
+
+  const itemTimestamps = (subscription?.items?.data || [])
+    .map((item: any) => Number(item?.[key] || 0))
+    .filter(Boolean);
+
+  if (!itemTimestamps.length) return null;
+  return key === 'current_period_end'
+    ? Math.max(...itemTimestamps)
+    : Math.min(...itemTimestamps);
+}
+
 function subscriptionFieldsFromStripe(subscription: any, userId: string | null) {
   const price = subscription?.items?.data?.[0]?.price || {};
   const interval = price?.recurring?.interval === 'year'
@@ -346,8 +363,8 @@ function subscriptionFieldsFromStripe(subscription: any, userId: string | null) 
     status: subscription.status || null,
     plan: ACTIVE_STATUSES.has(String(subscription.status || '').toLowerCase()) ? 'premium' : 'free',
     price_interval: interval,
-    current_period_start: timestampToIso(subscription.current_period_start),
-    current_period_end: timestampToIso(subscription.current_period_end),
+    current_period_start: timestampToIso(getSubscriptionPeriodTimestamp(subscription, 'current_period_start')),
+    current_period_end: timestampToIso(getSubscriptionPeriodTimestamp(subscription, 'current_period_end') || subscription.cancel_at),
     cancel_at_period_end: Boolean(subscription.cancel_at_period_end),
     canceled_at: timestampToIso(subscription.canceled_at),
     trial_end: timestampToIso(subscription.trial_end),
