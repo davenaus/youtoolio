@@ -29,7 +29,7 @@ const Page = styled.div`
 `;
 
 const Inner = styled.div`
-  max-width: 760px;
+  max-width: 1120px;
   margin: 0 auto;
   position: relative;
   z-index: 1;
@@ -63,15 +63,172 @@ const CardTitle = styled.h2`
   margin: 0;
 `;
 
-// ─── Profile ─────────────────────────────────────────────────────────────────
-
-const ProfileRow = styled.div`
+const TopBar = styled.div`
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  justify-content: space-between;
+  gap: 1rem;
 
-  @media (max-width: 480px) { flex-direction: column; text-align: center; }
+  @media (max-width: 560px) {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 `;
+
+const HeroCard = styled(Card)`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 1.5rem;
+  align-items: stretch;
+  padding: 2rem;
+  background:
+    radial-gradient(circle at top right, rgba(239, 68, 68, 0.16), transparent 44%),
+    ${({ theme }) => theme.colors.dark3};
+
+  @media (max-width: 820px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const HeroContent = styled.div`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.5rem;
+`;
+
+const HeroTitle = styled.h1`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: clamp(1.8rem, 4vw, 3.1rem);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  margin: 0.5rem 0 0;
+`;
+
+const HeroSub = styled.p`
+  max-width: 620px;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.95rem;
+  line-height: 1.65;
+  margin: 0.8rem 0 0;
+`;
+
+const HeroActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+`;
+
+const ProfilePanel = styled.div`
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.025);
+  padding: 1.25rem;
+  display: grid;
+  gap: 1rem;
+  align-content: space-between;
+`;
+
+const ProfileMini = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-width: 0;
+`;
+
+const DashboardGrid = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 1.5rem;
+
+  @media (max-width: 880px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const BenefitGrid = styled.div`
+  display: grid;
+  gap: 0.75rem;
+`;
+
+const BenefitTile = styled.div<{ $premium?: boolean }>`
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 0.8rem;
+  align-items: start;
+  padding: 0.9rem;
+  border: 1px solid ${({ $premium }) => $premium ? 'rgba(248, 113, 113, 0.28)' : 'rgba(255,255,255,0.08)'};
+  border-radius: 12px;
+  background: ${({ $premium }) => $premium ? 'rgba(248, 113, 113, 0.08)' : 'rgba(255,255,255,0.018)'};
+`;
+
+const BenefitIcon = styled.div<{ $active?: boolean }>`
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: ${({ $active }) => $active ? 'rgba(248, 113, 113, 0.16)' : 'rgba(255,255,255,0.05)'};
+  color: ${({ $active, theme }) => $active ? '#fca5a5' : theme.colors.text.muted};
+`;
+
+const BenefitTitle = styled.div`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 0.88rem;
+  font-weight: 700;
+`;
+
+const BenefitSub = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.74rem;
+  line-height: 1.45;
+  margin-top: 0.18rem;
+`;
+
+const AccountDetailsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+
+  @media (max-width: 740px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const DetailBox = styled.div`
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.018);
+  padding: 0.95rem;
+  min-width: 0;
+`;
+
+const DetailLabel = styled.div`
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+`;
+
+const DetailValue = styled.div`
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin-top: 0.35rem;
+  overflow-wrap: anywhere;
+`;
+
+const InlineActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+`;
+
+// ─── Profile ─────────────────────────────────────────────────────────────────
 
 const Avatar = styled.img`
   width: 64px;
@@ -216,59 +373,6 @@ const StepNum = styled.span`
   margin-top: 1px;
 `;
 
-// ─── Promo grid ───────────────────────────────────────────────────────────────
-
-const PromoGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-
-  @media (max-width: 600px) { grid-template-columns: 1fr; }
-`;
-
-const PromoTile = styled(Link)`
-  background: ${({ theme }) => theme.colors.dark3};
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
-  border-radius: 14px;
-  padding: 1.25rem;
-  text-decoration: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  transition: all 0.2s ease;
-
-  &:hover {
-    border-color: ${({ theme }) => theme.colors.red3};
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-  }
-`;
-
-const PromoTileIcon = styled.div`
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 0.25rem;
-
-  i { font-size: 1.1rem; color: white; }
-`;
-
-const PromoTileTitle = styled.div`
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.text.primary};
-`;
-
-const PromoTileSub = styled.div`
-  font-size: 0.75rem;
-  color: ${({ theme }) => theme.colors.text.muted};
-  line-height: 1.4;
-`;
-
 const SignOutLink = styled.button`
   background: none;
   border: none;
@@ -293,6 +397,26 @@ const BackLink = styled(Link)`
   &:hover { color: ${({ theme }) => theme.colors.text.primary}; }
 `;
 
+const AllToolsLink = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 34px;
+  border-radius: 999px;
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  background: rgba(255, 255, 255, 0.035);
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0 0.85rem;
+  text-decoration: none;
+
+  &:hover {
+    border-color: rgba(248, 113, 113, 0.45);
+    color: ${({ theme }) => theme.colors.text.primary};
+  }
+`;
+
 const PlanBadge = styled.span<{ $premium?: boolean }>`
   display: inline-flex;
   align-items: center;
@@ -315,6 +439,19 @@ const PlanBadge = styled.span<{ $premium?: boolean }>`
     background: ${({ $premium }) => $premium ? '#f87171' : 'rgba(255,255,255,0.28)'};
     box-shadow: ${({ $premium }) => $premium ? '0 0 10px rgba(248, 113, 113, 0.7)' : 'none'};
   }
+`;
+
+const StatusPill = styled.span`
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 0 0.75rem;
 `;
 
 const BillingLead = styled.p`
@@ -595,114 +732,200 @@ export const Account: React.FC = () => {
       ? `Your plan will cancel on ${billingPeriodEndLabel}`
       : `Renews on ${billingPeriodEndLabel}`
     : '';
+  const extensionStatusCopy = extensionConnected === null
+    ? 'Checking extension session...'
+    : extensionConnected
+      ? `Connected${lastUsed ? ` - Last used ${formatLastUsed(lastUsed)}` : ''}`
+      : 'Open the Chrome extension and sign in to link this account.';
+  const youtubeStatusCopy = ytChannel
+    ? `Connected to ${ytChannel.title}`
+    : 'Connect your YouTube channel to unlock stats, full analysis, and extension tools.';
 
   return (
     <Page>
       <Inner>
 
-        <BackLink to="/"><i className="bx bx-arrow-back"></i> Back to home</BackLink>
+        <TopBar>
+          <BackLink to="/"><i className="bx bx-arrow-back"></i> Back to home</BackLink>
+          <AllToolsLink to="/tools"><i className="bx bx-grid-alt"></i> All tools</AllToolsLink>
+        </TopBar>
 
-        {/* Profile */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Account</CardTitle>
-            <SignOutLink onClick={handleSignOut}>Sign out</SignOutLink>
-          </CardHeader>
-          <ProfileRow>
-            {avatar
-              ? <Avatar src={avatar} alt={name} />
-              : <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
-            }
-            <ProfileInfo>
-              <ProfileName>{name}</ProfileName>
-              <ProfileEmail>{user.email}</ProfileEmail>
-            </ProfileInfo>
-          </ProfileRow>
-        </Card>
-
-        {/* Extension */}
-        <Card>
-          <CardHeader>
-            <CardTitle>YouTool Extension</CardTitle>
-          </CardHeader>
-
-          <StatusRow>
-            <StatusLeft>
-              <StatusIcon><i className="bx bx-extension"></i></StatusIcon>
-              <div>
-                <StatusLabel>Extension status</StatusLabel>
-                <StatusSub>
-                  {extensionConnected === null
-                    ? 'Checking…'
-                    : extensionConnected
-                      ? `Connected${lastUsed ? ` · Last used ${formatLastUsed(lastUsed)}` : ''}`
-                      : 'Sign in from the extension popup to connect'}
-                </StatusSub>
-              </div>
-            </StatusLeft>
-            <Dot $connected={extensionConnected === true} />
-          </StatusRow>
-
-          <StatusRow>
-            <StatusLeft>
-              <StatusIcon><i className="bx bxl-youtube"></i></StatusIcon>
-              <div>
-                <StatusLabel>YouTube channel</StatusLabel>
-                <StatusSub>
-                  {ytChannel
-                    ? <>Connected · {ytChannel.title} · <SignOutLink onClick={handleDisconnectYouTube} disabled={ytDisconnecting}>{ytDisconnecting ? 'Disconnecting…' : 'Disconnect'}</SignOutLink></>
-                    : 'Not connected — link your channel to unlock analytics'}
-                </StatusSub>
-              </div>
-            </StatusLeft>
-            {ytChannel
-              ? <Dot $connected />
-              : <Button variant="secondary" size="sm" onClick={handleConnectYouTube} disabled={ytConnecting}>
-                  {ytConnecting ? 'Redirecting…' : 'Connect'}
-                </Button>
-            }
-          </StatusRow>
-
-          {extensionConnected !== true && <InstructionBox>
-            <InstructionTitle>Don't have the extension yet?</InstructionTitle>
-            <InstructionStep>
-              <StepNum>1</StepNum>
-              Install the YouTool.io Extension from the Chrome Web Store
-            </InstructionStep>
-            <InstructionStep>
-              <StepNum>2</StepNum>
-              Pin it to your Chrome toolbar and open the popup
-            </InstructionStep>
-            <InstructionStep>
-              <StepNum>3</StepNum>
-              Click "Sign in with Google" — your account here links automatically
-            </InstructionStep>
-            <InstructionStep>
-              <StepNum>4</StepNum>
-              Click "Connect YouTube" inside the extension to unlock channel tools
-            </InstructionStep>
-            <div style={{ marginTop: '0.25rem' }}>
-              <Button
-                variant="primary"
-                icon="bx bx-extension"
-                iconPosition="left"
-                onClick={() => window.open('https://chrome.google.com/webstore', '_blank')}
-              >
-                Get the Extension
-              </Button>
+        <HeroCard>
+          <HeroContent>
+            <div>
+              <CardTitle>Membership</CardTitle>
+              <HeroTitle>{isPremium ? 'Premium is active' : 'Your YouTool dashboard'}</HeroTitle>
+              <HeroSub>
+                {isPremium
+                  ? 'You have access to YouTool’s in-YouTube workflow: analysis, exports, and Studio tools without leaving YouTube.'
+                  : 'Connect your channel, manage extension access, and upgrade when you want YouTool’s tools directly inside YouTube.'}
+              </HeroSub>
             </div>
-          </InstructionBox>}
-        </Card>
+
+            <HeroActions>
+              {isPremium ? (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={billingAction !== '' || !billing?.hasStripeCustomer}
+                  onClick={handleManageBilling}
+                >
+                  {billingAction === 'portal' ? 'Opening…' : 'Manage billing'}
+                </Button>
+              ) : ytChannel ? (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={billingLoading || billingAction !== ''}
+                  onClick={() => handleStartCheckout('yearly')}
+                >
+                  {billingAction === 'yearly' ? 'Opening…' : 'Upgrade to Premium'}
+                </Button>
+              ) : (
+                <Button variant="primary" size="sm" onClick={handleConnectYouTube} disabled={ytConnecting}>
+                  {ytConnecting ? 'Redirecting…' : 'Connect YouTube'}
+                </Button>
+              )}
+              {billingRenewalCopy && <StatusPill>{billingRenewalCopy}</StatusPill>}
+            </HeroActions>
+          </HeroContent>
+
+          <ProfilePanel>
+            <ProfileMini>
+              {avatar
+                ? <Avatar src={avatar} alt={name} />
+                : <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
+              }
+              <ProfileInfo>
+                <ProfileName>{name}</ProfileName>
+                <ProfileEmail>{user.email}</ProfileEmail>
+              </ProfileInfo>
+            </ProfileMini>
+            <StatusRow>
+              <StatusLeft>
+                <StatusIcon><i className="bx bx-id-card"></i></StatusIcon>
+                <div>
+                  <StatusLabel>{billingLabel}</StatusLabel>
+                  <StatusSub>{isPremium ? 'Full extension access' : 'Free extension account'}</StatusSub>
+                </div>
+              </StatusLeft>
+              <PlanBadge $premium={isPremium}>{billingLabel}</PlanBadge>
+            </StatusRow>
+          </ProfilePanel>
+        </HeroCard>
+
+        <DashboardGrid>
+          <Card>
+            <CardHeader>
+              <CardTitle>Plan benefits</CardTitle>
+              <PlanBadge $premium={isPremium}>{isPremium ? 'Unlocked' : 'Free'}</PlanBadge>
+            </CardHeader>
+            <BenefitGrid>
+              <BenefitTile $premium>
+                <BenefitIcon $active><i className="bx bx-line-chart"></i></BenefitIcon>
+                <div>
+                  <BenefitTitle>Channel stats and full analysis</BenefitTitle>
+                  <BenefitSub>1D, 7D, 30D stats, trend graphs, and the deeper channel analysis stay available after connecting YouTube.</BenefitSub>
+                </div>
+              </BenefitTile>
+              <BenefitTile $premium={isPremium}>
+                <BenefitIcon $active={isPremium}><i className="bx bx-window-open"></i></BenefitIcon>
+                <div>
+                  <BenefitTitle>Use YouTool tools inside YouTube</BenefitTitle>
+                  <BenefitSub>{isPremium ? 'Unlimited in-YouTube tool runs are active.' : 'Free accounts get limited weekly in-YouTube tool runs before Premium is needed.'}</BenefitSub>
+                </div>
+              </BenefitTile>
+              <BenefitTile $premium={isPremium}>
+                <BenefitIcon $active={isPremium}><i className="bx bx-download"></i></BenefitIcon>
+                <div>
+                  <BenefitTitle>In-page exports</BenefitTitle>
+                  <BenefitSub>Download comments, analysis, and working files from YouTube pages without bouncing between tabs.</BenefitSub>
+                </div>
+              </BenefitTile>
+              <BenefitTile $premium={isPremium}>
+                <BenefitIcon $active={isPremium}><i className="bx bx-slider-alt"></i></BenefitIcon>
+                <div>
+                  <BenefitTitle>Premium Studio workflow tools</BenefitTitle>
+                  <BenefitSub>More timelines, content columns, streamer mode, and real-time engaged views are Premium extension features.</BenefitSub>
+                </div>
+              </BenefitTile>
+            </BenefitGrid>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Extension access</CardTitle>
+              <PlanBadge $premium={extensionConnected === true}>{extensionConnected === true ? 'Connected' : 'Setup'}</PlanBadge>
+            </CardHeader>
+
+            <StatusRow>
+              <StatusLeft>
+                <StatusIcon><i className="bx bx-extension"></i></StatusIcon>
+                <div>
+                  <StatusLabel>Chrome extension</StatusLabel>
+                  <StatusSub>{extensionStatusCopy}</StatusSub>
+                </div>
+              </StatusLeft>
+              <Dot $connected={extensionConnected === true} />
+            </StatusRow>
+
+            <StatusRow>
+              <StatusLeft>
+                <StatusIcon><i className="bx bxl-youtube"></i></StatusIcon>
+                <div>
+                  <StatusLabel>YouTube channel</StatusLabel>
+                  <StatusSub>
+                    {ytChannel
+                      ? <>{youtubeStatusCopy} · <SignOutLink onClick={handleDisconnectYouTube} disabled={ytDisconnecting}>{ytDisconnecting ? 'Disconnecting…' : 'Disconnect'}</SignOutLink></>
+                      : youtubeStatusCopy}
+                  </StatusSub>
+                </div>
+              </StatusLeft>
+              {ytChannel
+                ? <Dot $connected />
+                : <Button variant="secondary" size="sm" onClick={handleConnectYouTube} disabled={ytConnecting}>
+                    {ytConnecting ? 'Redirecting…' : 'Connect'}
+                  </Button>
+              }
+            </StatusRow>
+
+            {extensionConnected !== true && <InstructionBox>
+              <InstructionTitle>Extension setup</InstructionTitle>
+              <InstructionStep>
+                <StepNum>1</StepNum>
+                Install and pin the YouTool.io Chrome extension.
+              </InstructionStep>
+              <InstructionStep>
+                <StepNum>2</StepNum>
+                Open the extension popup and sign in with this account.
+              </InstructionStep>
+              <InstructionStep>
+                <StepNum>3</StepNum>
+                Connect YouTube to unlock channel-aware tools.
+              </InstructionStep>
+              <div style={{ marginTop: '0.25rem' }}>
+                <Button
+                  variant="primary"
+                  icon="bx bx-extension"
+                  iconPosition="left"
+                  onClick={() => window.open('https://chrome.google.com/webstore', '_blank')}
+                >
+                  Get the Extension
+                </Button>
+              </div>
+            </InstructionBox>}
+          </Card>
+        </DashboardGrid>
 
         <Card>
           <CardHeader>
-            <CardTitle>Premium</CardTitle>
+            <CardTitle>Billing and subscription</CardTitle>
             <PlanBadge $premium={isPremium}>{billingLabel}</PlanBadge>
           </CardHeader>
 
           <BillingLead>
-            Premium is for using YouTool tools directly inside YouTube. Keep the website tools free, and upgrade only when
-            you want in-YouTube analysis, comment exports, and premium Studio workflow features.
+            Premium controls paid extension access. Your plan status here decides whether YouTool’s in-YouTube analysis,
+            exports, and Studio workflow features are unlocked.
           </BillingLead>
 
           {isPremium && billingRenewalCopy && (
@@ -728,7 +951,7 @@ export const Account: React.FC = () => {
                 disabled={billingLoading || isPremium || billingAction !== '' || !ytChannel}
                 onClick={() => handleStartCheckout('monthly')}
               >
-                {billingAction === 'monthly' ? 'Opening…' : isPremium ? 'Active' : 'Upgrade'}
+                {billingAction === 'monthly' ? 'Opening…' : isPremium ? billing?.interval === 'monthly' ? 'Current' : 'Manage plan' : 'Upgrade'}
               </Button>
             </BillingRow>
 
@@ -738,12 +961,12 @@ export const Account: React.FC = () => {
                 <BillingRowMeta>$47.99/year · About 20% off monthly billing</BillingRowMeta>
               </div>
               <Button
-                variant="primary"
+                variant={isPremium && billing?.interval === 'yearly' ? 'secondary' : 'primary'}
                 size="sm"
                 disabled={billingLoading || isPremium || billingAction !== '' || !ytChannel}
                 onClick={() => handleStartCheckout('yearly')}
               >
-                {billingAction === 'yearly' ? 'Opening…' : isPremium ? 'Active' : 'Upgrade'}
+                {billingAction === 'yearly' ? 'Opening…' : isPremium ? billing?.interval === 'yearly' ? 'Current' : 'Manage plan' : 'Upgrade'}
               </Button>
             </BillingRow>
 
@@ -780,31 +1003,36 @@ export const Account: React.FC = () => {
           {billingError && <BillingError>{billingError}</BillingError>}
         </Card>
 
-        {isResearchAdmin && <AdminPlatformStats />}
-
-        {isResearchAdmin && <AdminYouTubeResearchDashboard />}
+        <Card>
+          <CardHeader>
+            <CardTitle>Account details</CardTitle>
+            <SignOutLink onClick={handleSignOut}>Sign out</SignOutLink>
+          </CardHeader>
+          <AccountDetailsGrid>
+            <DetailBox>
+              <DetailLabel>Email</DetailLabel>
+              <DetailValue>{user.email}</DetailValue>
+            </DetailBox>
+            <DetailBox>
+              <DetailLabel>Membership</DetailLabel>
+              <DetailValue>{billingLoading ? 'Checking plan...' : billingRenewalCopy || billingLabel}</DetailValue>
+            </DetailBox>
+            <DetailBox>
+              <DetailLabel>Quick links</DetailLabel>
+              <DetailValue>
+                <InlineActions>
+                  <AllToolsLink to="/tools"><i className="bx bx-grid-alt"></i> All tools</AllToolsLink>
+                </InlineActions>
+              </DetailValue>
+            </DetailBox>
+          </AccountDetailsGrid>
+        </Card>
 
         {ytChannel && <AccountYouTubeInsights channel={ytChannel} />}
 
-        {/* Promo — explore the website */}
-        <CardTitle style={{ padding: '0 0.25rem' }}>While you're here</CardTitle>
-        <PromoGrid>
-          <PromoTile to="/tools">
-            <PromoTileIcon><i className="bx bx-wrench"></i></PromoTileIcon>
-            <PromoTileTitle>20+ Free Tools</PromoTileTitle>
-            <PromoTileSub>Analyze videos, research keywords, test thumbnails — no login needed.</PromoTileSub>
-          </PromoTile>
-          <PromoTile to="/tools/outlier-finder">
-            <PromoTileIcon><i className="bx bx-trophy"></i></PromoTileIcon>
-            <PromoTileTitle>Outlier Finder</PromoTileTitle>
-            <PromoTileSub>Find videos that blew up in your niche and decode why they worked.</PromoTileSub>
-          </PromoTile>
-          <PromoTile to="/tools/keyword-analyzer">
-            <PromoTileIcon><i className="bx bx-search-alt"></i></PromoTileIcon>
-            <PromoTileTitle>Keyword Analyzer</PromoTileTitle>
-            <PromoTileSub>Discover what your audience is searching for and rank faster.</PromoTileSub>
-          </PromoTile>
-        </PromoGrid>
+        {isResearchAdmin && <AdminPlatformStats />}
+
+        {isResearchAdmin && <AdminYouTubeResearchDashboard />}
 
       </Inner>
     </Page>

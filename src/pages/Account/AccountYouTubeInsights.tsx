@@ -3,6 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/Button/Button';
 import { useAuth } from '../../context/AuthContext';
+import { downloadFullChannelAnalysis, type ChannelAnalysisExportFormat } from './fullChannelAnalysisExport';
 
 interface ConnectedChannel {
   title: string;
@@ -434,6 +435,85 @@ const ModalHeader = styled.div`
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1rem;
+`;
+
+const ModalHeaderActions = styled.div`
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  flex: 0 0 auto;
+`;
+
+const ExportMenuWrap = styled.div`
+  position: relative;
+`;
+
+const ExportButton = styled.button`
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(239, 68, 68, 0.42);
+  background: rgba(239, 68, 68, 0.12);
+  color: #fecaca;
+  padding: 0 0.8rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ffffff;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+`;
+
+const ExportMenu = styled.div`
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.45rem);
+  z-index: 3;
+  min-width: 178px;
+  padding: 0.35rem;
+  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border-radius: 12px;
+  background: ${({ theme }) => theme.colors.dark4};
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+`;
+
+const ExportMenuButton = styled.button`
+  width: 100%;
+  display: grid;
+  gap: 0.16rem;
+  text-align: left;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text.secondary};
+  padding: 0.55rem 0.65rem;
+  cursor: pointer;
+
+  strong {
+    color: ${({ theme }) => theme.colors.text.primary};
+    font-size: 0.74rem;
+  }
+
+  span {
+    color: ${({ theme }) => theme.colors.text.muted};
+    font-size: 0.63rem;
+    line-height: 1.35;
+  }
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.12);
+  }
 `;
 
 const CloseButton = styled.button`
@@ -937,6 +1017,8 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
   const [fullAnalysis, setFullAnalysis] = useState<FullAnalysis | null>(null);
   const [loadingFullAnalysis, setLoadingFullAnalysis] = useState(false);
   const [fullAnalysisError, setFullAnalysisError] = useState('');
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [exportingFormat, setExportingFormat] = useState<ChannelAnalysisExportFormat | null>(null);
 
   const dashboardCacheKey = user?.id ? `youtool.account.dashboard.${CACHE_VERSION}.${user.id}` : '';
   const fullCacheKey = user?.id ? `youtool.account.fullAnalysis.${CACHE_VERSION}.${user.id}` : '';
@@ -1054,6 +1136,7 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
   const openFullAnalysis = async () => {
     setModalOpen(true);
     setFullAnalysisError('');
+    setExportMenuOpen(false);
 
     if (fullCacheKey) {
       const cached = readCache<FullAnalysis>(fullCacheKey, FULL_ANALYSIS_CACHE_TTL_MS);
@@ -1085,6 +1168,27 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
       setFullAnalysisError(error instanceof Error ? error.message : 'Could not run the full channel analysis.');
     } finally {
       setLoadingFullAnalysis(false);
+    }
+  };
+
+  const handleExportFullAnalysis = async (format: ChannelAnalysisExportFormat) => {
+    if (!fullAnalysis || exportingFormat) return;
+
+    setExportingFormat(format);
+    setExportMenuOpen(false);
+    setFullAnalysisError('');
+
+    try {
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
+      downloadFullChannelAnalysis({
+        channelTitle: dashboard?.channel.title || channel.title || 'YouTube channel',
+        channel: dashboard?.channel,
+        analysis: fullAnalysis,
+      }, format);
+    } catch (error) {
+      setFullAnalysisError(error instanceof Error ? error.message : 'Could not export the channel analysis.');
+    } finally {
+      setExportingFormat(null);
     }
   };
 
@@ -1139,7 +1243,10 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
 
       {modalOpen && (
         <Overlay role="presentation" onMouseDown={(event) => {
-          if (event.target === event.currentTarget) setModalOpen(false);
+          if (event.target === event.currentTarget) {
+            setExportMenuOpen(false);
+            setModalOpen(false);
+          }
         }}>
           <Modal role="dialog" aria-modal="true" aria-labelledby="account-channel-analysis-title">
             <ModalHeader>
@@ -1152,7 +1259,37 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
                   A deeper read of your last 28 complete days across reach, retention, engagement, and top videos.
                 </Sub>
               </TitleBlock>
-              <CloseButton type="button" aria-label="Close analysis" onClick={() => setModalOpen(false)}>x</CloseButton>
+              <ModalHeaderActions>
+                {!loadingFullAnalysis && fullAnalysis && (
+                  <ExportMenuWrap>
+                    <ExportButton
+                      type="button"
+                      aria-haspopup="menu"
+                      aria-expanded={exportMenuOpen}
+                      disabled={Boolean(exportingFormat)}
+                      onClick={() => setExportMenuOpen((open) => !open)}
+                    >
+                      {exportingFormat ? 'Preparing...' : 'Download'}
+                    </ExportButton>
+                    {exportMenuOpen && !exportingFormat && (
+                      <ExportMenu role="menu" aria-label="Download channel analysis">
+                        <ExportMenuButton type="button" role="menuitem" onClick={() => handleExportFullAnalysis('pdf')}>
+                          <strong>PDF report</strong>
+                          <span>Clean document for sharing or saving.</span>
+                        </ExportMenuButton>
+                        <ExportMenuButton type="button" role="menuitem" onClick={() => handleExportFullAnalysis('html')}>
+                          <strong>HTML file</strong>
+                          <span>Styled offline page with the full analysis.</span>
+                        </ExportMenuButton>
+                      </ExportMenu>
+                    )}
+                  </ExportMenuWrap>
+                )}
+                <CloseButton type="button" aria-label="Close analysis" onClick={() => {
+                  setExportMenuOpen(false);
+                  setModalOpen(false);
+                }}>x</CloseButton>
+              </ModalHeaderActions>
             </ModalHeader>
 
             {loadingFullAnalysis && (
