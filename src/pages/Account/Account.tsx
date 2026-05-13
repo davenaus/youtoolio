@@ -8,22 +8,29 @@ import { AdminPlatformStats } from './AdminPlatformStats';
 import { AdminYouTubeResearchDashboard } from './AdminYouTubeResearchDashboard';
 import styled from 'styled-components';
 
+const CHROME_EXTENSION_STORE_URL = 'https://chromewebstore.google.com/search/YouTool.io';
+
 // ─── Page shell (matches 404 background) ──────────────────────────────────────
 
 const Page = styled.div`
   min-height: 100vh;
   padding: 3rem 2rem 6rem;
-  background: linear-gradient(135deg,
-    ${({ theme }) => theme.colors.dark1} 0%,
-    ${({ theme }) => theme.colors.dark2} 50%,
-    ${({ theme }) => theme.colors.dark3} 100%);
+  background:
+    radial-gradient(circle at 16% 12%, ${({ theme }) => theme.colors.red2}55 0%, transparent 28%),
+    radial-gradient(circle at 86% 8%, ${({ theme }) => theme.colors.red1}88 0%, transparent 34%),
+    linear-gradient(135deg,
+      ${({ theme }) => theme.colors.dark1} 0%,
+      ${({ theme }) => theme.colors.dark2} 52%,
+      ${({ theme }) => theme.colors.dark3} 100%);
   position: relative;
 
   &::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse at 70% 20%, rgba(125, 0, 0, 0.1) 0%, transparent 60%);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent 38%),
+      radial-gradient(ellipse at 70% 20%, rgba(125, 0, 0, 0.12) 0%, transparent 60%);
     pointer-events: none;
   }
 `;
@@ -41,10 +48,13 @@ const Inner = styled.div`
 // ─── Cards ────────────────────────────────────────────────────────────────────
 
 const Card = styled.div`
-  background: ${({ theme }) => theme.colors.dark3};
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent 42%),
+    ${({ theme }) => theme.colors.dark3};
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   padding: 1.75rem;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
 `;
 
 const CardHeader = styled.div`
@@ -59,7 +69,7 @@ const CardTitle = styled.h2`
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: ${({ theme }) => theme.colors.text.muted};
+  color: ${({ theme }) => theme.colors.red6};
   margin: 0;
 `;
 
@@ -82,7 +92,8 @@ const HeroCard = styled(Card)`
   align-items: stretch;
   padding: 2rem;
   background:
-    radial-gradient(circle at top right, rgba(239, 68, 68, 0.16), transparent 44%),
+    radial-gradient(circle at top right, ${({ theme }) => theme.colors.red3}42, transparent 46%),
+    linear-gradient(135deg, ${({ theme }) => theme.colors.red1}33, transparent 34%),
     ${({ theme }) => theme.colors.dark3};
 
   @media (max-width: 920px) {
@@ -123,9 +134,11 @@ const HeroActions = styled.div`
 
 const ProfilePanel = styled.div`
   min-width: 0;
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.025);
+  background:
+    linear-gradient(180deg, rgba(185, 28, 28, 0.08), rgba(255, 255, 255, 0.018)),
+    rgba(255, 255, 255, 0.025);
   padding: 1.25rem;
   display: grid;
   gap: 1rem;
@@ -160,9 +173,11 @@ const BenefitTile = styled.div<{ $premium?: boolean }>`
   gap: 0.8rem;
   align-items: start;
   padding: 0.9rem;
-  border: 1px solid ${({ $premium }) => $premium ? 'rgba(248, 113, 113, 0.28)' : 'rgba(255,255,255,0.08)'};
+  border: 1px solid ${({ $premium }) => $premium ? 'rgba(185, 28, 28, 0.42)' : 'rgba(255,255,255,0.08)'};
   border-radius: 12px;
-  background: ${({ $premium }) => $premium ? 'rgba(248, 113, 113, 0.08)' : 'rgba(255,255,255,0.018)'};
+  background: ${({ $premium }) => $premium
+    ? 'linear-gradient(135deg, rgba(185, 28, 28, 0.13), rgba(82, 1, 1, 0.08))'
+    : 'rgba(255,255,255,0.018)'};
 `;
 
 const BenefitIcon = styled.div<{ $active?: boolean }>`
@@ -171,8 +186,8 @@ const BenefitIcon = styled.div<{ $active?: boolean }>`
   border-radius: 10px;
   display: grid;
   place-items: center;
-  background: ${({ $active }) => $active ? 'rgba(248, 113, 113, 0.16)' : 'rgba(255,255,255,0.05)'};
-  color: ${({ $active, theme }) => $active ? '#fca5a5' : theme.colors.text.muted};
+  background: ${({ $active, theme }) => $active ? `${theme.colors.red1}` : 'rgba(255,255,255,0.05)'};
+  color: ${({ $active, theme }) => $active ? theme.colors.red6 : theme.colors.text.muted};
 `;
 
 const BenefitTitle = styled.div`
@@ -257,7 +272,8 @@ const StatusIcon = styled.div`
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: ${({ theme }) => theme.colors.dark4};
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.dark4}, ${({ theme }) => theme.colors.dark3});
+  border: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -285,17 +301,17 @@ const Dot = styled.span<{ $connected?: boolean }>`
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: ${({ $connected }) => $connected ? '#4ade80' : 'rgba(255,255,255,0.2)'};
+  background: ${({ $connected }) => $connected ? '#f87171' : 'rgba(255,255,255,0.2)'};
   display: inline-block;
   flex-shrink: 0;
-  box-shadow: ${({ $connected }) => $connected ? '0 0 6px rgba(74, 222, 128, 0.6)' : 'none'};
+  box-shadow: ${({ $connected }) => $connected ? '0 0 8px rgba(248, 113, 113, 0.7)' : 'none'};
 `;
 
 // ─── Extension instructions ───────────────────────────────────────────────────
 
 const InstructionBox = styled.div`
-  background: ${({ theme }) => theme.colors.dark4};
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
+  background: linear-gradient(135deg, rgba(46, 4, 4, 0.38), rgba(255, 255, 255, 0.018));
+  border: 1px solid rgba(185, 28, 28, 0.22);
   border-radius: 12px;
   padding: 1.25rem;
   margin-top: 0.75rem;
@@ -324,8 +340,8 @@ const StepNum = styled.span`
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: ${({ theme }) => theme.colors.dark5};
-  color: ${({ theme }) => theme.colors.text.muted};
+  background: ${({ theme }) => theme.colors.red1};
+  color: ${({ theme }) => theme.colors.red6};
   font-size: 0.68rem;
   font-weight: 700;
   display: flex;
@@ -379,15 +395,85 @@ const AllToolsLink = styled(Link)`
   }
 `;
 
+const ExtensionStoreCard = styled.a`
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  gap: 0.85rem;
+  align-items: center;
+  margin: 1rem 0 0.9rem;
+  padding: 0.95rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(185, 28, 28, 0.34);
+  background:
+    radial-gradient(circle at top left, ${({ theme }) => theme.colors.red3}36, transparent 46%),
+    linear-gradient(135deg, rgba(82, 1, 1, 0.34), rgba(255, 255, 255, 0.018));
+  color: ${({ theme }) => theme.colors.text.primary};
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.red4};
+    transform: translateY(-1px);
+    background:
+      radial-gradient(circle at top left, ${({ theme }) => theme.colors.red3}55, transparent 48%),
+      linear-gradient(135deg, rgba(82, 1, 1, 0.42), rgba(255, 255, 255, 0.026));
+  }
+`;
+
+const ExtensionStoreIcon = styled.div`
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
+  box-shadow: 0 10px 26px rgba(185, 28, 28, 0.28);
+  color: white;
+
+  i {
+    font-size: 1.25rem;
+  }
+`;
+
+const ExtensionStoreCopy = styled.div`
+  min-width: 0;
+
+  strong {
+    display: block;
+    color: ${({ theme }) => theme.colors.text.primary};
+    font-size: 0.88rem;
+    line-height: 1.25;
+  }
+
+  span {
+    display: block;
+    color: ${({ theme }) => theme.colors.text.muted};
+    font-size: 0.72rem;
+    line-height: 1.45;
+    margin-top: 0.18rem;
+  }
+`;
+
+const ExtensionStoreArrow = styled.span`
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  color: ${({ theme }) => theme.colors.red6};
+  flex-shrink: 0;
+`;
+
 const PlanBadge = styled.span<{ $premium?: boolean }>`
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   padding: 0.35rem 0.7rem;
   border-radius: 999px;
-  border: 1px solid ${({ $premium }) => $premium ? 'rgba(248, 113, 113, 0.35)' : 'rgba(255,255,255,0.12)'};
-  background: ${({ $premium }) => $premium ? 'rgba(248, 113, 113, 0.12)' : 'rgba(255,255,255,0.05)'};
-  color: ${({ $premium, theme }) => $premium ? '#fecaca' : theme.colors.text.secondary};
+  border: 1px solid ${({ $premium }) => $premium ? 'rgba(185, 28, 28, 0.48)' : 'rgba(255,255,255,0.12)'};
+  background: ${({ $premium }) => $premium ? 'rgba(185, 28, 28, 0.16)' : 'rgba(255,255,255,0.05)'};
+  color: ${({ $premium, theme }) => $premium ? theme.colors.red6 : theme.colors.text.secondary};
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -398,8 +484,8 @@ const PlanBadge = styled.span<{ $premium?: boolean }>`
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: ${({ $premium }) => $premium ? '#f87171' : 'rgba(255,255,255,0.28)'};
-    box-shadow: ${({ $premium }) => $premium ? '0 0 10px rgba(248, 113, 113, 0.7)' : 'none'};
+    background: ${({ $premium, theme }) => $premium ? theme.colors.red5 : 'rgba(255,255,255,0.28)'};
+    box-shadow: ${({ $premium }) => $premium ? '0 0 10px rgba(229, 72, 72, 0.72)' : 'none'};
   }
 `;
 
@@ -874,6 +960,19 @@ export const Account: React.FC = () => {
               <Dot $connected={extensionConnected === true} />
             </StatusRow>
 
+            <ExtensionStoreCard href={CHROME_EXTENSION_STORE_URL} target="_blank" rel="noopener noreferrer">
+              <ExtensionStoreIcon><i className="bx bxl-chrome"></i></ExtensionStoreIcon>
+              <ExtensionStoreCopy>
+                <strong>{extensionConnected ? 'Get the Chrome Extension' : 'Install the Chrome Extension'}</strong>
+                <span>
+                  {extensionConnected
+                    ? 'Install YouTool on another browser or computer whenever you need it.'
+                    : 'Get YouTool on this computer and open the tools directly inside YouTube.'}
+                </span>
+              </ExtensionStoreCopy>
+              <ExtensionStoreArrow><i className="bx bx-right-arrow-alt"></i></ExtensionStoreArrow>
+            </ExtensionStoreCard>
+
             <StatusRow>
               <StatusLeft>
                 <StatusIcon><i className="bx bxl-youtube"></i></StatusIcon>
@@ -898,7 +997,7 @@ export const Account: React.FC = () => {
               <InstructionTitle>Extension setup</InstructionTitle>
               <InstructionStep>
                 <StepNum>1</StepNum>
-                Install and pin the YouTool.io Chrome extension.
+                Use the install card above, then pin the YouTool.io Chrome extension.
               </InstructionStep>
               <InstructionStep>
                 <StepNum>2</StepNum>
@@ -908,16 +1007,6 @@ export const Account: React.FC = () => {
                 <StepNum>3</StepNum>
                 Connect YouTube to unlock channel-aware tools.
               </InstructionStep>
-              <div style={{ marginTop: '0.25rem' }}>
-                <Button
-                  variant="primary"
-                  icon="bx bx-extension"
-                  iconPosition="left"
-                  onClick={() => window.open('https://chrome.google.com/webstore', '_blank')}
-                >
-                  Get the Extension
-                </Button>
-              </div>
             </InstructionBox>}
           </Card>
         </DashboardGrid>
