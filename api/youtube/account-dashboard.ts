@@ -96,6 +96,8 @@ const PLAYLIST_DATA_LIMIT = 25;
 const PLAYLIST_ANALYTICS_LIMIT = 10;
 const THUMBNAIL_VISUAL_ANALYSIS_LIMIT = 50;
 const THUMBNAIL_VISUAL_ANALYSIS_CONCURRENCY = 3;
+const FULL_ANALYSIS_MODEL_VERSION = 'account-dashboard-v2';
+const FULL_ANALYSIS_SERVER_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const ADMIN_RESEARCH_EMAIL_HASH = '7d44cddbb1d4279022486b6195df17a232ccc8365bf0d89b2a971b8481f08bb8';
 const ADMIN_TABLE_PAGE_SIZE = 1000;
 const ADMIN_TABLE_MAX_ROWS = 100000;
@@ -2092,6 +2094,57 @@ function stripFullAnalysisForResponse(fullAnalysis: any, options: { includeResea
   return publicFullAnalysis;
 }
 
+async function readFreshStoredFullAnalysis(supabase: any, params: {
+  userId: string;
+  channelId: string;
+  windows: any;
+  force?: boolean;
+}) {
+  if (params.force) return null;
+
+  const since = new Date(Date.now() - FULL_ANALYSIS_SERVER_CACHE_TTL_MS).toISOString();
+  const { data, error } = await supabase
+    .from('youtube_channel_insight_runs')
+    .select('id,generated_at,model_version,results')
+    .eq('user_id', params.userId)
+    .eq('channel_id', params.channelId)
+    .eq('analysis_type', 'account_dashboard_full_analysis')
+    .eq('model_version', FULL_ANALYSIS_MODEL_VERSION)
+    .eq('period_start', params.windows.fullStartDate)
+    .eq('period_end', params.windows.endDate)
+    .gte('generated_at', since)
+    .order('generated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.warn('[account-dashboard] read stored full analysis:', error.message);
+    return null;
+  }
+
+  if (!data?.results) return null;
+
+  return {
+    id: data.id,
+    generatedAt: data.generated_at,
+    modelVersion: data.model_version,
+    fullAnalysis: data.results,
+  };
+}
+
+function prepareStoredFullAnalysisForResponse(summary: any, storedFullAnalysis: any, options: { includeResearchLab?: boolean } = {}) {
+  const fullAnalysis = {
+    ...storedFullAnalysis,
+    servedFromServerCache: true,
+  };
+
+  if (options.includeResearchLab && !fullAnalysis.researchLab) {
+    fullAnalysis.researchLab = buildResearchLab(summary, fullAnalysis);
+  }
+
+  return stripFullAnalysisForResponse(fullAnalysis, options);
+}
+
 async function readAdminTable(supabase: any, table: string, select: string, orderColumn = 'created_at', truncatedTables: string[] = []) {
   const rows: any[] = [];
 
@@ -3098,9 +3151,37 @@ const handler = async (req: any, res: any) => {
     const summary = await buildSummary(accessToken, connection, windows);
 
     if (String(req.query?.full || '') === '1') {
+      const forceFullAnalysis = isAdminResearch && ['1', 'true'].includes(String(req.query?.force || '').toLowerCase());
+      const storedFullAnalysis = await readFreshStoredFullAnalysis(supabase, {
+        userId,
+        channelId: summary.channel.id || connection.channel_id,
+        windows,
+        force: forceFullAnalysis,
+      });
+
+      if (storedFullAnalysis?.fullAnalysis) {
+        return res.status(200).json({
+          ...summary,
+          fullAnalysis: prepareStoredFullAnalysisForResponse(summary, storedFullAnalysis.fullAnalysis, { includeResearchLab: isAdminResearch }),
+          fullAnalysisCache: {
+            hit: true,
+            generatedAt: storedFullAnalysis.generatedAt,
+            modelVersion: storedFullAnalysis.modelVersion,
+            ttlMs: FULL_ANALYSIS_SERVER_CACHE_TTL_MS,
+          },
+        });
+      }
+
       const fullAnalysis = await buildFullAnalysis(accessToken, summary, windows, { includeResearchLab: isAdminResearch });
       await storeAccountDashboardAnalytics(supabase, { userId, connection, summary, fullAnalysis });
-      return res.status(200).json({ ...summary, fullAnalysis: stripFullAnalysisForResponse(fullAnalysis, { includeResearchLab: isAdminResearch }) });
+      return res.status(200).json({
+        ...summary,
+        fullAnalysis: stripFullAnalysisForResponse(fullAnalysis, { includeResearchLab: isAdminResearch }),
+        fullAnalysisCache: {
+          hit: false,
+          ttlMs: FULL_ANALYSIS_SERVER_CACHE_TTL_MS,
+        },
+      });
     }
 
     await storeAccountDashboardAnalytics(supabase, { userId, connection, summary });
