@@ -686,11 +686,6 @@ function formatPercent(value: number | null | undefined, digits = 1): string {
   return `${formatPrecise(Number(value), digits)}%`;
 }
 
-function formatOptionalPercent(value: number | null | undefined, fallback = 'Not returned', digits = 1): string {
-  if (value === null || value === undefined || !Number.isFinite(Number(value))) return fallback;
-  return formatPercent(value, digits);
-}
-
 function formatDuration(seconds: number | null | undefined): string {
   const total = Math.round(Number(seconds || 0));
   const minutes = Math.floor(total / 60);
@@ -1191,13 +1186,13 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
                       <MetricValue>{formatCount(Math.round(fullAnalysis.current.watchHours))}</MetricValue>
                       <MetricDelta {...metricTone(fullAnalysis.deltas.watchHours)}>{formatDelta(fullAnalysis.deltas.watchHours)}</MetricDelta>
                     </MetricTile>
-                    <MetricTile>
-                      <MetricLabel>Studio CTR</MetricLabel>
-                      <MetricValue>{formatOptionalPercent(fullAnalysis.current.thumbnailCtr)}</MetricValue>
-                      <MetricDelta {...metricTone(fullAnalysis.deltas.thumbnailCtr)}>
-                        {fullAnalysis.current.thumbnailCtr === null ? 'Not exposed by API' : formatDelta(fullAnalysis.deltas.thumbnailCtr)}
-                      </MetricDelta>
-                    </MetricTile>
+                    {fullAnalysis.current.thumbnailCtr !== null && (
+                      <MetricTile>
+                        <MetricLabel>Studio CTR</MetricLabel>
+                        <MetricValue>{formatPercent(fullAnalysis.current.thumbnailCtr)}</MetricValue>
+                        <MetricDelta {...metricTone(fullAnalysis.deltas.thumbnailCtr)}>{formatDelta(fullAnalysis.deltas.thumbnailCtr)}</MetricDelta>
+                      </MetricTile>
+                    )}
                     <MetricTile>
                       <MetricLabel>AVD</MetricLabel>
                       <MetricValue>{formatDuration(fullAnalysis.current.averageViewDuration)}</MetricValue>
@@ -1339,7 +1334,13 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
                         <div>
                           <VideoTitle>{video.title}</VideoTitle>
                           <VideoMeta>
-                            {formatCount(video.views)} views · {formatPercent(video.thumbnailCtr)} CTR · {formatPercent(video.engagementRate)} engagement · {formatDuration(video.averageViewDuration)} AVD · {formatSignedCount(video.netSubscribers)} subs
+                            {[
+                              `${formatCount(video.views)} views`,
+                              video.thumbnailCtr !== null ? `${formatPercent(video.thumbnailCtr)} CTR` : null,
+                              `${formatPercent(video.engagementRate)} engagement`,
+                              `${formatDuration(video.averageViewDuration)} AVD`,
+                              `${formatSignedCount(video.netSubscribers)} subs`,
+                            ].filter(Boolean).join(' · ')}
                           </VideoMeta>
                         </div>
                       </TopVideoRow>
