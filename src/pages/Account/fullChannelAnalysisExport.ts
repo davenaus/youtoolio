@@ -592,6 +592,7 @@ function buildFullAnalysisPdf(context: ChannelAnalysisExportContext): Blob {
 
   rect(0, pageHeight - 12, pageWidth, 12, '#ef4444');
   text('YOUTOOL.IO CHANNEL ANALYSIS', margin, 10, { bold: true, color: '#ef4444' });
+  y -= 8;
   text(channelTitle, margin, 26, { bold: true, width: contentWidth, lineHeight: 30 });
   const period = analysis.period?.startDate && analysis.period?.endDate
     ? `${formatDate(analysis.period.startDate)} to ${formatDate(analysis.period.endDate)}`

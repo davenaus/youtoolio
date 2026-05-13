@@ -77,7 +77,7 @@ const TopBar = styled.div`
 
 const HeroCard = styled(Card)`
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.42fr);
   gap: 1.5rem;
   align-items: stretch;
   padding: 2rem;
@@ -85,7 +85,7 @@ const HeroCard = styled(Card)`
     radial-gradient(circle at top right, rgba(239, 68, 68, 0.16), transparent 44%),
     ${({ theme }) => theme.colors.dark3};
 
-  @media (max-width: 820px) {
+  @media (max-width: 920px) {
     grid-template-columns: 1fr;
   }
 `;
@@ -122,6 +122,7 @@ const HeroActions = styled.div`
 `;
 
 const ProfilePanel = styled.div`
+  min-width: 0;
   border: 1px solid ${({ theme }) => theme.colors.dark5};
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.025);
@@ -133,7 +134,7 @@ const ProfilePanel = styled.div`
 
 const ProfileMini = styled.div`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.9rem;
   min-width: 0;
 `;
@@ -187,47 +188,6 @@ const BenefitSub = styled.div`
   margin-top: 0.18rem;
 `;
 
-const AccountDetailsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.85rem;
-
-  @media (max-width: 740px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const DetailBox = styled.div`
-  border: 1px solid ${({ theme }) => theme.colors.dark5};
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.018);
-  padding: 0.95rem;
-  min-width: 0;
-`;
-
-const DetailLabel = styled.div`
-  color: ${({ theme }) => theme.colors.text.muted};
-  font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-`;
-
-const DetailValue = styled.div`
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 0.82rem;
-  line-height: 1.45;
-  margin-top: 0.35rem;
-  overflow-wrap: anywhere;
-`;
-
-const InlineActions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-`;
-
 // ─── Profile ─────────────────────────────────────────────────────────────────
 
 const Avatar = styled.img`
@@ -271,6 +231,8 @@ const ProfileEmail = styled.p`
   font-size: 0.875rem;
   color: ${({ theme }) => theme.colors.text.secondary};
   margin: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
 `;
 
 // ─── Status rows ─────────────────────────────────────────────────────────────
@@ -454,17 +416,10 @@ const StatusPill = styled.span`
   padding: 0 0.75rem;
 `;
 
-const BillingLead = styled.p`
-  margin: 0 0 1.1rem;
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 0.86rem;
-  line-height: 1.55;
-`;
-
 const BillingNotice = styled.div<{ $canceling?: boolean }>`
   display: grid;
   gap: 0.35rem;
-  margin: 0 0 1.15rem;
+  margin: 0;
   padding: 0.95rem 1rem;
   border-radius: 12px;
   border: 1px solid ${({ $canceling }) => $canceling ? 'rgba(248, 113, 113, 0.38)' : 'rgba(248, 113, 113, 0.22)'};
@@ -747,7 +702,10 @@ export const Account: React.FC = () => {
 
         <TopBar>
           <BackLink to="/"><i className="bx bx-arrow-back"></i> Back to home</BackLink>
-          <AllToolsLink to="/tools"><i className="bx bx-grid-alt"></i> All tools</AllToolsLink>
+          <HeroActions>
+            <AllToolsLink to="/tools"><i className="bx bx-grid-alt"></i> All tools</AllToolsLink>
+            <SignOutLink onClick={handleSignOut}>Sign out</SignOutLink>
+          </HeroActions>
         </TopBar>
 
         <HeroCard>
@@ -788,6 +746,53 @@ export const Account: React.FC = () => {
               )}
               {billingRenewalCopy && <StatusPill>{billingRenewalCopy}</StatusPill>}
             </HeroActions>
+
+            {isPremium && billingRenewalCopy && (
+              <BillingNotice $canceling={billingIsCanceling}>
+                <strong>{billingRenewalCopy}</strong>
+                <span>
+                  {billingIsCanceling
+                    ? 'You keep Premium access until that date, including the Chrome extension features.'
+                    : 'Your Premium access and Chrome extension features stay active.'}
+                </span>
+              </BillingNotice>
+            )}
+
+            {!isPremium && (
+              <BillingRows>
+                <BillingRow>
+                  <div>
+                    <BillingRowTitle>Monthly</BillingRowTitle>
+                    <BillingRowMeta>$4.99/month · In-YouTube YouTool tools</BillingRowMeta>
+                  </div>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={billingLoading || billingAction !== '' || !ytChannel}
+                    onClick={() => handleStartCheckout('monthly')}
+                  >
+                    {billingAction === 'monthly' ? 'Opening…' : 'Upgrade'}
+                  </Button>
+                </BillingRow>
+
+                <BillingRow>
+                  <div>
+                    <BillingRowTitle>Yearly</BillingRowTitle>
+                    <BillingRowMeta>$47.99/year · About 20% off</BillingRowMeta>
+                  </div>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    disabled={billingLoading || billingAction !== '' || !ytChannel}
+                    onClick={() => handleStartCheckout('yearly')}
+                  >
+                    {billingAction === 'yearly' ? 'Opening…' : 'Upgrade'}
+                  </Button>
+                </BillingRow>
+              </BillingRows>
+            )}
+
+            {billingError && <BillingError>{billingError}</BillingError>}
           </HeroContent>
 
           <ProfilePanel>
@@ -916,117 +921,6 @@ export const Account: React.FC = () => {
             </InstructionBox>}
           </Card>
         </DashboardGrid>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Billing and subscription</CardTitle>
-            <PlanBadge $premium={isPremium}>{billingLabel}</PlanBadge>
-          </CardHeader>
-
-          <BillingLead>
-            Premium controls paid extension access. Your plan status here decides whether YouTool’s in-YouTube analysis,
-            exports, and Studio workflow features are unlocked.
-          </BillingLead>
-
-          {isPremium && billingRenewalCopy && (
-            <BillingNotice $canceling={billingIsCanceling}>
-              <strong>{billingRenewalCopy}</strong>
-              <span>
-                {billingIsCanceling
-                  ? 'You keep Premium access until that date, including the Chrome extension features.'
-                  : 'Your Premium access and Chrome extension features stay active.'}
-              </span>
-            </BillingNotice>
-          )}
-
-          <BillingRows>
-            <BillingRow>
-              <div>
-                <BillingRowTitle>Monthly</BillingRowTitle>
-                <BillingRowMeta>$4.99/month · Unlimited in-YouTube YouTool tools</BillingRowMeta>
-              </div>
-              <Button
-                variant={isPremium && billing?.interval === 'monthly' ? 'secondary' : 'primary'}
-                size="sm"
-                disabled={billingLoading || isPremium || billingAction !== '' || !ytChannel}
-                onClick={() => handleStartCheckout('monthly')}
-              >
-                {billingAction === 'monthly' ? 'Opening…' : isPremium ? billing?.interval === 'monthly' ? 'Current' : 'Manage plan' : 'Upgrade'}
-              </Button>
-            </BillingRow>
-
-            <BillingRow>
-              <div>
-                <BillingRowTitle>Yearly</BillingRowTitle>
-                <BillingRowMeta>$47.99/year · About 20% off monthly billing</BillingRowMeta>
-              </div>
-              <Button
-                variant={isPremium && billing?.interval === 'yearly' ? 'secondary' : 'primary'}
-                size="sm"
-                disabled={billingLoading || isPremium || billingAction !== '' || !ytChannel}
-                onClick={() => handleStartCheckout('yearly')}
-              >
-                {billingAction === 'yearly' ? 'Opening…' : isPremium ? billing?.interval === 'yearly' ? 'Current' : 'Manage plan' : 'Upgrade'}
-              </Button>
-            </BillingRow>
-
-            <BillingRow>
-              <div>
-                <BillingRowTitle>Billing</BillingRowTitle>
-                <BillingRowMeta>
-                  {billingLoading
-                    ? 'Checking your plan…'
-                    : isPremium
-                      ? billingRenewalCopy || (billing?.status || 'Active')
-                      : ytChannel
-                        ? 'Upgrade when you want YouTool tools inside YouTube.'
-                        : 'Connect your YouTube channel before upgrading.'}
-                </BillingRowMeta>
-              </div>
-              {isPremium ? (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={billingAction !== '' || !billing?.hasStripeCustomer}
-                  onClick={handleManageBilling}
-                >
-                  {billingAction === 'portal' ? 'Opening…' : 'Manage billing'}
-                </Button>
-              ) : (
-                <Button variant="secondary" size="sm" onClick={handleConnectYouTube} disabled={Boolean(ytChannel) || ytConnecting}>
-                  {ytChannel ? 'Connected' : ytConnecting ? 'Redirecting…' : 'Connect YouTube'}
-                </Button>
-              )}
-            </BillingRow>
-          </BillingRows>
-
-          {billingError && <BillingError>{billingError}</BillingError>}
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Account details</CardTitle>
-            <SignOutLink onClick={handleSignOut}>Sign out</SignOutLink>
-          </CardHeader>
-          <AccountDetailsGrid>
-            <DetailBox>
-              <DetailLabel>Email</DetailLabel>
-              <DetailValue>{user.email}</DetailValue>
-            </DetailBox>
-            <DetailBox>
-              <DetailLabel>Membership</DetailLabel>
-              <DetailValue>{billingLoading ? 'Checking plan...' : billingRenewalCopy || billingLabel}</DetailValue>
-            </DetailBox>
-            <DetailBox>
-              <DetailLabel>Quick links</DetailLabel>
-              <DetailValue>
-                <InlineActions>
-                  <AllToolsLink to="/tools"><i className="bx bx-grid-alt"></i> All tools</AllToolsLink>
-                </InlineActions>
-              </DetailValue>
-            </DetailBox>
-          </AccountDetailsGrid>
-        </Card>
 
         {ytChannel && <AccountYouTubeInsights channel={ytChannel} />}
 
