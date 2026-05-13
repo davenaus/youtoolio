@@ -353,6 +353,16 @@ function subscriptionFieldsFromStripe(subscription: any, userId: string | null) 
     : price?.recurring?.interval === 'month'
       ? 'monthly'
       : price?.recurring?.interval || null;
+  const status = String(subscription.status || '').toLowerCase();
+  const periodStart = getSubscriptionPeriodTimestamp(subscription, 'current_period_start');
+  const cancelAt = Number(subscription.cancel_at || 0);
+  const cancelAtIsFuture = Boolean(cancelAt && cancelAt * 1000 > Date.now());
+  const periodEnd = cancelAtIsFuture
+    ? cancelAt
+    : getSubscriptionPeriodTimestamp(subscription, 'current_period_end') || null;
+  const cancelingAtPeriodEnd = Boolean(subscription.cancel_at_period_end || (ACTIVE_STATUSES.has(status) && cancelAtIsFuture));
+  const keepsAccess = ACTIVE_STATUSES.has(status) || Boolean(cancelingAtPeriodEnd && periodEnd && periodEnd * 1000 > Date.now());
+  const plan = keepsAccess ? 'premium' : 'free';
 
   return {
     user_id: userId,
@@ -361,11 +371,12 @@ function subscriptionFieldsFromStripe(subscription: any, userId: string | null) 
     stripe_price_id: price.id || null,
     stripe_product_id: typeof price.product === 'string' ? price.product : price.product?.id || null,
     status: subscription.status || null,
-    plan: ACTIVE_STATUSES.has(String(subscription.status || '').toLowerCase()) ? 'premium' : 'free',
+    plan_key: plan,
+    plan,
     price_interval: interval,
-    current_period_start: timestampToIso(getSubscriptionPeriodTimestamp(subscription, 'current_period_start')),
-    current_period_end: timestampToIso(getSubscriptionPeriodTimestamp(subscription, 'current_period_end') || subscription.cancel_at),
-    cancel_at_period_end: Boolean(subscription.cancel_at_period_end),
+    current_period_start: timestampToIso(periodStart),
+    current_period_end: timestampToIso(periodEnd),
+    cancel_at_period_end: cancelingAtPeriodEnd,
     canceled_at: timestampToIso(subscription.canceled_at),
     trial_end: timestampToIso(subscription.trial_end),
     ended_at: timestampToIso(subscription.ended_at),
