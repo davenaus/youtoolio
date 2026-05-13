@@ -148,6 +148,7 @@ interface ResearchLabItem {
   label: string;
   answer: string;
   confidence: string;
+  detail?: string;
 }
 
 interface ResearchLabSection {
@@ -194,7 +195,7 @@ interface CacheEnvelope<T> {
 
 const DASHBOARD_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const FULL_ANALYSIS_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 
 const shimmer = keyframes`
   0% { background-position: 100% 0; }
@@ -625,6 +626,12 @@ const ResearchAnswer = styled.div`
   line-height: 1.45;
 `;
 
+const ResearchDetail = styled.div`
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 0.61rem;
+  line-height: 1.45;
+`;
+
 const ConfidencePill = styled.span`
   display: inline-flex;
   align-items: center;
@@ -677,6 +684,11 @@ function formatPrecise(value: number | null | undefined, digits = 1): string {
 function formatPercent(value: number | null | undefined, digits = 1): string {
   if (value === null || value === undefined || !Number.isFinite(Number(value))) return '-';
   return `${formatPrecise(Number(value), digits)}%`;
+}
+
+function formatOptionalPercent(value: number | null | undefined, fallback = 'Not returned', digits = 1): string {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) return fallback;
+  return formatPercent(value, digits);
 }
 
 function formatDuration(seconds: number | null | undefined): string {
@@ -815,6 +827,7 @@ function renderResearchLab(researchLab: ResearchLab | undefined) {
                 <ResearchItem key={`${section.title}-${entry.label}`}>
                   <ResearchQuestion>{entry.label}</ResearchQuestion>
                   <ResearchAnswer>{entry.answer}</ResearchAnswer>
+                  {entry.detail && <ResearchDetail>{entry.detail}</ResearchDetail>}
                   <ConfidencePill>{entry.confidence}</ConfidencePill>
                 </ResearchItem>
               ))}
@@ -1179,9 +1192,11 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
                       <MetricDelta {...metricTone(fullAnalysis.deltas.watchHours)}>{formatDelta(fullAnalysis.deltas.watchHours)}</MetricDelta>
                     </MetricTile>
                     <MetricTile>
-                      <MetricLabel>CTR</MetricLabel>
-                      <MetricValue>{fullAnalysis.current.thumbnailCtr === null ? '-' : formatPercent(fullAnalysis.current.thumbnailCtr)}</MetricValue>
-                      <MetricDelta {...metricTone(fullAnalysis.deltas.thumbnailCtr)}>{formatDelta(fullAnalysis.deltas.thumbnailCtr)}</MetricDelta>
+                      <MetricLabel>Studio CTR</MetricLabel>
+                      <MetricValue>{formatOptionalPercent(fullAnalysis.current.thumbnailCtr)}</MetricValue>
+                      <MetricDelta {...metricTone(fullAnalysis.deltas.thumbnailCtr)}>
+                        {fullAnalysis.current.thumbnailCtr === null ? 'Not exposed by API' : formatDelta(fullAnalysis.deltas.thumbnailCtr)}
+                      </MetricDelta>
                     </MetricTile>
                     <MetricTile>
                       <MetricLabel>AVD</MetricLabel>

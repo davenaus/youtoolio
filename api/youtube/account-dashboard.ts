@@ -59,10 +59,8 @@ const SEGMENT_METRICS = [
   'estimatedMinutesWatched'
 ];
 
-const REACH_METRICS = [
-  'videoThumbnailImpressions',
-  'videoThumbnailImpressionsClickRate'
-];
+// The targeted YouTube Analytics API does not expose Studio thumbnail CTR/impressions.
+const REACH_METRICS: string[] = [];
 
 const RETENTION_METRICS = [
   'audienceWatchRatio',
@@ -92,7 +90,7 @@ const PLAYLIST_DATA_LIMIT = 25;
 const PLAYLIST_ANALYTICS_LIMIT = 10;
 const THUMBNAIL_VISUAL_ANALYSIS_LIMIT = 50;
 const THUMBNAIL_VISUAL_ANALYSIS_CONCURRENCY = 3;
-const FULL_ANALYSIS_MODEL_VERSION = 'account-dashboard-v3';
+const FULL_ANALYSIS_MODEL_VERSION = 'account-dashboard-v4';
 const FULL_ANALYSIS_SERVER_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const ADMIN_RESEARCH_EMAIL_HASH = '7d44cddbb1d4279022486b6195df17a232ccc8365bf0d89b2a971b8481f08bb8';
 const ADMIN_TABLE_PAGE_SIZE = 1000;
@@ -982,8 +980,8 @@ function secondsToLabel(seconds: number | null | undefined) {
   return `${minutes}:${String(secs).padStart(2, '0')}`;
 }
 
-function item(label: string, answer: string, confidence = 'Live') {
-  return { label, answer, confidence };
+function item(label: string, answer: string, confidence = 'Live', detail = '') {
+  return { label, answer, confidence, ...(detail ? { detail } : {}) };
 }
 
 function median(values: number[]) {
@@ -1000,7 +998,7 @@ function percentile(values: number[], percent: number) {
   return sorted[index];
 }
 
-function pearsonByKey(pairs: any[], leftKey: string, rightKey: string) {
+function pearsonStatsByKey(pairs: any[], leftKey: string, rightKey: string) {
   const points = pairs
     .map((entry) => [Number(entry[leftKey]), Number(entry[rightKey])])
     .filter(([left, right]) => Number.isFinite(left) && Number.isFinite(right));
@@ -1022,7 +1020,11 @@ function pearsonByKey(pairs: any[], leftKey: string, rightKey: string) {
   });
 
   const denominator = Math.sqrt(leftVariance * rightVariance);
-  return denominator ? numerator / denominator : null;
+  return denominator ? { value: numerator / denominator, sampleSize: points.length } : null;
+}
+
+function pearsonByKey(pairs: any[], leftKey: string, rightKey: string) {
+  return pearsonStatsByKey(pairs, leftKey, rightKey)?.value ?? null;
 }
 
 function correlationLabel(value: number | null) {
@@ -1030,6 +1032,55 @@ function correlationLabel(value: number | null) {
   const strength = Math.abs(value) >= 0.7 ? 'strong' : Math.abs(value) >= 0.4 ? 'moderate' : Math.abs(value) >= 0.2 ? 'light' : 'weak';
   const direction = value > 0 ? 'positive' : value < 0 ? 'negative' : 'flat';
   return `${strength} ${direction} relationship (r=${value.toFixed(2)})`;
+}
+
+function correlationStrength(value: number) {
+  const abs = Math.abs(value);
+  if (abs >= 0.7) return 'strong';
+  if (abs >= 0.4) return 'moderate';
+  if (abs >= 0.2) return 'light';
+  return 'weak';
+}
+
+function correlationDetail(stats: any, leftLabel: string, rightLabel: string) {
+  if (!stats) {
+    return `Needs at least 3 videos with both ${leftLabel} and ${rightLabel}.`;
+  }
+
+  const direction = stats.value > 0
+    ? 'Positive means both tended to rise together.'
+    : stats.value < 0
+      ? 'Negative means one tended to fall as the other rose.'
+      : 'Flat means no clear linear relationship showed up.';
+
+  return `Correlation score: r=${stats.value.toFixed(2)} across ${stats.sampleSize} videos. ${direction}`;
+}
+
+function correlationResearchItem(label: string, rows: any[], leftKey: string, rightKey: string, options: any) {
+  const stats = pearsonStatsByKey(rows, leftKey, rightKey);
+
+  if (!stats) {
+    return item(
+      label,
+      options.emptyAnswer || 'Not enough matching data yet.',
+      options.emptyConfidence || 'Needs data',
+      options.emptyDetail || correlationDetail(null, options.leftLabel, options.rightLabel)
+    );
+  }
+
+  const strength = correlationStrength(stats.value);
+  const answer = Math.abs(stats.value) < 0.2
+    ? options.flatAnswer || `No meaningful ${options.rightLabel} pattern showed up against ${options.leftLabel}.`
+    : stats.value > 0
+      ? options.positiveAnswer
+      : options.negativeAnswer;
+
+  return item(
+    label,
+    `${answer} The pattern was ${strength}.`,
+    options.confidence || 'Live',
+    correlationDetail(stats, options.leftLabel, options.rightLabel)
+  );
 }
 
 function groupStats(rows: any[], keyFn: (row: any) => string, valueFn: (row: any) => number) {
@@ -1136,6 +1187,7 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
   const ctrs = videos.map((video: any) => Number(video.thumbnailCtr)).filter(Number.isFinite);
   const retentions = videos.map((video: any) => video.averageViewPercentage);
   const engagements = videos.map((video: any) => video.engagementRate);
+  const hasCtrSample = ctrs.length >= 3;
   const medianViews = median(views);
   const medianCtr = median(ctrs);
   const medianRetention = median(retentions);
@@ -1166,7 +1218,11 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
   const highCtrWeakRetention = videos.filter((video: any) => video.thumbnailCtr !== null && video.thumbnailCtr >= medianCtr && video.averageViewPercentage < medianRetention).slice(0, 3);
   const lowReachHighEngagement = videos.filter((video: any) => video.views < medianViews && video.engagementRate >= medianEngagement).slice(0, 3);
   const highReachLowEngagement = videos.filter((video: any) => video.views >= medianViews && video.engagementRate < medianEngagement).slice(0, 3);
-  const outliers = videos.filter((video: any) => video.views >= p90Views || video.thumbnailCtr >= p90Ctr || video.averageViewPercentage >= p90Retention).slice(0, 5);
+  const outliers = videos.filter((video: any) => (
+    video.views >= p90Views ||
+    (hasCtrSample && video.thumbnailCtr !== null && video.thumbnailCtr >= p90Ctr) ||
+    video.averageViewPercentage >= p90Retention
+  )).slice(0, 5);
   const shorts = videos.filter((video: any) => video.isShortGuess);
   const longForm = videos.filter((video: any) => !video.isShortGuess);
   const avg = (rows: any[], fn: (row: any) => number) => rows.length ? rows.reduce((sum, row) => sum + fn(row), 0) / rows.length : 0;
@@ -1197,7 +1253,9 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
       {
         title: 'Timing, Cadence, And Lifecycle',
         items: [
-          item('Best hour of day for highest CTR', `${topLabel(bestPublishHourCtr, 'Needs more videos with CTR')} is the current publish-hour proxy for CTR.`, 'Proxy'),
+          hasCtrSample
+            ? item('Best hour of day for highest CTR', `${topLabel(bestPublishHourCtr, 'Needs more videos with CTR')} is the current publish-hour proxy for CTR.`, 'Proxy', 'This groups videos by UTC publish hour and averages returned CTR.')
+            : item('Best hour of day for highest CTR', 'Studio thumbnail CTR was not returned for enough videos in this API pull.', 'Limited by API', 'YouTube Studio shows CTR, but the website API cannot build a reliable publish-hour CTR view from this pull.'),
           item('Best hour of day for highest watch time', `${topLabel(bestPublishHourWatch, 'Needs more videos')} is the current publish-hour proxy for watch time.`, 'Proxy'),
           item('Best hour of day for highest engagement rate', `${topLabel(bestPublishHourEngagement, 'Needs more videos')} is the current publish-hour proxy for engagement.`, 'Proxy'),
           item('Best day of week for video performance', `${topLabel(bestPublishDayViews, topLabel(bestDailyViews))} leads by average views in the current sample.`),
@@ -1205,7 +1263,7 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
           item('Time-to-peak views after publish', peakDescriptions.length ? peakDescriptions.join(' | ') : 'Daily video rows are now being collected; peak timing strengthens after repeated runs.', 'Building history'),
           item('Time-to-peak impressions after publish', 'Daily impression rows are now stored when YouTube returns them; true peak timing needs repeated daily snapshots after publish.', 'Building history'),
           item('Average lifespan of a video’s growth', 'Growth lifespan is now trackable from stored daily video rows; first useful decay curve appears after several weeks of repeated full analyses.', 'Building history'),
-          item('CTR, retention, and engagement decay over time', `Current 28-day medians are ${pct(medianCtr)} CTR, ${pct(medianRetention)} average viewed, and ${pct(medianEngagement)} engagement; decay curves improve as daily history accumulates.`, 'Building history'),
+          item('CTR, retention, and engagement decay over time', hasCtrSample ? `Current 28-day medians are ${pct(medianCtr)} CTR, ${pct(medianRetention)} average viewed, and ${pct(medianEngagement)} engagement; decay curves improve as daily history accumulates.` : `Current 28-day medians are ${pct(medianRetention)} average viewed and ${pct(medianEngagement)} engagement; CTR decay needs Studio CTR data.`, 'Building history'),
         ],
       },
       {
@@ -1214,9 +1272,30 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
           item('Optimal video length by niche', `${topLabel(bestLengthViews)} leads by average views in this channel sample; niche-level benchmark needs more channels.`, 'Channel-level'),
           item('Optimal video length by traffic source', `Current strongest source is ${strongestTraffic?.label || 'not enough data'}; source-by-length becomes stronger as more videos are stored.`, 'Building history'),
           item('Optimal video length for subscriber growth', `${topLabel(bestLengthSubs)} currently leads subscribers per 1K views.`),
-          item('Relationship between video length and retention', correlationLabel(pearsonByKey(videos, 'durationSeconds', 'averageViewPercentage'))),
-          item('Relationship between video length and CTR', correlationLabel(pearsonByKey(videos.filter((video: any) => video.thumbnailCtr !== null), 'durationSeconds', 'thumbnailCtr'))),
-          item('Relationship between video length and watch time', correlationLabel(pearsonByKey(videos, 'durationSeconds', 'watchHours'))),
+          correlationResearchItem('Relationship between video length and retention', videos, 'durationSeconds', 'averageViewPercentage', {
+            leftLabel: 'video length',
+            rightLabel: 'average viewed',
+            positiveAnswer: 'Longer videos tended to hold a higher average viewed percentage in this sample.',
+            negativeAnswer: 'Longer videos tended to have lower average viewed percentage in this sample.',
+            flatAnswer: 'Video length did not show a meaningful retention pattern in this sample.',
+          }),
+          correlationResearchItem('Relationship between video length and CTR', videos.filter((video: any) => video.thumbnailCtr !== null), 'durationSeconds', 'thumbnailCtr', {
+            leftLabel: 'video length',
+            rightLabel: 'thumbnail CTR',
+            positiveAnswer: 'Longer videos tended to have stronger thumbnail CTR in this sample.',
+            negativeAnswer: 'Longer videos tended to have weaker thumbnail CTR in this sample.',
+            flatAnswer: 'Video length did not show a meaningful CTR pattern in this sample.',
+            emptyAnswer: 'Studio thumbnail CTR was not returned for enough videos in this API pull.',
+            emptyConfidence: 'Limited by API',
+            emptyDetail: 'YouTube Studio shows thumbnail CTR, but the targeted Analytics API used here does not expose enough thumbnail CTR/impression data for this calculation.',
+          }),
+          correlationResearchItem('Relationship between video length and watch time', videos, 'durationSeconds', 'watchHours', {
+            leftLabel: 'video length',
+            rightLabel: 'watch time',
+            positiveAnswer: 'Longer videos tended to generate more total watch time in this sample.',
+            negativeAnswer: 'Longer videos tended to generate less total watch time in this sample.',
+            flatAnswer: 'Video length did not show a meaningful watch-time pattern in this sample.',
+          }),
           item('Shorts vs long-form performance differences', `Shorts avg ${compact(avg(shorts, (video) => video.views))} views vs long-form avg ${compact(avg(longForm, (video) => video.views))} views.`),
           item('Shorts contribution to total channel growth', `${strongestContentType?.label || 'Content type data not returned'} is currently carrying ${pct(strongestContentType?.shareOfViews || 0, 0)} of views.`),
           item('Live vs VOD performance differences', `${breakdowns.liveOrOnDemand?.[0]?.label || 'No live/on-demand split'} leads the current period.`),
@@ -1225,33 +1304,90 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
       {
         title: 'Metric Relationships',
         items: [
-          item('CTR vs watch time correlation', correlationLabel(pearsonByKey(videos.filter((video: any) => video.thumbnailCtr !== null), 'thumbnailCtr', 'watchHours'))),
-          item('CTR vs retention correlation', correlationLabel(pearsonByKey(videos.filter((video: any) => video.thumbnailCtr !== null), 'thumbnailCtr', 'averageViewPercentage'))),
-          item('Retention vs subscriber conversion correlation', correlationLabel(pearsonByKey(videos, 'averageViewPercentage', 'subsPerThousandViews'))),
-          item('Engagement vs retention correlation', correlationLabel(pearsonByKey(videos, 'engagementRate', 'averageViewPercentage'))),
-          item('Engagement vs CTR correlation', correlationLabel(pearsonByKey(videos.filter((video: any) => video.thumbnailCtr !== null), 'engagementRate', 'thumbnailCtr'))),
-          item('Views vs subscriber conversion rate', correlationLabel(pearsonByKey(videos, 'views', 'subsPerThousandViews'))),
-          item('Views vs engagement rate scaling patterns', correlationLabel(pearsonByKey(videos, 'views', 'engagementRate'))),
-          item('Like, comment, share, and playlist add rate vs performance', `Like/views ${correlationLabel(pearsonByKey(videos, 'likeRate', 'views'))}; comment/views ${correlationLabel(pearsonByKey(videos, 'commentRate', 'views'))}; share/views ${correlationLabel(pearsonByKey(videos, 'shareRate', 'views'))}; playlist/views ${correlationLabel(pearsonByKey(videos, 'playlistAddRate', 'views'))}.`),
-          item('Impressions vs views efficiency', `Current channel CTR is ${pct(fullAnalysis.current.thumbnailCtr)} with ${compact(fullAnalysis.current.videoThumbnailImpressions)} impressions.`),
-          item('Watch time per impression', fullAnalysis.current.videoThumbnailImpressions ? `${secondsToLabel((fullAnalysis.current.watchHours * 3600) / fullAnalysis.current.videoThumbnailImpressions)} watch time per impression.` : 'Needs impression data.'),
-          item('Engagement and subscriber conversion per impression', fullAnalysis.current.videoThumbnailImpressions ? `${pct((fullAnalysis.current.likes + fullAnalysis.current.comments + fullAnalysis.current.shares) / fullAnalysis.current.videoThumbnailImpressions * 100)} engagement per impression; ${pct(fullAnalysis.current.netSubscribers / fullAnalysis.current.videoThumbnailImpressions * 100)} net subs per impression.` : 'Needs impression data.'),
+          correlationResearchItem('CTR vs watch time correlation', videos.filter((video: any) => video.thumbnailCtr !== null), 'thumbnailCtr', 'watchHours', {
+            leftLabel: 'thumbnail CTR',
+            rightLabel: 'watch time',
+            positiveAnswer: 'Videos with stronger CTR tended to produce more watch time.',
+            negativeAnswer: 'Videos with stronger CTR tended to produce less watch time.',
+            flatAnswer: 'CTR did not show a meaningful watch-time pattern in this sample.',
+            emptyAnswer: 'Studio thumbnail CTR was not returned for enough videos in this API pull.',
+            emptyConfidence: 'Limited by API',
+            emptyDetail: 'YouTube Studio shows thumbnail CTR, but the targeted Analytics API used here does not expose enough thumbnail CTR/impression data for this calculation.',
+          }),
+          correlationResearchItem('CTR vs retention correlation', videos.filter((video: any) => video.thumbnailCtr !== null), 'thumbnailCtr', 'averageViewPercentage', {
+            leftLabel: 'thumbnail CTR',
+            rightLabel: 'average viewed',
+            positiveAnswer: 'Videos with stronger CTR tended to keep more of the audience watching.',
+            negativeAnswer: 'Videos with stronger CTR tended to have weaker retention, which can mean the package over-promised.',
+            flatAnswer: 'CTR did not show a meaningful retention pattern in this sample.',
+            emptyAnswer: 'Studio thumbnail CTR was not returned for enough videos in this API pull.',
+            emptyConfidence: 'Limited by API',
+            emptyDetail: 'YouTube Studio shows thumbnail CTR, but the targeted Analytics API used here does not expose enough thumbnail CTR/impression data for this calculation.',
+          }),
+          correlationResearchItem('Retention vs subscriber conversion correlation', videos, 'averageViewPercentage', 'subsPerThousandViews', {
+            leftLabel: 'average viewed',
+            rightLabel: 'subscriber conversion',
+            positiveAnswer: 'Videos with stronger retention tended to convert more subscribers per 1K views.',
+            negativeAnswer: 'Videos with stronger retention tended to convert fewer subscribers per 1K views.',
+            flatAnswer: 'Retention did not show a meaningful subscriber-conversion pattern in this sample.',
+          }),
+          correlationResearchItem('Engagement vs retention correlation', videos, 'engagementRate', 'averageViewPercentage', {
+            leftLabel: 'engagement rate',
+            rightLabel: 'average viewed',
+            positiveAnswer: 'More-engaged videos also tended to hold attention better.',
+            negativeAnswer: 'More-engaged videos tended to have weaker average viewed percentage.',
+            flatAnswer: 'Engagement did not show a meaningful retention pattern in this sample.',
+          }),
+          correlationResearchItem('Engagement vs CTR correlation', videos.filter((video: any) => video.thumbnailCtr !== null), 'engagementRate', 'thumbnailCtr', {
+            leftLabel: 'engagement rate',
+            rightLabel: 'thumbnail CTR',
+            positiveAnswer: 'More-engaged videos also tended to have stronger CTR.',
+            negativeAnswer: 'More-engaged videos tended to have weaker CTR.',
+            flatAnswer: 'Engagement did not show a meaningful CTR pattern in this sample.',
+            emptyAnswer: 'Studio thumbnail CTR was not returned for enough videos in this API pull.',
+            emptyConfidence: 'Limited by API',
+            emptyDetail: 'YouTube Studio shows thumbnail CTR, but the targeted Analytics API used here does not expose enough thumbnail CTR/impression data for this calculation.',
+          }),
+          correlationResearchItem('Views vs subscriber conversion rate', videos, 'views', 'subsPerThousandViews', {
+            leftLabel: 'views',
+            rightLabel: 'subscriber conversion',
+            positiveAnswer: 'Higher-view videos tended to convert subscribers more efficiently.',
+            negativeAnswer: 'Higher-view videos tended to convert subscribers less efficiently.',
+            flatAnswer: 'Views did not show a meaningful subscriber-conversion pattern in this sample.',
+          }),
+          correlationResearchItem('Views vs engagement rate scaling patterns', videos, 'views', 'engagementRate', {
+            leftLabel: 'views',
+            rightLabel: 'engagement rate',
+            positiveAnswer: 'Higher-view videos tended to keep engagement rate higher as reach scaled.',
+            negativeAnswer: 'Higher-view videos tended to lose engagement rate as reach scaled.',
+            flatAnswer: 'Views did not show a meaningful engagement-rate scaling pattern in this sample.',
+          }),
+          item('Like, comment, share, and playlist add rate vs performance', `Like rate: ${correlationLabel(pearsonByKey(videos, 'likeRate', 'views'))}; comment rate: ${correlationLabel(pearsonByKey(videos, 'commentRate', 'views'))}; share rate: ${correlationLabel(pearsonByKey(videos, 'shareRate', 'views'))}; playlist add rate: ${correlationLabel(pearsonByKey(videos, 'playlistAddRate', 'views'))}.`, 'Live', 'These compare engagement rates against views across the videos in this 28-day sample.'),
+          item('Impressions vs views efficiency', 'Studio thumbnail impressions and CTR are not returned by this API pull.', 'Limited by API', 'Exact impression efficiency is still visible in YouTube Studio. YouTool can use it if we later add a Studio-page extension collector.'),
+          item('Watch time per impression', 'Studio thumbnail impressions are not returned by this API pull.', 'Limited by API', 'Without impressions, watch time per impression cannot be calculated from the website API.'),
+          item('Engagement and subscriber conversion per impression', 'Studio thumbnail impressions are not returned by this API pull.', 'Limited by API', 'Without impressions, engagement per impression and subscriber conversion per impression cannot be calculated from the website API.'),
         ],
       },
       {
         title: 'Benchmarks, Outliers, And Breakout Signals',
         items: [
-          item('Top percentile CTR benchmarks', `Top current sample CTR starts around ${pct(p90Ctr)}.`),
-          item('Top percentile retention benchmarks', `Top current sample retention starts around ${pct(p90Retention)} average viewed.`),
-          item('Top percentile engagement benchmarks', `Top current sample engagement starts around ${pct(p90Engagement)}.`),
-          item('Median vs top performer gaps', `Median views ${compact(medianViews)} vs top sample threshold ${compact(p90Views)}.`),
+          hasCtrSample
+            ? item('Top percentile CTR benchmarks', `Top current sample CTR starts around ${pct(p90Ctr)}.`, 'Live', 'This is the top-slice threshold from the videos in the current 28-day sample.')
+            : item('Top percentile CTR benchmarks', 'Studio thumbnail CTR was not returned for enough videos in this API pull.', 'Limited by API', 'YouTube Studio shows thumbnail CTR, but this website API pull cannot build a reliable CTR percentile.'),
+          item('Top percentile retention benchmarks', `Top current sample retention starts around ${pct(p90Retention)} average viewed.`, 'Live', 'This is the top-slice threshold from videos in the last 28 complete days. Values can exceed 100% when viewers rewind or loop sections, especially on Shorts.'),
+          item('Top percentile engagement benchmarks', `Top current sample engagement starts around ${pct(p90Engagement)}.`, 'Live', 'Engagement rate is likes + comments + shares divided by views for videos in this sample.'),
+          item('Median vs top performer gaps', `Median views are ${compact(medianViews)} while the current top-sample threshold is ${compact(p90Views)}.`, 'Live', 'Median is the middle video in the sample. The top-sample threshold is the 90th percentile, so it marks where the strongest slice begins.'),
           item('Performance distribution curves across channels', 'Personal distribution is live; cross-channel curves need more opted-in channels and rollups.', 'Building cohort data'),
           item('Outlier detection for viral videos', outliers.length ? outliers.map((video: any) => video.title).join(' | ') : 'No strong outlier in the current sample.'),
           item('Retention thresholds for scaling', `Current retention threshold proxy: ${pct(p90Retention)} average viewed.`),
-          item('CTR thresholds for scaling', `Current CTR threshold proxy: ${pct(p90Ctr)}.`),
-          item('Combined CTR + retention thresholds for growth', `Flag videos above ${pct(p90Ctr)} CTR and ${pct(p90Retention)} average viewed as strongest packaging-content fit.`),
-          item('Signals that predict breakout videos', `Best current breakout recipe: high CTR, high retention, strong engagement, and traffic diversity. Top candidate: ${topVideo?.title || 'not enough data'}.`),
-          item('Minimum viable performance for algorithm pickup', `Use channel medians as baseline: ${pct(medianCtr)} CTR, ${pct(medianRetention)} retention, ${pct(medianEngagement)} engagement.`),
+          hasCtrSample
+            ? item('CTR thresholds for scaling', `Current CTR threshold proxy: ${pct(p90Ctr)}.`, 'Live', 'This uses the top-slice threshold from videos with returned CTR.')
+            : item('CTR thresholds for scaling', 'Studio thumbnail CTR was not returned for enough videos in this API pull.', 'Limited by API', 'Exact CTR thresholds need YouTube Studio CTR/impression data.'),
+          hasCtrSample
+            ? item('Combined CTR + retention thresholds for growth', `Flag videos above ${pct(p90Ctr)} CTR and ${pct(p90Retention)} average viewed as strongest packaging-content fit.`, 'Live', 'This combines click appeal and viewer satisfaction when CTR is available.')
+            : item('Combined CTR + retention thresholds for growth', `Use ${pct(p90Retention)} average viewed plus strong engagement as the current proxy until Studio CTR is available.`, 'Proxy', 'CTR is the missing piece. Retention and engagement are still useful for spotting content that satisfied viewers after the click.'),
+          item('Signals that predict breakout videos', hasCtrSample ? `Best current breakout recipe: high CTR, high retention, strong engagement, and traffic diversity. Top candidate: ${topVideo?.title || 'not enough data'}.` : `Best current breakout proxy: high retention, strong engagement, and traffic diversity. Top candidate: ${topVideo?.title || 'not enough data'}.`, hasCtrSample ? 'Live' : 'Proxy', hasCtrSample ? '' : 'CTR would make this stronger, but it was not returned by this API pull.'),
+          item('Minimum viable performance for algorithm pickup', hasCtrSample ? `Use channel medians as baseline: ${pct(medianCtr)} CTR, ${pct(medianRetention)} retention, ${pct(medianEngagement)} engagement.` : `Use channel medians as baseline: ${pct(medianRetention)} retention and ${pct(medianEngagement)} engagement. CTR needs Studio data.`, hasCtrSample ? 'Live' : 'Proxy'),
         ],
       },
       {
@@ -1309,21 +1445,49 @@ function buildResearchLab(summary: any, fullAnalysis: any) {
       {
         title: 'Metadata, Packaging, And Thumbnails',
         items: [
-          item('Correlation between title length and CTR', correlationLabel(pearsonByKey(videos.filter((video: any) => video.thumbnailCtr !== null), 'titleLength', 'thumbnailCtr'))),
+          correlationResearchItem('Correlation between title length and CTR', videos.filter((video: any) => video.thumbnailCtr !== null), 'titleLength', 'thumbnailCtr', {
+            leftLabel: 'title length',
+            rightLabel: 'thumbnail CTR',
+            positiveAnswer: 'Longer titles tended to have stronger CTR in this sample.',
+            negativeAnswer: 'Longer titles tended to have weaker CTR in this sample.',
+            flatAnswer: 'Title length did not show a meaningful CTR pattern in this sample.',
+            emptyAnswer: 'Studio thumbnail CTR was not returned for enough videos in this API pull.',
+            emptyConfidence: 'Limited by API',
+            emptyDetail: 'YouTube Studio shows thumbnail CTR, but the targeted Analytics API used here does not expose enough thumbnail CTR/impression data for this calculation.',
+          }),
           item('Title length vs retention correlation', correlationLabel(pearsonByKey(videos, 'titleLength', 'averageViewPercentage'))),
           item('Impact of numbers in titles on performance', `Number titles avg ${compact(avg(videos.filter((video: any) => video.hasNumber), (video) => video.views))} views vs non-number avg ${compact(avg(videos.filter((video: any) => !video.hasNumber), (video) => video.views))}.`),
-          item('Impact of questions in titles on CTR', `Question titles avg ${pct(avg(videos.filter((video: any) => video.hasQuestion && video.thumbnailCtr !== null), (video) => video.thumbnailCtr))} CTR.`),
+          hasCtrSample
+            ? item('Impact of questions in titles on CTR', `Question titles avg ${pct(avg(videos.filter((video: any) => video.hasQuestion && video.thumbnailCtr !== null), (video) => video.thumbnailCtr))} CTR.`, 'Live', 'This only uses videos where CTR was returned.')
+            : item('Impact of questions in titles on CTR', 'Studio thumbnail CTR was not returned for enough videos in this API pull.', 'Limited by API', 'The title-question flag is stored, but CTR needs Studio CTR/impression data.'),
           item('Impact of emotional words in titles on engagement', correlationLabel(pearsonByKey(videos, 'emotionalWordCount', 'engagementRate'))),
           item('Title capitalization patterns vs performance', correlationLabel(pearsonByKey(videos, 'uppercaseShare', 'views'))),
           item('Description length vs performance', correlationLabel(pearsonByKey(videos.map((video: any) => ({ ...video, descriptionLength: String(video.description || '').length })), 'descriptionLength', 'views'))),
           item('Links in description vs external traffic share', `${strongestExternal?.label || 'External data'} is now tracked; description link counts are stored in video snapshots for correlation.`, 'Stored for analysis'),
-          item('Tags count vs CTR correlation', correlationLabel(pearsonByKey(videos.filter((video: any) => video.thumbnailCtr !== null).map((video: any) => ({ ...video, tagCount: Array.isArray(video.tags) ? video.tags.length : 0 })), 'tagCount', 'thumbnailCtr'))),
+          correlationResearchItem('Tags count vs CTR correlation', videos.filter((video: any) => video.thumbnailCtr !== null).map((video: any) => ({ ...video, tagCount: Array.isArray(video.tags) ? video.tags.length : 0 })), 'tagCount', 'thumbnailCtr', {
+            leftLabel: 'tag count',
+            rightLabel: 'thumbnail CTR',
+            positiveAnswer: 'Videos with more tags tended to have stronger CTR in this sample.',
+            negativeAnswer: 'Videos with more tags tended to have weaker CTR in this sample.',
+            flatAnswer: 'Tag count did not show a meaningful CTR pattern in this sample.',
+            emptyAnswer: 'Studio thumbnail CTR was not returned for enough videos in this API pull.',
+            emptyConfidence: 'Limited by API',
+            emptyDetail: 'Tags are stored, but CTR needs Studio CTR/impression data.',
+          }),
           item('Tags usage vs search traffic share', `${strongestSearch?.label || 'Search data'} is tracked while tag counts are stored per video.`, 'Stored for analysis'),
           item('Thumbnail style consistency vs channel growth', strongestThumbnailStyle ? `Top saved visual style for subscriber conversion is ${strongestThumbnailStyle.key} (${compact(strongestThumbnailStyle.average)} subs per 1K views, n=${strongestThumbnailStyle.count}).${strongestThumbnailStyleCtr ? ` Best CTR style is ${strongestThumbnailStyleCtr.key} (${pct(strongestThumbnailStyleCtr.average)}, n=${strongestThumbnailStyleCtr.count}).` : ''}` : 'Thumbnail visual features are collected during full analysis; run again as channels connect to build style benchmarks.', strongestThumbnailStyle ? 'Live' : 'Collecting'),
-          item('Thumbnail text presence vs CTR', thumbnailTextCtrAnswer, textPresentCtrVideos.length && textAbsentCtrVideos.length ? 'Live' : 'Collecting'),
-          item('Thumbnail complexity vs CTR', visualVideosWithCtr.length ? correlationLabel(pearsonByKey(visualVideosWithCtr, 'thumbnailComplexity', 'thumbnailCtr')) : 'Visual complexity scores are now collected from thumbnail pixels during full analysis.', visualVideosWithCtr.length ? 'Live' : 'Collecting'),
-          item('High CTR but low retention patterns', highCtrWeakRetention.length ? highCtrWeakRetention.map((video: any) => video.title).join(' | ') : 'No high-CTR/low-retention candidate in current sample.'),
-          item('Low CTR but high retention patterns', videos.filter((video: any) => video.thumbnailCtr !== null && video.thumbnailCtr < medianCtr && video.averageViewPercentage >= medianRetention).slice(0, 3).map((video: any) => video.title).join(' | ') || 'No low-CTR/high-retention candidate in current sample.'),
+          hasCtrSample
+            ? item('Thumbnail text presence vs CTR', thumbnailTextCtrAnswer, textPresentCtrVideos.length && textAbsentCtrVideos.length ? 'Live' : 'Collecting')
+            : item('Thumbnail text presence vs CTR', 'Thumbnail text presence is collected, but Studio thumbnail CTR was not returned for enough videos in this API pull.', 'Limited by API', 'The visual thumbnail features are stored and ready for CTR comparison if we later add a Studio CTR collector.'),
+          hasCtrSample
+            ? item('Thumbnail complexity vs CTR', visualVideosWithCtr.length ? correlationLabel(pearsonByKey(visualVideosWithCtr, 'thumbnailComplexity', 'thumbnailCtr')) : 'Visual complexity scores are now collected from thumbnail pixels during full analysis.', visualVideosWithCtr.length ? 'Live' : 'Collecting')
+            : item('Thumbnail complexity vs CTR', 'Thumbnail complexity is collected, but Studio thumbnail CTR was not returned for enough videos in this API pull.', 'Limited by API', 'The visual thumbnail features are stored and ready for CTR comparison if we later add a Studio CTR collector.'),
+          hasCtrSample
+            ? item('High CTR but low retention patterns', highCtrWeakRetention.length ? highCtrWeakRetention.map((video: any) => video.title).join(' | ') : 'No high-CTR/low-retention candidate in current sample.')
+            : item('High CTR but low retention patterns', 'Studio thumbnail CTR was not returned for enough videos in this API pull.', 'Limited by API'),
+          hasCtrSample
+            ? item('Low CTR but high retention patterns', videos.filter((video: any) => video.thumbnailCtr !== null && video.thumbnailCtr < medianCtr && video.averageViewPercentage >= medianRetention).slice(0, 3).map((video: any) => video.title).join(' | ') || 'No low-CTR/high-retention candidate in current sample.')
+            : item('Low CTR but high retention patterns', 'Studio thumbnail CTR was not returned for enough videos in this API pull.', 'Limited by API'),
         ],
       },
       {
