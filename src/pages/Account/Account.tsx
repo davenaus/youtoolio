@@ -70,6 +70,13 @@ const SkeletonStack = styled.div`
   gap: 0.8rem;
 `;
 
+const SkeletonTextStack = styled.div<{ $gap?: string }>`
+  display: grid;
+  gap: ${({ $gap }) => $gap || '0.55rem'};
+  width: 100%;
+  min-width: 0;
+`;
+
 // ─── Cards ────────────────────────────────────────────────────────────────────
 
 const Card = styled.div`
@@ -80,6 +87,12 @@ const Card = styled.div`
   border-radius: 16px;
   padding: 1.75rem;
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+`;
+
+const ExtensionAccessCard = styled(Card)`
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
 `;
 
 const CardHeader = styled.div`
@@ -197,19 +210,26 @@ const DashboardGrid = styled.div`
 
 const BenefitGrid = styled.div`
   display: grid;
-  gap: 0.75rem;
+  gap: 0;
 `;
 
 const BenefitTile = styled.div<{ $active?: boolean; $locked?: boolean }>`
   display: grid;
   grid-template-columns: 34px 1fr;
-  gap: 0.8rem;
+  gap: 0.875rem;
   align-items: start;
-  padding: 0.9rem;
-  border: 1px solid ${({ $active }) => $active ? 'rgba(185, 28, 28, 0.26)' : 'rgba(255,255,255,0.08)'};
-  border-radius: 12px;
-  background: ${({ $locked }) => $locked ? 'rgba(255,255,255,0.012)' : 'rgba(255,255,255,0.024)'};
-  opacity: ${({ $locked }) => $locked ? 0.62 : 1};
+  padding: 1rem 0;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
+  opacity: ${({ $locked }) => $locked ? 0.72 : 1};
+
+  &:first-child {
+    padding-top: 0.15rem;
+  }
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
 `;
 
 const BenefitIcon = styled.div<{ $active?: boolean; $locked?: boolean }>`
@@ -218,7 +238,7 @@ const BenefitIcon = styled.div<{ $active?: boolean; $locked?: boolean }>`
   border-radius: 10px;
   display: grid;
   place-items: center;
-  background: ${({ $active, $locked, theme }) => $active ? `${theme.colors.red1}` : $locked ? 'rgba(255,255,255,0.028)' : 'rgba(255,255,255,0.05)'};
+  background: ${({ $active, $locked, theme }) => $active ? `${theme.colors.red1}` : $locked ? 'rgba(255,255,255,0.024)' : 'rgba(255,255,255,0.045)'};
   color: ${({ $active, $locked, theme }) => $active ? theme.colors.red6 : $locked ? 'rgba(156, 163, 175, 0.62)' : theme.colors.text.muted};
   box-shadow: ${({ $active }) => $active ? '0 0 0 1px rgba(185, 28, 28, 0.34), 0 0 20px rgba(229, 72, 72, 0.26)' : 'none'};
 `;
@@ -479,41 +499,41 @@ const PrimaryLink = styled(Link)`
 
 const ExtensionStoreCard = styled.a`
   display: grid;
-  grid-template-columns: 38px minmax(0, 1fr) auto;
-  gap: 0.85rem;
+  grid-template-columns: 32px minmax(0, 1fr) auto;
+  gap: 0.75rem;
   align-items: center;
-  margin: 1rem 0 0.9rem;
-  padding: 0.95rem 1rem;
-  border-radius: 14px;
-  border: 1px solid rgba(185, 28, 28, 0.34);
+  margin: auto 0 0;
+  padding: 0.78rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid rgba(185, 28, 28, 0.18);
   background:
-    radial-gradient(circle at top left, ${({ theme }) => theme.colors.red3}36, transparent 46%),
-    linear-gradient(135deg, rgba(82, 1, 1, 0.34), rgba(255, 255, 255, 0.018));
+    radial-gradient(circle at top left, ${({ theme }) => theme.colors.red3}24, transparent 48%),
+    linear-gradient(135deg, rgba(82, 1, 1, 0.16), rgba(255, 255, 255, 0.018));
   color: ${({ theme }) => theme.colors.text.primary};
   text-decoration: none;
-  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
-    border-color: ${({ theme }) => theme.colors.red4};
-    transform: translateY(-1px);
+    border-color: rgba(248, 113, 113, 0.34);
     background:
-      radial-gradient(circle at top left, ${({ theme }) => theme.colors.red3}55, transparent 48%),
-      linear-gradient(135deg, rgba(82, 1, 1, 0.42), rgba(255, 255, 255, 0.026));
+      radial-gradient(circle at top left, ${({ theme }) => theme.colors.red3}34, transparent 48%),
+      linear-gradient(135deg, rgba(82, 1, 1, 0.22), rgba(255, 255, 255, 0.024));
+    box-shadow: 0 12px 30px rgba(185, 28, 28, 0.11);
   }
 `;
 
 const ExtensionStoreIcon = styled.div`
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
-  box-shadow: 0 10px 26px rgba(185, 28, 28, 0.28);
-  color: white;
+  background: rgba(185, 28, 28, 0.14);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  color: ${({ theme }) => theme.colors.red6};
 
   i {
-    font-size: 1.25rem;
+    font-size: 1.05rem;
   }
 `;
 
@@ -523,14 +543,14 @@ const ExtensionStoreCopy = styled.div`
   strong {
     display: block;
     color: ${({ theme }) => theme.colors.text.primary};
-    font-size: 0.88rem;
+    font-size: 0.82rem;
     line-height: 1.25;
   }
 
   span {
     display: block;
     color: ${({ theme }) => theme.colors.text.muted};
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     line-height: 1.45;
     margin-top: 0.18rem;
   }
@@ -542,8 +562,8 @@ const ExtensionStoreArrow = styled.span`
   border-radius: 999px;
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.06);
-  color: ${({ theme }) => theme.colors.red6};
+  background: rgba(255, 255, 255, 0.035);
+  color: ${({ theme }) => theme.colors.text.muted};
   flex-shrink: 0;
 `;
 
@@ -714,10 +734,10 @@ function AccountSkeleton() {
           <ProfilePanel>
             <ProfileMini>
               <SkeletonCircle $width="64px" $height="64px" $radius="50%" />
-              <ProfileInfo>
+              <SkeletonTextStack $gap="0.65rem">
                 <SkeletonBlock $width="78%" $height="20px" />
                 <SkeletonBlock $width="92%" $height="14px" />
-              </ProfileInfo>
+              </SkeletonTextStack>
             </ProfileMini>
             <StatusRow>
               <StatusLeft>
@@ -751,7 +771,7 @@ function AccountSkeleton() {
             </BenefitGrid>
           </Card>
 
-          <Card>
+          <ExtensionAccessCard>
             <CardHeader>
               <SkeletonBlock $width="132px" $height="12px" />
             </CardHeader>
@@ -775,7 +795,7 @@ function AccountSkeleton() {
               </SkeletonStack>
               <SkeletonBlock $width="28px" $height="28px" />
             </ExtensionStoreCard>
-          </Card>
+          </ExtensionAccessCard>
         </DashboardGrid>
       </Inner>
     </Page>
@@ -1154,7 +1174,7 @@ export const Account: React.FC = () => {
             </BenefitGrid>
           </Card>
 
-          <Card>
+          <ExtensionAccessCard>
             <CardHeader>
               <CardTitle>Extension access</CardTitle>
             </CardHeader>
@@ -1212,13 +1232,13 @@ export const Account: React.FC = () => {
                 <strong>{extensionConnected ? 'Get the Chrome Extension' : 'Install the Chrome Extension'}</strong>
                 <span>
                   {extensionConnected
-                    ? 'Install YouTool on another browser or computer whenever you need it.'
-                    : 'Get YouTool on this computer and open the tools directly inside YouTube.'}
+                    ? 'Open YouTool inside YouTube.'
+                    : 'Use YouTool directly on YouTube.'}
                 </span>
               </ExtensionStoreCopy>
               <ExtensionStoreArrow><i className="bx bx-right-arrow-alt"></i></ExtensionStoreArrow>
             </ExtensionStoreCard>
-          </Card>
+          </ExtensionAccessCard>
         </DashboardGrid>
 
         {ytChannel && <AccountYouTubeInsights channel={ytChannel} />}

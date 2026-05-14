@@ -142,6 +142,11 @@ const SkeletonFeatureList = styled.div`
   margin-top: 1.4rem;
 `;
 
+const SkeletonPlanBody = styled.div`
+  display: grid;
+  gap: 0.85rem;
+`;
+
 const SkeletonFeatureRow = styled.div`
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr);
@@ -346,24 +351,26 @@ function PricingSkeletonGrid() {
     <PricingGrid>
       {[false, true].map((featured) => (
         <PlanCard key={String(featured)} $featured={featured}>
-          <SkeletonBlock $width="40%" $height="30px" $radius="10px" />
-          <SkeletonBlock $width="84%" $height="14px" />
-          <SkeletonBlock $width="58%" $height="14px" />
-          {featured && <SkeletonBlock $width="180px" $height="42px" $radius="999px" />}
-          <Price>
-            <SkeletonBlock $width="150px" $height="52px" $radius="16px" />
-            <SkeletonBlock $width="60px" $height="16px" />
-          </Price>
-          <SkeletonBlock $width="70%" $height="14px" />
-          <SkeletonBlock $width="100%" $height="46px" $radius="12px" />
-          <SkeletonFeatureList>
-            {rows.map((_, index) => (
-              <SkeletonFeatureRow key={index}>
-                <SkeletonBlock $width="24px" $height="24px" $radius="50%" />
-                <SkeletonBlock $width={index % 2 ? '82%' : '94%'} $height="14px" />
-              </SkeletonFeatureRow>
-            ))}
-          </SkeletonFeatureList>
+          <SkeletonPlanBody>
+            <SkeletonBlock $width="40%" $height="30px" $radius="10px" />
+            <SkeletonBlock $width="84%" $height="14px" />
+            <SkeletonBlock $width="58%" $height="14px" />
+            {featured && <SkeletonBlock $width="180px" $height="42px" $radius="999px" />}
+            <Price>
+              <SkeletonBlock $width="150px" $height="52px" $radius="16px" />
+              <SkeletonBlock $width="60px" $height="16px" />
+            </Price>
+            <SkeletonBlock $width="70%" $height="14px" />
+            <SkeletonBlock $width="100%" $height="46px" $radius="12px" />
+            <SkeletonFeatureList>
+              {rows.map((_, index) => (
+                <SkeletonFeatureRow key={index}>
+                  <SkeletonBlock $width="24px" $height="24px" $radius="50%" />
+                  <SkeletonBlock $width={index % 2 ? '82%' : '94%'} $height="14px" />
+                </SkeletonFeatureRow>
+              ))}
+            </SkeletonFeatureList>
+          </SkeletonPlanBody>
         </PlanCard>
       ))}
     </PricingGrid>
