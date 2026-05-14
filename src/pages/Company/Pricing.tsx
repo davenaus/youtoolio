@@ -130,7 +130,7 @@ const Price = styled.div`
 
 const PriceValue = styled.span`
   font-size: clamp(2.1rem, 5vw, 3.2rem);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   line-height: 1;
   font-weight: 800;
   letter-spacing: 0;
