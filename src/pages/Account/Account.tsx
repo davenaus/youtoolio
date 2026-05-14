@@ -497,12 +497,17 @@ const PrimaryLink = styled(Link)`
   }
 `;
 
+const ExtensionStoreSlot = styled.div`
+  margin-top: auto;
+  padding-top: 1rem;
+`;
+
 const ExtensionStoreCard = styled.a`
   display: grid;
   grid-template-columns: 32px minmax(0, 1fr) auto;
   gap: 0.75rem;
   align-items: center;
-  margin: auto 0 0;
+  margin: 0;
   padding: 0.78rem 0.85rem;
   border-radius: 12px;
   border: 1px solid rgba(185, 28, 28, 0.18);
@@ -787,14 +792,16 @@ function AccountSkeleton() {
                 <SkeletonBlock $width="52px" $height="22px" />
               </StatusRow>
             ))}
-            <ExtensionStoreCard as="div">
-              <SkeletonBlock $width="38px" $height="38px" $radius="12px" />
-              <SkeletonStack>
-                <SkeletonBlock $width="172px" $height="16px" />
-                <SkeletonBlock $width="94%" $height="12px" />
-              </SkeletonStack>
-              <SkeletonBlock $width="28px" $height="28px" />
-            </ExtensionStoreCard>
+            <ExtensionStoreSlot>
+              <ExtensionStoreCard as="div">
+                <SkeletonBlock $width="38px" $height="38px" $radius="12px" />
+                <SkeletonStack>
+                  <SkeletonBlock $width="172px" $height="16px" />
+                  <SkeletonBlock $width="94%" $height="12px" />
+                </SkeletonStack>
+                <SkeletonBlock $width="28px" $height="28px" />
+              </ExtensionStoreCard>
+            </ExtensionStoreSlot>
           </ExtensionAccessCard>
         </DashboardGrid>
       </Inner>
@@ -1226,18 +1233,20 @@ export const Account: React.FC = () => {
               </InstructionStep>
             </InstructionBox>}
 
-            <ExtensionStoreCard href={CHROME_EXTENSION_STORE_URL} target="_blank" rel="noopener noreferrer">
-              <ExtensionStoreIcon><i className="bx bxl-chrome"></i></ExtensionStoreIcon>
-              <ExtensionStoreCopy>
-                <strong>{extensionConnected ? 'Get the Chrome Extension' : 'Install the Chrome Extension'}</strong>
-                <span>
-                  {extensionConnected
-                    ? 'Open YouTool inside YouTube.'
-                    : 'Use YouTool directly on YouTube.'}
-                </span>
-              </ExtensionStoreCopy>
-              <ExtensionStoreArrow><i className="bx bx-right-arrow-alt"></i></ExtensionStoreArrow>
-            </ExtensionStoreCard>
+            <ExtensionStoreSlot>
+              <ExtensionStoreCard href={CHROME_EXTENSION_STORE_URL} target="_blank" rel="noopener noreferrer">
+                <ExtensionStoreIcon><i className="bx bxl-chrome"></i></ExtensionStoreIcon>
+                <ExtensionStoreCopy>
+                  <strong>{extensionConnected ? 'Get the Chrome Extension' : 'Install the Chrome Extension'}</strong>
+                  <span>
+                    {extensionConnected
+                      ? 'Open YouTool inside YouTube.'
+                      : 'Use YouTool directly on YouTube.'}
+                  </span>
+                </ExtensionStoreCopy>
+                <ExtensionStoreArrow><i className="bx bx-right-arrow-alt"></i></ExtensionStoreArrow>
+              </ExtensionStoreCard>
+            </ExtensionStoreSlot>
           </ExtensionAccessCard>
         </DashboardGrid>
 
