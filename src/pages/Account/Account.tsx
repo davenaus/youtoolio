@@ -335,10 +335,10 @@ const Dot = styled.span<{ $connected?: boolean }>`
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: ${({ $connected }) => $connected ? '#f87171' : 'rgba(255,255,255,0.2)'};
+  background: ${({ $connected }) => $connected ? '#22c55e' : 'rgba(255,255,255,0.2)'};
   display: inline-block;
   flex-shrink: 0;
-  box-shadow: ${({ $connected }) => $connected ? '0 0 8px rgba(248, 113, 113, 0.7)' : 'none'};
+  box-shadow: ${({ $connected }) => $connected ? '0 0 8px rgba(34, 197, 94, 0.7)' : 'none'};
 `;
 
 // ─── Extension instructions ───────────────────────────────────────────────────
@@ -779,7 +779,7 @@ export const Account: React.FC = () => {
             <div>
               <CardTitle>Membership</CardTitle>
               <HeroTitle>
-                {isPremium ? <><HeroTitleAccent>Premium</HeroTitleAccent> is active</> : <>Your YouTool <HeroTitleAccent>dashboard</HeroTitleAccent></>}
+                {isPremium ? <><HeroTitleAccent>Premium</HeroTitleAccent> is active</> : <>Your YouTool <HeroTitleAccent>Dashboard</HeroTitleAccent></>}
               </HeroTitle>
               <HeroSub>
                 {isPremium
@@ -897,7 +897,6 @@ export const Account: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle>Extension access</CardTitle>
-              <PlanBadge $premium={extensionConnected === true}>{extensionConnected === true ? 'Connected' : 'Setup'}</PlanBadge>
             </CardHeader>
 
             <StatusRow>

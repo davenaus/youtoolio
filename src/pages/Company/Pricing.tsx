@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { supabase } from '../../lib/supabase';
@@ -6,9 +6,14 @@ import { useAuth } from '../../context/AuthContext';
 
 type BillingInterval = 'monthly' | 'yearly';
 
+interface BillingStatus {
+  isPremium: boolean;
+}
+
 const Page = styled.div`
   min-height: 100vh;
   padding: 4rem 2rem 2rem;
+  font-family: ${({ theme }) => theme.fonts.primary};
   background:
     radial-gradient(circle at 48% 8%, ${({ theme }) => theme.colors.red2}38 0%, transparent 36%),
     radial-gradient(circle at 90% 18%, ${({ theme }) => theme.colors.red1}66 0%, transparent 34%),
@@ -100,25 +105,11 @@ const PlanCard = styled.div<{ $featured?: boolean }>`
   box-shadow: ${({ $featured }) => $featured ? '0 24px 70px rgba(185, 28, 28, 0.18)' : '0 18px 45px rgba(0, 0, 0, 0.22)'};
 `;
 
-const PopularBadge = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 28px;
-  padding: 0 0.72rem;
-  border-radius: 999px;
-  background: rgba(185, 28, 28, 0.18);
-  border: 1px solid rgba(229, 72, 72, 0.42);
-  color: ${({ theme }) => theme.colors.red6};
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-bottom: 1rem;
-`;
-
 const PlanName = styled.h2`
   font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0;
   margin: 0;
 `;
 
@@ -140,8 +131,8 @@ const Price = styled.div`
 const PriceValue = styled.span`
   font-size: clamp(2.1rem, 5vw, 3.2rem);
   line-height: 1;
-  font-weight: 800;
-  letter-spacing: -0.05em;
+  font-weight: 700;
+  letter-spacing: 0;
 `;
 
 const PriceMeta = styled.span`
@@ -220,14 +211,15 @@ const CtaLink = styled(Link)<{ $primary?: boolean }>`
   border: 1px solid ${({ $primary, theme }) => $primary ? theme.colors.red3 : theme.colors.dark5};
   background: ${({ $primary, theme }) => $primary ? `linear-gradient(135deg, ${theme.colors.red3}, ${theme.colors.red4})` : theme.colors.dark4};
   color: ${({ theme }) => theme.colors.white};
+  font-family: ${({ theme }) => theme.fonts.primary};
   text-decoration: none;
-  font-weight: 800;
+  font-weight: 700;
   margin-top: 1.35rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: ${({ $primary }) => $primary ? '0 0 24px rgba(185, 28, 28, 0.34)' : '0 12px 28px rgba(0,0,0,0.28)'};
+    box-shadow: ${({ $primary }) => $primary ? '0 0 18px rgba(185, 28, 28, 0.18)' : '0 10px 20px rgba(0,0,0,0.16)'};
   }
 `;
 
@@ -243,20 +235,37 @@ const CtaButton = styled.button<{ $primary?: boolean }>`
   background: ${({ $primary, theme }) => $primary ? `linear-gradient(135deg, ${theme.colors.red3}, ${theme.colors.red4})` : theme.colors.dark4};
   color: ${({ theme }) => theme.colors.white};
   font-family: ${({ theme }) => theme.fonts.primary};
-  font-weight: 800;
+  font-weight: 700;
   margin-top: 1.35rem;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 
   &:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: ${({ $primary }) => $primary ? '0 0 24px rgba(185, 28, 28, 0.34)' : '0 12px 28px rgba(0,0,0,0.28)'};
+    box-shadow: ${({ $primary }) => $primary ? '0 0 18px rgba(185, 28, 28, 0.18)' : '0 10px 20px rgba(0,0,0,0.16)'};
   }
 
   &:disabled {
     cursor: not-allowed;
     opacity: 0.7;
   }
+`;
+
+const CurrentPlanButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 46px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.075);
+  color: ${({ theme }) => theme.colors.text.muted};
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-weight: 700;
+  margin-top: 1.35rem;
+  cursor: default;
 `;
 
 const CheckoutError = styled.div`
@@ -270,23 +279,9 @@ const CheckoutError = styled.div`
   line-height: 1.45;
 `;
 
-const NoteBand = styled.div`
-  margin-top: 1.25rem;
-  border: 1px solid rgba(185, 28, 28, 0.28);
-  background: linear-gradient(135deg, rgba(46, 4, 4, 0.36), rgba(255,255,255,0.018));
-  border-radius: 16px;
-  padding: 1.1rem 1.25rem;
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 0.88rem;
-  line-height: 1.55;
-
-  strong {
-    color: ${({ theme }) => theme.colors.text.primary};
-  }
-`;
-
 export const Pricing: React.FC = () => {
   const [interval, setBillingInterval] = useState<BillingInterval>('yearly');
+  const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
   const { user, loading } = useAuth();
@@ -294,6 +289,46 @@ export const Pricing: React.FC = () => {
   const yearly = interval === 'yearly';
   const price = yearly ? '$47.99' : '$4.99';
   const period = yearly ? '/year' : '/month';
+  const signedIn = Boolean(user);
+  const billingChecking = signedIn && billingStatus === null;
+  const isPremium = Boolean(billingStatus?.isPremium);
+  const isFreeCurrentPlan = signedIn && !billingChecking && !isPremium;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadBillingStatus() {
+      if (loading || !user) {
+        setBillingStatus(null);
+        return;
+      }
+
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          if (!cancelled) setBillingStatus(null);
+          return;
+        }
+
+        const response = await fetch('/api/billing?action=status', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        const payload = await response.json();
+
+        if (!cancelled) {
+          setBillingStatus(payload.billing ? { isPremium: Boolean(payload.billing.isPremium) } : { isPremium: false });
+        }
+      } catch {
+        if (!cancelled) setBillingStatus(null);
+      }
+    }
+
+    loadBillingStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, user]);
 
   const handleCheckout = async () => {
     setCheckoutError('');
@@ -347,7 +382,7 @@ export const Pricing: React.FC = () => {
 
         <Hero>
           <Kicker>YouTool.io Premium</Kicker>
-          <Title><TitleAccent>Simple pricing.</TitleAccent></Title>
+          <Title><TitleAccent>Simple</TitleAccent> pricing.</Title>
           <Subtitle>
             Free website tools. Premium Chrome extension workflows.
           </Subtitle>
@@ -363,10 +398,14 @@ export const Pricing: React.FC = () => {
               <PriceValue>$0</PriceValue>
               <PriceMeta>/month</PriceMeta>
             </Price>
-            <SaveLine>Connect YouTube for tailored analysis.</SaveLine>
-            <CtaLink to="/login">Start free</CtaLink>
+            {isFreeCurrentPlan ? (
+              <CurrentPlanButton type="button" disabled>Current plan</CurrentPlanButton>
+            ) : (
+              <CtaLink to={signedIn ? '/account' : '/login'}>{signedIn ? 'View account' : 'Start free'}</CtaLink>
+            )}
             <FeatureList>
               <FeatureItem><i className="bx bx-check"></i><span>Website tools</span></FeatureItem>
+              <FeatureItem><i className="bx bx-check"></i><span>Google Chrome extension basics</span></FeatureItem>
               <FeatureItem><i className="bx bx-check"></i><span>Connected-channel stats</span></FeatureItem>
               <FeatureItem><i className="bx bx-check"></i><span>Full channel analysis</span></FeatureItem>
               <FeatureItem $muted><i className="bx bx-lock-alt"></i><span>Premium Studio workflow features are locked</span></FeatureItem>
@@ -374,10 +413,9 @@ export const Pricing: React.FC = () => {
           </PlanCard>
 
           <PlanCard $featured>
-            <PopularBadge><i className="bx bx-extension"></i> Chrome extension focus</PopularBadge>
             <PlanName>Premium</PlanName>
             <PlanCopy>
-              Bring YouTool into YouTube and YouTube Studio.
+              An enhanced Chrome extension experience for YouTube and YouTube Studio.
             </PlanCopy>
             <Toggle aria-label="Billing interval">
               <ToggleButton type="button" $active={interval === 'monthly'} onClick={() => setBillingInterval('monthly')}>Monthly</ToggleButton>
@@ -388,22 +426,22 @@ export const Pricing: React.FC = () => {
               <PriceMeta>{period}</PriceMeta>
             </Price>
             <SaveLine>{yearly ? 'Save about 20% compared with monthly billing.' : 'Switch to yearly to save about 20%.'}</SaveLine>
-            <CtaButton $primary type="button" onClick={handleCheckout} disabled={checkoutLoading || loading}>
-              {checkoutLoading ? 'Opening checkout…' : 'Subscribe'}
-            </CtaButton>
+            {isPremium ? (
+              <CurrentPlanButton type="button" disabled>Current plan</CurrentPlanButton>
+            ) : (
+              <CtaButton $primary type="button" onClick={handleCheckout} disabled={checkoutLoading || loading || billingChecking}>
+                {checkoutLoading ? 'Opening checkout…' : 'Subscribe'}
+              </CtaButton>
+            )}
             {checkoutError && <CheckoutError>{checkoutError}</CheckoutError>}
             <FeatureList>
-              <FeatureItem><i className="bx bx-check"></i><span>Unlimited in-YouTube tool runs</span></FeatureItem>
-              <FeatureItem><i className="bx bx-check"></i><span>Video, channel, and comment tools inside YouTube</span></FeatureItem>
+              <FeatureItem><i className="bx bx-check"></i><span>Everything in the free Chrome extension, upgraded</span></FeatureItem>
+              <FeatureItem><i className="bx bx-check"></i><span>Unlimited video, channel, and comment tools inside YouTube</span></FeatureItem>
               <FeatureItem><i className="bx bx-check"></i><span>Higher comment export limits</span></FeatureItem>
-              <FeatureItem><i className="bx bx-check"></i><span>Streamer Mode and real-time engaged views for Studio workflows</span></FeatureItem>
+              <FeatureItem><i className="bx bx-check"></i><span>Premium Studio tools: timelines, columns, streamer mode, and engaged views</span></FeatureItem>
             </FeatureList>
           </PlanCard>
         </PricingGrid>
-
-        <NoteBand>
-          <strong>Premium is mainly for the Chrome extension.</strong> Connect YouTube from your account before checkout so the paid features attach to the right channel.
-        </NoteBand>
       </Shell>
     </Page>
   );
