@@ -489,19 +489,6 @@ const PlanBadge = styled.span<{ $premium?: boolean }>`
   }
 `;
 
-const StatusPill = styled.span`
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 0.76rem;
-  font-weight: 700;
-  padding: 0 0.75rem;
-`;
-
 const BillingNotice = styled.div<{ $canceling?: boolean }>`
   display: grid;
   gap: 0.35rem;
@@ -830,7 +817,6 @@ export const Account: React.FC = () => {
                   {ytConnecting ? 'Redirecting…' : 'Connect YouTube'}
                 </Button>
               )}
-              {billingRenewalCopy && <StatusPill>{billingRenewalCopy}</StatusPill>}
             </HeroActions>
 
             {isPremium && billingRenewalCopy && (
@@ -960,19 +946,6 @@ export const Account: React.FC = () => {
               <Dot $connected={extensionConnected === true} />
             </StatusRow>
 
-            <ExtensionStoreCard href={CHROME_EXTENSION_STORE_URL} target="_blank" rel="noopener noreferrer">
-              <ExtensionStoreIcon><i className="bx bxl-chrome"></i></ExtensionStoreIcon>
-              <ExtensionStoreCopy>
-                <strong>{extensionConnected ? 'Get the Chrome Extension' : 'Install the Chrome Extension'}</strong>
-                <span>
-                  {extensionConnected
-                    ? 'Install YouTool on another browser or computer whenever you need it.'
-                    : 'Get YouTool on this computer and open the tools directly inside YouTube.'}
-                </span>
-              </ExtensionStoreCopy>
-              <ExtensionStoreArrow><i className="bx bx-right-arrow-alt"></i></ExtensionStoreArrow>
-            </ExtensionStoreCard>
-
             <StatusRow>
               <StatusLeft>
                 <StatusIcon><i className="bx bxl-youtube"></i></StatusIcon>
@@ -997,7 +970,7 @@ export const Account: React.FC = () => {
               <InstructionTitle>Extension setup</InstructionTitle>
               <InstructionStep>
                 <StepNum>1</StepNum>
-                Use the install card above, then pin the YouTool.io Chrome extension.
+                Install and pin the YouTool.io Chrome extension.
               </InstructionStep>
               <InstructionStep>
                 <StepNum>2</StepNum>
@@ -1008,6 +981,19 @@ export const Account: React.FC = () => {
                 Connect YouTube to unlock channel-aware tools.
               </InstructionStep>
             </InstructionBox>}
+
+            <ExtensionStoreCard href={CHROME_EXTENSION_STORE_URL} target="_blank" rel="noopener noreferrer">
+              <ExtensionStoreIcon><i className="bx bxl-chrome"></i></ExtensionStoreIcon>
+              <ExtensionStoreCopy>
+                <strong>{extensionConnected ? 'Get the Chrome Extension' : 'Install the Chrome Extension'}</strong>
+                <span>
+                  {extensionConnected
+                    ? 'Install YouTool on another browser or computer whenever you need it.'
+                    : 'Get YouTool on this computer and open the tools directly inside YouTube.'}
+                </span>
+              </ExtensionStoreCopy>
+              <ExtensionStoreArrow><i className="bx bx-right-arrow-alt"></i></ExtensionStoreArrow>
+            </ExtensionStoreCard>
           </Card>
         </DashboardGrid>
 
