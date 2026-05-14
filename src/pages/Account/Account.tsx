@@ -111,10 +111,18 @@ const HeroContent = styled.div`
 
 const HeroTitle = styled.h1`
   color: ${({ theme }) => theme.colors.text.primary};
-  font-size: clamp(1.8rem, 4vw, 3.1rem);
-  line-height: 0.98;
-  letter-spacing: -0.04em;
+  font-size: clamp(1.9rem, 4vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: 0;
   margin: 0.5rem 0 0;
+`;
+
+const HeroTitleAccent = styled.span`
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 `;
 
 const HeroSub = styled.p`
@@ -421,6 +429,29 @@ const AllToolsLink = styled(Link)`
   }
 `;
 
+const PrimaryLink = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border: 1px solid ${({ theme }) => theme.colors.red3};
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red3}, ${({ theme }) => theme.colors.red4});
+  color: ${({ theme }) => theme.colors.white};
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, ${({ theme }) => theme.colors.red2}, ${({ theme }) => theme.colors.red3});
+    border-color: ${({ theme }) => theme.colors.red2};
+    transform: translateY(-2px);
+    box-shadow: ${({ theme }) => theme.shadows.glow};
+  }
+`;
+
 const ExtensionStoreCard = styled.a`
   display: grid;
   grid-template-columns: 38px minmax(0, 1fr) auto;
@@ -531,41 +562,6 @@ const BillingNotice = styled.div<{ $canceling?: boolean }>`
     color: ${({ $canceling }) => $canceling ? '#fecaca' : '#fff'};
     font-size: 0.86rem;
   }
-`;
-
-const BillingRows = styled.div`
-  display: grid;
-  gap: 0;
-  border-top: 1px solid ${({ theme }) => theme.colors.dark5};
-`;
-
-const BillingRow = styled.div`
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 1rem;
-  align-items: center;
-  padding: 1rem 0;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.dark5};
-
-  &:last-child { border-bottom: none; }
-
-  @media (max-width: 560px) {
-    grid-template-columns: 1fr;
-    align-items: stretch;
-  }
-`;
-
-const BillingRowTitle = styled.div`
-  color: ${({ theme }) => theme.colors.text.primary};
-  font-size: 0.92rem;
-  font-weight: 700;
-`;
-
-const BillingRowMeta = styled.div`
-  margin-top: 0.2rem;
-  color: ${({ theme }) => theme.colors.text.muted};
-  font-size: 0.75rem;
-  line-height: 1.45;
 `;
 
 const BillingError = styled.div`
@@ -712,35 +708,6 @@ export const Account: React.FC = () => {
     if (payload.billing) setBilling(payload.billing);
   };
 
-  const handleStartCheckout = async (interval: 'monthly' | 'yearly') => {
-    setBillingError('');
-    if (!ytChannel) {
-      setBillingError('Connect your YouTube channel before upgrading to Premium.');
-      return;
-    }
-
-    setBillingAction(interval);
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { navigate('/login'); return; }
-
-    try {
-      const res = await fetch('/api/billing', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ action: 'create_checkout_session', interval }),
-      });
-      const payload = await res.json();
-      if (!res.ok || !payload.url) throw new Error(payload.message || 'Could not start checkout.');
-      window.location.href = payload.url;
-    } catch (error) {
-      setBillingError(error instanceof Error ? error.message : 'Could not start checkout.');
-      setBillingAction('');
-    }
-  };
-
   const handleManageBilling = async () => {
     setBillingError('');
     setBillingAction('portal');
@@ -811,7 +778,9 @@ export const Account: React.FC = () => {
           <HeroContent>
             <div>
               <CardTitle>Membership</CardTitle>
-              <HeroTitle>{isPremium ? 'Premium is active' : 'Your YouTool dashboard'}</HeroTitle>
+              <HeroTitle>
+                {isPremium ? <><HeroTitleAccent>Premium</HeroTitleAccent> is active</> : <>Your YouTool <HeroTitleAccent>dashboard</HeroTitleAccent></>}
+              </HeroTitle>
               <HeroSub>
                 {isPremium
                   ? 'You have access to YouTool’s in-YouTube workflow: analysis, exports, and Studio tools without leaving YouTube.'
@@ -830,14 +799,7 @@ export const Account: React.FC = () => {
                   {billingAction === 'portal' ? 'Opening…' : 'Manage billing'}
                 </Button>
               ) : ytChannel ? (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  disabled={billingLoading || billingAction !== ''}
-                  onClick={() => handleStartCheckout('yearly')}
-                >
-                  {billingAction === 'yearly' ? 'Opening…' : 'Upgrade to Premium'}
-                </Button>
+                <PrimaryLink to="/pricing">View pricing</PrimaryLink>
               ) : (
                 <Button variant="primary" size="sm" onClick={handleConnectYouTube} disabled={ytConnecting}>
                   {ytConnecting ? 'Redirecting…' : 'Connect YouTube'}
@@ -854,40 +816,6 @@ export const Account: React.FC = () => {
                     : 'Your Premium access and Chrome extension features stay active.'}
                 </span>
               </BillingNotice>
-            )}
-
-            {!isPremium && ytChannel && (
-              <BillingRows>
-                <BillingRow>
-                  <div>
-                    <BillingRowTitle>Monthly</BillingRowTitle>
-                    <BillingRowMeta>$4.99/month · In-YouTube YouTool tools</BillingRowMeta>
-                  </div>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={billingLoading || billingAction !== '' || !ytChannel}
-                    onClick={() => handleStartCheckout('monthly')}
-                  >
-                    {billingAction === 'monthly' ? 'Opening…' : 'Upgrade'}
-                  </Button>
-                </BillingRow>
-
-                <BillingRow>
-                  <div>
-                    <BillingRowTitle>Yearly</BillingRowTitle>
-                    <BillingRowMeta>$47.99/year · About 20% off</BillingRowMeta>
-                  </div>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    disabled={billingLoading || billingAction !== '' || !ytChannel}
-                    onClick={() => handleStartCheckout('yearly')}
-                  >
-                    {billingAction === 'yearly' ? 'Opening…' : 'Upgrade'}
-                  </Button>
-                </BillingRow>
-              </BillingRows>
             )}
 
             {billingError && <BillingError>{billingError}</BillingError>}
@@ -921,7 +849,6 @@ export const Account: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle>Plan benefits</CardTitle>
-              <PlanBadge $premium={isPremium}>{isPremium ? 'Unlocked' : 'Free'}</PlanBadge>
             </CardHeader>
             <BenefitGrid>
               <BenefitTile $active>

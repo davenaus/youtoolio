@@ -382,9 +382,14 @@ const Footnote = styled.p`
 `;
 
 const ErrorText = styled.p`
-  margin: 0.75rem 0 0;
-  color: #fca5a5;
-  font-size: 0.75rem;
+  margin: 0.9rem 0 0;
+  padding: 0.85rem 0.95rem;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 113, 113, 0.24);
+  background: rgba(127, 29, 29, 0.14);
+  color: #fecaca;
+  font-size: 0.78rem;
+  line-height: 1.5;
 `;
 
 const SkeletonLine = styled.div<{ $width?: string; $height?: string }>`
@@ -802,6 +807,22 @@ function formatDelta(delta: DeltaEntry | undefined, suffix = '') {
   return `${direction}${formatPrecise(delta.percent, 1)}% vs prev${suffix}`;
 }
 
+function formatAnalyticsError(error: unknown, fallback: string): string {
+  const message = error instanceof Error ? error.message : String(error || '');
+  const lower = message.toLowerCase();
+
+  if (
+    lower.includes('forbidden') ||
+    lower.includes('insufficient') ||
+    lower.includes('permission') ||
+    lower.includes('analytics')
+  ) {
+    return 'YouTube Analytics is not available for this channel yet. If this is a new channel or it has no recent views, publish a video and give YouTube time to generate analytics.';
+  }
+
+  return message || fallback;
+}
+
 function formatSignedCount(value: number | null | undefined): string {
   const next = Number(value || 0);
   return `${next >= 0 ? '+' : ''}${formatCount(next)}`;
@@ -1056,7 +1077,7 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
         writeCache(dashboardCacheKey, payload);
       } catch (error) {
         if (!cancelled) {
-          setDashboardError(error instanceof Error ? error.message : 'Could not load channel analytics.');
+          setDashboardError(formatAnalyticsError(error, 'Could not load channel analytics.'));
         }
       } finally {
         if (!cancelled) setLoadingDashboard(false);
@@ -1165,7 +1186,7 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
       setFullAnalysis(payload.fullAnalysis);
       if (fullCacheKey) writeCache(fullCacheKey, payload.fullAnalysis);
     } catch (error) {
-      setFullAnalysisError(error instanceof Error ? error.message : 'Could not run the full channel analysis.');
+      setFullAnalysisError(formatAnalyticsError(error, 'Could not run the full channel analysis.'));
     } finally {
       setLoadingFullAnalysis(false);
     }

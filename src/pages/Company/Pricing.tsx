@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
 
 type BillingInterval = 'monthly' | 'yearly';
 
@@ -8,8 +10,9 @@ const Page = styled.div`
   min-height: 100vh;
   padding: 4rem 2rem 2rem;
   background:
-    radial-gradient(circle at 15% 8%, ${({ theme }) => theme.colors.red2}66 0%, transparent 28%),
-    radial-gradient(circle at 86% 18%, ${({ theme }) => theme.colors.red1}88 0%, transparent 34%),
+    radial-gradient(circle at 48% 8%, ${({ theme }) => theme.colors.red2}38 0%, transparent 36%),
+    radial-gradient(circle at 90% 18%, ${({ theme }) => theme.colors.red1}66 0%, transparent 34%),
+    linear-gradient(135deg, ${({ theme }) => theme.colors.dark2} 0%, ${({ theme }) => theme.colors.dark3} 100%),
     ${({ theme }) => theme.colors.dark2};
   color: ${({ theme }) => theme.colors.text.primary};
 `;
@@ -35,7 +38,7 @@ const BackLink = styled(Link)`
 `;
 
 const Hero = styled.header`
-  max-width: 760px;
+  max-width: 680px;
   margin-bottom: 2rem;
 `;
 
@@ -49,18 +52,26 @@ const Kicker = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: clamp(2.2rem, 6vw, 4.8rem);
-  line-height: 0.95;
-  letter-spacing: -0.055em;
-  margin: 0;
+  font-size: clamp(2.1rem, 5vw, 4rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0;
+  margin: 0 0 1rem;
+`;
+
+const TitleAccent = styled.span`
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.red4}, ${({ theme }) => theme.colors.red5});
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 `;
 
 const Subtitle = styled.p`
-  max-width: 680px;
+  max-width: 560px;
   color: ${({ theme }) => theme.colors.text.secondary};
-  font-size: 1rem;
-  line-height: 1.75;
-  margin: 1.2rem 0 0;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  margin: 0;
 `;
 
 const PricingGrid = styled.div`
@@ -114,9 +125,9 @@ const PlanName = styled.h2`
 const PlanCopy = styled.p`
   color: ${({ theme }) => theme.colors.text.muted};
   font-size: 0.88rem;
-  line-height: 1.65;
-  min-height: 58px;
-  margin: 0.8rem 0 1.35rem;
+  line-height: 1.5;
+  min-height: 0;
+  margin: 0.7rem 0 1.15rem;
 `;
 
 const Price = styled.div`
@@ -220,6 +231,45 @@ const CtaLink = styled(Link)<{ $primary?: boolean }>`
   }
 `;
 
+const CtaButton = styled.button<{ $primary?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 46px;
+  border-radius: 12px;
+  border: 1px solid ${({ $primary, theme }) => $primary ? theme.colors.red3 : theme.colors.dark5};
+  background: ${({ $primary, theme }) => $primary ? `linear-gradient(135deg, ${theme.colors.red3}, ${theme.colors.red4})` : theme.colors.dark4};
+  color: ${({ theme }) => theme.colors.white};
+  font-family: ${({ theme }) => theme.fonts.primary};
+  font-weight: 800;
+  margin-top: 1.35rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: ${({ $primary }) => $primary ? '0 0 24px rgba(185, 28, 28, 0.34)' : '0 12px 28px rgba(0,0,0,0.28)'};
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+`;
+
+const CheckoutError = styled.div`
+  margin-top: 0.8rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(248, 113, 113, 0.24);
+  border-radius: 12px;
+  background: rgba(127, 29, 29, 0.16);
+  color: #fecaca;
+  font-size: 0.76rem;
+  line-height: 1.45;
+`;
+
 const NoteBand = styled.div`
   margin-top: 1.25rem;
   border: 1px solid rgba(185, 28, 28, 0.28);
@@ -228,69 +278,67 @@ const NoteBand = styled.div`
   padding: 1.1rem 1.25rem;
   color: ${({ theme }) => theme.colors.text.secondary};
   font-size: 0.88rem;
-  line-height: 1.65;
+  line-height: 1.55;
 
   strong {
     color: ${({ theme }) => theme.colors.text.primary};
   }
 `;
 
-const BenefitSection = styled.section`
-  margin-top: 3rem;
-`;
-
-const SectionTitle = styled.h2`
-  font-size: clamp(1.6rem, 3vw, 2.4rem);
-  letter-spacing: -0.035em;
-  margin: 0 0 1rem;
-`;
-
-const BenefitCards = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-
-  @media (max-width: 860px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const BenefitCard = styled.div`
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 16px;
-  padding: 1.1rem;
-  background: rgba(255,255,255,0.022);
-
-  i {
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
-    display: grid;
-    place-items: center;
-    color: ${({ theme }) => theme.colors.red6};
-    background: ${({ theme }) => theme.colors.red1};
-    box-shadow: 0 0 22px rgba(229, 72, 72, 0.2);
-    margin-bottom: 0.9rem;
-  }
-
-  h3 {
-    margin: 0;
-    font-size: 1rem;
-  }
-
-  p {
-    margin: 0.45rem 0 0;
-    color: ${({ theme }) => theme.colors.text.muted};
-    font-size: 0.82rem;
-    line-height: 1.6;
-  }
-`;
-
 export const Pricing: React.FC = () => {
   const [interval, setBillingInterval] = useState<BillingInterval>('yearly');
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const yearly = interval === 'yearly';
   const price = yearly ? '$47.99' : '$4.99';
   const period = yearly ? '/year' : '/month';
+
+  const handleCheckout = async () => {
+    setCheckoutError('');
+
+    if (loading) return;
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    setCheckoutLoading(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await fetch('/api/billing', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'create_checkout_session', interval }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok || !payload.url) {
+        const message = payload.message || 'Could not start checkout.';
+        if (String(message).toLowerCase().includes('connect')) {
+          setCheckoutError('Connect your YouTube channel from the account page before upgrading.');
+          return;
+        }
+        throw new Error(message);
+      }
+
+      window.location.href = payload.url;
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : 'Could not start checkout.');
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
 
   return (
     <Page>
@@ -299,9 +347,9 @@ export const Pricing: React.FC = () => {
 
         <Hero>
           <Kicker>YouTool.io Premium</Kicker>
-          <Title>Pricing built around the Chrome extension.</Title>
+          <Title><TitleAccent>Simple pricing.</TitleAccent></Title>
           <Subtitle>
-            The website tools stay useful and easy to access. Premium is for creators who want YouTool directly inside YouTube and YouTube Studio, with higher limits, exports, and workflow upgrades where they actually work.
+            Free website tools. Premium Chrome extension workflows.
           </Subtitle>
         </Hero>
 
@@ -309,7 +357,7 @@ export const Pricing: React.FC = () => {
           <PlanCard>
             <PlanName>Free</PlanName>
             <PlanCopy>
-              Start with the website tools, connect your YouTube channel, and get enough extension access to understand how YouTool fits your workflow.
+              Use YouTool on the web and connect your channel.
             </PlanCopy>
             <Price>
               <PriceValue>$0</PriceValue>
@@ -318,10 +366,9 @@ export const Pricing: React.FC = () => {
             <SaveLine>Connect YouTube for tailored analysis.</SaveLine>
             <CtaLink to="/login">Start free</CtaLink>
             <FeatureList>
-              <FeatureItem><i className="bx bx-check"></i><span>Free YouTool website tools</span></FeatureItem>
-              <FeatureItem><i className="bx bx-check"></i><span>Connected-channel stats and trend graph</span></FeatureItem>
-              <FeatureItem><i className="bx bx-check"></i><span>Full channel analysis from your account page</span></FeatureItem>
-              <FeatureItem><i className="bx bx-check"></i><span>Limited weekly in-YouTube YouTool tool runs</span></FeatureItem>
+              <FeatureItem><i className="bx bx-check"></i><span>Website tools</span></FeatureItem>
+              <FeatureItem><i className="bx bx-check"></i><span>Connected-channel stats</span></FeatureItem>
+              <FeatureItem><i className="bx bx-check"></i><span>Full channel analysis</span></FeatureItem>
               <FeatureItem $muted><i className="bx bx-lock-alt"></i><span>Premium Studio workflow features are locked</span></FeatureItem>
             </FeatureList>
           </PlanCard>
@@ -330,7 +377,7 @@ export const Pricing: React.FC = () => {
             <PopularBadge><i className="bx bx-extension"></i> Chrome extension focus</PopularBadge>
             <PlanName>Premium</PlanName>
             <PlanCopy>
-              Unlock the in-YouTube experience: run YouTool tools from the page you are already on, export deeper data, and upgrade YouTube Studio workflows.
+              Bring YouTool into YouTube and YouTube Studio.
             </PlanCopy>
             <Toggle aria-label="Billing interval">
               <ToggleButton type="button" $active={interval === 'monthly'} onClick={() => setBillingInterval('monthly')}>Monthly</ToggleButton>
@@ -341,41 +388,22 @@ export const Pricing: React.FC = () => {
               <PriceMeta>{period}</PriceMeta>
             </Price>
             <SaveLine>{yearly ? 'Save about 20% compared with monthly billing.' : 'Switch to yearly to save about 20%.'}</SaveLine>
-            <CtaLink $primary to="/account">Connect YouTube & subscribe</CtaLink>
+            <CtaButton $primary type="button" onClick={handleCheckout} disabled={checkoutLoading || loading}>
+              {checkoutLoading ? 'Opening checkout…' : 'Subscribe'}
+            </CtaButton>
+            {checkoutError && <CheckoutError>{checkoutError}</CheckoutError>}
             <FeatureList>
-              <FeatureItem><i className="bx bx-check"></i><span>Unlimited in-YouTube YouTool tool runs</span></FeatureItem>
-              <FeatureItem><i className="bx bx-check"></i><span>Video analyzer, channel analyzer, and comment exports from YouTube pages</span></FeatureItem>
-              <FeatureItem><i className="bx bx-check"></i><span>Higher comment export limits inside the extension</span></FeatureItem>
-              <FeatureItem><i className="bx bx-check"></i><span>More YouTube Studio timelines and content-page columns</span></FeatureItem>
+              <FeatureItem><i className="bx bx-check"></i><span>Unlimited in-YouTube tool runs</span></FeatureItem>
+              <FeatureItem><i className="bx bx-check"></i><span>Video, channel, and comment tools inside YouTube</span></FeatureItem>
+              <FeatureItem><i className="bx bx-check"></i><span>Higher comment export limits</span></FeatureItem>
               <FeatureItem><i className="bx bx-check"></i><span>Streamer Mode and real-time engaged views for Studio workflows</span></FeatureItem>
             </FeatureList>
           </PlanCard>
         </PricingGrid>
 
         <NoteBand>
-          <strong>Important:</strong> Premium is mainly for the Chrome extension experience. You can still use YouTool.io’s public website tools without paying, and the account flow asks you to connect YouTube before checkout so the paid features can be tied to the right channel.
+          <strong>Premium is mainly for the Chrome extension.</strong> Connect YouTube from your account before checkout so the paid features attach to the right channel.
         </NoteBand>
-
-        <BenefitSection>
-          <SectionTitle>What Premium changes</SectionTitle>
-          <BenefitCards>
-            <BenefitCard>
-              <i className="bx bx-window-open"></i>
-              <h3>Tools where you work</h3>
-              <p>Analyze videos, channels, comments, and exports from inside YouTube instead of opening separate website tools in another tab.</p>
-            </BenefitCard>
-            <BenefitCard>
-              <i className="bx bx-download"></i>
-              <h3>More useful exports</h3>
-              <p>Premium raises in-extension export limits and makes YouTool feel like a working package you can save, copy, and share.</p>
-            </BenefitCard>
-            <BenefitCard>
-              <i className="bx bx-slider-alt"></i>
-              <h3>Studio workflow upgrades</h3>
-              <p>Unlock premium YouTube Studio helpers like extra timelines, content columns, streamer mode, and engaged-view workflow tools.</p>
-            </BenefitCard>
-          </BenefitCards>
-        </BenefitSection>
       </Shell>
     </Page>
   );
