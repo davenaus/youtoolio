@@ -193,6 +193,7 @@ export const Footer: React.FC = () => {
             <h4>Company</h4>
             <FooterLinks>
               <li><Link to="/about">About Us</Link></li>
+              <li><Link to="/pricing">Pricing</Link></li>
               <li><Link to="/contact">Contact</Link></li>
               <li><Link to="/careers">Careers</Link></li>
               <li><Link to="/press">Press Kit</Link></li>

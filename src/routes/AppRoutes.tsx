@@ -19,6 +19,7 @@ const CreatorGuides = lazy(() => import('../pages/Company').then(m => ({ default
 const HelpCenter = lazy(() => import('../pages/Company').then(m => ({ default: m.HelpCenter })));
 const AboutUs = lazy(() => import('../pages/Company').then(m => ({ default: m.AboutUs })));
 const Contact = lazy(() => import('../pages/Company').then(m => ({ default: m.Contact })));
+const Pricing = lazy(() => import('../pages/Company').then(m => ({ default: m.Pricing })));
 const Careers = lazy(() => import('../pages/Company').then(m => ({ default: m.Careers })));
 const PressKit = lazy(() => import('../pages/Company').then(m => ({ default: m.PressKit })));
 const Partnerships = lazy(() => import('../pages/Company').then(m => ({ default: m.Partnerships })));
@@ -123,6 +124,7 @@ export const AppRoutes: React.FC = () => {
         <Route path="/help" element={<HelpCenter />} />
         <Route path="/about" element={<AboutUs />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/pricing" element={<Pricing />} />
         <Route path="/careers" element={<Careers />} />
         <Route path="/press" element={<PressKit />} />
         <Route path="/partnerships" element={<Partnerships />} />

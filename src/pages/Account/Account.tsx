@@ -167,27 +167,34 @@ const BenefitGrid = styled.div`
   gap: 0.75rem;
 `;
 
-const BenefitTile = styled.div<{ $premium?: boolean }>`
+const BenefitTile = styled.div<{ $active?: boolean; $locked?: boolean }>`
   display: grid;
   grid-template-columns: 34px 1fr;
   gap: 0.8rem;
   align-items: start;
   padding: 0.9rem;
-  border: 1px solid ${({ $premium }) => $premium ? 'rgba(185, 28, 28, 0.42)' : 'rgba(255,255,255,0.08)'};
+  border: 1px solid ${({ $active }) => $active ? 'rgba(185, 28, 28, 0.26)' : 'rgba(255,255,255,0.08)'};
   border-radius: 12px;
-  background: ${({ $premium }) => $premium
-    ? 'linear-gradient(135deg, rgba(185, 28, 28, 0.13), rgba(82, 1, 1, 0.08))'
-    : 'rgba(255,255,255,0.018)'};
+  background: ${({ $locked }) => $locked ? 'rgba(255,255,255,0.012)' : 'rgba(255,255,255,0.024)'};
+  opacity: ${({ $locked }) => $locked ? 0.62 : 1};
 `;
 
-const BenefitIcon = styled.div<{ $active?: boolean }>`
+const BenefitIcon = styled.div<{ $active?: boolean; $locked?: boolean }>`
   width: 34px;
   height: 34px;
   border-radius: 10px;
   display: grid;
   place-items: center;
-  background: ${({ $active, theme }) => $active ? `${theme.colors.red1}` : 'rgba(255,255,255,0.05)'};
-  color: ${({ $active, theme }) => $active ? theme.colors.red6 : theme.colors.text.muted};
+  background: ${({ $active, $locked, theme }) => $active ? `${theme.colors.red1}` : $locked ? 'rgba(255,255,255,0.028)' : 'rgba(255,255,255,0.05)'};
+  color: ${({ $active, $locked, theme }) => $active ? theme.colors.red6 : $locked ? 'rgba(156, 163, 175, 0.62)' : theme.colors.text.muted};
+  box-shadow: ${({ $active }) => $active ? '0 0 0 1px rgba(185, 28, 28, 0.34), 0 0 20px rgba(229, 72, 72, 0.26)' : 'none'};
+`;
+
+const BenefitTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 `;
 
 const BenefitTitle = styled.div`
@@ -201,6 +208,25 @@ const BenefitSub = styled.div`
   font-size: 0.74rem;
   line-height: 1.45;
   margin-top: 0.18rem;
+`;
+
+const BenefitStateBadge = styled.span<{ $active?: boolean; $locked?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  border: 1px solid ${({ $active, $locked }) =>
+    $active ? 'rgba(185, 28, 28, 0.34)' : $locked ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.12)'};
+  background: ${({ $active, $locked }) =>
+    $active ? 'rgba(185, 28, 28, 0.13)' : $locked ? 'rgba(255,255,255,0.018)' : 'rgba(255,255,255,0.04)'};
+  color: ${({ $active, $locked, theme }) =>
+    $active ? theme.colors.red6 : $locked ? 'rgba(156, 163, 175, 0.72)' : theme.colors.text.muted};
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
 `;
 
 // ─── Profile ─────────────────────────────────────────────────────────────────
@@ -789,7 +815,7 @@ export const Account: React.FC = () => {
               <HeroSub>
                 {isPremium
                   ? 'You have access to YouTool’s in-YouTube workflow: analysis, exports, and Studio tools without leaving YouTube.'
-                  : 'Connect your channel, manage extension access, and upgrade when you want YouTool’s tools directly inside YouTube.'}
+                  : 'Connect your channel for tailored analysis, then upgrade when you want YouTool’s tools directly inside YouTube.'}
               </HeroSub>
             </div>
 
@@ -830,7 +856,7 @@ export const Account: React.FC = () => {
               </BillingNotice>
             )}
 
-            {!isPremium && (
+            {!isPremium && ytChannel && (
               <BillingRows>
                 <BillingRow>
                   <div>
@@ -898,31 +924,43 @@ export const Account: React.FC = () => {
               <PlanBadge $premium={isPremium}>{isPremium ? 'Unlocked' : 'Free'}</PlanBadge>
             </CardHeader>
             <BenefitGrid>
-              <BenefitTile $premium>
+              <BenefitTile $active>
                 <BenefitIcon $active><i className="bx bx-line-chart"></i></BenefitIcon>
                 <div>
-                  <BenefitTitle>Channel stats and full analysis</BenefitTitle>
+                  <BenefitTitleRow>
+                    <BenefitTitle>Channel stats and full analysis</BenefitTitle>
+                    <BenefitStateBadge $active>Included</BenefitStateBadge>
+                  </BenefitTitleRow>
                   <BenefitSub>1D, 7D, 30D stats, trend graphs, and the deeper channel analysis stay available after connecting YouTube.</BenefitSub>
                 </div>
               </BenefitTile>
-              <BenefitTile $premium={isPremium}>
+              <BenefitTile $active={isPremium}>
                 <BenefitIcon $active={isPremium}><i className="bx bx-window-open"></i></BenefitIcon>
                 <div>
-                  <BenefitTitle>Use YouTool tools inside YouTube</BenefitTitle>
+                  <BenefitTitleRow>
+                    <BenefitTitle>Use YouTool tools inside YouTube</BenefitTitle>
+                    <BenefitStateBadge $active={isPremium}>{isPremium ? 'Unlimited' : 'Limited'}</BenefitStateBadge>
+                  </BenefitTitleRow>
                   <BenefitSub>{isPremium ? 'Unlimited in-YouTube tool runs are active.' : 'Free accounts get limited weekly in-YouTube tool runs before Premium is needed.'}</BenefitSub>
                 </div>
               </BenefitTile>
-              <BenefitTile $premium={isPremium}>
-                <BenefitIcon $active={isPremium}><i className="bx bx-download"></i></BenefitIcon>
+              <BenefitTile $active={isPremium} $locked={!isPremium}>
+                <BenefitIcon $active={isPremium} $locked={!isPremium}><i className="bx bx-download"></i></BenefitIcon>
                 <div>
-                  <BenefitTitle>In-page exports</BenefitTitle>
-                  <BenefitSub>Download comments, analysis, and working files from YouTube pages without bouncing between tabs.</BenefitSub>
+                  <BenefitTitleRow>
+                    <BenefitTitle>In-page exports</BenefitTitle>
+                    <BenefitStateBadge $active={isPremium} $locked={!isPremium}>{isPremium ? 'Active' : 'Premium'}</BenefitStateBadge>
+                  </BenefitTitleRow>
+                  <BenefitSub>{isPremium ? 'Download comments, analysis, and working files from YouTube pages without bouncing between tabs.' : 'Premium unlocks higher in-YouTube export limits and richer downloads from YouTube pages.'}</BenefitSub>
                 </div>
               </BenefitTile>
-              <BenefitTile $premium={isPremium}>
-                <BenefitIcon $active={isPremium}><i className="bx bx-slider-alt"></i></BenefitIcon>
+              <BenefitTile $active={isPremium} $locked={!isPremium}>
+                <BenefitIcon $active={isPremium} $locked={!isPremium}><i className="bx bx-slider-alt"></i></BenefitIcon>
                 <div>
-                  <BenefitTitle>Premium Studio workflow tools</BenefitTitle>
+                  <BenefitTitleRow>
+                    <BenefitTitle>Premium Studio workflow tools</BenefitTitle>
+                    <BenefitStateBadge $active={isPremium} $locked={!isPremium}>{isPremium ? 'Active' : 'Premium'}</BenefitStateBadge>
+                  </BenefitTitleRow>
                   <BenefitSub>More timelines, content columns, streamer mode, and real-time engaged views are Premium extension features.</BenefitSub>
                 </div>
               </BenefitTile>

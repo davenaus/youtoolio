@@ -4,6 +4,7 @@ export { CreatorGuides } from './CreatorGuides';
 export { HelpCenter } from './HelpCenter';
 export { AboutUs } from './AboutUs';
 export { Contact } from './Contact';
+export { Pricing } from './Pricing';
 export { Careers } from './Careers';
 export { PressKit } from './PressKit';
 export { Partnerships } from './Partnerships';
