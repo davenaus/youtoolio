@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
@@ -8,6 +8,35 @@ type BillingInterval = 'monthly' | 'yearly';
 
 interface BillingStatus {
   isPremium: boolean;
+  verificationStatus?: 'verified' | 'unverified';
+  verificationError?: string | null;
+}
+
+async function readBillingPayload(response: Response, fallback: string) {
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || payload.error) {
+    throw new Error(payload.message || fallback);
+  }
+  return payload;
+}
+
+function getCheckoutMessage(payload: any, fallback = 'Could not start checkout.') {
+  const message = String(payload?.message || fallback);
+  const code = String(payload?.error || '');
+
+  if (code === 'youtube_required' || message.toLowerCase().includes('connect')) {
+    return 'Connect your YouTube channel from the account page before upgrading.';
+  }
+
+  if (code === 'stripe_price_missing') {
+    return 'Premium checkout is temporarily unavailable. Pricing is not configured yet.';
+  }
+
+  if (code === 'unauthorized') {
+    return 'Please sign in again to start checkout.';
+  }
+
+  return message;
 }
 
 const Page = styled.div`
@@ -89,6 +118,35 @@ const PricingGrid = styled.div`
   @media (max-width: 860px) {
     grid-template-columns: 1fr;
   }
+`;
+
+const skeletonShimmer = keyframes`
+  0% { background-position: 120% 0; }
+  100% { background-position: -120% 0; }
+`;
+
+const SkeletonBlock = styled.div<{ $width?: string; $height?: string; $radius?: string }>`
+  width: ${({ $width }) => $width || '100%'};
+  height: ${({ $height }) => $height || '1rem'};
+  max-width: 100%;
+  border-radius: ${({ $radius }) => $radius || '999px'};
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.045), rgba(255,255,255,0.105), rgba(255,255,255,0.045));
+  background-size: 220% 100%;
+  animation: ${skeletonShimmer} 1.35s ease-in-out infinite;
+`;
+
+const SkeletonFeatureList = styled.div`
+  display: grid;
+  gap: 0.82rem;
+  margin-top: 1.4rem;
+`;
+
+const SkeletonFeatureRow = styled.div`
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 0.72rem;
+  align-items: center;
 `;
 
 const PlanCard = styled.div<{ $featured?: boolean }>`
@@ -281,9 +339,41 @@ const CheckoutError = styled.div`
   line-height: 1.45;
 `;
 
+function PricingSkeletonGrid() {
+  const rows = Array.from({ length: 5 });
+
+  return (
+    <PricingGrid>
+      {[false, true].map((featured) => (
+        <PlanCard key={String(featured)} $featured={featured}>
+          <SkeletonBlock $width="40%" $height="30px" $radius="10px" />
+          <SkeletonBlock $width="84%" $height="14px" />
+          <SkeletonBlock $width="58%" $height="14px" />
+          {featured && <SkeletonBlock $width="180px" $height="42px" $radius="999px" />}
+          <Price>
+            <SkeletonBlock $width="150px" $height="52px" $radius="16px" />
+            <SkeletonBlock $width="60px" $height="16px" />
+          </Price>
+          <SkeletonBlock $width="70%" $height="14px" />
+          <SkeletonBlock $width="100%" $height="46px" $radius="12px" />
+          <SkeletonFeatureList>
+            {rows.map((_, index) => (
+              <SkeletonFeatureRow key={index}>
+                <SkeletonBlock $width="24px" $height="24px" $radius="50%" />
+                <SkeletonBlock $width={index % 2 ? '82%' : '94%'} $height="14px" />
+              </SkeletonFeatureRow>
+            ))}
+          </SkeletonFeatureList>
+        </PlanCard>
+      ))}
+    </PricingGrid>
+  );
+}
+
 export const Pricing: React.FC = () => {
   const [interval, setBillingInterval] = useState<BillingInterval>('monthly');
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
+  const [billingLoadFailed, setBillingLoadFailed] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
   const { user, loading } = useAuth();
@@ -292,9 +382,10 @@ export const Pricing: React.FC = () => {
   const price = yearly ? '$47.99' : '$4.99';
   const period = yearly ? '/year' : '/month';
   const signedIn = Boolean(user);
-  const billingChecking = signedIn && billingStatus === null;
-  const isPremium = Boolean(billingStatus?.isPremium);
-  const isFreeCurrentPlan = signedIn && !billingChecking && !isPremium;
+  const billingChecking = signedIn && !billingLoadFailed && billingStatus === null;
+  const pricingStateLoading = loading || billingChecking;
+  const isPremium = Boolean(billingStatus?.isPremium && billingStatus.verificationStatus !== 'unverified');
+  const isFreeCurrentPlan = signedIn && !billingChecking && !billingLoadFailed && !isPremium;
 
   useEffect(() => {
     let cancelled = false;
@@ -302,10 +393,13 @@ export const Pricing: React.FC = () => {
     async function loadBillingStatus() {
       if (loading || !user) {
         setBillingStatus(null);
+        setBillingLoadFailed(false);
         return;
       }
 
       try {
+        setBillingLoadFailed(false);
+        setCheckoutError('');
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           if (!cancelled) setBillingStatus(null);
@@ -315,13 +409,29 @@ export const Pricing: React.FC = () => {
         const response = await fetch('/api/billing?action=status', {
           headers: { Authorization: `Bearer ${session.access_token}` },
         });
-        const payload = await response.json();
+        const payload = await readBillingPayload(response, 'Could not verify your current plan.');
 
         if (!cancelled) {
-          setBillingStatus(payload.billing ? { isPremium: Boolean(payload.billing.isPremium) } : { isPremium: false });
+          const billing = payload.billing || null;
+          if (billing?.verificationStatus === 'unverified') {
+            setBillingStatus(null);
+            setBillingLoadFailed(true);
+            setCheckoutError(billing.verificationError || 'Could not verify your current plan with Stripe. Please retry from your account page before subscribing.');
+          } else {
+            setBillingStatus(billing ? {
+              isPremium: Boolean(billing.isPremium),
+              verificationStatus: billing.verificationStatus,
+              verificationError: billing.verificationError,
+            } : { isPremium: false, verificationStatus: 'verified' });
+          }
         }
-      } catch {
-        if (!cancelled) setBillingStatus(null);
+      } catch (error) {
+        console.error('[pricing] billing status load failed', error);
+        if (!cancelled) {
+          setBillingStatus(null);
+          setBillingLoadFailed(true);
+          setCheckoutError(error instanceof Error ? error.message : 'Could not verify your current plan.');
+        }
       }
     }
 
@@ -338,6 +448,11 @@ export const Pricing: React.FC = () => {
     if (loading) return;
     if (!user) {
       navigate('/login');
+      return;
+    }
+
+    if (billingLoadFailed) {
+      setCheckoutError('We could not verify your current plan. Open your account page and retry billing before subscribing.');
       return;
     }
 
@@ -358,19 +473,15 @@ export const Pricing: React.FC = () => {
         },
         body: JSON.stringify({ action: 'create_checkout_session', interval }),
       });
-      const payload = await response.json();
+      const payload = await response.json().catch(() => ({}));
 
       if (!response.ok || !payload.url) {
-        const message = payload.message || 'Could not start checkout.';
-        if (String(message).toLowerCase().includes('connect')) {
-          setCheckoutError('Connect your YouTube channel from the account page before upgrading.');
-          return;
-        }
-        throw new Error(message);
+        throw new Error(getCheckoutMessage(payload));
       }
 
       window.location.href = payload.url;
     } catch (error) {
+      console.error('[pricing] checkout failed', error);
       setCheckoutError(error instanceof Error ? error.message : 'Could not start checkout.');
     } finally {
       setCheckoutLoading(false);
@@ -390,7 +501,7 @@ export const Pricing: React.FC = () => {
           </Subtitle>
         </Hero>
 
-        <PricingGrid>
+        {pricingStateLoading ? <PricingSkeletonGrid /> : <PricingGrid>
           <PlanCard>
             <PlanName>Free</PlanName>
             <PlanCopy>
@@ -400,13 +511,15 @@ export const Pricing: React.FC = () => {
               <PriceValue>$0</PriceValue>
               <PriceMeta>/month</PriceMeta>
             </Price>
-            {isFreeCurrentPlan ? (
+            {billingLoadFailed ? (
+              <CurrentPlanButton type="button" disabled>Billing check needed</CurrentPlanButton>
+            ) : isFreeCurrentPlan ? (
               <CurrentPlanButton type="button" disabled>Current plan</CurrentPlanButton>
             ) : (
               <CtaLink to={signedIn ? '/account' : '/login'}>{signedIn ? 'View account' : 'Start free'}</CtaLink>
             )}
             <FeatureList>
-              <FeatureItem><i className="bx bx-check"></i><span>Website tools</span></FeatureItem>
+              <FeatureItem><i className="bx bx-check"></i><span>Website tools (No login required)</span></FeatureItem>
               <FeatureItem><i className="bx bx-check"></i><span>Google Chrome extension basics</span></FeatureItem>
               <FeatureItem><i className="bx bx-check"></i><span>Connected-channel stats</span></FeatureItem>
               <FeatureItem><i className="bx bx-check"></i><span>Full channel analysis</span></FeatureItem>
@@ -427,12 +540,14 @@ export const Pricing: React.FC = () => {
               <PriceValue>{price}</PriceValue>
               <PriceMeta>{period}</PriceMeta>
             </Price>
-            <SaveLine>{yearly ? 'Save about 20% compared with monthly billing.' : 'Switch to yearly to save about 20%.'}</SaveLine>
-            {isPremium ? (
+            <SaveLine>{yearly ? 'Save about 20% compared with monthly billing.' : 'Switch to yearly to save about 20%'}</SaveLine>
+            {billingLoadFailed ? (
+              <CurrentPlanButton type="button" disabled>Billing check needed</CurrentPlanButton>
+            ) : isPremium ? (
               <CurrentPlanButton type="button" disabled>Current plan</CurrentPlanButton>
             ) : (
-              <CtaButton $primary type="button" onClick={handleCheckout} disabled={checkoutLoading || loading || billingChecking}>
-                {checkoutLoading ? 'Opening checkout…' : 'Subscribe'}
+              <CtaButton $primary type="button" onClick={handleCheckout} disabled={checkoutLoading || loading || billingChecking || billingLoadFailed}>
+                {checkoutLoading ? 'Opening checkout…' : billingChecking ? 'Checking plan…' : 'Subscribe'}
               </CtaButton>
             )}
             {checkoutError && <CheckoutError>{checkoutError}</CheckoutError>}
@@ -443,7 +558,7 @@ export const Pricing: React.FC = () => {
               <FeatureItem><i className="bx bx-check"></i><span>Premium Studio tools: timelines, columns, streamer mode, and engaged views</span></FeatureItem>
             </FeatureList>
           </PlanCard>
-        </PricingGrid>
+        </PricingGrid>}
       </Shell>
     </Page>
   );

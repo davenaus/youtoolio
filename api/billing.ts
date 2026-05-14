@@ -43,6 +43,25 @@ function createHttpError(status: number, message: string, code = 'billing_error'
   return error;
 }
 
+function getErrorMessage(error: any, fallback = 'Unknown billing error.') {
+  return error instanceof Error ? error.message : String(error?.message || error || fallback);
+}
+
+function logBillingError(context: string, error: any, extra: Record<string, any> = {}) {
+  console.error('[billing]', context, {
+    message: getErrorMessage(error),
+    code: error?.code || null,
+    status: error?.status || null,
+    ...extra,
+  });
+}
+
+function isStripeExpandError(error: any) {
+  const code = String(error?.code || '').toLowerCase();
+  const message = getErrorMessage(error).toLowerCase();
+  return code === 'parameter_unknown' || message.includes('unknown parameter') || message.includes('cannot expand');
+}
+
 async function readRawBody(req: any): Promise<string> {
   return await new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
@@ -141,15 +160,36 @@ async function readSubscription(supabase: any, userId: string) {
 
 async function readSyncedSubscription(supabase: any, userId: string) {
   const subscription = await readSubscription(supabase, userId);
-  if (!subscription?.stripe_subscription_id) return subscription;
+  if (!subscription?.stripe_subscription_id) {
+    return {
+      subscription,
+      verified: true,
+      source: 'supabase',
+      verificationError: null,
+    };
+  }
 
   try {
     const stripeSubscription = await retrieveStripeSubscription(subscription.stripe_subscription_id);
     await upsertStripeSubscription(supabase, stripeSubscription, userId);
-    return await readSubscription(supabase, userId);
+    return {
+      subscription: await readSubscription(supabase, userId),
+      verified: true,
+      source: 'stripe',
+      verificationError: null,
+    };
   } catch (error) {
-    console.warn('Could not refresh Stripe subscription status:', error?.message || error);
-    return subscription;
+    logBillingError('stripe_subscription_refresh_failed', error, {
+      userId,
+      stripeSubscriptionId: subscription.stripe_subscription_id,
+    });
+
+    return {
+      subscription,
+      verified: false,
+      source: 'supabase_stale',
+      verificationError: 'We could not verify your subscription with Stripe. Retry before relying on plan status.',
+    };
   }
 }
 
@@ -211,19 +251,27 @@ function isActiveSubscription(row: any) {
   return Boolean(row.is_premium || (hasFuturePeriodEnd && String(row.plan || '').toLowerCase() !== 'free'));
 }
 
-function publicBillingStatus(row: any) {
-  const isPremium = isActiveSubscription(row);
+function publicBillingStatus(row: any, syncState: any = {}) {
+  const verified = syncState.verified !== false;
+  const localIsPremium = isActiveSubscription(row);
+  const isPremium = verified ? localIsPremium : false;
+  const discount = normalizeStoredDiscount(row?.metadata?.stripe_discount);
 
   return {
-    plan: isPremium ? 'premium' : 'free',
-    label: isPremium ? 'Premium' : 'Free',
+    plan: verified ? (isPremium ? 'premium' : 'free') : 'unknown',
+    label: verified ? (isPremium ? 'Premium' : 'Free') : 'Billing check needed',
     isPremium,
+    localIsPremium,
     status: row?.status || 'free',
     interval: row?.price_interval || null,
     priceId: row?.stripe_price_id || null,
     currentPeriodEnd: row?.current_period_end || null,
     cancelAtPeriodEnd: row?.cancel_at_period_end === true || String(row?.cancel_at_period_end || '').toLowerCase() === 'true',
     hasStripeCustomer: Boolean(row?.stripe_customer_id),
+    discount: verified ? discount : null,
+    verificationStatus: verified ? 'verified' : 'unverified',
+    verificationSource: syncState.source || (row?.stripe_subscription_id ? 'supabase' : 'none'),
+    verificationError: verified ? null : syncState.verificationError,
   };
 }
 
@@ -309,16 +357,59 @@ function verifyStripeSignature(rawBody: string, signature: string, secret: strin
 }
 
 async function retrieveStripeSubscription(subscriptionId: string) {
-  return await stripeRequest(
-    `/subscriptions/${encodeURIComponent(subscriptionId)}?expand[]=items.data.price`,
-    undefined,
-    'GET'
-  );
+  let subscription;
+  try {
+    subscription = await stripeRequest(
+      `/subscriptions/${encodeURIComponent(subscriptionId)}?expand[]=items.data.price&expand[]=discounts`,
+      undefined,
+      'GET'
+    );
+  } catch (error) {
+    if (!isStripeExpandError(error)) throw error;
+    logBillingError('stripe_subscription_discount_expand_failed', error, { subscriptionId });
+    subscription = await stripeRequest(
+      `/subscriptions/${encodeURIComponent(subscriptionId)}?expand[]=items.data.price`,
+      undefined,
+      'GET'
+    );
+  }
+
+  const customerId = typeof subscription?.customer === 'string'
+    ? subscription.customer
+    : subscription?.customer?.id;
+
+  if (customerId) {
+    try {
+      subscription.customer = await retrieveStripeCustomer(customerId);
+    } catch (error) {
+      logBillingError('stripe_customer_discount_refresh_failed', error, { customerId });
+    }
+  }
+
+  return subscription;
 }
 
 async function retrieveCheckoutSession(sessionId: string) {
+  try {
+    return await stripeRequest(
+      `/checkout/sessions/${encodeURIComponent(sessionId)}?expand[]=subscription&expand[]=subscription.items.data.price&expand[]=subscription.discounts`,
+      undefined,
+      'GET'
+    );
+  } catch (error) {
+    if (!isStripeExpandError(error)) throw error;
+    logBillingError('stripe_checkout_discount_expand_failed', error, { sessionId });
+    return await stripeRequest(
+      `/checkout/sessions/${encodeURIComponent(sessionId)}?expand[]=subscription&expand[]=subscription.items.data.price`,
+      undefined,
+      'GET'
+    );
+  }
+}
+
+async function retrieveStripeCustomer(customerId: string) {
   return await stripeRequest(
-    `/checkout/sessions/${encodeURIComponent(sessionId)}?expand[]=subscription&expand[]=subscription.items.data.price`,
+    `/customers/${encodeURIComponent(customerId)}`,
     undefined,
     'GET'
   );
@@ -346,6 +437,98 @@ function getSubscriptionPeriodTimestamp(subscription: any, key: 'current_period_
     : Math.min(...itemTimestamps);
 }
 
+function formatPercentOff(value: any) {
+  const percent = Number(value);
+  if (!Number.isFinite(percent)) return '';
+  return `${percent % 1 === 0 ? percent.toFixed(0) : percent.toFixed(1)}%`;
+}
+
+function formatAmountOff(amount: any, currency: any) {
+  const cents = Number(amount);
+  const code = String(currency || 'usd').toUpperCase();
+  if (!Number.isFinite(cents)) return '';
+
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: code,
+      maximumFractionDigits: cents % 100 === 0 ? 0 : 2,
+    }).format(cents / 100);
+  } catch {
+    return `${code} ${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}`;
+  }
+}
+
+function formatDiscountDate(timestamp: any) {
+  const date = timestampToIso(timestamp);
+  if (!date) return '';
+  return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function normalizeDiscountCandidate(discount: any, source: string) {
+  if (!discount || typeof discount === 'string') return null;
+  const coupon = discount.coupon || {};
+  const endTimestamp = Number(discount.end || 0);
+
+  if (coupon.valid === false) return null;
+  if (endTimestamp && endTimestamp * 1000 <= Date.now()) return null;
+
+  const percentOff = Number(coupon.percent_off || 0) || null;
+  const amountOff = Number(coupon.amount_off || 0) || null;
+  const currency = coupon.currency || null;
+  const duration = coupon.duration || null;
+  const durationInMonths = Number(coupon.duration_in_months || 0) || null;
+
+  let value = coupon.name || 'coupon';
+  if (percentOff) value = `${formatPercentOff(percentOff)} off`;
+  if (amountOff) value = `${formatAmountOff(amountOff, currency)} off`;
+
+  let suffix = '';
+  if (amountOff && duration === 'repeating' && durationInMonths) {
+    suffix = ` for ${durationInMonths} ${durationInMonths === 1 ? 'month' : 'months'}`;
+  } else if (endTimestamp) {
+    suffix = ` until ${formatDiscountDate(endTimestamp)}`;
+  } else if (duration === 'repeating' && durationInMonths) {
+    suffix = ` for ${durationInMonths} ${durationInMonths === 1 ? 'month' : 'months'}`;
+  } else if (duration === 'once') {
+    suffix = ' this billing period';
+  }
+
+  return {
+    source,
+    label: `${value}${suffix}`,
+    couponName: coupon.name || null,
+    couponId: coupon.id || null,
+    percentOff,
+    amountOff,
+    currency,
+    duration,
+    durationInMonths,
+    endsAt: timestampToIso(endTimestamp),
+  };
+}
+
+function collectStripeDiscounts(subscription: any) {
+  const candidates: any[] = [];
+  const subscriptionDiscounts = Array.isArray(subscription?.discounts?.data)
+    ? subscription.discounts.data
+    : Array.isArray(subscription?.discounts)
+      ? subscription.discounts
+      : [];
+
+  subscriptionDiscounts.forEach((discount: any) => candidates.push(normalizeDiscountCandidate(discount, 'subscription')));
+  candidates.push(normalizeDiscountCandidate(subscription?.discount, 'subscription'));
+  candidates.push(normalizeDiscountCandidate(subscription?.customer?.discount, 'customer'));
+
+  return candidates.filter(Boolean);
+}
+
+function normalizeStoredDiscount(discount: any) {
+  if (!discount?.label) return null;
+  if (discount.endsAt && new Date(discount.endsAt).getTime() <= Date.now()) return null;
+  return discount;
+}
+
 function subscriptionFieldsFromStripe(subscription: any, userId: string | null) {
   const price = subscription?.items?.data?.[0]?.price || {};
   const interval = price?.recurring?.interval === 'year'
@@ -363,6 +546,15 @@ function subscriptionFieldsFromStripe(subscription: any, userId: string | null) 
   const cancelingAtPeriodEnd = Boolean(subscription.cancel_at_period_end || (ACTIVE_STATUSES.has(status) && cancelAtIsFuture));
   const keepsAccess = ACTIVE_STATUSES.has(status) || Boolean(cancelingAtPeriodEnd && periodEnd && periodEnd * 1000 > Date.now());
   const plan = keepsAccess ? 'premium' : 'free';
+  const metadata = { ...(subscription.metadata || {}) };
+  const [discount] = collectStripeDiscounts(subscription);
+  metadata.stripe_last_synced_at = new Date().toISOString();
+
+  if (discount) {
+    metadata.stripe_discount = discount;
+  } else {
+    delete metadata.stripe_discount;
+  }
 
   return {
     user_id: userId,
@@ -380,7 +572,7 @@ function subscriptionFieldsFromStripe(subscription: any, userId: string | null) 
     canceled_at: timestampToIso(subscription.canceled_at),
     trial_end: timestampToIso(subscription.trial_end),
     ended_at: timestampToIso(subscription.ended_at),
-    metadata: subscription.metadata || {},
+    metadata,
     updated_at: new Date().toISOString(),
   };
 }
@@ -434,7 +626,7 @@ async function syncCheckoutSession(supabase: any, user: any, sessionId: string) 
 
   await upsertStripeSubscription(supabase, stripeSubscription, user.id);
   const subscription = await readSubscription(supabase, user.id);
-  return { billing: publicBillingStatus(subscription) };
+  return { billing: publicBillingStatus(subscription, { verified: true, source: 'stripe' }) };
 }
 
 async function handleStripeWebhook(supabase: any, req: any, rawBody: string) {
@@ -481,9 +673,9 @@ async function handler(req: any, res: any) {
     const user = await resolveUser(supabase, req);
 
     if (req.method === 'GET') {
-      const subscription = await readSyncedSubscription(supabase, user.id);
+      const subscriptionState = await readSyncedSubscription(supabase, user.id);
       return res.status(200).json({
-        billing: publicBillingStatus(subscription),
+        billing: publicBillingStatus(subscriptionState.subscription, subscriptionState),
         prices: {
           monthly: process.env.STRIPE_PRICE_PREMIUM_MONTHLY || null,
           yearly: process.env.STRIPE_PRICE_PREMIUM_YEARLY || null,
@@ -512,6 +704,19 @@ async function handler(req: any, res: any) {
     return res.status(400).json({ error: 'invalid_action', message: 'Invalid billing action.' });
   } catch (error: any) {
     const status = Number(error?.status || 500);
+    let failedAction = req.method === 'POST' ? null : String(req.query?.action || 'status');
+    if (req.method === 'POST' && rawBody) {
+      try {
+        failedAction = JSON.parse(rawBody)?.action || null;
+      } catch {
+        failedAction = 'unparseable_body';
+      }
+    }
+    logBillingError('request_failed', error, {
+      method: req.method,
+      action: failedAction,
+      status,
+    });
     return res.status(status).json({
       error: error?.code || 'billing_error',
       message: error?.message || 'Billing request failed.',

@@ -6,7 +6,7 @@ import { Button } from '../../components/Button/Button';
 import { AccountYouTubeInsights } from './AccountYouTubeInsights';
 import { AdminPlatformStats } from './AdminPlatformStats';
 import { AdminYouTubeResearchDashboard } from './AdminYouTubeResearchDashboard';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 
 const CHROME_EXTENSION_STORE_URL = 'https://chromewebstore.google.com/search/YouTool.io';
 
@@ -43,6 +43,31 @@ const Inner = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+`;
+
+const skeletonShimmer = keyframes`
+  0% { background-position: 120% 0; }
+  100% { background-position: -120% 0; }
+`;
+
+const SkeletonBlock = styled.div<{ $width?: string; $height?: string; $radius?: string }>`
+  width: ${({ $width }) => $width || '100%'};
+  height: ${({ $height }) => $height || '1rem'};
+  max-width: 100%;
+  border-radius: ${({ $radius }) => $radius || '999px'};
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.045), rgba(255,255,255,0.105), rgba(255,255,255,0.045));
+  background-size: 220% 100%;
+  animation: ${skeletonShimmer} 1.35s ease-in-out infinite;
+`;
+
+const SkeletonCircle = styled(SkeletonBlock)`
+  flex-shrink: 0;
+`;
+
+const SkeletonStack = styled.div`
+  display: grid;
+  gap: 0.8rem;
 `;
 
 // ─── Cards ────────────────────────────────────────────────────────────────────
@@ -564,7 +589,36 @@ const BillingNotice = styled.div<{ $canceling?: boolean }>`
   }
 `;
 
+const DiscountNotice = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.72rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: rgba(20, 83, 45, 0.18);
+  color: #bbf7d0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+
+  i {
+    color: #4ade80;
+    font-size: 1rem;
+  }
+
+  strong {
+    color: #dcfce7;
+    font-weight: 700;
+  }
+`;
+
 const BillingError = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
   margin-top: 1rem;
   padding: 0.8rem 0.95rem;
   border: 1px solid rgba(248, 113, 113, 0.22);
@@ -573,6 +627,27 @@ const BillingError = styled.div`
   color: #fecaca;
   font-size: 0.78rem;
   line-height: 1.45;
+
+  span {
+    min-width: 0;
+  }
+
+  button {
+    flex: 0 0 auto;
+    border: 1px solid rgba(248, 113, 113, 0.28);
+    border-radius: 999px;
+    background: rgba(248, 113, 113, 0.12);
+    color: #fee2e2;
+    font: inherit;
+    font-weight: 800;
+    padding: 0.42rem 0.68rem;
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: wait;
+    opacity: 0.62;
+  }
 `;
 
 interface BillingStatus {
@@ -584,6 +659,127 @@ interface BillingStatus {
   currentPeriodEnd: string | null;
   cancelAtPeriodEnd: boolean;
   hasStripeCustomer: boolean;
+  verificationStatus?: 'verified' | 'unverified';
+  verificationError?: string | null;
+  localIsPremium?: boolean;
+  discount?: {
+    label: string;
+    couponName?: string | null;
+    endsAt?: string | null;
+  } | null;
+}
+
+async function readBillingPayload(response: Response, fallback: string) {
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || payload.error) {
+    throw new Error(payload.message || fallback);
+  }
+  return payload;
+}
+
+function getBillingVerificationError(billing: BillingStatus | null) {
+  if (billing?.verificationStatus !== 'unverified') return '';
+  return billing.verificationError || 'We could not verify your subscription with Stripe. Retry before relying on plan status.';
+}
+
+function AccountSkeleton() {
+  const benefitRows = Array.from({ length: 4 });
+  const statusRows = Array.from({ length: 2 });
+
+  return (
+    <Page>
+      <Inner>
+        <TopBar>
+          <SkeletonBlock $width="118px" $height="18px" />
+          <HeroActions>
+            <SkeletonBlock $width="92px" $height="34px" />
+            <SkeletonBlock $width="64px" $height="18px" />
+          </HeroActions>
+        </TopBar>
+
+        <HeroCard>
+          <HeroContent>
+            <SkeletonStack>
+              <SkeletonBlock $width="112px" $height="12px" />
+              <SkeletonBlock $width="72%" $height="58px" $radius="18px" />
+              <SkeletonBlock $width="88%" $height="16px" />
+              <SkeletonBlock $width="62%" $height="16px" />
+            </SkeletonStack>
+            <HeroActions>
+              <SkeletonBlock $width="138px" $height="38px" $radius="10px" />
+              <SkeletonBlock $width="96px" $height="38px" $radius="10px" />
+            </HeroActions>
+          </HeroContent>
+
+          <ProfilePanel>
+            <ProfileMini>
+              <SkeletonCircle $width="64px" $height="64px" $radius="50%" />
+              <ProfileInfo>
+                <SkeletonBlock $width="78%" $height="20px" />
+                <SkeletonBlock $width="92%" $height="14px" />
+              </ProfileInfo>
+            </ProfileMini>
+            <StatusRow>
+              <StatusLeft>
+                <SkeletonBlock $width="36px" $height="36px" $radius="10px" />
+                <SkeletonStack>
+                  <SkeletonBlock $width="110px" $height="15px" />
+                  <SkeletonBlock $width="150px" $height="12px" />
+                </SkeletonStack>
+              </StatusLeft>
+              <SkeletonBlock $width="82px" $height="28px" />
+            </StatusRow>
+          </ProfilePanel>
+        </HeroCard>
+
+        <DashboardGrid>
+          <Card>
+            <CardHeader>
+              <SkeletonBlock $width="124px" $height="12px" />
+            </CardHeader>
+            <BenefitGrid>
+              {benefitRows.map((_, index) => (
+                <BenefitTile key={index}>
+                  <SkeletonBlock $width="34px" $height="34px" $radius="10px" />
+                  <SkeletonStack>
+                    <SkeletonBlock $width="78%" $height="15px" />
+                    <SkeletonBlock $width="96%" $height="12px" />
+                    <SkeletonBlock $width="64%" $height="12px" />
+                  </SkeletonStack>
+                </BenefitTile>
+              ))}
+            </BenefitGrid>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <SkeletonBlock $width="132px" $height="12px" />
+            </CardHeader>
+            {statusRows.map((_, index) => (
+              <StatusRow key={index}>
+                <StatusLeft>
+                  <SkeletonBlock $width="36px" $height="36px" $radius="10px" />
+                  <SkeletonStack>
+                    <SkeletonBlock $width="134px" $height="15px" />
+                    <SkeletonBlock $width="210px" $height="12px" />
+                  </SkeletonStack>
+                </StatusLeft>
+                <SkeletonBlock $width="52px" $height="22px" />
+              </StatusRow>
+            ))}
+            <ExtensionStoreCard as="div">
+              <SkeletonBlock $width="38px" $height="38px" $radius="12px" />
+              <SkeletonStack>
+                <SkeletonBlock $width="172px" $height="16px" />
+                <SkeletonBlock $width="94%" $height="12px" />
+              </SkeletonStack>
+              <SkeletonBlock $width="28px" $height="28px" />
+            </ExtensionStoreCard>
+          </Card>
+        </DashboardGrid>
+      </Inner>
+    </Page>
+  );
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -607,7 +803,10 @@ export const Account: React.FC = () => {
     if (!user) return;
     setIsResearchAdmin(false);
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) return;
+      if (!session) {
+        navigate('/login', { replace: true });
+        return;
+      }
 
       fetch('/api/extension/session/status', {
         headers: { Authorization: `Bearer ${session.access_token}` },
@@ -640,6 +839,7 @@ export const Account: React.FC = () => {
       const shouldSyncCheckout = checkoutParams.get('checkout') === 'success' && checkoutSessionId;
 
       setBillingLoading(true);
+      setBillingError('');
       const billingRequest = shouldSyncCheckout
         ? fetch('/api/billing', {
             method: 'POST',
@@ -654,17 +854,26 @@ export const Account: React.FC = () => {
           });
 
       billingRequest
-        .then(r => r.json())
+        .then(r => readBillingPayload(r, 'Could not load subscription data.'))
         .then(({ billing, message }) => {
           setBilling(billing || null);
-          if (!billing && message) setBillingError(message);
+          const verificationError = getBillingVerificationError(billing || null);
+          if (verificationError) {
+            setBillingError(verificationError);
+          } else if (!billing && message) {
+            setBillingError(message);
+          }
         })
-        .catch(() => setBilling(null))
+        .catch((error) => {
+          console.error('[account] billing load failed', error);
+          setBilling(null);
+          setBillingError(error instanceof Error ? error.message : 'Could not load subscription data.');
+        })
         .finally(() => setBillingLoading(false));
     });
-  }, [user, location.search]);
+  }, [user, location.search, navigate]);
 
-  if (loading) return null;
+  if (loading || Boolean(user && !billing && !billingError)) return <AccountSkeleton />;
   if (!user) return <Navigate to="/login" replace />;
 
   const name  = user.user_metadata?.full_name ?? 'YouTool User';
@@ -698,21 +907,50 @@ export const Account: React.FC = () => {
   };
 
   const refreshBilling = async () => {
+    setBillingLoading(true);
+    setBillingError('');
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    if (!session) {
+      setBillingLoading(false);
+      navigate('/login');
+      return;
+    }
 
-    const res = await fetch('/api/billing?action=status', {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    });
-    const payload = await res.json();
-    if (payload.billing) setBilling(payload.billing);
+    try {
+      const res = await fetch('/api/billing?action=status', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const payload = await readBillingPayload(res, 'Could not refresh subscription data.');
+      const nextBilling = payload.billing || null;
+      setBilling(nextBilling);
+      const verificationError = getBillingVerificationError(nextBilling);
+      if (verificationError) setBillingError(verificationError);
+    } catch (error) {
+      console.error('[account] billing refresh failed', error);
+      setBilling(null);
+      setBillingError(error instanceof Error ? error.message : 'Could not refresh subscription data.');
+    } finally {
+      setBillingLoading(false);
+    }
   };
 
   const handleManageBilling = async () => {
     setBillingError('');
+
+    if (billing?.verificationStatus !== 'unverified' && billing?.discount?.label) {
+      const shouldContinue = window.confirm(
+        'You currently have a discount on your membership. If you cancel, you may lose this discount.'
+      );
+      if (!shouldContinue) return;
+    }
+
     setBillingAction('portal');
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { navigate('/login'); return; }
+    if (!session) {
+      setBillingAction('');
+      navigate('/login');
+      return;
+    }
 
     try {
       const res = await fetch('/api/billing', {
@@ -727,6 +965,7 @@ export const Account: React.FC = () => {
       if (!res.ok || !payload.url) throw new Error(payload.message || 'Could not open billing portal.');
       window.location.href = payload.url;
     } catch (error) {
+      console.error('[account] billing portal failed', error);
       setBillingError(error instanceof Error ? error.message : 'Could not open billing portal.');
       setBillingAction('');
       refreshBilling().catch(() => {});
@@ -744,8 +983,11 @@ export const Account: React.FC = () => {
     return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const isPremium = Boolean(billing?.isPremium);
-  const billingLabel = billingLoading ? 'Checking' : isPremium ? 'Premium' : 'Free';
+  const billingUnverified = billing?.verificationStatus === 'unverified';
+  const billingUnavailable = billingUnverified || (!billing && Boolean(billingError));
+  const benefitsReady = !billingUnavailable;
+  const isPremium = Boolean(billing?.isPremium && !billingUnverified);
+  const billingLabel = billingLoading ? 'Checking' : billingUnavailable ? 'Needs check' : isPremium ? 'Premium' : 'Free';
   const billingPeriodEndLabel = formatBillingDate(billing?.currentPeriodEnd || null);
   const billingIsCanceling = Boolean(isPremium && billing?.cancelAtPeriodEnd && billingPeriodEndLabel);
   const billingRenewalCopy = billingPeriodEndLabel
@@ -789,7 +1031,11 @@ export const Account: React.FC = () => {
             </div>
 
             <HeroActions>
-              {isPremium ? (
+              {billingUnavailable ? (
+                <Button variant="primary" size="sm" onClick={refreshBilling} disabled={billingLoading}>
+                  {billingLoading ? 'Checking…' : 'Retry billing check'}
+                </Button>
+              ) : isPremium ? (
                 <Button
                   variant="primary"
                   size="sm"
@@ -818,7 +1064,21 @@ export const Account: React.FC = () => {
               </BillingNotice>
             )}
 
-            {billingError && <BillingError>{billingError}</BillingError>}
+            {billing?.verificationStatus !== 'unverified' && billing?.discount?.label && (
+              <DiscountNotice>
+                <i className="bx bx-purchase-tag-alt"></i>
+                <span><strong>Discount active:</strong> {billing.discount.label}</span>
+              </DiscountNotice>
+            )}
+
+            {billingError && (
+              <BillingError>
+                <span>{billingError}</span>
+                <button type="button" onClick={refreshBilling} disabled={billingLoading}>
+                  {billingLoading ? 'Checking...' : 'Retry'}
+                </button>
+              </BillingError>
+            )}
           </HeroContent>
 
           <ProfilePanel>
@@ -837,7 +1097,7 @@ export const Account: React.FC = () => {
                 <StatusIcon><i className="bx bx-id-card"></i></StatusIcon>
                 <div>
                   <StatusLabel>{billingLabel}</StatusLabel>
-                  <StatusSub>{isPremium ? 'Full extension access' : 'Free extension account'}</StatusSub>
+                  <StatusSub>{billingUnavailable ? 'Retry billing check' : isPremium ? 'Full extension access' : 'Free extension account'}</StatusSub>
                 </div>
               </StatusLeft>
               <PlanBadge $premium={isPremium}>{billingLabel}</PlanBadge>
@@ -851,42 +1111,42 @@ export const Account: React.FC = () => {
               <CardTitle>Plan benefits</CardTitle>
             </CardHeader>
             <BenefitGrid>
-              <BenefitTile $active>
+              <BenefitTile $active={benefitsReady}>
                 <BenefitIcon $active><i className="bx bx-line-chart"></i></BenefitIcon>
                 <div>
                   <BenefitTitleRow>
                     <BenefitTitle>Channel stats and full analysis</BenefitTitle>
-                    <BenefitStateBadge $active>Included</BenefitStateBadge>
+                    <BenefitStateBadge $active={benefitsReady}>{benefitsReady ? 'Included' : 'Checking'}</BenefitStateBadge>
                   </BenefitTitleRow>
-                  <BenefitSub>1D, 7D, 30D stats, trend graphs, and the deeper channel analysis stay available after connecting YouTube.</BenefitSub>
+                  <BenefitSub>{benefitsReady ? '1D, 7D, 30D stats, trend graphs, and the deeper channel analysis stay available after connecting YouTube.' : 'Retry billing check to confirm which account benefits are active.'}</BenefitSub>
                 </div>
               </BenefitTile>
-              <BenefitTile $active={isPremium}>
-                <BenefitIcon $active={isPremium}><i className="bx bx-window-open"></i></BenefitIcon>
+              <BenefitTile $active={benefitsReady && isPremium}>
+                <BenefitIcon $active={benefitsReady && isPremium}><i className="bx bx-window-open"></i></BenefitIcon>
                 <div>
                   <BenefitTitleRow>
                     <BenefitTitle>Use YouTool tools inside YouTube</BenefitTitle>
-                    <BenefitStateBadge $active={isPremium}>{isPremium ? 'Unlimited' : 'Limited'}</BenefitStateBadge>
+                    <BenefitStateBadge $active={benefitsReady && isPremium}>{benefitsReady ? isPremium ? 'Unlimited' : 'Limited' : 'Checking'}</BenefitStateBadge>
                   </BenefitTitleRow>
-                  <BenefitSub>{isPremium ? 'Unlimited in-YouTube tool runs are active.' : 'Free accounts get limited weekly in-YouTube tool runs before Premium is needed.'}</BenefitSub>
+                  <BenefitSub>{benefitsReady ? isPremium ? 'Unlimited in-YouTube tool runs are active.' : 'Free accounts get limited weekly in-YouTube tool runs before Premium is needed.' : 'Plan-limited extension access will show after billing is verified.'}</BenefitSub>
                 </div>
               </BenefitTile>
-              <BenefitTile $active={isPremium} $locked={!isPremium}>
-                <BenefitIcon $active={isPremium} $locked={!isPremium}><i className="bx bx-download"></i></BenefitIcon>
+              <BenefitTile $active={benefitsReady && isPremium} $locked={benefitsReady && !isPremium}>
+                <BenefitIcon $active={benefitsReady && isPremium} $locked={benefitsReady && !isPremium}><i className="bx bx-download"></i></BenefitIcon>
                 <div>
                   <BenefitTitleRow>
                     <BenefitTitle>In-page exports</BenefitTitle>
-                    <BenefitStateBadge $active={isPremium} $locked={!isPremium}>{isPremium ? 'Active' : 'Premium'}</BenefitStateBadge>
+                    <BenefitStateBadge $active={benefitsReady && isPremium} $locked={benefitsReady && !isPremium}>{benefitsReady ? isPremium ? 'Active' : 'Premium' : 'Checking'}</BenefitStateBadge>
                   </BenefitTitleRow>
-                  <BenefitSub>{isPremium ? 'Download comments, analysis, and working files from YouTube pages without bouncing between tabs.' : 'Premium unlocks higher in-YouTube export limits and richer downloads from YouTube pages.'}</BenefitSub>
+                  <BenefitSub>{benefitsReady ? isPremium ? 'Download comments, analysis, and working files from YouTube pages without bouncing between tabs.' : 'Premium unlocks higher in-YouTube export limits and richer downloads from YouTube pages.' : 'Export limits will show after billing is verified.'}</BenefitSub>
                 </div>
               </BenefitTile>
-              <BenefitTile $active={isPremium} $locked={!isPremium}>
-                <BenefitIcon $active={isPremium} $locked={!isPremium}><i className="bx bx-slider-alt"></i></BenefitIcon>
+              <BenefitTile $active={benefitsReady && isPremium} $locked={benefitsReady && !isPremium}>
+                <BenefitIcon $active={benefitsReady && isPremium} $locked={benefitsReady && !isPremium}><i className="bx bx-slider-alt"></i></BenefitIcon>
                 <div>
                   <BenefitTitleRow>
                     <BenefitTitle>Premium Studio workflow tools</BenefitTitle>
-                    <BenefitStateBadge $active={isPremium} $locked={!isPremium}>{isPremium ? 'Active' : 'Premium'}</BenefitStateBadge>
+                    <BenefitStateBadge $active={benefitsReady && isPremium} $locked={benefitsReady && !isPremium}>{benefitsReady ? isPremium ? 'Active' : 'Premium' : 'Checking'}</BenefitStateBadge>
                   </BenefitTitleRow>
                   <BenefitSub>More timelines, content columns, streamer mode, and real-time engaged views are Premium extension features.</BenefitSub>
                 </div>
