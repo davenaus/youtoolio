@@ -130,10 +130,10 @@ const Price = styled.div`
 
 const PriceValue = styled.span`
   font-size: clamp(2.1rem, 5vw, 3.2rem);
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: Arial, Helvetica, sans-serif;
   line-height: 1;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-weight: 800;
+  letter-spacing: 0;
   font-variant-numeric: tabular-nums;
 `;
 
