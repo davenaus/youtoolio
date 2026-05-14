@@ -10,6 +10,11 @@ interface ConnectedChannel {
   thumbnail: string | null;
 }
 
+interface AccountYouTubeInsightsProps {
+  channel: ConnectedChannel;
+  isPremium: boolean;
+}
+
 interface MetricSet {
   views: number;
   engagedViews: number;
@@ -1029,7 +1034,7 @@ function metricTone(delta?: DeltaEntry) {
   };
 }
 
-export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = ({ channel }) => {
+export const AccountYouTubeInsights: React.FC<AccountYouTubeInsightsProps> = ({ channel, isPremium }) => {
   const { user } = useAuth();
   const [dashboard, setDashboard] = useState<DashboardPayload | null>(null);
   const [loadingDashboard, setLoadingDashboard] = useState(true);
@@ -1194,6 +1199,11 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
 
   const handleExportFullAnalysis = async (format: ChannelAnalysisExportFormat) => {
     if (!fullAnalysis || exportingFormat) return;
+    if (!isPremium) {
+      setExportMenuOpen(false);
+      setFullAnalysisError('Premium unlocks downloadable channel analysis reports.');
+      return;
+    }
 
     setExportingFormat(format);
     setExportMenuOpen(false);
@@ -1286,13 +1296,20 @@ export const AccountYouTubeInsights: React.FC<{ channel: ConnectedChannel }> = (
                     <ExportButton
                       type="button"
                       aria-haspopup="menu"
-                      aria-expanded={exportMenuOpen}
+                      aria-expanded={isPremium && exportMenuOpen}
+                      title={isPremium ? undefined : 'Premium unlocks downloadable channel analysis reports.'}
                       disabled={Boolean(exportingFormat)}
-                      onClick={() => setExportMenuOpen((open) => !open)}
+                      onClick={() => {
+                        if (!isPremium) {
+                          setFullAnalysisError('Premium unlocks downloadable channel analysis reports.');
+                          return;
+                        }
+                        setExportMenuOpen((open) => !open);
+                      }}
                     >
-                      {exportingFormat ? 'Preparing...' : 'Download'}
+                      {exportingFormat ? 'Preparing...' : isPremium ? 'Download' : 'Premium download'}
                     </ExportButton>
-                    {exportMenuOpen && !exportingFormat && (
+                    {isPremium && exportMenuOpen && !exportingFormat && (
                       <ExportMenu role="menu" aria-label="Download channel analysis">
                         <ExportMenuButton type="button" role="menuitem" onClick={() => handleExportFullAnalysis('pdf')}>
                           <strong>PDF report</strong>

@@ -708,7 +708,7 @@ function getBillingVerificationError(billing: BillingStatus | null) {
 }
 
 function AccountSkeleton() {
-  const benefitRows = Array.from({ length: 4 });
+  const benefitRows = Array.from({ length: 6 });
   const statusRows = Array.from({ length: 2 });
 
   return (
@@ -1029,7 +1029,7 @@ export const Account: React.FC = () => {
       : 'Open the Chrome extension and sign in to link this account.';
   const youtubeStatusCopy = ytChannel
     ? `Connected to ${ytChannel.title}`
-    : 'Connect your YouTube channel to unlock stats, full analysis, and extension tools.';
+    : 'Connect your YouTube channel to run analysis and personalize extension tools.';
 
   return (
     <Page>
@@ -1139,13 +1139,33 @@ export const Account: React.FC = () => {
             </CardHeader>
             <BenefitGrid>
               <BenefitTile $active={benefitsReady}>
+                <BenefitIcon $active><i className="bx bx-wrench"></i></BenefitIcon>
+                <div>
+                  <BenefitTitleRow>
+                    <BenefitTitle>Website tools</BenefitTitle>
+                    <BenefitStateBadge $active={benefitsReady}>{benefitsReady ? 'Included' : 'Checking'}</BenefitStateBadge>
+                  </BenefitTitleRow>
+                  <BenefitSub>{benefitsReady ? 'Use any tool on the YouTool.io website completely free.' : 'Retry billing check to confirm which account benefits are active.'}</BenefitSub>
+                </div>
+              </BenefitTile>
+              <BenefitTile $active={benefitsReady}>
                 <BenefitIcon $active><i className="bx bx-line-chart"></i></BenefitIcon>
                 <div>
                   <BenefitTitleRow>
-                    <BenefitTitle>Channel stats and full analysis</BenefitTitle>
+                    <BenefitTitle>Channel analysis</BenefitTitle>
                     <BenefitStateBadge $active={benefitsReady}>{benefitsReady ? 'Included' : 'Checking'}</BenefitStateBadge>
                   </BenefitTitleRow>
-                  <BenefitSub>{benefitsReady ? '1D, 7D, 30D stats, trend graphs, and the deeper channel analysis stay available after connecting YouTube.' : 'Retry billing check to confirm which account benefits are active.'}</BenefitSub>
+                  <BenefitSub>{benefitsReady ? 'Connect YouTube to run a full channel analysis from your account page.' : 'Channel analysis availability will show after billing is verified.'}</BenefitSub>
+                </div>
+              </BenefitTile>
+              <BenefitTile $active={benefitsReady}>
+                <BenefitIcon $active><i className="bx bx-extension"></i></BenefitIcon>
+                <div>
+                  <BenefitTitleRow>
+                    <BenefitTitle>Creator YouTube customization</BenefitTitle>
+                    <BenefitStateBadge $active={benefitsReady}>{benefitsReady ? 'Included' : 'Checking'}</BenefitStateBadge>
+                  </BenefitTitleRow>
+                  <BenefitSub>{benefitsReady ? 'Download the Chrome extension to customize YouTube and support your creator workflow.' : 'Extension access will show after billing is verified.'}</BenefitSub>
                 </div>
               </BenefitTile>
               <BenefitTile $active={benefitsReady && isPremium}>
@@ -1162,10 +1182,10 @@ export const Account: React.FC = () => {
                 <BenefitIcon $active={benefitsReady && isPremium} $locked={benefitsReady && !isPremium}><i className="bx bx-download"></i></BenefitIcon>
                 <div>
                   <BenefitTitleRow>
-                    <BenefitTitle>In-page exports</BenefitTitle>
+                    <BenefitTitle>Download reports</BenefitTitle>
                     <BenefitStateBadge $active={benefitsReady && isPremium} $locked={benefitsReady && !isPremium}>{benefitsReady ? isPremium ? 'Active' : 'Premium' : 'Checking'}</BenefitStateBadge>
                   </BenefitTitleRow>
-                  <BenefitSub>{benefitsReady ? isPremium ? 'Download comments, analysis, and working files from YouTube pages without bouncing between tabs.' : 'Premium unlocks higher in-YouTube export limits and richer downloads from YouTube pages.' : 'Export limits will show after billing is verified.'}</BenefitSub>
+                  <BenefitSub>{benefitsReady ? isPremium ? 'Download full channel analysis reports and richer export files when you need to save or share your work.' : 'Premium unlocks downloadable channel analysis reports and higher export limits.' : 'Report downloads will show after billing is verified.'}</BenefitSub>
                 </div>
               </BenefitTile>
               <BenefitTile $active={benefitsReady && isPremium} $locked={benefitsReady && !isPremium}>
@@ -1250,7 +1270,7 @@ export const Account: React.FC = () => {
           </ExtensionAccessCard>
         </DashboardGrid>
 
-        {ytChannel && <AccountYouTubeInsights channel={ytChannel} />}
+        {ytChannel && <AccountYouTubeInsights channel={ytChannel} isPremium={isPremium} />}
 
         {isResearchAdmin && <AdminPlatformStats />}
 
